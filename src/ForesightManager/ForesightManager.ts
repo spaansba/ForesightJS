@@ -1,10 +1,10 @@
 "use client"
 import { IntentDebugger } from "./ForesightDebugger"
 import type {
-  IntentCallback,
-  IntentManagerProps,
-  LinkData,
-  LinkElement,
+  ForesightCallback,
+  ForesightManagerProps,
+  ElementData,
+  ForesightElement,
   MousePosition,
   Point,
   Rect,
@@ -12,7 +12,7 @@ import type {
 
 export class ForesightManager {
   private static instance: ForesightManager
-  private links: Map<LinkElement, LinkData> = new Map()
+  private links: Map<ForesightElement, ElementData> = new Map()
 
   private isSetup: boolean = false
   private debugMode: boolean = false
@@ -33,7 +33,7 @@ export class ForesightManager {
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
-  public static initialize(props?: Partial<IntentManagerProps>): ForesightManager {
+  public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
     if (!ForesightManager.instance) {
       ForesightManager.instance = new ForesightManager()
     }
@@ -67,21 +67,21 @@ export class ForesightManager {
   private checkTrajectoryHitExpiration(): void {
     const now = performance.now()
     let needsVisualUpdate = false
-    const updatedLinkElements: LinkElement[] = []
+    const updatedForesightElements: ForesightElement[] = []
 
-    this.links.forEach((linkData, element) => {
-      if (linkData.isTrajectoryHit && now - linkData.trajectoryHitTime > 300) {
+    this.links.forEach((elementData, element) => {
+      if (elementData.isTrajectoryHit && now - elementData.trajectoryHitTime > 300) {
         this.links.set(element, {
-          ...linkData,
+          ...elementData,
           isTrajectoryHit: false,
         })
         needsVisualUpdate = true
-        updatedLinkElements.push(element)
+        updatedForesightElements.push(element)
       }
     })
 
     if (needsVisualUpdate && this.debugMode && this.debugger) {
-      updatedLinkElements.forEach((element) => {
+      updatedForesightElements.forEach((element) => {
         const data = this.links.get(element)
         if (data && this.debugger) {
           console.log("asda")
@@ -91,17 +91,42 @@ export class ForesightManager {
     }
   }
 
-  public register(element: LinkElement, callback: IntentCallback): () => void {
-    const newLinkData: LinkData = {
+  private normalizeHitSlop = (hitSlop: number | Rect | undefined): Rect => {
+    if (!hitSlop) {
+      return { top: 0, left: 0, right: 0, bottom: 0 }
+    }
+    if (typeof hitSlop === "number") {
+      return {
+        top: hitSlop,
+        left: hitSlop,
+        right: hitSlop,
+        bottom: hitSlop,
+      }
+    }
+    return hitSlop
+  }
+
+  public register(
+    element: ForesightElement,
+    callback: ForesightCallback,
+    hitSlop?: number | Rect
+  ): () => void {
+    const normalizedHitSlop = this.normalizeHitSlop(hitSlop)
+    const originalRect = element.getBoundingClientRect()
+    const newElementData: ElementData = {
       callback,
-      expandedRect: null,
+      elementBounds: {
+        expandedRect: this.getExpandedRect(originalRect, normalizedHitSlop),
+        originalRect: originalRect,
+        hitSlop: normalizedHitSlop,
+      },
       isHovering: false,
       isTrajectoryHit: false,
       trajectoryHitTime: 0,
     }
-    this.links.set(element, newLinkData)
+    this.links.set(element, newElementData)
 
-    this.updateExpandedRect(element) // This will also update debug visuals if active
+    this.updateExpandedRect(element)
     this.setupGlobalListeners()
 
     if (this.debugMode && this.debugger) {
@@ -112,7 +137,7 @@ export class ForesightManager {
     return () => this.unregister(element)
   }
 
-  private unregister(element: LinkElement): void {
+  private unregister(element: ForesightElement): void {
     this.links.delete(element)
 
     if (this.debugMode && this.debugger) {
@@ -183,7 +208,7 @@ export class ForesightManager {
     }
   }
 
-  private getExpandedRect(baseRect: Rect, hitSlop: Rect): Rect {
+  private getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
     return {
       left: baseRect.left - hitSlop.left,
       right: baseRect.right + hitSlop.right,
@@ -192,9 +217,9 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(element: LinkElement): void {
-    const linkData = this.links.get(element)
-    if (!linkData) return
+  private updateExpandedRect(element: ForesightElement): void {
+    const elementData = this.links.get(element)
+    if (!elementData) return
 
     const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), {
       top: 100,
@@ -203,11 +228,14 @@ export class ForesightManager {
       bottom: 100,
     })
 
-    if (expandedRect != linkData.expandedRect) {
+    if (expandedRect != elementData.elementBounds.expandedRect) {
       console.log("updating rect")
       this.links.set(element, {
-        ...linkData,
-        expandedRect,
+        ...elementData,
+        elementBounds: {
+          ...elementData.elementBounds,
+          expandedRect,
+        },
       })
     }
 
@@ -282,15 +310,15 @@ export class ForesightManager {
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
-    const linksToUpdateInDebugger: LinkElement[] = []
+    const linksToUpdateInDebugger: ForesightElement[] = []
 
-    this.links.forEach((linkData, element) => {
-      if (!linkData.expandedRect) return
+    this.links.forEach((elementData, element) => {
+      if (!elementData.elementBounds.expandedRect) return
 
       const { isHoveringInArea, shouldRunCallback } = this.isMouseInExpandedArea(
-        linkData.expandedRect,
+        elementData.elementBounds.expandedRect,
         this.currentPoint,
-        linkData.isHovering
+        elementData.isHovering
       )
 
       let linkStateChanged = false
@@ -300,14 +328,14 @@ export class ForesightManager {
           this.pointIntersectsRect(
             this.predictedPoint.x,
             this.predictedPoint.y,
-            linkData.expandedRect
+            elementData.elementBounds.expandedRect
           )
         ) {
-          if (!linkData.isTrajectoryHit) {
-            linkData.callback()
+          if (!elementData.isTrajectoryHit) {
+            elementData.callback()
             console.log("trajectory")
             this.links.set(element, {
-              ...linkData,
+              ...elementData,
               isTrajectoryHit: true,
               trajectoryHitTime: performance.now(),
               isHovering: isHoveringInArea,
@@ -317,9 +345,9 @@ export class ForesightManager {
         }
       }
 
-      if (linkData.isHovering !== isHoveringInArea) {
+      if (elementData.isHovering !== isHoveringInArea) {
         this.links.set(element, {
-          ...linkData,
+          ...elementData,
           isHovering: isHoveringInArea,
           isTrajectoryHit: this.links.get(element)!.isTrajectoryHit,
           trajectoryHitTime: this.links.get(element)!.trajectoryHitTime,
@@ -333,10 +361,10 @@ export class ForesightManager {
 
       if (shouldRunCallback) {
         if (
-          !linkData.isTrajectoryHit ||
-          (linkData.isTrajectoryHit && !this.enableMouseTrajectory)
+          !elementData.isTrajectoryHit ||
+          (elementData.isTrajectoryHit && !this.enableMouseTrajectory)
         ) {
-          linkData.callback()
+          elementData.callback()
           console.log("hover")
         }
       }

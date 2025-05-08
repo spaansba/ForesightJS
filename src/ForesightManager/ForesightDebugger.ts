@@ -1,15 +1,6 @@
 "use client"
 import type { ForesightManager } from "./ForesightManager"
-import type { LinkElement, Point, Rect } from "../types/types" // Forward declaration
-
-// Define the structure of link data the debugger needs
-type LinkManagerData = {
-  callback: () => void
-  expandedRect: Rect | null
-  isHovering: boolean
-  isTrajectoryHit: boolean
-  trajectoryHitTime: number
-}
+import type { ElementData, ForesightElement, Point, Rect } from "../types/types" // Forward declaration
 
 export class IntentDebugger {
   private foresightManagerInstance: ForesightManager
@@ -17,7 +8,7 @@ export class IntentDebugger {
   private shadowRoot: ShadowRoot | null = null
   private debugContainer: HTMLElement | null = null
   private debugLinkOverlays: Map<
-    LinkElement,
+    ForesightElement,
     { linkOverlay: HTMLElement; expandedOverlay: HTMLElement }
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
@@ -25,12 +16,12 @@ export class IntentDebugger {
   private debugControlsContainer: HTMLElement | null = null
   private debugStyleElement: HTMLStyleElement | null = null
 
-  constructor(foresightManager: ForesightManager) {
-    this.foresightManagerInstance = foresightManager
+  constructor(intentManager: ForesightManager) {
+    this.foresightManagerInstance = intentManager
   }
 
   public initialize(
-    links: Map<LinkElement, LinkManagerData>,
+    links: Map<ForesightElement, ElementData>,
     currentSettings: {
       positionHistorySize: number
       trajectoryPredictionTime: number
@@ -43,7 +34,7 @@ export class IntentDebugger {
     this.cleanup()
 
     this.shadowHost = document.createElement("div")
-    this.shadowHost.id = "intent-debugger-shadow-host"
+    this.shadowHost.id = "jsforesight-debugger-shadow-host"
     // Host itself should not capture pointer events unless specifically designed to.
     this.shadowHost.style.pointerEvents = "none"
     document.body.appendChild(this.shadowHost)
@@ -51,62 +42,62 @@ export class IntentDebugger {
 
     this.debugStyleElement = document.createElement("style")
     this.debugStyleElement.textContent = `
-      #intent-debug-container {
+      #jsforesight-debug-container {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 9999;
       }
-      .intent-link-overlay {
+      .jsforesight-link-overlay {
         position: absolute; border: 2px solid blue;
         background-color: rgba(0, 0, 255, 0.1); box-sizing: border-box;
         transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
-      .intent-link-overlay.active {
+      .jsforesight-link-overlay.active {
         border-color: red; background-color: rgba(255, 0, 0, 0.1);
       }
-      .intent-link-overlay.trajectory-hit {
+      .jsforesight-link-overlay.trajectory-hit {
         border-color: lime; background-color: rgba(0, 255, 0, 0.3);
         box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
       }
-      .intent-expanded-overlay {
+      .jsforesight-expanded-overlay {
         position: absolute; border: 1px dashed rgba(0, 0, 255, 0.5);
         background-color: rgba(0, 0, 255, 0.05); box-sizing: border-box;
       }
-      .intent-mouse-predicted {
+      .jsforesight-mouse-predicted {
         position: absolute; width: 20px; height: 20px; border-radius: 50%;
         border: 2px solid orange; background-color: rgba(255, 165, 0, 0.3);
         transform: translate(-50%, -50%); z-index: 10000;
       }
-      .intent-trajectory-line {
+      .jsforesight-trajectory-line {
         position: absolute; height: 2px; background-color: rgba(255, 100, 0, 0.5);
         transform-origin: left center; z-index: 9999;
       }
-      #intent-debug-controls {
+      #jsforesight-debug-controls {
         position: fixed; bottom: 10px; right: 10px;
         background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px;
         border-radius: 5px; font-family: monospace; font-size: 12px;
         z-index: 10001; pointer-events: auto; /* Make controls interactive */
       }
-      #intent-debug-controls h3 { margin: 0 0 5px 0; font-size: 14px; }
-      #intent-debug-controls label { display: block; margin: 5px 0; }
-      #intent-debug-controls input { margin-right: 5px; vertical-align: middle; }
-      #intent-debug-controls button {
+      #jsforesight-debug-controls h3 { margin: 0 0 5px 0; font-size: 14px; }
+      #jsforesight-debug-controls label { display: block; margin: 5px 0; }
+      #jsforesight-debug-controls input { margin-right: 5px; vertical-align: middle; }
+      #jsforesight-debug-controls button {
         margin: 5px 5px 0 0; padding: 3px 8px; background: #444;
         border: 1px solid #666; color: white; border-radius: 3px; cursor: pointer;
       }
-      #intent-debug-controls button:hover { background: #555; }
+      #jsforesight-debug-controls button:hover { background: #555; }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
 
     this.debugContainer = document.createElement("div")
-    this.debugContainer.id = "intent-debug-container"
+    this.debugContainer.id = "jsforesight-debug-container"
     this.shadowRoot.appendChild(this.debugContainer)
 
     this.debugPredictedMouseIndicator = document.createElement("div")
-    this.debugPredictedMouseIndicator.className = "intent-mouse-predicted"
+    this.debugPredictedMouseIndicator.className = "jsforesight-mouse-predicted"
     this.debugContainer.appendChild(this.debugPredictedMouseIndicator)
 
     this.debugTrajectoryLine = document.createElement("div")
-    this.debugTrajectoryLine.className = "intent-trajectory-line"
+    this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
     this.debugContainer.appendChild(this.debugTrajectoryLine)
 
     this.createDebugControls(currentSettings) // Appends to shadowRoot
@@ -127,17 +118,17 @@ export class IntentDebugger {
     this.shadowRoot = null
   }
 
-  public createOrUpdateLinkOverlay(element: LinkElement, linkData: LinkManagerData): void {
+  public createOrUpdateLinkOverlay(element: ForesightElement, elementData: ElementData): void {
     if (!this.debugContainer) return
 
     let overlays = this.debugLinkOverlays.get(element)
     if (!overlays) {
       const linkOverlay = document.createElement("div")
-      linkOverlay.className = "intent-link-overlay"
+      linkOverlay.className = "jsforesight-link-overlay"
       this.debugContainer.appendChild(linkOverlay)
 
       const expandedOverlay = document.createElement("div")
-      expandedOverlay.className = "intent-expanded-overlay"
+      expandedOverlay.className = "jsforesight-expanded-overlay"
       this.debugContainer.appendChild(expandedOverlay)
 
       overlays = { linkOverlay, expandedOverlay }
@@ -154,22 +145,26 @@ export class IntentDebugger {
     linkOverlay.style.width = `${rect.width}px`
     linkOverlay.style.height = `${rect.height}px`
 
-    linkOverlay.classList.toggle("trajectory-hit", linkData.isTrajectoryHit)
-    linkOverlay.classList.toggle("active", linkData.isHovering)
+    linkOverlay.classList.toggle("trajectory-hit", elementData.isTrajectoryHit)
+    linkOverlay.classList.toggle("active", elementData.isHovering)
 
-    if (linkData.expandedRect) {
+    if (elementData.elementBounds.expandedRect) {
       // Corrected: Assuming expandedRect coords are viewport-relative.
-      expandedOverlay.style.left = `${linkData.expandedRect.left}px`
-      expandedOverlay.style.top = `${linkData.expandedRect.top}px`
-      expandedOverlay.style.width = `${linkData.expandedRect.right - linkData.expandedRect.left}px`
-      expandedOverlay.style.height = `${linkData.expandedRect.bottom - linkData.expandedRect.top}px`
+      expandedOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
+      expandedOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
+      expandedOverlay.style.width = `${
+        elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
+      }px`
+      expandedOverlay.style.height = `${
+        elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
+      }px`
       expandedOverlay.style.display = "block"
     } else {
       expandedOverlay.style.display = "none"
     }
   }
 
-  public removeLinkOverlay(element: LinkElement): void {
+  public removeLinkOverlay(element: ForesightElement): void {
     const overlays = this.debugLinkOverlays.get(element)
     if (overlays) {
       overlays.linkOverlay.remove()
@@ -178,7 +173,7 @@ export class IntentDebugger {
     }
   }
 
-  public updateAllLinkVisuals(links: Map<LinkElement, LinkManagerData>): void {
+  public updateAllLinkVisuals(links: Map<ForesightElement, ElementData>): void {
     if (!this.shadowRoot || !this.debugContainer) return
 
     const currentElements = new Set(links.keys())
@@ -233,28 +228,30 @@ export class IntentDebugger {
     if (!this.shadowRoot) return
 
     this.debugControlsContainer = document.createElement("div")
-    this.debugControlsContainer.id = "intent-debug-controls"
+    this.debugControlsContainer.id = "jsforesight-debug-controls"
     this.shadowRoot.appendChild(this.debugControlsContainer)
 
     this.debugControlsContainer.innerHTML = `
       <h3>Trajectory Debug</h3>
       <label>
-        <input type="checkbox" id="intent-trajectory-enabled" ${
+        <input type="checkbox" id="jsforesight-trajectory-enabled" ${
           initialSettings.enableMouseTrajectory ? "checked" : ""
         }>
         Enable Trajectory
       </label>
       <label>
-        History Size: <span id="intent-history-value">${initialSettings.positionHistorySize}</span>
-        <input type="range" id="intent-history-size" min="2" max="20" value="${
+        History Size: <span id="jsforesight-history-value">${
+          initialSettings.positionHistorySize
+        }</span>
+        <input type="range" id="jsforesight-history-size" min="2" max="20" value="${
           initialSettings.positionHistorySize
         }">
       </label>
       <label>
-        Prediction Time: <span id="intent-prediction-value">${
+        Prediction Time: <span id="jsforesight-prediction-value">${
           initialSettings.trajectoryPredictionTime
         }</span>ms
-        <input type="range" id="intent-prediction-time" min="10" max="500" value="${
+        <input type="range" id="jsforesight-prediction-time" min="10" max="500" value="${
           initialSettings.trajectoryPredictionTime
         }">
       </label>
@@ -262,7 +259,7 @@ export class IntentDebugger {
     `
 
     const enabledCheckbox = this.debugControlsContainer.querySelector(
-      "#intent-trajectory-enabled"
+      "#jsforesight-trajectory-enabled"
     ) as HTMLInputElement
     enabledCheckbox.addEventListener("change", () => {
       this.foresightManagerInstance.setTrajectorySettings({
@@ -271,10 +268,10 @@ export class IntentDebugger {
     })
 
     const historySlider = this.debugControlsContainer.querySelector(
-      "#intent-history-size"
+      "#jsforesight-history-size"
     ) as HTMLInputElement
     const historyValueSpan = this.debugControlsContainer.querySelector(
-      "#intent-history-value"
+      "#jsforesight-history-value"
     ) as HTMLSpanElement
     historySlider.addEventListener("input", () => {
       const value = parseInt(historySlider.value)
@@ -283,10 +280,10 @@ export class IntentDebugger {
     })
 
     const predictionSlider = this.debugControlsContainer.querySelector(
-      "#intent-prediction-time"
+      "#jsforesight-prediction-time"
     ) as HTMLInputElement
     const predictionValueSpan = this.debugControlsContainer.querySelector(
-      "#intent-prediction-value"
+      "#jsforesight-prediction-value"
     ) as HTMLSpanElement
     predictionSlider.addEventListener("input", () => {
       const value = parseInt(predictionSlider.value)
@@ -305,15 +302,15 @@ export class IntentDebugger {
     if (!this.debugControlsContainer) return
 
     const enabledCheckbox = this.debugControlsContainer.querySelector(
-      "#intent-trajectory-enabled"
+      "#jsforesight-trajectory-enabled"
     ) as HTMLInputElement
     if (enabledCheckbox) enabledCheckbox.checked = settings.enableMouseTrajectory
 
     const historySlider = this.debugControlsContainer.querySelector(
-      "#intent-history-size"
+      "#jsforesight-history-size"
     ) as HTMLInputElement
     const historyValueSpan = this.debugControlsContainer.querySelector(
-      "#intent-history-value"
+      "#jsforesight-history-value"
     ) as HTMLSpanElement
     if (historySlider && historyValueSpan) {
       historySlider.value = settings.positionHistorySize.toString()
@@ -321,10 +318,10 @@ export class IntentDebugger {
     }
 
     const predictionSlider = this.debugControlsContainer.querySelector(
-      "#intent-prediction-time"
+      "#jsforesight-prediction-time"
     ) as HTMLInputElement
     const predictionValueSpan = this.debugControlsContainer.querySelector(
-      "#intent-prediction-value"
+      "#jsforesight-prediction-value"
     ) as HTMLSpanElement
     if (predictionSlider && predictionValueSpan) {
       predictionSlider.value = settings.trajectoryPredictionTime.toString()

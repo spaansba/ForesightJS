@@ -5,9 +5,9 @@ export type Rect = {
   bottom: number
 }
 
-export type IntentCallback = () => void
+export type ForesightCallback = () => void
 
-export type LinkElement = HTMLAnchorElement
+export type ForesightElement = Element
 
 export type MousePosition = {
   point: Point
@@ -19,15 +19,21 @@ export type Point = {
   y: number
 }
 
-export type LinkData = {
-  callback: IntentCallback
+type ElementBounds = {
   expandedRect: Rect | null
+  originalRect: DOMRect
+  hitSlop?: Rect
+}
+
+export type ElementData = {
+  callback: ForesightCallback
+  elementBounds: ElementBounds
   isHovering: boolean
   isTrajectoryHit: boolean
   trajectoryHitTime: number
 }
 
-export type IntentManagerProps = {
+export type ForesightManagerProps = {
   positionHistorySize: number
   trajectoryPredictionTime: number
   enableMouseTrajectory: boolean

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "if exist dist rmdir /s /q dist",
     "build": "pnpm clean && tsc",
     "prepublishOnly": "pnpm build",
     "test": "cd ./test_project && pnpm dev"
