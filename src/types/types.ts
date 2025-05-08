@@ -20,9 +20,9 @@ export type Point = {
 }
 
 type ElementBounds = {
-  expandedRect: Rect | null
+  expandedRect: Rect
   originalRect: DOMRect
-  hitSlop?: Rect
+  hitSlop: Rect
 }
 
 export type ElementData = {

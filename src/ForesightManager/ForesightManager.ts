@@ -27,7 +27,7 @@ export class ForesightManager {
 
   private lastResizeScrollCallTimestamp: number = 0
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private readonly resizeScrollThrottleDelay: number = 50
+  private resizeScrollThrottleDelay: number = 50
 
   private constructor() {
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
@@ -84,7 +84,6 @@ export class ForesightManager {
       updatedForesightElements.forEach((element) => {
         const data = this.links.get(element)
         if (data && this.debugger) {
-          console.log("asda")
           this.debugger.createOrUpdateLinkOverlay(element, data)
         }
       })
@@ -126,9 +125,10 @@ export class ForesightManager {
     }
     this.links.set(element, newElementData)
 
-    this.updateExpandedRect(element)
+    // this.updateExpandedRect(element, newElementData.elementBounds.hitSlop)
     this.setupGlobalListeners()
-
+    console.log(this.debugMode)
+    console.log(this.debugger)
     if (this.debugMode && this.debugger) {
       const data = this.links.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
@@ -217,19 +217,13 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(element: ForesightElement): void {
+  private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
     const elementData = this.links.get(element)
     if (!elementData) return
 
-    const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), {
-      top: 100,
-      left: 100,
-      right: 100,
-      bottom: 100,
-    })
+    const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), hitSlop)
 
     if (expandedRect != elementData.elementBounds.expandedRect) {
-      console.log("updating rect")
       this.links.set(element, {
         ...elementData,
         elementBounds: {
@@ -246,8 +240,8 @@ export class ForesightManager {
   }
 
   private updateAllRects(): void {
-    this.links.forEach((_, element) => {
-      this.updateExpandedRect(element)
+    this.links.forEach((data, element) => {
+      this.updateExpandedRect(element, data.elementBounds.hitSlop)
     })
   }
 
