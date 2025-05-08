@@ -1,5 +1,5 @@
 "use client"
-import type { IntentManager } from "./ForesightManager"
+import type { ForesightManager } from "./ForesightManager"
 import type { LinkElement, Point, Rect } from "../types/types" // Forward declaration
 
 // Define the structure of link data the debugger needs
@@ -12,7 +12,7 @@ type LinkManagerData = {
 }
 
 export class IntentDebugger {
-  private intentManagerInstance: IntentManager
+  private foresightManagerInstance: ForesightManager
   private shadowHost: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
   private debugContainer: HTMLElement | null = null
@@ -25,8 +25,8 @@ export class IntentDebugger {
   private debugControlsContainer: HTMLElement | null = null
   private debugStyleElement: HTMLStyleElement | null = null
 
-  constructor(intentManager: IntentManager) {
-    this.intentManagerInstance = intentManager
+  constructor(foresightManager: ForesightManager) {
+    this.foresightManagerInstance = foresightManager
   }
 
   public initialize(
@@ -265,7 +265,7 @@ export class IntentDebugger {
       "#intent-trajectory-enabled"
     ) as HTMLInputElement
     enabledCheckbox.addEventListener("change", () => {
-      this.intentManagerInstance.setTrajectorySettings({
+      this.foresightManagerInstance.setTrajectorySettings({
         enabled: enabledCheckbox.checked,
       })
     })
@@ -279,7 +279,7 @@ export class IntentDebugger {
     historySlider.addEventListener("input", () => {
       const value = parseInt(historySlider.value)
       historyValueSpan.textContent = value.toString()
-      this.intentManagerInstance.setTrajectorySettings({ historySize: value })
+      this.foresightManagerInstance.setTrajectorySettings({ historySize: value })
     })
 
     const predictionSlider = this.debugControlsContainer.querySelector(
@@ -291,7 +291,7 @@ export class IntentDebugger {
     predictionSlider.addEventListener("input", () => {
       const value = parseInt(predictionSlider.value)
       predictionValueSpan.textContent = value.toString()
-      this.intentManagerInstance.setTrajectorySettings({
+      this.foresightManagerInstance.setTrajectorySettings({
         predictionTime: value,
       })
     })

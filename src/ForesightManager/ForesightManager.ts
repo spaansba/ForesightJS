@@ -10,8 +10,8 @@ import type {
   Rect,
 } from "../types/types"
 
-export class IntentManager {
-  private static instance: IntentManager
+export class ForesightManager {
+  private static instance: ForesightManager
   private links: Map<LinkElement, LinkData> = new Map()
 
   private isSetup: boolean = false
@@ -33,12 +33,12 @@ export class IntentManager {
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
-  public static initialize(props?: Partial<IntentManagerProps>): IntentManager {
-    if (!IntentManager.instance) {
-      IntentManager.instance = new IntentManager()
+  public static initialize(props?: Partial<IntentManagerProps>): ForesightManager {
+    if (!ForesightManager.instance) {
+      ForesightManager.instance = new ForesightManager()
     }
     if (props) {
-      IntentManager.instance.setTrajectorySettings({
+      ForesightManager.instance.setTrajectorySettings({
         historySize: props.positionHistorySize,
         predictionTime: props.trajectoryPredictionTime,
         enabled: props.enableMouseTrajectory,
@@ -54,14 +54,14 @@ export class IntentManager {
       }
     }
 
-    return IntentManager.instance
+    return ForesightManager.instance
   }
 
   public static getInstance() {
-    if (!IntentManager.instance) {
+    if (!ForesightManager.instance) {
       return this.initialize()
     }
-    return IntentManager.instance
+    return ForesightManager.instance
   }
 
   private checkTrajectoryHitExpiration(): void {
