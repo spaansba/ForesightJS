@@ -3,3 +3,4 @@ src
 tsconfig.json
 .gitignore
 test_project
+docs
