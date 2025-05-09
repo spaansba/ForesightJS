@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import styles from "./styles.module.css"
-import { ForesightManager } from "js.foresight"
 import { useRef, useEffect, useState } from "react"
 
 export default function ForesightPreview(): ReactNode {

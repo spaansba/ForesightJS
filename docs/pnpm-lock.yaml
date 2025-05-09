@@ -21,8 +21,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       js.foresight:
-        specifier: ../js.foresight-0.0.14.tgz
-        version: file:../js.foresight-0.0.14.tgz
+        specifier: ^0.0.15
+        version: 0.0.15
       prism-react-renderer:
         specifier: ^2.3.0
         version: 2.4.1(react@19.1.0)
@@ -2994,9 +2994,8 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  js.foresight@file:../js.foresight-0.0.14.tgz:
-    resolution: {integrity: sha512-xskXoLHGfgz42BHgDOgYA4efnrfFS5R0Om5+qcsZU5b38TojU/eeC2SbwtxuiSVbL4wMFTY/FfOdJxgSpeoWsA==, tarball: file:../js.foresight-0.0.14.tgz}
-    version: 0.0.14
+  js.foresight@0.0.15:
+    resolution: {integrity: sha512-ZAa/u8e1YyY+hf92jowFKdvJajXIgde0mPi9O65eTlztjNtjXWVp2yPOLycRMCF8pLofR5yjgzjQmDbmEGiDDw==}
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
@@ -8935,7 +8934,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js.foresight@file:../js.foresight-0.0.14.tgz: {}
+  js.foresight@0.0.15: {}
 
   jsesc@3.0.2: {}
 
