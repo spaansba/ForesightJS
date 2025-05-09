@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { ForesightManager } from "../../../src/ForesightManager/ForesightManager"
 import type { JSX } from "react/jsx-dev-runtime"
-import type { ForesightElementData } from "../../../src/types/types"
 
 const ReactPage: React.FC = () => {
   // Start with debug mode on by default
@@ -14,17 +13,13 @@ const ReactPage: React.FC = () => {
   const box1Ref = useRef<HTMLDivElement>(null)
   const box2Ref = useRef<HTMLDivElement>(null)
   const box3Ref = useRef<HTMLDivElement>(null)
-  const unregisterFuncsRef = useRef<(() => void)[]>([])
   const manager = ForesightManager.instance
-  const [trackedElements, setTrackedElements] = useState<ForesightElementData[]>([])
-
   useEffect(() => {
     // Box 1 - standard hitSlop
     let box1CallbackCount = 0
-    let unregisterBox1: (() => void) | null = null
 
     if (box1Ref.current) {
-      unregisterBox1 = manager.register(
+      manager.register(
         box1Ref.current,
         () => {
           box1CallbackCount++
@@ -34,16 +29,13 @@ const ReactPage: React.FC = () => {
         50,
         "big hitslop"
       )
-
-      if (unregisterBox1) unregisterFuncsRef.current.push(unregisterBox1)
     }
 
     // Box 2 - custom hitSlop rectangle
     let box2CallbackCount = 0
-    let unregisterBox2: (() => void) | null = null
 
     if (box2Ref.current) {
-      unregisterBox2 = manager.register(
+      manager.register(
         box2Ref.current,
         () => {
           box2CallbackCount++
@@ -53,15 +45,13 @@ const ReactPage: React.FC = () => {
         { top: 20, right: 100, bottom: 20, left: 100 },
         "custom hitslop"
       )
-      if (unregisterBox2) unregisterFuncsRef.current.push(unregisterBox2)
     }
 
     // Box 3 - no hitSlop
     let box3CallbackCount = 0
-    let unregisterBox3: (() => void) | null = null
 
     if (box3Ref.current) {
-      unregisterBox3 = manager.register(
+      manager.register(
         box3Ref.current,
         () => {
           box3CallbackCount++
@@ -71,49 +61,8 @@ const ReactPage: React.FC = () => {
         0,
         "no hitslop"
       )
-      if (unregisterBox3) unregisterFuncsRef.current.push(unregisterBox3)
-    }
-
-    // Cleanup function
-    return () => {
-      console.log("ReactPage: Cleaning up ForesightManager registrations")
-      unregisterFuncsRef.current.forEach((unregister) => {
-        try {
-          unregister()
-        } catch (err) {
-          console.error("ReactPage: Error unregistering element", err)
-        }
-      })
-      unregisterFuncsRef.current = []
     }
   }, [debugMode, isThirdButton])
-
-  useEffect(() => {
-    // Function to fetch and update the elements from the manager
-    const updateElementsDisplay = () => {
-      // 1. Convert Map values to an array
-      const elementsArray = Array.from(manager.elements.values())
-      setTrackedElements(elementsArray)
-    }
-
-    // Initial load
-    updateElementsDisplay()
-
-    // 2. How to get live updates:
-    // This is the crucial part. ForesightManager doesn't currently have a
-    // built-in way to subscribe to its internal state changes for external UI.
-    // For a simple debug UI, you could use a polling interval.
-    // A more robust solution would involve ForesightManager emitting events
-    // or providing a subscription mechanism.
-
-    // Option A: Simple Polling (for debug purposes)
-    const intervalId = setInterval(updateElementsDisplay, 250) // Update every 250ms
-
-    // Cleanup on component unmount
-    return () => {
-      clearInterval(intervalId)
-    }
-  }, []) //
 
   // Update debug mode
   useEffect(() => {
@@ -134,16 +83,6 @@ const ReactPage: React.FC = () => {
   const handleGenerateElements = () => {
     const startTime = performance.now()
 
-    // Clean up any previously generated elements
-    unregisterFuncsRef.current.forEach((unregister) => {
-      try {
-        unregister()
-      } catch (err) {
-        console.error("Error unregistering element", err)
-      }
-    })
-    unregisterFuncsRef.current = []
-
     // Generate new elements
     const manager = ForesightManager.instance
     const newElements: JSX.Element[] = []
@@ -156,12 +95,7 @@ const ReactPage: React.FC = () => {
           style={{ backgroundColor: `hsl(${(i * 7) % 360}, 70%, 80%)` }}
           ref={(el) => {
             if (el) {
-              const unregister = manager.register(
-                el,
-                () => showNotification(`Element ${i + 1} triggered`),
-                5 // 5px hitSlop
-              )
-              unregisterFuncsRef.current.push(unregister)
+              manager.register(el, () => showNotification(`Element ${i + 1} triggered`), 5)
             }
           }}
         >
@@ -225,15 +159,15 @@ const ReactPage: React.FC = () => {
         <h3 className="text-lg font-semibold mb-2">Demo Elements</h3>
 
         <div className="flex flex-wrap gap-10 justify-between">
-          {isThirdButton && (
-            <div
-              ref={box1Ref}
-              className="w-36 h-36 bg-green-500 flex flex-col justify-center items-center text-white font-bold rounded"
-            >
-              Box 1<br />
-              <span className="text-xs font-normal">50px HitSlop</span>
-            </div>
-          )}
+          <div
+            ref={box1Ref}
+            className={`${
+              isThirdButton ? "hidden" : "block"
+            } w-36 h-36 bg-green-500 flex flex-col justify-center items-center text-white font-bold rounded`}
+          >
+            Box 1<br />
+            <span className="text-xs font-normal">50px HitSlop</span>
+          </div>
 
           <div
             ref={box2Ref}
@@ -276,19 +210,6 @@ const ReactPage: React.FC = () => {
 
         {/* Container for generated elements */}
         <div className="flex flex-wrap gap-1 mt-4 justify-center">{elementsGenerated}</div>
-      </div>
-      <div className="mb-5">
-        {trackedElements.map((elementData, index) => (
-          // Use a more stable key if elementData.name is unique and persistent,
-          // or if you have another unique ID. Index is a fallback.
-          <div key={elementData.name || index} className="mb-3 p-2 border-b border-gray-300">
-            <span className="text-sm font-semibold text-blue-600">{elementData.name}</span>
-            <div className="text-xs text-gray-700">
-              {`isHovering: ${elementData.isHovering}, isTrajectoryHit: ${elementData.isTrajectoryHit}`}
-            </div>
-            {/* You could add more details here if needed, e.g., from elementData.elementBounds */}
-          </div>
-        ))}
       </div>
     </div>
   )

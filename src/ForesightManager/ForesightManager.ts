@@ -148,7 +148,6 @@ export class ForesightManager {
     hitSlop?: number | Rect,
     name?: string
   ): () => void {
-    // console.log("Registering element:", name || element);
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
       : (this.globalSettings.defaultHitSlop as Rect)
@@ -178,6 +177,7 @@ export class ForesightManager {
     if (this.debugMode && this.debugger) {
       const data = this.elements.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
+      this.debugger.refreshDisplayedElements()
     }
 
     return () => this.unregister(element)
@@ -193,6 +193,7 @@ export class ForesightManager {
 
       if (this.debugMode && this.debugger) {
         this.debugger.removeLinkOverlay(element)
+        this.debugger.refreshDisplayedElements()
       }
       this.elements.delete(element)
 
@@ -247,7 +248,6 @@ export class ForesightManager {
       this.globalSettings.defaultHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
       settingsActuallyChanged = true
       this.elements.forEach((data, el) => {
-        // Re-evaluate expandedRect for all elements as default has changed
         this.updateExpandedRect(el, data.elementBounds.hitSlop)
       })
     }
@@ -262,7 +262,7 @@ export class ForesightManager {
 
     if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
       this.globalSettings.debug = props.debug
-      settingsActuallyChanged = true // Mark true so debugger visuals update if other settings also changed
+      settingsActuallyChanged = true
       if (this.globalSettings.debug) {
         this.turnOnDebugMode()
       } else {
@@ -284,6 +284,7 @@ export class ForesightManager {
       this.elements.forEach((data, el) => {
         this.debugger!.createOrUpdateLinkOverlay(el, data)
       })
+      this.debugger.refreshDisplayedElements()
     }
   }
 
@@ -299,7 +300,7 @@ export class ForesightManager {
       )
     } else {
       this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals(this.elements)
+      this.debugger.updateAllLinkVisuals(this.elements) // This will refresh the element list too
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -317,15 +318,11 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(
-    element: ForesightElement,
-    hitSlop: Rect // This should be the element's specific hitSlop
-  ): void {
+  private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
     const newOriginalRect = element.getBoundingClientRect()
-    // Use the element's own hitSlop, not the global default, unless it is the default
     const currentHitSlop = foresightElementData.elementBounds.hitSlop
     const expandedRect = this.getExpandedRect(newOriginalRect, currentHitSlop)
 
@@ -352,7 +349,6 @@ export class ForesightManager {
   }
 
   private updateAllRects(): void {
-    // console.log('Updating all rects due to scroll, resize, or DOM mutation.');
     this.elements.forEach((data, element) => {
       this.updateExpandedRect(element, data.elementBounds.hitSlop)
     })
@@ -427,17 +423,25 @@ export class ForesightManager {
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
-    const elementsToUpdateInDebugger: ForesightElement[] = []
+    // Conditionally prepare for debugger updates
+    let elementsToUpdateInDebugger: ForesightElement[] | null = null
+    if (this.debugMode && this.debugger) {
+      elementsToUpdateInDebugger = []
+    }
 
     this.elements.forEach((currentData, element) => {
-      const previousData = { ...currentData } // Shallow copy for comparison
+      const previousDataState = {
+        isHovering: currentData.isHovering,
+        isTrajectoryHit: currentData.isTrajectoryHit,
+        trajectoryHitTime: currentData.trajectoryHitTime,
+      }
 
       let callbackFiredThisCycle = false
-      let finalIsHovering = previousData.isHovering
-      let finalIsTrajectoryHit = previousData.isTrajectoryHit
-      let finalTrajectoryHitTime = previousData.trajectoryHitTime
+      let finalIsHovering = currentData.isHovering
+      let finalIsTrajectoryHit = currentData.isTrajectoryHit
+      let finalTrajectoryHitTime = currentData.trajectoryHitTime
 
-      const { expandedRect } = previousData.elementBounds
+      const { expandedRect } = currentData.elementBounds // Use currentData directly
 
       const isCurrentlyPhysicallyHovering =
         this.currentPoint.x >= expandedRect.left &&
@@ -449,7 +453,7 @@ export class ForesightManager {
       if (
         this.globalSettings.enableMousePrediction &&
         !isCurrentlyPhysicallyHovering &&
-        !previousData.isTrajectoryHit
+        !currentData.isTrajectoryHit // Check against currentData
       ) {
         if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
@@ -457,48 +461,50 @@ export class ForesightManager {
       }
 
       if (isNewTrajectoryActivation) {
-        previousData.callback()
+        currentData.callback() // Call callback from currentData
         callbackFiredThisCycle = true
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
       }
 
-      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !previousData.isHovering
+      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering // Check against currentData
 
       if (isNewPhysicalHoverEvent) {
         const hoverCanTriggerCallback =
-          !previousData.isTrajectoryHit ||
-          (previousData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
+          !currentData.isTrajectoryHit || // Check against currentData
+          (currentData.isTrajectoryHit && // Check against currentData
+            !this.globalSettings.enableMousePrediction)
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
-          previousData.callback()
-          // callbackFiredThisCycle = true; // Not strictly needed here as it's the last callback check
+          currentData.callback() // Call callback from currentData
         }
       }
 
       finalIsHovering = isCurrentlyPhysicallyHovering
 
-      const newElementData: ForesightElementData = {
-        ...previousData, // Start with previous data
-        elementBounds: previousData.elementBounds, // Keep existing bounds object
-        isHovering: finalIsHovering,
-        isTrajectoryHit: finalIsTrajectoryHit,
-        trajectoryHitTime: finalTrajectoryHitTime,
-      }
+      // Determine if the core state actually changed
+      const coreStateActuallyChanged =
+        finalIsHovering !== previousDataState.isHovering ||
+        finalIsTrajectoryHit !== previousDataState.isTrajectoryHit ||
+        (finalIsTrajectoryHit && finalTrajectoryHitTime !== previousDataState.trajectoryHitTime)
 
-      const stateActuallyChanged =
-        newElementData.isHovering !== previousData.isHovering ||
-        newElementData.isTrajectoryHit !== previousData.isTrajectoryHit ||
-        (newElementData.isTrajectoryHit &&
-          newElementData.trajectoryHitTime !== previousData.trajectoryHitTime)
-
-      if (stateActuallyChanged) {
+      if (coreStateActuallyChanged) {
+        const newElementData: ForesightElementData = {
+          ...currentData,
+          isHovering: finalIsHovering,
+          isTrajectoryHit: finalIsTrajectoryHit,
+          trajectoryHitTime: finalTrajectoryHitTime,
+        }
         this.elements.set(element, newElementData)
-        elementsToUpdateInDebugger.push(element)
+
+        if (elementsToUpdateInDebugger) {
+          elementsToUpdateInDebugger.push(element)
+        }
       }
     })
 
-    if (this.debugMode && this.debugger) {
+    if (elementsToUpdateInDebugger && this.debugger) {
+      // Check elementsToUpdateInDebugger first
       elementsToUpdateInDebugger.forEach((element) => {
         const data = this.elements.get(element)
         if (data) this.debugger!.createOrUpdateLinkOverlay(element, data)
@@ -539,7 +545,6 @@ export class ForesightManager {
       const foresightElementData = this.elements.get(element)
 
       if (foresightElementData) {
-        // console.log('ResizeObserver detected resize for:', foresightElementData.name || element);
         this.updateExpandedRect(element, foresightElementData.elementBounds.hitSlop)
       }
     }
@@ -580,6 +585,13 @@ export class ForesightManager {
         this.updateAllRects()
         this.lastDomMutationRectsUpdateTimestamp = now
         this.domMutationRectsUpdateTimeoutId = null
+      } else {
+        this.domMutationRectsUpdateTimeoutId = setTimeout(() => {
+          console.log("DOM Mutation: Updating all rects after throttle delay")
+          this.updateAllRects()
+          this.lastDomMutationRectsUpdateTimestamp = performance.now()
+          this.domMutationRectsUpdateTimeoutId = null
+        }, delay - timeSinceLastCall)
       }
     }
   }
@@ -587,7 +599,6 @@ export class ForesightManager {
   private setupGlobalListeners(): void {
     console.log("Setting up global listeners")
     if (this.isSetup) return
-    // console.log("Setting up global listeners");
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
@@ -598,21 +609,17 @@ export class ForesightManager {
     this.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
-      attributes: true, // Observe attribute changes that might affect layout
-      // attributeFilter: ['style', 'class'], // More targeted, but broader is safer
+      attributes: true,
     })
 
     if (!this.elementResizeObserver) {
       this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
-      // Existing elements (if any from a re-setup, though unlikely with singleton)
-      // would need to be re-observed. New elements are observed in register().
       this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
     }
     this.isSetup = true
   }
 
   private removeGlobalListeners(): void {
-    // console.log("Removing global listeners");
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)

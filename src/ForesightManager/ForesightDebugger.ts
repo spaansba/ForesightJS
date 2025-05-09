@@ -41,6 +41,11 @@ export class ForesightDebugger {
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
+  // For displaying the list of registered elements
+  private debugElementListContainer: HTMLElement | null = null
+  private debugElementListItems: Map<ForesightElement, HTMLElement> = new Map()
+  private elementCountSpan: HTMLSpanElement | null = null
+
   constructor(intentManager: ForesightManager) {
     this.foresightManagerInstance = intentManager
   }
@@ -52,7 +57,7 @@ export class ForesightDebugger {
     predictedPoint: Point
   ): void {
     if (typeof window === "undefined") return
-    this.cleanup()
+    this.cleanup() // Clears all previous debug elements including list items
 
     this.currentGlobalSettings = { ...currentSettings }
 
@@ -110,7 +115,7 @@ export class ForesightDebugger {
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
-        min-width: 300px;
+        min-width: 300px; max-width: 350px; /* Added max-width */
       }
       .jsforesight-debugger-title-container {
         display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
@@ -135,17 +140,79 @@ export class ForesightDebugger {
         position: absolute;
         background-color: black;
         color: white;
-        padding: 3px 6px;      /* Smaller padding */
-        font-size: 10px;       /* Smaller font */
+        padding: 3px 6px;
+        font-size: 10px;
         font-family: Arial, sans-serif;
         font-weight: bold;
-        border-radius: 4px;     /* Slightly smaller radius */
+        border-radius: 4px;
         z-index: 10002;
         white-space: nowrap;
         pointer-events: none;
         opacity: 1;
-        transition: transform 0.6s cubic-bezier(0.15, 0.5, 0.35, 1), /* Shorter duration */
-                    opacity 0.6s cubic-bezier(0.4, 0, 0.8, 1);    /* Shorter duration */
+        transition: transform 0.6s cubic-bezier(0.15, 0.5, 0.35, 1),
+                    opacity 0.6s cubic-bezier(0.4, 0, 0.8, 1);
+      }
+      .jsforesight-debugger-section {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid #444;
+      }
+      .jsforesight-debugger-section h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .jsforesight-element-list {
+        max-height: 150px;
+        overflow-y: auto;
+        background-color: rgba(20, 20, 20, 0.5);
+        border-radius: 3px;
+        padding: 5px;
+        font-size: 12px;
+      }
+      .jsforesight-element-list-item {
+        padding: 4px 6px;
+        margin-bottom: 3px;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background-color: rgba(50,50,50,0.7);
+        transition: background-color 0.2s ease;
+      }
+      .jsforesight-element-list-item:last-child {
+        margin-bottom: 0;
+      }
+      .jsforesight-element-list-item .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #777; /* Default */
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+      }
+      .jsforesight-element-list-item.hovering .status-indicator {
+        background-color: oklch(83.7% 0.128 66.29 / 0.7);
+      }
+      .jsforesight-element-list-item.trajectory-hit .status-indicator {
+        background-color: oklch(89.7% 0.196 126.665 / 0.7);
+      }
+      .jsforesight-element-list-item.hovering.trajectory-hit .status-indicator {
+        background: linear-gradient(45deg, oklch(89.7% 0.196 126.665 / 0.7) 50%, oklch(83.7% 0.128 66.29 / 0.7) 50%);
+      }
+      .jsforesight-element-list-item .element-name {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .jsforesight-element-list-item .element-details {
+        font-size: 10px;
+        color: #ccc;
+        flex-shrink: 0;
       }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
@@ -162,9 +229,10 @@ export class ForesightDebugger {
     this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
     this.debugContainer.appendChild(this.debugTrajectoryLine)
 
-    this.createDebugControls(currentSettings)
+    this.createDebugControls(currentSettings) // Creates controls and element list container
+    this.populateDebugElementList() // Populates the element list
 
-    this.lastElementData.clear()
+    // Initialize overlays for existing links (this will also update their list item states)
     links.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
     })
@@ -187,6 +255,9 @@ export class ForesightDebugger {
     })
     this.debugLinkOverlays.clear()
     this.lastElementData.clear()
+    this.debugElementListItems.clear() // Clear the map for list items
+    this.debugElementListContainer = null
+    this.elementCountSpan = null
     if (this.debugContainer) {
       this.debugContainer
         .querySelectorAll(".jsforesight-prefetch-indicator")
@@ -209,10 +280,7 @@ export class ForesightDebugger {
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
 
-    // Shorter random end position for the "arch" flight
-    // Horizontal: -40px to +40px from the element's center
     const randomXEnd = (Math.random() - 0.5) * 80
-    // Vertical: -50px to -80px (upwards) from the element's center
     const randomYEnd = -50 - Math.random() * 30
 
     indicator.style.left = `${centerX}px`
@@ -220,7 +288,7 @@ export class ForesightDebugger {
     indicator.style.opacity = "1"
     indicator.style.transform = `translate(-50%, -50%) translate(0px, 0px) scale(0.7)`
 
-    void indicator.offsetWidth
+    void indicator.offsetWidth // Force reflow
 
     indicator.style.opacity = "0"
     indicator.style.transform = `translate(-50%, -50%) translate(${randomXEnd}px, ${randomYEnd}px) scale(1)`
@@ -228,6 +296,50 @@ export class ForesightDebugger {
     setTimeout(() => {
       indicator.remove()
     }, 800)
+  }
+
+  private populateDebugElementList(): void {
+    if (!this.debugElementListContainer) return
+
+    this.debugElementListContainer.innerHTML = "" // Clear previous items
+    this.debugElementListItems.clear()
+
+    const elementsMap = this.foresightManagerInstance.elements
+
+    if (this.elementCountSpan) {
+      this.elementCountSpan.textContent = elementsMap.size.toString()
+    }
+
+    if (elementsMap.size === 0) {
+      this.debugElementListContainer.innerHTML = "<em>No elements registered.</em>"
+      return
+    }
+
+    elementsMap.forEach((data, element) => {
+      const listItem = document.createElement("div")
+      listItem.className = "jsforesight-element-list-item"
+      this.updateListItemContent(listItem, data) // Set initial content
+
+      this.debugElementListContainer!.appendChild(listItem)
+      this.debugElementListItems.set(element, listItem)
+    })
+  }
+
+  private updateListItemContent(listItem: HTMLElement, data: ForesightElementData): void {
+    listItem.classList.toggle("hovering", data.isHovering)
+    listItem.classList.toggle("trajectory-hit", data.isTrajectoryHit)
+
+    const statusIndicatorHTML = `<span class="status-indicator"></span>`
+
+    listItem.innerHTML = `
+      ${statusIndicatorHTML}
+      <span class="element-name" title="${data.name || "Unnamed Element"}">${
+      data.name || "Unnamed Element"
+    }</span>
+      <span class="element-details">(H: ${data.isHovering ? "Y" : "N"}, T: ${
+      data.isTrajectoryHit ? "Y" : "N"
+    })</span>
+    `
   }
 
   public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData): void {
@@ -310,6 +422,13 @@ export class ForesightDebugger {
     } else {
       nameLabel.style.display = "none"
     }
+
+    // Update the corresponding list item in the debug panel
+    const listItem = this.debugElementListItems.get(element)
+    if (listItem) {
+      this.updateListItemContent(listItem, newData)
+    }
+    // If listItem is not found, refreshDisplayedElements called by manager will handle it
   }
 
   public removeLinkOverlay(element: ForesightElement): void {
@@ -321,21 +440,34 @@ export class ForesightDebugger {
       this.debugLinkOverlays.delete(element)
     }
     this.lastElementData.delete(element)
+
+    // Remove from the debug element list
+    const listItem = this.debugElementListItems.get(element)
+    if (listItem) {
+      listItem.remove()
+      this.debugElementListItems.delete(element)
+    }
+    // The count will be updated by refreshDisplayedElements called by the manager
+  }
+
+  /**
+   * Rebuilds the displayed list of elements and updates their visual overlays.
+   * Called by ForesightManager when elements are registered/unregistered or debug settings change.
+   */
+  public refreshDisplayedElements(): void {
+    this.populateDebugElementList()
+    // After populating, ensure overlays and list item content are up-to-date
+    this.foresightManagerInstance.elements.forEach((data, element) => {
+      this.createOrUpdateLinkOverlay(element, data)
+    })
   }
 
   public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
     if (!this.shadowRoot || !this.debugContainer) return
 
-    const currentElements = new Set(links.keys())
-    this.debugLinkOverlays.forEach((_, element) => {
-      if (!currentElements.has(element)) {
-        this.removeLinkOverlay(element)
-      }
-    })
-
-    links.forEach((data, element) => {
-      this.createOrUpdateLinkOverlay(element, data)
-    })
+    // This method is typically called when debug mode is turned on or settings change.
+    // It ensures the entire visual state is correct.
+    this.refreshDisplayedElements()
   }
 
   public updateTrajectoryVisuals(
@@ -375,9 +507,9 @@ export class ForesightDebugger {
 
     this.debugControlsContainer = document.createElement("div")
     this.debugControlsContainer.id = "jsforesight-debug-controls"
-    this.shadowRoot.appendChild(this.debugControlsContainer)
 
-    this.debugControlsContainer.innerHTML = `
+    // Main controls HTML
+    let controlsHTML = `
       <div class="jsforesight-debugger-title-container">
         <h3>Foresight Debugger</h3>
         <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
@@ -423,6 +555,25 @@ export class ForesightDebugger {
       </div>
     `
 
+    // Element list section HTML
+    controlsHTML += `
+      <div class="jsforesight-debugger-section">
+        <h4>Registered Elements (<span id="jsforesight-element-count">0</span>)</h4>
+        <div id="jsforesight-element-list-items-container" class="jsforesight-element-list">
+          <em>Initializing...</em>
+        </div>
+      </div>
+    `
+    this.debugControlsContainer.innerHTML = controlsHTML
+    this.shadowRoot.appendChild(this.debugControlsContainer)
+
+    // Store references to the element list parts
+    this.debugElementListContainer = this.debugControlsContainer.querySelector(
+      "#jsforesight-element-list-items-container"
+    )
+    this.elementCountSpan = this.debugControlsContainer.querySelector("#jsforesight-element-count")
+
+    // Event listeners for controls
     const enabledCheckbox = this.debugControlsContainer.querySelector(
       "#jsforesight-trajectory-enabled"
     ) as HTMLInputElement
