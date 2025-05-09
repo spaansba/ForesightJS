@@ -1,12 +1,14 @@
 {
   "name": "js.foresight",
   "version": "0.0.10",
-  "description": "",
+  "description": "Predicts mouse trajectory to trigger actions as users approach elements, enabling anticipatory UI updates or pre-loading. Made with vanilla javascript and usable in every framework.",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build --clean && tsc",
-    "test": "cd ./test_project && pnpm dev"
+    "test": "cd ./test_project && pnpm dev",
+    "rollup": "rollup -c --bundleConfigAsCjs"
   },
   "exports": {
     ".": {
@@ -14,16 +16,40 @@
       "default": "./dist/index.js"
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaansba/ForesightJS"
+  },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
-  "keywords": [],
+  "keywords": [
+    "javascript-prefetch",
+    "smart-prefetch",
+    "fast-prefetch",
+    "mouse-trajectory",
+    "element-hitslop",
+    "foresight",
+    "interaction-prediction",
+    "cursor-prediction",
+    "vanilla-javascript",
+    "prefetching"
+  ],
   "author": "Bart Spaans",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.15.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.40.1",
+    "rollup-plugin-dts": "^6.2.1",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "tslib": "^2.8.1"
   }
 }

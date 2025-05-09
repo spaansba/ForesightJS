@@ -9,7 +9,6 @@ import type {
   Point,
   Rect,
 } from "../types/types"
-import { captureRejectionSymbol } from "events"
 
 export class ForesightManager {
   private static manager: ForesightManager
