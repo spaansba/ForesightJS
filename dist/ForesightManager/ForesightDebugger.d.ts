@@ -1,13 +1,6 @@
 import type { ForesightManager } from "./ForesightManager";
-import type { LinkElement, Point, Rect } from "../types/types";
-type LinkManagerData = {
-    callback: () => void;
-    expandedRect: Rect | null;
-    isHovering: boolean;
-    isTrajectoryHit: boolean;
-    trajectoryHitTime: number;
-};
-export declare class IntentDebugger {
+import type { ElementData, ForesightElement, ForesightManagerProps, Point } from "../types/types";
+export declare class ForesightDebugger {
     private foresightManagerInstance;
     private shadowHost;
     private shadowRoot;
@@ -18,21 +11,12 @@ export declare class IntentDebugger {
     private debugControlsContainer;
     private debugStyleElement;
     constructor(intentManager: ForesightManager);
-    initialize(links: Map<LinkElement, LinkManagerData>, currentSettings: {
-        positionHistorySize: number;
-        trajectoryPredictionTime: number;
-        enableMouseTrajectory: boolean;
-    }, currentPoint: Point, predictedPoint: Point): void;
+    initialize(links: Map<ForesightElement, ElementData>, currentSettings: ForesightManagerProps, currentPoint: Point, predictedPoint: Point): void;
     cleanup(): void;
-    createOrUpdateLinkOverlay(element: LinkElement, linkData: LinkManagerData): void;
-    removeLinkOverlay(element: LinkElement): void;
-    updateAllLinkVisuals(links: Map<LinkElement, LinkManagerData>): void;
+    createOrUpdateLinkOverlay(element: ForesightElement, elementData: ElementData): void;
+    removeLinkOverlay(element: ForesightElement): void;
+    updateAllLinkVisuals(links: Map<ForesightElement, ElementData>): void;
     updateTrajectoryVisuals(currentPoint: Point, predictedPoint: Point, enableMouseTrajectory: boolean): void;
     private createDebugControls;
-    updateControlsState(settings: {
-        positionHistorySize: number;
-        trajectoryPredictionTime: number;
-        enableMouseTrajectory: boolean;
-    }): void;
+    updateControlsState(settings: ForesightManagerProps): void;
 }
-export {};

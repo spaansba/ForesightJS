@@ -1,30 +1,24 @@
-import type { IntentCallback, IntentManagerProps, LinkElement } from "../types/types";
+import type { ForesightCallback, ForesightManagerProps, ForesightElement, Rect } from "../types/types";
 export declare class ForesightManager {
     private static instance;
     private links;
     private isSetup;
     private debugMode;
     private debugger;
-    private positionHistorySize;
-    private trajectoryPredictionTime;
+    private globalSettings;
     private positions;
-    private enableMouseTrajectory;
     private currentPoint;
     private predictedPoint;
     private lastResizeScrollCallTimestamp;
     private resizeScrollThrottleTimeoutId;
-    private readonly resizeScrollThrottleDelay;
     private constructor();
-    static initialize(props?: Partial<IntentManagerProps>): ForesightManager;
+    static initialize(props?: Partial<ForesightManagerProps>): ForesightManager;
     static getInstance(): ForesightManager;
     private checkTrajectoryHitExpiration;
-    register(element: LinkElement, callback: IntentCallback): () => void;
+    private normalizeHitSlop;
+    register(element: ForesightElement, callback: ForesightCallback, hitSlop?: number | Rect): () => void;
     private unregister;
-    setTrajectorySettings(settings: {
-        historySize?: number;
-        predictionTime?: number;
-        enabled?: boolean;
-    }): void;
+    alterGlobalSettings(props?: Partial<ForesightManagerProps>): void;
     private turnOnDebugMode;
     private getExpandedRect;
     private updateExpandedRect;

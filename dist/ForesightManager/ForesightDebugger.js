@@ -1,5 +1,5 @@
 "use client";
-export class IntentDebugger {
+export class ForesightDebugger {
     foresightManagerInstance;
     shadowHost = null;
     shadowRoot = null;
@@ -18,7 +18,6 @@ export class IntentDebugger {
         this.cleanup();
         this.shadowHost = document.createElement("div");
         this.shadowHost.id = "jsforesight-debugger-shadow-host";
-        // Host itself should not capture pointer events unless specifically designed to.
         this.shadowHost.style.pointerEvents = "none";
         document.body.appendChild(this.shadowHost);
         this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
@@ -29,7 +28,7 @@ export class IntentDebugger {
         pointer-events: none; z-index: 9999;
       }
       .jsforesight-link-overlay {
-        position: absolute; border: 2px solid purple;
+        position: absolute; border: 2px solid blue;
         background-color: rgba(0, 0, 255, 0.1); box-sizing: border-box;
         transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
@@ -55,18 +54,30 @@ export class IntentDebugger {
       }
       #jsforesight-debug-controls {
         position: fixed; bottom: 10px; right: 10px;
-        background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px;
-        border-radius: 5px; font-family: monospace; font-size: 12px;
-        z-index: 10001; pointer-events: auto; /* Make controls interactive */
+        background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
+        border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
+        z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
+        min-width: 300px; /* Ensure enough space for title and icon */
       }
-      #jsforesight-debug-controls h3 { margin: 0 0 5px 0; font-size: 14px; }
-      #jsforesight-debug-controls label { display: block; margin: 5px 0; }
-      #jsforesight-debug-controls input { margin-right: 5px; vertical-align: middle; }
-      #jsforesight-debug-controls button {
-        margin: 5px 5px 0 0; padding: 3px 8px; background: #444;
-        border: 1px solid #666; color: white; border-radius: 3px; cursor: pointer;
+      .jsforesight-debugger-title-container {
+        display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
       }
-      #jsforesight-debug-controls button:hover { background: #555; }
+      .jsforesight-debugger-title-container h3 { margin: 0; font-size: 15px; }
+      #jsforesight-debug-controls label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+      #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
+      #jsforesight-debug-controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
+      #jsforesight-debug-controls .control-row { display: flex; align-items: center; justify-content: space-between; }
+      #jsforesight-debug-controls .control-row label { flex-basis: auto; /* Adjust for better spacing */ }
+      #jsforesight-debug-controls .control-row span:not(.jsforesight-info-icon) { min-width: 30px; text-align: right; }
+      .jsforesight-info-icon {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 16px; height: 16px; border-radius: 50%;
+        background-color: #555; color: white;
+        font-size: 10px; font-style: italic; font-weight: bold;
+        font-family: 'Georgia', serif;
+        cursor: help; user-select: none;
+        flex-shrink: 0; /* Prevent icon from shrinking */
+      }
     `;
         this.shadowRoot.appendChild(this.debugStyleElement);
         this.debugContainer = document.createElement("div");
@@ -78,7 +89,7 @@ export class IntentDebugger {
         this.debugTrajectoryLine = document.createElement("div");
         this.debugTrajectoryLine.className = "jsforesight-trajectory-line";
         this.debugContainer.appendChild(this.debugTrajectoryLine);
-        this.createDebugControls(currentSettings); // Appends to shadowRoot
+        this.createDebugControls(currentSettings);
         links.forEach((data, element) => {
             this.createOrUpdateLinkOverlay(element, data);
         });
@@ -88,9 +99,10 @@ export class IntentDebugger {
         this.shadowHost?.remove();
         this.shadowHost = null;
         this.shadowRoot = null;
+        this.debugLinkOverlays.clear();
     }
-    createOrUpdateLinkOverlay(element, linkData) {
-        if (!this.debugContainer)
+    createOrUpdateLinkOverlay(element, elementData) {
+        if (!this.debugContainer || !this.shadowRoot)
             return;
         let overlays = this.debugLinkOverlays.get(element);
         if (!overlays) {
@@ -105,20 +117,17 @@ export class IntentDebugger {
         }
         const { linkOverlay, expandedOverlay } = overlays;
         const rect = element.getBoundingClientRect();
-        // Corrected: Since debugContainer is position:fixed top:0 left:0,
-        // getBoundingClientRect() coords are already relative to it.
         linkOverlay.style.left = `${rect.left}px`;
         linkOverlay.style.top = `${rect.top}px`;
         linkOverlay.style.width = `${rect.width}px`;
         linkOverlay.style.height = `${rect.height}px`;
-        linkOverlay.classList.toggle("trajectory-hit", linkData.isTrajectoryHit);
-        linkOverlay.classList.toggle("active", linkData.isHovering);
-        if (linkData.expandedRect) {
-            // Corrected: Assuming expandedRect coords are viewport-relative.
-            expandedOverlay.style.left = `${linkData.expandedRect.left}px`;
-            expandedOverlay.style.top = `${linkData.expandedRect.top}px`;
-            expandedOverlay.style.width = `${linkData.expandedRect.right - linkData.expandedRect.left}px`;
-            expandedOverlay.style.height = `${linkData.expandedRect.bottom - linkData.expandedRect.top}px`;
+        linkOverlay.classList.toggle("trajectory-hit", elementData.isTrajectoryHit);
+        linkOverlay.classList.toggle("active", elementData.isHovering);
+        if (elementData.elementBounds.expandedRect) {
+            expandedOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`;
+            expandedOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`;
+            expandedOverlay.style.width = `${elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left}px`;
+            expandedOverlay.style.height = `${elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top}px`;
             expandedOverlay.style.display = "block";
         }
         else {
@@ -179,25 +188,46 @@ export class IntentDebugger {
         this.debugControlsContainer.id = "jsforesight-debug-controls";
         this.shadowRoot.appendChild(this.debugControlsContainer);
         this.debugControlsContainer.innerHTML = `
-      <h3>Trajectory Debug</h3>
-      <label>
+      <div class="jsforesight-debugger-title-container">
+        <h3>Foresight Debugger</h3>
+        <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
+      </div>
+      <div class="control-row">
+        <label for="jsforesight-trajectory-enabled">
+          Enable Trajectory
+          <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions.">i</span>
+        </label>
         <input type="checkbox" id="jsforesight-trajectory-enabled" ${initialSettings.enableMouseTrajectory ? "checked" : ""}>
-        Enable Trajectory
-      </label>
-      <label>
-        History Size: <span id="jsforesight-history-value">${initialSettings.positionHistorySize}</span>
+      </div>
+      <div class="control-row">
+        <label for="jsforesight-history-size">
+          History Size
+          <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation (Min: 2, Max: 20). Higher values smooth predictions but add latency.">i</span>
+        </label>
         <input type="range" id="jsforesight-history-size" min="2" max="20" value="${initialSettings.positionHistorySize}">
-      </label>
-      <label>
-        Prediction Time: <span id="jsforesight-prediction-value">${initialSettings.trajectoryPredictionTime}</span>ms
-        <input type="range" id="jsforesight-prediction-time" min="10" max="500" value="${initialSettings.trajectoryPredictionTime}">
-      </label>
-     
+        <span id="jsforesight-history-value">${initialSettings.positionHistorySize}</span>
+      </div>
+      <div class="control-row">
+        <label for="jsforesight-prediction-time">
+          Prediction Time (ms)
+          <span class="jsforesight-info-icon" title="How far (ms) to project trajectory (Min: 10, Max: 500). Larger values detect intent sooner.">i</span>
+        </label>
+        <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10" value="${initialSettings.trajectoryPredictionTime}">
+        <span id="jsforesight-prediction-value">${initialSettings.trajectoryPredictionTime}</span>
+      </div>
+      <div class="control-row">
+        <label for="jsforesight-throttle-delay">
+          Scroll/Resize Throttle (ms)
+          <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
+        </label>
+        <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10" value="${initialSettings.resizeScrollThrottleDelay}">
+        <span id="jsforesight-throttle-value">${initialSettings.resizeScrollThrottleDelay}</span>
+      </div>
     `;
         const enabledCheckbox = this.debugControlsContainer.querySelector("#jsforesight-trajectory-enabled");
         enabledCheckbox.addEventListener("change", () => {
-            this.foresightManagerInstance.setTrajectorySettings({
-                enabled: enabledCheckbox.checked,
+            this.foresightManagerInstance.alterGlobalSettings({
+                enableMouseTrajectory: enabledCheckbox.checked,
             });
         });
         const historySlider = this.debugControlsContainer.querySelector("#jsforesight-history-size");
@@ -205,15 +235,26 @@ export class IntentDebugger {
         historySlider.addEventListener("input", () => {
             const value = parseInt(historySlider.value);
             historyValueSpan.textContent = value.toString();
-            this.foresightManagerInstance.setTrajectorySettings({ historySize: value });
+            this.foresightManagerInstance.alterGlobalSettings({
+                positionHistorySize: value,
+            });
         });
         const predictionSlider = this.debugControlsContainer.querySelector("#jsforesight-prediction-time");
         const predictionValueSpan = this.debugControlsContainer.querySelector("#jsforesight-prediction-value");
         predictionSlider.addEventListener("input", () => {
             const value = parseInt(predictionSlider.value);
             predictionValueSpan.textContent = value.toString();
-            this.foresightManagerInstance.setTrajectorySettings({
-                predictionTime: value,
+            this.foresightManagerInstance.alterGlobalSettings({
+                trajectoryPredictionTime: value,
+            });
+        });
+        const throttleSlider = this.debugControlsContainer.querySelector("#jsforesight-throttle-delay");
+        const throttleValueSpan = this.debugControlsContainer.querySelector("#jsforesight-throttle-value");
+        throttleSlider.addEventListener("input", () => {
+            const value = parseInt(throttleSlider.value);
+            throttleValueSpan.textContent = value.toString();
+            this.foresightManagerInstance.alterGlobalSettings({
+                resizeScrollThrottleDelay: value,
             });
         });
     }
@@ -234,6 +275,12 @@ export class IntentDebugger {
         if (predictionSlider && predictionValueSpan) {
             predictionSlider.value = settings.trajectoryPredictionTime.toString();
             predictionValueSpan.textContent = settings.trajectoryPredictionTime.toString();
+        }
+        const throttleSlider = this.debugControlsContainer.querySelector("#jsforesight-throttle-delay");
+        const throttleValueSpan = this.debugControlsContainer.querySelector("#jsforesight-throttle-value");
+        if (throttleSlider && throttleValueSpan) {
+            throttleSlider.value = settings.resizeScrollThrottleDelay.toString();
+            throttleValueSpan.textContent = settings.resizeScrollThrottleDelay.toString();
         }
     }
 }
