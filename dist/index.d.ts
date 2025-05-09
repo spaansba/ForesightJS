@@ -16,52 +16,6 @@ type ForesightCallback = () => void;
  */
 type ForesightElement = Element;
 /**
- * Represents a mouse position captured at a specific point in time.
- * Used for tracking mouse movement history.
- */
-type MousePosition = {
-    /** The (x, y) coordinates of the mouse. */
-    point: Point;
-    /** The timestamp (e.g., from `performance.now()`) when this position was recorded. */
-    time: number;
-};
-/**
- * Represents a 2D point with x and y coordinates.
- */
-type Point = {
-    x: number;
-    y: number;
-};
-/**
- * Internal type representing the calculated boundaries of a foresight element,
- * including its original dimensions and the expanded hit area.
- * (This type is not exported, but commenting it is good practice for maintainability)
- */
-type ElementBounds = {
-    /** The expanded rectangle, including hitSlop, used for interaction detection. */
-    expandedRect: Rect;
-    /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
-    originalRect: DOMRect;
-    /** The hit slop values applied to this element. */
-    hitSlop: Rect;
-};
-/**
- * Represents the data associated with a registered foresight element.
- * This includes its callback, boundary information, and current interaction state.
- */
-type ElementData = {
-    /** The callback function to execute on interaction. */
-    callback: ForesightCallback;
-    /** The boundary information for the element. */
-    elementBounds: ElementBounds;
-    /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
-    isHovering: boolean;
-    /** True if the predicted mouse trajectory has intersected the element's expanded bounds. */
-    isTrajectoryHit: boolean;
-    /** The timestamp when the last trajectory hit occurred. */
-    trajectoryHitTime: number;
-};
-/**
  * Configuration options for the ForesightManager
  */
 type ForesightManagerProps = {
@@ -82,7 +36,7 @@ type ForesightManagerProps = {
      * If false, only direct hover/interaction is considered.
      * @default true
      */
-    enableMouseTrajectory: boolean;
+    enableMousePrediction: boolean;
     /**
      * Whether to show visual debugging information on the screen.
      * This includes overlays for elements, hit slop areas, and the predicted mouse path.
@@ -104,6 +58,20 @@ type ForesightManagerProps = {
     resizeScrollThrottleDelay: number;
 };
 
+/**
+ * Manages the prediction of user intent based on mouse trajectory and element interactions.
+ *
+ * ForesightManager is a singleton class responsible for:
+ * - Registering HTML elements to monitor.
+ * - Tracking mouse movements and predicting future cursor positions.
+ * - Detecting when a predicted trajectory intersects with a registered element's bounds.
+ * - Invoking callbacks associated with elements upon predicted or actual interaction.
+ * - Handling global settings for prediction behavior (e.g., history size, prediction time).
+ * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
+ *
+ * It should be initialized once using {@link ForesightManager.initialize} and then
+ * accessed via the static getter {@link ForesightManager.instance}.
+ */
 declare class ForesightManager {
     private static manager;
     private links;
@@ -117,12 +85,72 @@ declare class ForesightManager {
     private lastResizeScrollCallTimestamp;
     private resizeScrollThrottleTimeoutId;
     private constructor();
+    /**
+     * Initializes the ForesightManager singleton instance with optional global settings.
+     *
+     * This method sets up the manager, applying any provided configuration. If the manager
+     * is already initialized and this method is called again with new props, it will
+     * log an error and apply the new settings using `alterGlobalSettings`.
+     * It's recommended to call this method only once at the application's entry point.
+     *
+     * If `props.debug` is true or becomes true, the {@link ForesightDebugger} will be initialized or updated.
+     *
+     * @param {Partial<ForesightManagerProps>} [props] - Optional initial global settings
+     *        to configure the manager. See {@link ForesightManagerProps} for details.
+     * @returns {ForesightManager} The singleton instance of the ForesightManager.
+     */
     static initialize(props?: Partial<ForesightManagerProps>): ForesightManager;
+    /**
+     * Gets the singleton instance of the ForesightManager.
+     *
+     * If the manager has not been initialized yet, this getter will call
+     * {@link ForesightManager.initialize} with default settings to create the instance.
+     *
+     * @returns {ForesightManager} The singleton instance of the ForesightManager.
+     */
     static get instance(): ForesightManager;
     private checkTrajectoryHitExpiration;
     private normalizeHitSlop;
-    register(element: ForesightElement, callback: ForesightCallback, hitSlop?: number | Rect): () => void;
+    /**
+     * Registers an element with the ForesightManager to monitor for predicted interactions.
+     *
+     * @param element The HTML element to monitor.
+     * @param callback The function to execute when an interaction is predicted or occurs.
+     *                 (Corresponds to {@link ForesightElementConfig.callback})
+     * @param hitSlop Optional. The amount of "slop" to add to the element's bounding box
+     *                for hit detection. Can be a single number or a Rect object.
+     *                This will overwrite the default global hitSlop set by the initializer of foresight.
+     * @param name Optional. A descriptive name for the element, useful for debugging.
+     *             Defaults to "Unnamed".
+     * @returns A function to unregister the element.
+     */
+    register(element: ForesightElement, callback: ForesightCallback, hitSlop?: number | Rect, name?: string): () => void;
     private unregister;
+    /**
+     * Alters the global settings of the ForesightManager at runtime.
+     *
+     * This method allows dynamic updates to global configuration properties such as
+     * prediction parameters (`positionHistorySize`, `trajectoryPredictionTime`),
+     * `defaultHitSlop`, `debug` mode, and more.
+     *
+     * While global settings are typically best configured once via
+     * {@link ForesightManager.initialize} at the application's start, this method
+     * provides a way to modify them post-initialization. It is notably used by the
+     * {@link ForesightDebugger} UI to allow real-time adjustments for testing and
+     * tuning prediction behavior.
+     *
+     * For element-specific configurations (like an individual element's `hitSlop` or `name`),
+     * those should be provided during the element's registration via the
+     * {@link ForesightManager.register} method.
+     *
+     * If debug mode is active (`globalSettings.debug` is true) and any settings
+     * that affect the debugger's display or controls are changed, the
+     * {@link ForesightDebugger} instance will be updated accordingly.
+     *
+     * @param {Partial<ForesightManagerProps>} [props] - An object containing the global
+     *        settings to update. Only properties provided in this object will be changed.
+     *        See {@link ForesightManagerProps} for available settings.
+     */
     alterGlobalSettings(props?: Partial<ForesightManagerProps>): void;
     private turnOnDebugMode;
     private getExpandedRect;
@@ -146,4 +174,4 @@ declare class ForesightManager {
 }
 
 export { ForesightManager };
-export type { ElementData, ForesightCallback, ForesightElement, ForesightManagerProps, MousePosition, Point, Rect };
+export type { ForesightCallback, ForesightElement, ForesightManagerProps, Rect as ForesightRect };
