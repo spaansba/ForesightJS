@@ -1,11 +1,6 @@
 "use client"
 import type { ForesightManager } from "./ForesightManager"
-import type {
-  ElementData,
-  ForesightElement,
-  ForesightManagerProps, // Added for settings type
-  Point,
-} from "../types/types"
+import type { ElementData, ForesightElement, ForesightManagerProps, Point } from "../types/types"
 
 export class ForesightDebugger {
   private foresightManagerInstance: ForesightManager
@@ -27,7 +22,7 @@ export class ForesightDebugger {
 
   public initialize(
     links: Map<ForesightElement, ElementData>,
-    currentSettings: ForesightManagerProps, // Updated type
+    currentSettings: ForesightManagerProps,
     currentPoint: Point,
     predictedPoint: Point
   ): void {
@@ -76,13 +71,17 @@ export class ForesightDebugger {
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
+        min-width: 300px; /* Ensure enough space for title and icon */
       }
-      #jsforesight-debug-controls h3 { margin: 0 0 8px 0; font-size: 15px; text-align: center; }
+      .jsforesight-debugger-title-container {
+        display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
+      }
+      .jsforesight-debugger-title-container h3 { margin: 0; font-size: 15px; }
       #jsforesight-debug-controls label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
       #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
       #jsforesight-debug-controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
       #jsforesight-debug-controls .control-row { display: flex; align-items: center; justify-content: space-between; }
-      #jsforesight-debug-controls .control-row label { flex-basis: 45%; }
+      #jsforesight-debug-controls .control-row label { flex-basis: auto; /* Adjust for better spacing */ }
       #jsforesight-debug-controls .control-row span:not(.jsforesight-info-icon) { min-width: 30px; text-align: right; }
       .jsforesight-info-icon {
         display: inline-flex; align-items: center; justify-content: center;
@@ -91,6 +90,7 @@ export class ForesightDebugger {
         font-size: 10px; font-style: italic; font-weight: bold;
         font-family: 'Georgia', serif;
         cursor: help; user-select: none;
+        flex-shrink: 0; /* Prevent icon from shrinking */
       }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
@@ -122,7 +122,7 @@ export class ForesightDebugger {
   public cleanup(): void {
     this.shadowHost?.remove()
     this.shadowHost = null
-    this.shadowRoot = null // This also removes all children including controls
+    this.shadowRoot = null
     this.debugLinkOverlays.clear()
   }
 
@@ -233,7 +233,10 @@ export class ForesightDebugger {
     this.shadowRoot.appendChild(this.debugControlsContainer)
 
     this.debugControlsContainer.innerHTML = `
-      <h3>Foresight Debugger</h3>
+      <div class="jsforesight-debugger-title-container">
+        <h3>Foresight Debugger</h3>
+        <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
+      </div>
       <div class="control-row">
         <label for="jsforesight-trajectory-enabled">
           Enable Trajectory
@@ -266,7 +269,7 @@ export class ForesightDebugger {
       <div class="control-row">
         <label for="jsforesight-throttle-delay">
           Scroll/Resize Throttle (ms)
-          <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500).">i</span>
+          <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
         </label>
         <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10" value="${
           initialSettings.resizeScrollThrottleDelay
