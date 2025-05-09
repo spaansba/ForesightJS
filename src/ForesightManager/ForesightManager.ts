@@ -1,5 +1,5 @@
 "use client"
-import { IntentDebugger } from "./ForesightDebugger"
+import { ForesightDebugger } from "./ForesightDebugger"
 import type {
   ForesightCallback,
   ForesightManagerProps,
@@ -15,48 +15,55 @@ export class ForesightManager {
   private links: Map<ForesightElement, ElementData> = new Map()
 
   private isSetup: boolean = false
-  private debugMode: boolean = false
-  private debugger: IntentDebugger | null = null
+  private debugMode: boolean = false // Synced with globalSettings.debug
+  private debugger: ForesightDebugger | null = null
 
-  private positionHistorySize = 6
-  private trajectoryPredictionTime = 50
-  private defaultHitSlop: Rect = { top: 0, left: 0, right: 0, bottom: 0 }
+  private globalSettings: ForesightManagerProps = {
+    debug: false,
+    enableMouseTrajectory: true,
+    positionHistorySize: 6,
+    trajectoryPredictionTime: 50,
+    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
+    resizeScrollThrottleDelay: 50,
+  }
+
   private positions: MousePosition[] = []
-  private enableMouseTrajectory: boolean = true
   private currentPoint: Point = { x: 0, y: 0 }
   private predictedPoint: Point = { x: 0, y: 0 }
 
   private lastResizeScrollCallTimestamp: number = 0
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private resizeScrollThrottleDelay: number = 50
 
   private constructor() {
+    // Ensure defaultHitSlop is normalized if it's a number initially
+    this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop)
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
   public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
     if (!ForesightManager.instance) {
       ForesightManager.instance = new ForesightManager()
-    }
-    if (props) {
-      ForesightManager.instance.setTrajectorySettings(props)
-    }
-    if (props?.debug) {
-      this.instance.turnOnDebugMode()
-    } else {
-      if (this.instance.debugger) {
-        this.instance.debugMode = false
-        this.instance.debugger.cleanup()
-        this.instance.debugger = null
+      // Apply initial props, which also handles initial debugger setup
+      if (props) {
+        ForesightManager.instance.alterGlobalSettings(props)
+      } else {
+        // If no props, but default globalSettings.debug is true, ensure debugger is on
+        if (ForesightManager.instance.globalSettings.debug) {
+          ForesightManager.instance.turnOnDebugMode()
+        }
       }
+    } else if (props) {
+      // Instance exists, apply new props (handles debugger lifecycle and UI updates)
+      ForesightManager.instance.alterGlobalSettings(props)
     }
-
+    // Ensure internal debugMode flag is synced
+    ForesightManager.instance.debugMode = ForesightManager.instance.globalSettings.debug
     return ForesightManager.instance
   }
 
   public static getInstance() {
     if (!ForesightManager.instance) {
-      return this.initialize()
+      return this.initialize() // Initialize with defaults
     }
     return ForesightManager.instance
   }
@@ -104,7 +111,9 @@ export class ForesightManager {
     callback: ForesightCallback,
     hitSlop?: number | Rect
   ): () => void {
-    const normalizedHitSlop = hitSlop ? this.normalizeHitSlop(hitSlop) : this.defaultHitSlop
+    const normalizedHitSlop = hitSlop
+      ? this.normalizeHitSlop(hitSlop)
+      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized in constructor/alterGlobalSettings
     const originalRect = element.getBoundingClientRect()
     const newElementData: ElementData = {
       callback,
@@ -129,78 +138,102 @@ export class ForesightManager {
 
   private unregister(element: ForesightElement): void {
     this.links.delete(element)
-
     if (this.debugMode && this.debugger) {
       this.debugger.removeLinkOverlay(element)
     }
-
     if (this.links.size === 0 && this.isSetup) {
       this.removeGlobalListeners()
     }
   }
 
-  public setTrajectorySettings(props?: Partial<ForesightManagerProps>): void {
-    let changed = false
+  public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
+    let settingsActuallyChanged = false
+
     if (
       props?.positionHistorySize !== undefined &&
-      this.positionHistorySize !== props.positionHistorySize
+      this.globalSettings.positionHistorySize !== props.positionHistorySize
     ) {
-      this.positionHistorySize = props.positionHistorySize
-      while (this.positions.length > this.positionHistorySize) {
+      this.globalSettings.positionHistorySize = props.positionHistorySize
+      while (this.positions.length > this.globalSettings.positionHistorySize) {
         this.positions.shift()
       }
-      changed = true
+      settingsActuallyChanged = true
     }
 
     if (
       props?.trajectoryPredictionTime !== undefined &&
-      this.trajectoryPredictionTime !== props?.trajectoryPredictionTime
+      this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
     ) {
-      this.trajectoryPredictionTime = props?.trajectoryPredictionTime
-      changed = true
+      this.globalSettings.trajectoryPredictionTime = props.trajectoryPredictionTime
+      settingsActuallyChanged = true
     }
 
     if (
       props?.enableMouseTrajectory !== undefined &&
-      this.enableMouseTrajectory !== props?.enableMouseTrajectory
+      this.globalSettings.enableMouseTrajectory !== props.enableMouseTrajectory
     ) {
-      this.enableMouseTrajectory = props?.enableMouseTrajectory
-      changed = true
+      this.globalSettings.enableMouseTrajectory = props.enableMouseTrajectory
+      settingsActuallyChanged = true
     }
 
     if (props?.defaultHitSlop !== undefined) {
-      this.defaultHitSlop = this.normalizeHitSlop(props?.defaultHitSlop)
-      changed = true
+      const newSlop = this.normalizeHitSlop(props.defaultHitSlop)
+      if (JSON.stringify(this.globalSettings.defaultHitSlop) !== JSON.stringify(newSlop)) {
+        this.globalSettings.defaultHitSlop = newSlop
+        settingsActuallyChanged = true
+        // Note: This won't update existing elements' hitSlop unless they are re-registered.
+      }
     }
 
-    if (changed && this.debugMode && this.debugger) {
-      this.debugger.updateControlsState({
-        positionHistorySize: this.positionHistorySize,
-        trajectoryPredictionTime: this.trajectoryPredictionTime,
-        enableMouseTrajectory: this.enableMouseTrajectory,
-      })
+    if (
+      props?.resizeScrollThrottleDelay !== undefined &&
+      this.globalSettings.resizeScrollThrottleDelay !== props.resizeScrollThrottleDelay
+    ) {
+      this.globalSettings.resizeScrollThrottleDelay = props.resizeScrollThrottleDelay
+      settingsActuallyChanged = true
+    }
+
+    if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
+      this.globalSettings.debug = props.debug
+      if (this.globalSettings.debug) {
+        this.turnOnDebugMode()
+      } else {
+        if (this.debugger) {
+          this.debugger.cleanup()
+          this.debugger = null
+        }
+      }
+      this.debugMode = this.globalSettings.debug
+    }
+
+    if (settingsActuallyChanged && this.globalSettings.debug && this.debugger) {
+      this.debugger.updateControlsState(this.globalSettings)
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.enableMouseTrajectory
+        this.globalSettings.enableMouseTrajectory
       )
     }
   }
 
   private turnOnDebugMode() {
-    this.debugMode = true
+    this.debugMode = true // Ensure this is true when method is called
     if (!this.debugger) {
-      this.debugger = new IntentDebugger(this)
-
+      this.debugger = new ForesightDebugger(this)
       this.debugger.initialize(
         this.links,
-        {
-          positionHistorySize: this.positionHistorySize,
-          trajectoryPredictionTime: this.trajectoryPredictionTime,
-          enableMouseTrajectory: this.enableMouseTrajectory,
-        },
+        this.globalSettings,
         this.currentPoint,
         this.predictedPoint
+      )
+    } else {
+      // If debugger exists, ensure its controls are up-to-date with current globalSettings
+      // This could happen if debug was false, then true again, or settings changed.
+      this.debugger.updateControlsState(this.globalSettings)
+      this.debugger.updateTrajectoryVisuals(
+        this.currentPoint,
+        this.predictedPoint,
+        this.globalSettings.enableMouseTrajectory
       )
     }
   }
@@ -220,7 +253,7 @@ export class ForesightManager {
 
     const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), hitSlop)
 
-    if (expandedRect != elementData.elementBounds.expandedRect) {
+    if (JSON.stringify(expandedRect) !== JSON.stringify(elementData.elementBounds.expandedRect)) {
       this.links.set(element, {
         ...elementData,
         elementBounds: {
@@ -248,7 +281,7 @@ export class ForesightManager {
     const { x, y } = point
 
     this.positions.push(currentPosition)
-    if (this.positions.length > this.positionHistorySize) {
+    if (this.positions.length > this.globalSettings.positionHistorySize) {
       this.positions.shift()
     }
 
@@ -269,7 +302,7 @@ export class ForesightManager {
     const vx = dx / dt
     const vy = dy / dt
 
-    const trajectoryPredictionTimeInSeconds = this.trajectoryPredictionTime / 1000
+    const trajectoryPredictionTimeInSeconds = this.globalSettings.trajectoryPredictionTime / 1000
     const predictedX = x + vx * trajectoryPredictionTimeInSeconds
     const predictedY = y + vy * trajectoryPredictionTimeInSeconds
     return { x: predictedX, y: predictedY }
@@ -297,7 +330,7 @@ export class ForesightManager {
 
   private handleMouseMove = (e: MouseEvent): void => {
     this.currentPoint = { x: e.clientX, y: e.clientY }
-    this.predictedPoint = this.enableMouseTrajectory
+    this.predictedPoint = this.globalSettings.enableMouseTrajectory
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
@@ -314,7 +347,7 @@ export class ForesightManager {
 
       let linkStateChanged = false
 
-      if (this.enableMouseTrajectory && !isHoveringInArea) {
+      if (this.globalSettings.enableMouseTrajectory && !isHoveringInArea) {
         if (
           this.pointIntersectsRect(
             this.predictedPoint.x,
@@ -324,7 +357,6 @@ export class ForesightManager {
         ) {
           if (!elementData.isTrajectoryHit) {
             elementData.callback()
-            console.log("trajectory")
             this.links.set(element, {
               ...elementData,
               isTrajectoryHit: true,
@@ -340,6 +372,7 @@ export class ForesightManager {
         this.links.set(element, {
           ...elementData,
           isHovering: isHoveringInArea,
+          // Preserve trajectory hit state if it was already hit
           isTrajectoryHit: this.links.get(element)!.isTrajectoryHit,
           trajectoryHitTime: this.links.get(element)!.trajectoryHitTime,
         })
@@ -353,10 +386,9 @@ export class ForesightManager {
       if (shouldRunCallback) {
         if (
           !elementData.isTrajectoryHit ||
-          (elementData.isTrajectoryHit && !this.enableMouseTrajectory)
+          (elementData.isTrajectoryHit && !this.globalSettings.enableMouseTrajectory)
         ) {
           elementData.callback()
-          console.log("hover")
         }
       }
     })
@@ -369,12 +401,11 @@ export class ForesightManager {
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.enableMouseTrajectory
+        this.globalSettings.enableMouseTrajectory
       )
     }
   }
 
-  // Throttled handler for resize and scroll events
   private handleResizeOrScroll = (): void => {
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
@@ -382,8 +413,9 @@ export class ForesightManager {
 
     const now = performance.now()
     const timeSinceLastCall = now - this.lastResizeScrollCallTimestamp
+    const currentDelay = this.globalSettings.resizeScrollThrottleDelay
 
-    if (timeSinceLastCall >= this.resizeScrollThrottleDelay) {
+    if (timeSinceLastCall >= currentDelay) {
       this.updateAllRects()
       this.lastResizeScrollCallTimestamp = now
       this.resizeScrollThrottleTimeoutId = null
@@ -392,14 +424,13 @@ export class ForesightManager {
         this.updateAllRects()
         this.lastResizeScrollCallTimestamp = performance.now()
         this.resizeScrollThrottleTimeoutId = null
-      }, this.resizeScrollThrottleDelay - timeSinceLastCall)
+      }, currentDelay - timeSinceLastCall)
     }
   }
 
   private setupGlobalListeners(): void {
     if (this.isSetup) return
     document.addEventListener("mousemove", this.handleMouseMove)
-    // Use the throttled handler for resize and scroll
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
     this.isSetup = true
@@ -407,11 +438,8 @@ export class ForesightManager {
 
   private removeGlobalListeners(): void {
     document.removeEventListener("mousemove", this.handleMouseMove)
-    // Remove the throttled handler for resize and scroll
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
-
-    // Clear any pending timeout for the throttled handler
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
       this.resizeScrollThrottleTimeoutId = null

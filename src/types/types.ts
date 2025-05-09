@@ -108,4 +108,10 @@ export type ForesightManagerProps = {
    * @default { top: 0, left: 0, right: 0, bottom: 0 }
    */
   defaultHitSlop: Rect | number
+
+  /**
+   * Amount of time in ms the element bounds get recalculated on scroll/resize of the page.
+   * @default 50
+   */
+  resizeScrollThrottleDelay: number
 }
