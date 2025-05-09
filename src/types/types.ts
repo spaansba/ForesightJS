@@ -53,15 +53,16 @@ type ElementBounds = {
 
 /**
  * Represents the data associated with a registered foresight element.
- * This includes its callback, boundary information, and current interaction state.
  */
-export type ElementData = {
+export type ForesightElementData = {
   /** The callback function to execute on interaction. */
   callback: ForesightCallback
   /** The boundary information for the element. */
   elementBounds: ElementBounds
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
   isHovering: boolean
+  /** The name of the element, usefull for debugging */
+  name: string
   /** True if the predicted mouse trajectory has intersected the element's expanded bounds. */
   isTrajectoryHit: boolean
   /** The timestamp when the last trajectory hit occurred. */
@@ -91,7 +92,7 @@ export type ForesightManagerProps = {
    * If false, only direct hover/interaction is considered.
    * @default true
    */
-  enableMouseTrajectory: boolean
+  enableMousePrediction: boolean
 
   /**
    * Whether to show visual debugging information on the screen.

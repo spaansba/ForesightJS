@@ -1,26 +1,39 @@
-"use client"
 import { ForesightDebugger } from "./ForesightDebugger"
 import type {
   ForesightCallback,
   ForesightManagerProps,
-  ElementData,
+  ForesightElementData,
   ForesightElement,
   MousePosition,
   Point,
   Rect,
 } from "../types/types"
 
+/**
+ * Manages the prediction of user intent based on mouse trajectory and element interactions.
+ *
+ * ForesightManager is a singleton class responsible for:
+ * - Registering HTML elements to monitor.
+ * - Tracking mouse movements and predicting future cursor positions.
+ * - Detecting when a predicted trajectory intersects with a registered element's bounds.
+ * - Invoking callbacks associated with elements upon predicted or actual interaction.
+ * - Handling global settings for prediction behavior (e.g., history size, prediction time).
+ * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
+ *
+ * It should be initialized once using {@link ForesightManager.initialize} and then
+ * accessed via the static getter {@link ForesightManager.instance}.
+ */
 export class ForesightManager {
   private static manager: ForesightManager
-  private links: Map<ForesightElement, ElementData> = new Map()
+  private links: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
-  private debugMode: boolean = false // Synced with globalSettings.debug
+  private debugMode: boolean = false
   private debugger: ForesightDebugger | null = null
 
   private globalSettings: ForesightManagerProps = {
     debug: false,
-    enableMouseTrajectory: true,
+    enableMousePrediction: true,
     positionHistorySize: 8,
     trajectoryPredictionTime: 80,
     defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
@@ -39,6 +52,20 @@ export class ForesightManager {
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
+  /**
+   * Initializes the ForesightManager singleton instance with optional global settings.
+   *
+   * This method sets up the manager, applying any provided configuration. If the manager
+   * is already initialized and this method is called again with new props, it will
+   * log an error and apply the new settings using `alterGlobalSettings`.
+   * It's recommended to call this method only once at the application's entry point.
+   *
+   * If `props.debug` is true or becomes true, the {@link ForesightDebugger} will be initialized or updated.
+   *
+   * @param {Partial<ForesightManagerProps>} [props] - Optional initial global settings
+   *        to configure the manager. See {@link ForesightManagerProps} for details.
+   * @returns {ForesightManager} The singleton instance of the ForesightManager.
+   */
   public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
       ForesightManager.manager = new ForesightManager()
@@ -50,7 +77,7 @@ export class ForesightManager {
         }
       }
     } else if (props) {
-      console.error(
+      console.warn(
         "ForesightManager is already initialized. Use alterGlobalSettings to update settings. Make sure to not put the ForesightManager.initialize() in a place that rerenders often."
       )
       ForesightManager.manager.alterGlobalSettings(props)
@@ -59,6 +86,14 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
+  /**
+   * Gets the singleton instance of the ForesightManager.
+   *
+   * If the manager has not been initialized yet, this getter will call
+   * {@link ForesightManager.initialize} with default settings to create the instance.
+   *
+   * @returns {ForesightManager} The singleton instance of the ForesightManager.
+   */
   public static get instance() {
     if (!ForesightManager.manager) {
       return this.initialize()
@@ -71,10 +106,13 @@ export class ForesightManager {
     let needsVisualUpdate = false
     const updatedForesightElements: ForesightElement[] = []
 
-    this.links.forEach((elementData, element) => {
-      if (elementData.isTrajectoryHit && now - elementData.trajectoryHitTime > 100) {
+    this.links.forEach((foresightElementData, element) => {
+      if (
+        foresightElementData.isTrajectoryHit &&
+        now - foresightElementData.trajectoryHitTime > 100
+      ) {
         this.links.set(element, {
-          ...elementData,
+          ...foresightElementData,
           isTrajectoryHit: false,
         })
         needsVisualUpdate = true
@@ -104,16 +142,30 @@ export class ForesightManager {
     return hitSlop
   }
 
+  /**
+   * Registers an element with the ForesightManager to monitor for predicted interactions.
+   *
+   * @param element The HTML element to monitor.
+   * @param callback The function to execute when an interaction is predicted or occurs.
+   *                 (Corresponds to {@link ForesightElementConfig.callback})
+   * @param hitSlop Optional. The amount of "slop" to add to the element's bounding box
+   *                for hit detection. Can be a single number or a Rect object.
+   *                This will overwrite the default global hitSlop set by the initializer of foresight.
+   * @param name Optional. A descriptive name for the element, useful for debugging.
+   *             Defaults to "Unnamed".
+   * @returns A function to unregister the element.
+   */
   public register(
     element: ForesightElement,
     callback: ForesightCallback,
-    hitSlop?: number | Rect
+    hitSlop?: number | Rect,
+    name?: string
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
       : (this.globalSettings.defaultHitSlop as Rect) // Already normalized in constructor
     const originalRect = element.getBoundingClientRect()
-    const newElementData: ElementData = {
+    const newForesightElementData: ForesightElementData = {
       callback,
       elementBounds: {
         expandedRect: this.getExpandedRect(originalRect, normalizedHitSlop),
@@ -123,8 +175,9 @@ export class ForesightManager {
       isHovering: false,
       isTrajectoryHit: false,
       trajectoryHitTime: 0,
+      name: name ?? "Unnamed",
     }
-    this.links.set(element, newElementData)
+    this.links.set(element, newForesightElementData)
     this.setupGlobalListeners()
     if (this.debugMode && this.debugger) {
       const data = this.links.get(element)
@@ -144,6 +197,31 @@ export class ForesightManager {
     }
   }
 
+  /**
+   * Alters the global settings of the ForesightManager at runtime.
+   *
+   * This method allows dynamic updates to global configuration properties such as
+   * prediction parameters (`positionHistorySize`, `trajectoryPredictionTime`),
+   * `defaultHitSlop`, `debug` mode, and more.
+   *
+   * While global settings are typically best configured once via
+   * {@link ForesightManager.initialize} at the application's start, this method
+   * provides a way to modify them post-initialization. It is notably used by the
+   * {@link ForesightDebugger} UI to allow real-time adjustments for testing and
+   * tuning prediction behavior.
+   *
+   * For element-specific configurations (like an individual element's `hitSlop` or `name`),
+   * those should be provided during the element's registration via the
+   * {@link ForesightManager.register} method.
+   *
+   * If debug mode is active (`globalSettings.debug` is true) and any settings
+   * that affect the debugger's display or controls are changed, the
+   * {@link ForesightDebugger} instance will be updated accordingly.
+   *
+   * @param {Partial<ForesightManagerProps>} [props] - An object containing the global
+   *        settings to update. Only properties provided in this object will be changed.
+   *        See {@link ForesightManagerProps} for available settings.
+   */
   public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
     let settingsActuallyChanged = false
 
@@ -167,10 +245,10 @@ export class ForesightManager {
     }
 
     if (
-      props?.enableMouseTrajectory !== undefined &&
-      this.globalSettings.enableMouseTrajectory !== props.enableMouseTrajectory
+      props?.enableMousePrediction !== undefined &&
+      this.globalSettings.enableMousePrediction !== props.enableMousePrediction
     ) {
-      this.globalSettings.enableMouseTrajectory = props.enableMouseTrajectory
+      this.globalSettings.enableMousePrediction = props.enableMousePrediction
       settingsActuallyChanged = true
     }
 
@@ -208,7 +286,7 @@ export class ForesightManager {
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.globalSettings.enableMouseTrajectory
+        this.globalSettings.enableMousePrediction
       )
     }
   }
@@ -228,7 +306,7 @@ export class ForesightManager {
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.globalSettings.enableMouseTrajectory
+        this.globalSettings.enableMousePrediction
       )
     }
   }
@@ -243,16 +321,19 @@ export class ForesightManager {
   }
 
   private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
-    const elementData = this.links.get(element)
-    if (!elementData) return
+    const foresightElementData = this.links.get(element)
+    if (!foresightElementData) return
 
     const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), hitSlop)
 
-    if (JSON.stringify(expandedRect) !== JSON.stringify(elementData.elementBounds.expandedRect)) {
+    if (
+      JSON.stringify(expandedRect) !==
+      JSON.stringify(foresightElementData.elementBounds.expandedRect)
+    ) {
       this.links.set(element, {
-        ...elementData,
+        ...foresightElementData,
         elementBounds: {
-          ...elementData.elementBounds,
+          ...foresightElementData.elementBounds,
           expandedRect,
         },
       })
@@ -376,36 +457,36 @@ export class ForesightManager {
 
   private handleMouseMove = (e: MouseEvent): void => {
     this.currentPoint = { x: e.clientX, y: e.clientY }
-    this.predictedPoint = this.globalSettings.enableMouseTrajectory
+    this.predictedPoint = this.globalSettings.enableMousePrediction
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
     const linksToUpdateInDebugger: ForesightElement[] = []
 
-    this.links.forEach((elementData, element) => {
-      if (!elementData.elementBounds.expandedRect) return
+    this.links.forEach((foresightElementData, element) => {
+      if (!foresightElementData.elementBounds.expandedRect) return
 
       const { isHoveringInArea, shouldRunCallback } = this.isMouseInExpandedArea(
-        elementData.elementBounds.expandedRect,
+        foresightElementData.elementBounds.expandedRect,
         this.currentPoint,
-        elementData.isHovering
+        foresightElementData.isHovering
       )
 
       let linkStateChanged = false
 
-      if (this.globalSettings.enableMouseTrajectory && !isHoveringInArea) {
+      if (this.globalSettings.enableMousePrediction && !isHoveringInArea) {
         // Check if the trajectory line segment intersects the expanded rect
         if (
           this.lineSegmentIntersectsRect(
             this.currentPoint,
             this.predictedPoint,
-            elementData.elementBounds.expandedRect
+            foresightElementData.elementBounds.expandedRect
           )
         ) {
-          if (!elementData.isTrajectoryHit) {
-            elementData.callback()
+          if (!foresightElementData.isTrajectoryHit) {
+            foresightElementData.callback()
             this.links.set(element, {
-              ...elementData,
+              ...foresightElementData,
               isTrajectoryHit: true,
               trajectoryHitTime: performance.now(),
               isHovering: isHoveringInArea, // isHoveringInArea is false here
@@ -417,9 +498,9 @@ export class ForesightManager {
         // It's managed by checkTrajectoryHitExpiration or when actual hover occurs.
       }
 
-      if (elementData.isHovering !== isHoveringInArea) {
+      if (foresightElementData.isHovering !== isHoveringInArea) {
         this.links.set(element, {
-          ...elementData,
+          ...foresightElementData,
           isHovering: isHoveringInArea,
           // Preserve trajectory hit state if it was already hit,
           // unless actual hover is now false and trajectory also doesn't hit
@@ -436,10 +517,10 @@ export class ForesightManager {
 
       if (shouldRunCallback) {
         if (
-          !elementData.isTrajectoryHit ||
-          (elementData.isTrajectoryHit && !this.globalSettings.enableMouseTrajectory)
+          !foresightElementData.isTrajectoryHit ||
+          (foresightElementData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
         ) {
-          elementData.callback()
+          foresightElementData.callback()
         }
       }
     })
@@ -452,7 +533,7 @@ export class ForesightManager {
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.globalSettings.enableMouseTrajectory
+        this.globalSettings.enableMousePrediction
       )
     }
   }

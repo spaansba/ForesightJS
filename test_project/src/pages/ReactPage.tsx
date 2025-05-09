@@ -28,7 +28,8 @@ const ReactPage: React.FC = () => {
           console.log(`Box 1 callback triggered! Count: ${box1CallbackCount}`)
           showNotification(`Box 1 callback triggered! Count: ${box1CallbackCount}`)
         },
-        50 // 50px hitSlop in all directions
+        50,
+        "big hitslop"
       )
       if (unregisterBox1) unregisterFuncsRef.current.push(unregisterBox1)
     }

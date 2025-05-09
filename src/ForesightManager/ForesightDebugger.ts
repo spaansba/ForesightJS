@@ -1,7 +1,22 @@
-"use client"
 import type { ForesightManager } from "./ForesightManager"
-import type { ElementData, ForesightElement, ForesightManagerProps, Point } from "../types/types"
+import type {
+  ForesightElementData,
+  ForesightElement,
+  ForesightManagerProps,
+  Point,
+} from "../types/types"
 
+/**
+ * Manages the visual debugging interface for the ForesightManager.
+ *
+ * This class is responsible for creating and updating all visual elements
+ * related to debugging, such as element overlays, trajectory lines,
+ * predicted mouse indicators, and control panels. It operates within a
+ * shadow DOM to avoid interfering with the host page's styles and structure.
+ *
+ * The ForesightDebugger is typically instantiated and controlled by the
+ * {@link ForesightManager} when its debug mode is enabled.
+ */
 export class ForesightDebugger {
   private foresightManagerInstance: ForesightManager
   private shadowHost: HTMLElement | null = null
@@ -9,7 +24,11 @@ export class ForesightDebugger {
   private debugContainer: HTMLElement | null = null
   private debugLinkOverlays: Map<
     ForesightElement,
-    { linkOverlay: HTMLElement; expandedOverlay: HTMLElement }
+    {
+      linkOverlay: HTMLElement
+      expandedOverlay: HTMLElement
+      nameLabel: HTMLElement // Added for the name label
+    }
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
@@ -21,7 +40,7 @@ export class ForesightDebugger {
   }
 
   public initialize(
-    links: Map<ForesightElement, ElementData>,
+    links: Map<ForesightElement, ForesightElementData>,
     currentSettings: ForesightManagerProps,
     currentPoint: Point,
     predictedPoint: Point
@@ -66,12 +85,24 @@ export class ForesightDebugger {
         position: absolute; height: 2px; background-color: rgba(255, 100, 0, 0.5);
         transform-origin: left center; z-index: 9999;
       }
+      .jsforesight-name-label { /* Added style for name label */
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 3px 6px;
+        font-size: 11px;
+        font-family: Arial, sans-serif;
+        border-radius: 3px;
+        z-index: 10001; /* Above link overlays */
+        white-space: nowrap;
+        pointer-events: none;
+      }
       #jsforesight-debug-controls {
         position: fixed; bottom: 10px; right: 10px;
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
-        min-width: 300px; /* Ensure enough space for title and icon */
+        min-width: 300px;
       }
       .jsforesight-debugger-title-container {
         display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
@@ -81,7 +112,7 @@ export class ForesightDebugger {
       #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
       #jsforesight-debug-controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
       #jsforesight-debug-controls .control-row { display: flex; align-items: center; justify-content: space-between; }
-      #jsforesight-debug-controls .control-row label { flex-basis: auto; /* Adjust for better spacing */ }
+      #jsforesight-debug-controls .control-row label { flex-basis: auto; }
       #jsforesight-debug-controls .control-row span:not(.jsforesight-info-icon) { min-width: 30px; text-align: right; }
       .jsforesight-info-icon {
         display: inline-flex; align-items: center; justify-content: center;
@@ -90,7 +121,7 @@ export class ForesightDebugger {
         font-size: 10px; font-style: italic; font-weight: bold;
         font-family: 'Georgia', serif;
         cursor: help; user-select: none;
-        flex-shrink: 0; /* Prevent icon from shrinking */
+        flex-shrink: 0;
       }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
@@ -115,7 +146,7 @@ export class ForesightDebugger {
     this.updateTrajectoryVisuals(
       currentPoint,
       predictedPoint,
-      currentSettings.enableMouseTrajectory
+      currentSettings.enableMousePrediction
     )
   }
 
@@ -123,10 +154,19 @@ export class ForesightDebugger {
     this.shadowHost?.remove()
     this.shadowHost = null
     this.shadowRoot = null
+    // Ensure all parts of overlays are cleared if any exist
+    this.debugLinkOverlays.forEach((overlays) => {
+      overlays.linkOverlay.remove()
+      overlays.expandedOverlay.remove()
+      overlays.nameLabel.remove()
+    })
     this.debugLinkOverlays.clear()
   }
 
-  public createOrUpdateLinkOverlay(element: ForesightElement, elementData: ElementData): void {
+  public createOrUpdateLinkOverlay(
+    element: ForesightElement,
+    foresightElementData: ForesightElementData
+  ): void {
     if (!this.debugContainer || !this.shadowRoot) return
 
     let overlays = this.debugLinkOverlays.get(element)
@@ -139,33 +179,51 @@ export class ForesightDebugger {
       expandedOverlay.className = "jsforesight-expanded-overlay"
       this.debugContainer.appendChild(expandedOverlay)
 
-      overlays = { linkOverlay, expandedOverlay }
+      const nameLabel = document.createElement("div") // Create name label
+      nameLabel.className = "jsforesight-name-label"
+      this.debugContainer.appendChild(nameLabel)
+
+      overlays = { linkOverlay, expandedOverlay, nameLabel }
       this.debugLinkOverlays.set(element, overlays)
     }
 
-    const { linkOverlay, expandedOverlay } = overlays
+    const { linkOverlay, expandedOverlay, nameLabel } = overlays
     const rect = element.getBoundingClientRect()
 
+    // Update main link overlay
     linkOverlay.style.left = `${rect.left}px`
     linkOverlay.style.top = `${rect.top}px`
     linkOverlay.style.width = `${rect.width}px`
     linkOverlay.style.height = `${rect.height}px`
+    linkOverlay.classList.toggle("trajectory-hit", foresightElementData.isTrajectoryHit)
+    linkOverlay.classList.toggle("active", foresightElementData.isHovering)
 
-    linkOverlay.classList.toggle("trajectory-hit", elementData.isTrajectoryHit)
-    linkOverlay.classList.toggle("active", elementData.isHovering)
-
-    if (elementData.elementBounds.expandedRect) {
-      expandedOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
-      expandedOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
+    // Update expanded hit area overlay
+    if (foresightElementData.elementBounds.expandedRect) {
+      expandedOverlay.style.left = `${foresightElementData.elementBounds.expandedRect.left}px`
+      expandedOverlay.style.top = `${foresightElementData.elementBounds.expandedRect.top}px`
       expandedOverlay.style.width = `${
-        elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
+        foresightElementData.elementBounds.expandedRect.right -
+        foresightElementData.elementBounds.expandedRect.left
       }px`
       expandedOverlay.style.height = `${
-        elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
+        foresightElementData.elementBounds.expandedRect.bottom -
+        foresightElementData.elementBounds.expandedRect.top
       }px`
       expandedOverlay.style.display = "block"
     } else {
       expandedOverlay.style.display = "none"
+    }
+
+    // Update name label
+    if (foresightElementData.name && foresightElementData.name !== "Unnamed") {
+      nameLabel.textContent = foresightElementData.name
+      nameLabel.style.display = "block"
+      nameLabel.style.left = `${rect.left}px`
+      // Position 20px above the element's top border. Adjust as needed.
+      nameLabel.style.top = `${rect.top - 22}px` // Adjusted for typical label height + padding
+    } else {
+      nameLabel.style.display = "none"
     }
   }
 
@@ -174,11 +232,12 @@ export class ForesightDebugger {
     if (overlays) {
       overlays.linkOverlay.remove()
       overlays.expandedOverlay.remove()
+      overlays.nameLabel.remove() // Remove the name label
       this.debugLinkOverlays.delete(element)
     }
   }
 
-  public updateAllLinkVisuals(links: Map<ForesightElement, ElementData>): void {
+  public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
     if (!this.shadowRoot || !this.debugContainer) return
 
     const currentElements = new Set(links.keys())
@@ -196,7 +255,7 @@ export class ForesightDebugger {
   public updateTrajectoryVisuals(
     currentPoint: Point,
     predictedPoint: Point,
-    enableMouseTrajectory: boolean
+    enableMousePrediction: boolean
   ): void {
     if (!this.shadowRoot || !this.debugContainer) return
 
@@ -204,11 +263,11 @@ export class ForesightDebugger {
       this.debugPredictedMouseIndicator.style.left = `${predictedPoint?.x || 0}px`
       this.debugPredictedMouseIndicator.style.top = `${predictedPoint?.y || 0}px`
       this.debugPredictedMouseIndicator.style.display =
-        enableMouseTrajectory && predictedPoint ? "block" : "none"
+        enableMousePrediction && predictedPoint ? "block" : "none"
     }
 
     if (this.debugTrajectoryLine) {
-      if (enableMouseTrajectory && currentPoint && predictedPoint) {
+      if (enableMousePrediction && currentPoint && predictedPoint) {
         const dx = predictedPoint.x - currentPoint.x
         const dy = predictedPoint.y - currentPoint.y
         const length = Math.sqrt(dx * dx + dy * dy)
@@ -239,11 +298,11 @@ export class ForesightDebugger {
       </div>
       <div class="control-row">
         <label for="jsforesight-trajectory-enabled">
-          Enable Trajectory
+          Enable Mouse Prediction
           <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions.">i</span>
         </label>
         <input type="checkbox" id="jsforesight-trajectory-enabled" ${
-          initialSettings.enableMouseTrajectory ? "checked" : ""
+          initialSettings.enableMousePrediction ? "checked" : ""
         }>
       </div>
       <div class="control-row">
@@ -283,7 +342,7 @@ export class ForesightDebugger {
     ) as HTMLInputElement
     enabledCheckbox.addEventListener("change", () => {
       this.foresightManagerInstance.alterGlobalSettings({
-        enableMouseTrajectory: enabledCheckbox.checked,
+        enableMousePrediction: enabledCheckbox.checked,
       })
     })
 
@@ -336,7 +395,7 @@ export class ForesightDebugger {
     const enabledCheckbox = this.debugControlsContainer.querySelector(
       "#jsforesight-trajectory-enabled"
     ) as HTMLInputElement
-    if (enabledCheckbox) enabledCheckbox.checked = settings.enableMouseTrajectory
+    if (enabledCheckbox) enabledCheckbox.checked = settings.enableMousePrediction
 
     const historySlider = this.debugControlsContainer.querySelector(
       "#jsforesight-history-size"
