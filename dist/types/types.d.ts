@@ -68,13 +68,13 @@ export type ForesightManagerProps = {
     /**
      * Number of mouse positions to keep in history for trajectory calculation.
      * A higher number might lead to smoother but slightly delayed predictions.
-     * @default 6
+     * @default 8
      */
     positionHistorySize: number;
     /**
      * How far ahead (in milliseconds) to predict the mouse trajectory.
      * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
-     * @default 50
+     * @default 80
      */
     trajectoryPredictionTime: number;
     /**
