@@ -263,7 +263,7 @@ export class IntentDebugger {
     ) as HTMLInputElement
     enabledCheckbox.addEventListener("change", () => {
       this.foresightManagerInstance.setTrajectorySettings({
-        enabled: enabledCheckbox.checked,
+        enableMouseTrajectory: enabledCheckbox.checked,
       })
     })
 
@@ -276,7 +276,7 @@ export class IntentDebugger {
     historySlider.addEventListener("input", () => {
       const value = parseInt(historySlider.value)
       historyValueSpan.textContent = value.toString()
-      this.foresightManagerInstance.setTrajectorySettings({ historySize: value })
+      this.foresightManagerInstance.setTrajectorySettings({ positionHistorySize: value })
     })
 
     const predictionSlider = this.debugControlsContainer.querySelector(
@@ -289,7 +289,7 @@ export class IntentDebugger {
       const value = parseInt(predictionSlider.value)
       predictionValueSpan.textContent = value.toString()
       this.foresightManagerInstance.setTrajectorySettings({
-        predictionTime: value,
+        trajectoryPredictionTime: value,
       })
     })
   }

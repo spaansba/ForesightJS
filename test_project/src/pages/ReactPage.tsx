@@ -16,7 +16,7 @@ const ReactPage: React.FC = () => {
 
   const manager = ForesightManager.initialize({
     debug: debugMode,
-    defaultHitSlop: 100,
+    defaultHitSlop: 0,
   })
 
   // Initialize ForesightManager
