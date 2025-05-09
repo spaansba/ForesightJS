@@ -109,7 +109,7 @@ export class ForesightManager {
     this.elements.forEach((foresightElementData, element) => {
       if (
         foresightElementData.isTrajectoryHit &&
-        now - foresightElementData.trajectoryHitTime > 100
+        now - foresightElementData.trajectoryHitTime > 200
       ) {
         this.elements.set(element, {
           ...foresightElementData,
@@ -226,7 +226,21 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
     let settingsActuallyChanged = false
 
-    // ... (other settings like positionHistorySize, trajectoryPredictionTime) ...
+    if (
+      props?.positionHistorySize !== undefined &&
+      this.globalSettings.positionHistorySize !== props.positionHistorySize
+    ) {
+      this.globalSettings.positionHistorySize = props.positionHistorySize
+      settingsActuallyChanged = true
+    }
+
+    if (
+      props?.trajectoryPredictionTime !== undefined &&
+      this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
+    ) {
+      this.globalSettings.trajectoryPredictionTime = props.trajectoryPredictionTime
+      settingsActuallyChanged = true
+    }
 
     if (
       props?.enableMousePrediction !== undefined &&
@@ -234,26 +248,46 @@ export class ForesightManager {
     ) {
       this.globalSettings.enableMousePrediction = props.enableMousePrediction
       settingsActuallyChanged = true
-      // === ADD THIS BLOCK START ===
-      // If the prediction setting changed, immediately update the predictedPoint
       if (this.globalSettings.enableMousePrediction) {
-        // Recalculate prediction if it's now enabled
         this.predictedPoint = this.predictMousePosition(this.currentPoint)
       } else {
-        // If prediction is disabled, predicted point is the current point
         this.predictedPoint = this.currentPoint
       }
-      // === ADD THIS BLOCK END ===
     }
 
-    // ... (other settings like defaultHitSlop, resizeScrollThrottleDelay, debug) ...
+    if (
+      props?.defaultHitSlop !== undefined &&
+      JSON.stringify(this.globalSettings.defaultHitSlop) !==
+        JSON.stringify(this.normalizeHitSlop(props.defaultHitSlop))
+    ) {
+      this.globalSettings.defaultHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
+      settingsActuallyChanged = true
+      // This requires updating all existing elements' expandedRects if they use default
+      this.elements.forEach((data, el) => {
+        // Check if the element is using the (old) default hitSlop
+        // This comparison is tricky if the old default was a number and normalized.
+        // For simplicity, we might just update all, or be more precise.
+        // Assuming if a specific hitSlop was provided at registration, it's stored in data.elementBounds.hitSlop
+        // If data.elementBounds.hitSlop matches the *old* global default, update it.
+        // A simpler approach for now: if global defaultHitSlop changes, re-evaluate all rects
+        // that might have been using it. The most robust is to update all.
+        this.updateExpandedRect(el, data.elementBounds.hitSlop) // This will use its own hitSlop or the new default if it was using default
+      })
+    }
+
+    if (
+      props?.resizeScrollThrottleDelay !== undefined &&
+      this.globalSettings.resizeScrollThrottleDelay !== props.resizeScrollThrottleDelay
+    ) {
+      this.globalSettings.resizeScrollThrottleDelay = props.resizeScrollThrottleDelay
+      settingsActuallyChanged = true
+    }
+
     if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
       this.globalSettings.debug = props.debug
-      // No need to set settingsActuallyChanged here for debug toggle itself,
-      // as turnOnDebugMode/cleanup handles visuals.
-      // But if other settings changed AND debug is on, the visual update below is needed.
+      settingsActuallyChanged = true // Mark true so debugger visuals update if other settings also changed
       if (this.globalSettings.debug) {
-        this.turnOnDebugMode() // This will initialize or update debugger
+        this.turnOnDebugMode()
       } else {
         if (this.debugger) {
           this.debugger.cleanup()
@@ -261,19 +295,20 @@ export class ForesightManager {
         }
       }
       this.debugMode = this.globalSettings.debug
-      // If only debug status changed, we might not need the full visual update below,
-      // as turnOnDebugMode handles its own initialization.
-      // However, if other settings changed concurrently, we do.
     }
 
     if (settingsActuallyChanged && this.globalSettings.debug && this.debugger) {
       this.debugger.updateControlsState(this.globalSettings)
-      // Now this.predictedPoint is fresh based on the new enableMousePrediction state
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
-        this.predictedPoint, // This will now be the re-calculated point
+        this.predictedPoint,
         this.globalSettings.enableMousePrediction
       )
+      // If settings affecting element visuals (like hitSlop indirectly) changed,
+      // ensure all overlays are up-to-date.
+      this.elements.forEach((data, el) => {
+        this.debugger!.createOrUpdateLinkOverlay(el, data)
+      })
     }
   }
 
@@ -288,7 +323,9 @@ export class ForesightManager {
         this.predictedPoint
       )
     } else {
+      // If debugger exists, ensure its view of elements and settings is current
       this.debugger.updateControlsState(this.globalSettings)
+      this.debugger.updateAllLinkVisuals(this.elements) // Ensure all overlays are correct
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -310,16 +347,20 @@ export class ForesightManager {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
-    const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), hitSlop)
+    const newOriginalRect = element.getBoundingClientRect()
+    const expandedRect = this.getExpandedRect(newOriginalRect, hitSlop)
 
     if (
       JSON.stringify(expandedRect) !==
-      JSON.stringify(foresightElementData.elementBounds.expandedRect)
+        JSON.stringify(foresightElementData.elementBounds.expandedRect) ||
+      JSON.stringify(newOriginalRect) !==
+        JSON.stringify(foresightElementData.elementBounds.originalRect)
     ) {
       this.elements.set(element, {
         ...foresightElementData,
         elementBounds: {
           ...foresightElementData.elementBounds,
+          originalRect: newOriginalRect, // Update originalRect as well
           expandedRect,
         },
       })
@@ -384,61 +425,30 @@ export class ForesightManager {
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
 
-    // Helper function for Liang-Barsky algorithm
-    // p: parameter related to edge normal and line direction
-    // q: parameter related to distance from p1 to edge
     const clipTest = (p: number, q: number): boolean => {
       if (p === 0) {
-        // Line is parallel to the clip edge
         if (q < 0) {
-          // Line is outside the clip edge (p1 is on the "wrong" side)
           return false
         }
       } else {
         const r = q / p
         if (p < 0) {
-          // Line proceeds from outside to inside (potential entry)
-          if (r > t1) return false // Enters after already exited
-          if (r > t0) t0 = r // Update latest entry time
+          if (r > t1) return false
+          if (r > t0) t0 = r
         } else {
-          // Line proceeds from inside to outside (potential exit) (p > 0)
-          if (r < t0) return false // Exits before already entered
-          if (r < t1) t1 = r // Update earliest exit time
+          if (r < t0) return false
+          if (r < t1) t1 = r
         }
       }
       return true
     }
 
-    // Left edge: rect.left
     if (!clipTest(-dx, p1.x - rect.left)) return false
-    // Right edge: rect.right
     if (!clipTest(dx, rect.right - p1.x)) return false
-    // Top edge: rect.top
     if (!clipTest(-dy, p1.y - rect.top)) return false
-    // Bottom edge: rect.bottom
     if (!clipTest(dy, rect.bottom - p1.y)) return false
 
-    // If t0 > t1, the segment is completely outside or misses the clip window.
-    // Also, the valid intersection must be within the segment [0,1].
-    // Since t0 and t1 are initialized to 0 and 1, and clamped,
-    // this also ensures the intersection lies on the segment.
     return t0 <= t1
-  }
-
-  private isMouseInExpandedArea = (
-    area: Rect,
-    clientPoint: Point,
-    isAlreadyHovering: boolean
-  ): { isHoveringInArea: boolean; shouldRunCallback: boolean } => {
-    const isInExpandedArea =
-      clientPoint.x >= area.left &&
-      clientPoint.x <= area.right &&
-      clientPoint.y >= area.top &&
-      clientPoint.y <= area.bottom
-    if (isInExpandedArea && !isAlreadyHovering) {
-      return { isHoveringInArea: true, shouldRunCallback: true }
-    }
-    return { isHoveringInArea: isInExpandedArea, shouldRunCallback: false }
   }
 
   private handleMouseMove = (e: MouseEvent): void => {
@@ -449,68 +459,88 @@ export class ForesightManager {
 
     const elementsToUpdateInDebugger: ForesightElement[] = []
 
-    this.elements.forEach((foresightElementData, element) => {
-      if (!foresightElementData.elementBounds.expandedRect) return
+    this.elements.forEach((currentData, element) => {
+      // Capture the state of the element before this event's processing
+      const previousData = { ...currentData }
 
-      const { isHoveringInArea, shouldRunCallback } = this.isMouseInExpandedArea(
-        foresightElementData.elementBounds.expandedRect,
-        this.currentPoint,
-        foresightElementData.isHovering
-      )
+      let callbackFiredThisCycle = false
+      let finalIsHovering = previousData.isHovering
+      let finalIsTrajectoryHit = previousData.isTrajectoryHit
+      let finalTrajectoryHitTime = previousData.trajectoryHitTime
 
-      let elementStateChanged = false
+      const { expandedRect } = previousData.elementBounds
 
-      if (this.globalSettings.enableMousePrediction && !isHoveringInArea) {
-        // Check if the trajectory line segment intersects the expanded rect
-        if (
-          this.lineSegmentIntersectsRect(
-            this.currentPoint,
-            this.predictedPoint,
-            foresightElementData.elementBounds.expandedRect
-          )
-        ) {
-          if (!foresightElementData.isTrajectoryHit) {
-            foresightElementData.callback()
-            this.elements.set(element, {
-              ...foresightElementData,
-              isTrajectoryHit: true,
-              trajectoryHitTime: performance.now(),
-              isHovering: isHoveringInArea, // isHoveringInArea is false here
-            })
-            elementStateChanged = true
-          }
+      // --- 1. Determine Current Physical Hover State ---
+      const isCurrentlyPhysicallyHovering =
+        this.currentPoint.x >= expandedRect.left &&
+        this.currentPoint.x <= expandedRect.right &&
+        this.currentPoint.y >= expandedRect.top &&
+        this.currentPoint.y <= expandedRect.bottom
+
+      // --- 2. Determine Potential New Trajectory Hit (Prediction Logic) ---
+      let isNewTrajectoryActivation = false
+      if (
+        this.globalSettings.enableMousePrediction &&
+        !isCurrentlyPhysicallyHovering && // Only predict if not physically hovering
+        !previousData.isTrajectoryHit // And not already in a trajectory hit state from previous cycles
+      ) {
+        if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
+          isNewTrajectoryActivation = true
         }
-        // Note: No 'else' here to turn off isTrajectoryHit immediately.
-        // It's managed by checkTrajectoryHitExpiration or when actual hover occurs.
       }
 
-      if (foresightElementData.isHovering !== isHoveringInArea) {
-        this.elements.set(element, {
-          ...foresightElementData,
-          isHovering: isHoveringInArea,
-          // Preserve trajectory hit state if it was already hit,
-          // unless actual hover is now false and trajectory also doesn't hit
-          // (though trajectory hit is primarily for non-hovering states)
-          isTrajectoryHit: this.elements.get(element)!.isTrajectoryHit,
-          trajectoryHitTime: this.elements.get(element)!.trajectoryHitTime,
-        })
-        elementStateChanged = true
+      // --- 3. Process Trajectory Hit Activation (if any) ---
+      if (isNewTrajectoryActivation) {
+        previousData.callback() // Fire callback based on the state that led to this event
+        callbackFiredThisCycle = true
+        finalIsTrajectoryHit = true
+        finalTrajectoryHitTime = performance.now()
+        // If a trajectory activates, it implies the mouse isn't physically hovering at this exact moment for this logic path
+        // finalIsHovering will be updated based on isCurrentlyPhysicallyHovering later.
       }
 
-      if (elementStateChanged) {
+      // --- 4. Process Hover State Change and Potential Hover Callback ---
+      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !previousData.isHovering
+
+      if (isNewPhysicalHoverEvent) {
+        // Conditions for firing callback due to hover:
+        // 1. No callback has been fired by trajectory logic in this cycle.
+        // 2. AND (Either no prior trajectory hit OR prediction is disabled (making hover always primary))
+        const hoverCanTriggerCallback =
+          !previousData.isTrajectoryHit ||
+          (previousData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
+
+        if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
+          previousData.callback()
+          // callbackFiredThisCycle = true; // Optional: mark if needed for further logic, though not used after this.
+        }
+      }
+
+      // Set the definitive hover state for this cycle based on physical mouse position
+      finalIsHovering = isCurrentlyPhysicallyHovering
+
+      // --- 5. Construct New Element Data and Update if State Changed ---
+      const newElementData: ForesightElementData = {
+        ...previousData,
+        isHovering: finalIsHovering,
+        isTrajectoryHit: finalIsTrajectoryHit,
+        trajectoryHitTime: finalTrajectoryHitTime,
+      }
+
+      const stateActuallyChanged =
+        newElementData.isHovering !== previousData.isHovering ||
+        newElementData.isTrajectoryHit !== previousData.isTrajectoryHit ||
+        // Ensure time change is also considered a state change if trajectory hit status is true
+        (newElementData.isTrajectoryHit &&
+          newElementData.trajectoryHitTime !== previousData.trajectoryHitTime)
+
+      if (stateActuallyChanged) {
+        this.elements.set(element, newElementData)
         elementsToUpdateInDebugger.push(element)
-      }
-
-      if (shouldRunCallback) {
-        if (
-          !foresightElementData.isTrajectoryHit ||
-          (foresightElementData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
-        ) {
-          foresightElementData.callback()
-        }
       }
     })
 
+    // --- 6. Update Debugger Visuals (if enabled) ---
     if (this.debugMode && this.debugger) {
       elementsToUpdateInDebugger.forEach((element) => {
         const data = this.elements.get(element)

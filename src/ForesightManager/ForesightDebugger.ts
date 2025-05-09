@@ -27,13 +27,19 @@ export class ForesightDebugger {
     {
       linkOverlay: HTMLElement
       expandedOverlay: HTMLElement
-      nameLabel: HTMLElement // Added for the name label
+      nameLabel: HTMLElement
     }
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
   private debugControlsContainer: HTMLElement | null = null
   private debugStyleElement: HTMLStyleElement | null = null
+
+  private currentGlobalSettings: ForesightManagerProps | null = null
+  private lastElementData: Map<
+    ForesightElement,
+    { isHovering: boolean; isTrajectoryHit: boolean }
+  > = new Map()
 
   constructor(intentManager: ForesightManager) {
     this.foresightManagerInstance = intentManager
@@ -47,6 +53,8 @@ export class ForesightDebugger {
   ): void {
     if (typeof window === "undefined") return
     this.cleanup()
+
+    this.currentGlobalSettings = { ...currentSettings }
 
     this.shadowHost = document.createElement("div")
     this.shadowHost.id = "jsforesight-debugger-shadow-host"
@@ -85,7 +93,7 @@ export class ForesightDebugger {
         position: absolute; height: 2px; background-color: rgba(255, 100, 0, 0.5);
         transform-origin: left center; z-index: 9999;
       }
-      .jsforesight-name-label { /* Added style for name label */
+      .jsforesight-name-label {
         position: absolute;
         background-color: rgba(0, 0, 0, 0.75);
         color: white;
@@ -93,7 +101,7 @@ export class ForesightDebugger {
         font-size: 11px;
         font-family: Arial, sans-serif;
         border-radius: 3px;
-        z-index: 10001; /* Above link overlays */
+        z-index: 10001;
         white-space: nowrap;
         pointer-events: none;
       }
@@ -123,6 +131,22 @@ export class ForesightDebugger {
         cursor: help; user-select: none;
         flex-shrink: 0;
       }
+      .jsforesight-prefetch-indicator {
+        position: absolute;
+        background-color: black;
+        color: white;
+        padding: 3px 6px;      /* Smaller padding */
+        font-size: 10px;       /* Smaller font */
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        border-radius: 4px;     /* Slightly smaller radius */
+        z-index: 10002;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 1;
+        transition: transform 0.6s cubic-bezier(0.15, 0.5, 0.35, 1), /* Shorter duration */
+                    opacity 0.6s cubic-bezier(0.4, 0, 0.8, 1);    /* Shorter duration */
+      }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
 
@@ -140,9 +164,11 @@ export class ForesightDebugger {
 
     this.createDebugControls(currentSettings)
 
+    this.lastElementData.clear()
     links.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
     })
+
     this.updateTrajectoryVisuals(
       currentPoint,
       predictedPoint,
@@ -154,20 +180,85 @@ export class ForesightDebugger {
     this.shadowHost?.remove()
     this.shadowHost = null
     this.shadowRoot = null
-    // Ensure all parts of overlays are cleared if any exist
     this.debugLinkOverlays.forEach((overlays) => {
       overlays.linkOverlay.remove()
       overlays.expandedOverlay.remove()
       overlays.nameLabel.remove()
     })
     this.debugLinkOverlays.clear()
+    this.lastElementData.clear()
+    if (this.debugContainer) {
+      this.debugContainer
+        .querySelectorAll(".jsforesight-prefetch-indicator")
+        .forEach((el) => el.remove())
+    }
   }
 
-  public createOrUpdateLinkOverlay(
-    element: ForesightElement,
-    foresightElementData: ForesightElementData
-  ): void {
+  private showPrefetchAnimation(element: ForesightElement): void {
+    if (!this.debugContainer) return
+
+    const rect = element.getBoundingClientRect()
+    if (rect.width === 0 && rect.height === 0) return
+
+    const indicator = document.createElement("div")
+    indicator.className = "jsforesight-prefetch-indicator"
+    indicator.textContent = "Prefetched"
+
+    this.debugContainer.appendChild(indicator)
+
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+
+    // Shorter random end position for the "arch" flight
+    // Horizontal: -40px to +40px from the element's center
+    const randomXEnd = (Math.random() - 0.5) * 80
+    // Vertical: -50px to -80px (upwards) from the element's center
+    const randomYEnd = -50 - Math.random() * 30
+
+    indicator.style.left = `${centerX}px`
+    indicator.style.top = `${centerY}px`
+    indicator.style.opacity = "1"
+    indicator.style.transform = `translate(-50%, -50%) translate(0px, 0px) scale(0.7)`
+
+    void indicator.offsetWidth
+
+    indicator.style.opacity = "0"
+    indicator.style.transform = `translate(-50%, -50%) translate(${randomXEnd}px, ${randomYEnd}px) scale(1)`
+
+    setTimeout(() => {
+      indicator.remove()
+    }, 800)
+  }
+
+  public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData): void {
     if (!this.debugContainer || !this.shadowRoot) return
+
+    if (this.currentGlobalSettings) {
+      const oldData = this.lastElementData.get(element)
+      let callbackLikelyTriggered = false
+
+      const newTrajectoryHit = newData.isTrajectoryHit && (!oldData || !oldData.isTrajectoryHit)
+      const newHover = newData.isHovering && (!oldData || !oldData.isHovering)
+
+      if (newTrajectoryHit) {
+        callbackLikelyTriggered = true
+      } else if (newHover) {
+        if (
+          !newData.isTrajectoryHit ||
+          (newData.isTrajectoryHit && !this.currentGlobalSettings.enableMousePrediction)
+        ) {
+          callbackLikelyTriggered = true
+        }
+      }
+
+      if (callbackLikelyTriggered) {
+        this.showPrefetchAnimation(element)
+      }
+    }
+    this.lastElementData.set(element, {
+      isHovering: newData.isHovering,
+      isTrajectoryHit: newData.isTrajectoryHit,
+    })
 
     let overlays = this.debugLinkOverlays.get(element)
     if (!overlays) {
@@ -179,7 +270,7 @@ export class ForesightDebugger {
       expandedOverlay.className = "jsforesight-expanded-overlay"
       this.debugContainer.appendChild(expandedOverlay)
 
-      const nameLabel = document.createElement("div") // Create name label
+      const nameLabel = document.createElement("div")
       nameLabel.className = "jsforesight-name-label"
       this.debugContainer.appendChild(nameLabel)
 
@@ -190,38 +281,32 @@ export class ForesightDebugger {
     const { linkOverlay, expandedOverlay, nameLabel } = overlays
     const rect = element.getBoundingClientRect()
 
-    // Update main link overlay
     linkOverlay.style.left = `${rect.left}px`
     linkOverlay.style.top = `${rect.top}px`
     linkOverlay.style.width = `${rect.width}px`
     linkOverlay.style.height = `${rect.height}px`
-    linkOverlay.classList.toggle("trajectory-hit", foresightElementData.isTrajectoryHit)
-    linkOverlay.classList.toggle("active", foresightElementData.isHovering)
+    linkOverlay.classList.toggle("trajectory-hit", newData.isTrajectoryHit)
+    linkOverlay.classList.toggle("active", newData.isHovering)
 
-    // Update expanded hit area overlay
-    if (foresightElementData.elementBounds.expandedRect) {
-      expandedOverlay.style.left = `${foresightElementData.elementBounds.expandedRect.left}px`
-      expandedOverlay.style.top = `${foresightElementData.elementBounds.expandedRect.top}px`
+    if (newData.elementBounds.expandedRect) {
+      expandedOverlay.style.left = `${newData.elementBounds.expandedRect.left}px`
+      expandedOverlay.style.top = `${newData.elementBounds.expandedRect.top}px`
       expandedOverlay.style.width = `${
-        foresightElementData.elementBounds.expandedRect.right -
-        foresightElementData.elementBounds.expandedRect.left
+        newData.elementBounds.expandedRect.right - newData.elementBounds.expandedRect.left
       }px`
       expandedOverlay.style.height = `${
-        foresightElementData.elementBounds.expandedRect.bottom -
-        foresightElementData.elementBounds.expandedRect.top
+        newData.elementBounds.expandedRect.bottom - newData.elementBounds.expandedRect.top
       }px`
       expandedOverlay.style.display = "block"
     } else {
       expandedOverlay.style.display = "none"
     }
 
-    // Update name label
-    if (foresightElementData.name && foresightElementData.name !== "Unnamed") {
-      nameLabel.textContent = foresightElementData.name
+    if (newData.name && newData.name !== "Unnamed") {
+      nameLabel.textContent = newData.name
       nameLabel.style.display = "block"
       nameLabel.style.left = `${rect.left}px`
-      // Position 20px above the element's top border. Adjust as needed.
-      nameLabel.style.top = `${rect.top - 22}px` // Adjusted for typical label height + padding
+      nameLabel.style.top = `${rect.top - 22}px`
     } else {
       nameLabel.style.display = "none"
     }
@@ -232,9 +317,10 @@ export class ForesightDebugger {
     if (overlays) {
       overlays.linkOverlay.remove()
       overlays.expandedOverlay.remove()
-      overlays.nameLabel.remove() // Remove the name label
+      overlays.nameLabel.remove()
       this.debugLinkOverlays.delete(element)
     }
+    this.lastElementData.delete(element)
   }
 
   public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
@@ -390,6 +476,8 @@ export class ForesightDebugger {
   }
 
   public updateControlsState(settings: ForesightManagerProps): void {
+    this.currentGlobalSettings = { ...settings }
+
     if (!this.debugControlsContainer) return
 
     const enabledCheckbox = this.debugControlsContainer.querySelector(
