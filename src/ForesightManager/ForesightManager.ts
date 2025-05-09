@@ -124,11 +124,7 @@ export class ForesightManager {
       trajectoryHitTime: 0,
     }
     this.links.set(element, newElementData)
-
-    // this.updateExpandedRect(element, newElementData.elementBounds.hitSlop)
     this.setupGlobalListeners()
-    console.log(this.debugMode)
-    console.log(this.debugger)
     if (this.debugMode && this.debugger) {
       const data = this.links.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
