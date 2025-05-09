@@ -225,24 +225,7 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
     let settingsActuallyChanged = false
 
-    if (
-      props?.positionHistorySize !== undefined &&
-      this.globalSettings.positionHistorySize !== props.positionHistorySize
-    ) {
-      this.globalSettings.positionHistorySize = props.positionHistorySize
-      while (this.positions.length > this.globalSettings.positionHistorySize) {
-        this.positions.shift()
-      }
-      settingsActuallyChanged = true
-    }
-
-    if (
-      props?.trajectoryPredictionTime !== undefined &&
-      this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
-    ) {
-      this.globalSettings.trajectoryPredictionTime = props.trajectoryPredictionTime
-      settingsActuallyChanged = true
-    }
+    // ... (other settings like positionHistorySize, trajectoryPredictionTime) ...
 
     if (
       props?.enableMousePrediction !== undefined &&
@@ -250,28 +233,26 @@ export class ForesightManager {
     ) {
       this.globalSettings.enableMousePrediction = props.enableMousePrediction
       settingsActuallyChanged = true
-    }
-
-    if (props?.defaultHitSlop !== undefined) {
-      const newSlop = this.normalizeHitSlop(props.defaultHitSlop)
-      if (JSON.stringify(this.globalSettings.defaultHitSlop) !== JSON.stringify(newSlop)) {
-        this.globalSettings.defaultHitSlop = newSlop
-        settingsActuallyChanged = true
+      // === ADD THIS BLOCK START ===
+      // If the prediction setting changed, immediately update the predictedPoint
+      if (this.globalSettings.enableMousePrediction) {
+        // Recalculate prediction if it's now enabled
+        this.predictedPoint = this.predictMousePosition(this.currentPoint)
+      } else {
+        // If prediction is disabled, predicted point is the current point
+        this.predictedPoint = this.currentPoint
       }
+      // === ADD THIS BLOCK END ===
     }
 
-    if (
-      props?.resizeScrollThrottleDelay !== undefined &&
-      this.globalSettings.resizeScrollThrottleDelay !== props.resizeScrollThrottleDelay
-    ) {
-      this.globalSettings.resizeScrollThrottleDelay = props.resizeScrollThrottleDelay
-      settingsActuallyChanged = true
-    }
-
+    // ... (other settings like defaultHitSlop, resizeScrollThrottleDelay, debug) ...
     if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
       this.globalSettings.debug = props.debug
+      // No need to set settingsActuallyChanged here for debug toggle itself,
+      // as turnOnDebugMode/cleanup handles visuals.
+      // But if other settings changed AND debug is on, the visual update below is needed.
       if (this.globalSettings.debug) {
-        this.turnOnDebugMode()
+        this.turnOnDebugMode() // This will initialize or update debugger
       } else {
         if (this.debugger) {
           this.debugger.cleanup()
@@ -279,13 +260,17 @@ export class ForesightManager {
         }
       }
       this.debugMode = this.globalSettings.debug
+      // If only debug status changed, we might not need the full visual update below,
+      // as turnOnDebugMode handles its own initialization.
+      // However, if other settings changed concurrently, we do.
     }
 
     if (settingsActuallyChanged && this.globalSettings.debug && this.debugger) {
       this.debugger.updateControlsState(this.globalSettings)
+      // Now this.predictedPoint is fresh based on the new enableMousePrediction state
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
-        this.predictedPoint,
+        this.predictedPoint, // This will now be the re-calculated point
         this.globalSettings.enableMousePrediction
       )
     }
