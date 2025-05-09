@@ -47,7 +47,7 @@ export class ForesightDebugger {
         transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .jsforesight-link-overlay.active {
-        border-color: red; background-color: rgba(255, 0, 0, 0.1);
+        border-color: orange; background-color: rgba(255, 0, 0, 0.1);
       }
       .jsforesight-link-overlay.trajectory-hit {
         border-color: lime; background-color: rgba(0, 255, 0, 0.3);

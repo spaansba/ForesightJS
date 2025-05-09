@@ -21,8 +21,8 @@ export class ForesightManager {
   private globalSettings: ForesightManagerProps = {
     debug: false,
     enableMouseTrajectory: true,
-    positionHistorySize: 6,
-    trajectoryPredictionTime: 50,
+    positionHistorySize: 8,
+    trajectoryPredictionTime: 80,
     defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     resizeScrollThrottleDelay: 50,
   }
@@ -113,7 +113,7 @@ export class ForesightManager {
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized in constructor/alterGlobalSettings
+      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized
     const originalRect = element.getBoundingClientRect()
     const newElementData: ElementData = {
       callback,
@@ -181,7 +181,6 @@ export class ForesightManager {
       if (JSON.stringify(this.globalSettings.defaultHitSlop) !== JSON.stringify(newSlop)) {
         this.globalSettings.defaultHitSlop = newSlop
         settingsActuallyChanged = true
-        // Note: This won't update existing elements' hitSlop unless they are re-registered.
       }
     }
 
@@ -217,7 +216,7 @@ export class ForesightManager {
   }
 
   private turnOnDebugMode() {
-    this.debugMode = true // Ensure this is true when method is called
+    this.debugMode = true
     if (!this.debugger) {
       this.debugger = new ForesightDebugger(this)
       this.debugger.initialize(
@@ -227,8 +226,6 @@ export class ForesightManager {
         this.predictedPoint
       )
     } else {
-      // If debugger exists, ensure its controls are up-to-date with current globalSettings
-      // This could happen if debug was false, then true again, or settings changed.
       this.debugger.updateControlsState(this.globalSettings)
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
@@ -312,6 +309,61 @@ export class ForesightManager {
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
   }
 
+  /**
+   * Checks if a line segment intersects with an axis-aligned rectangle.
+   * Uses the Liang-Barsky line clipping algorithm.
+   * @param p1 Start point of the line segment.
+   * @param p2 End point of the line segment.
+   * @param rect The rectangle to check against.
+   * @returns True if the line segment intersects the rectangle, false otherwise.
+   */
+  private lineSegmentIntersectsRect(p1: Point, p2: Point, rect: Rect): boolean {
+    let t0 = 0.0
+    let t1 = 1.0
+    const dx = p2.x - p1.x
+    const dy = p2.y - p1.y
+
+    // Helper function for Liang-Barsky algorithm
+    // p: parameter related to edge normal and line direction
+    // q: parameter related to distance from p1 to edge
+    const clipTest = (p: number, q: number): boolean => {
+      if (p === 0) {
+        // Line is parallel to the clip edge
+        if (q < 0) {
+          // Line is outside the clip edge (p1 is on the "wrong" side)
+          return false
+        }
+      } else {
+        const r = q / p
+        if (p < 0) {
+          // Line proceeds from outside to inside (potential entry)
+          if (r > t1) return false // Enters after already exited
+          if (r > t0) t0 = r // Update latest entry time
+        } else {
+          // Line proceeds from inside to outside (potential exit) (p > 0)
+          if (r < t0) return false // Exits before already entered
+          if (r < t1) t1 = r // Update earliest exit time
+        }
+      }
+      return true
+    }
+
+    // Left edge: rect.left
+    if (!clipTest(-dx, p1.x - rect.left)) return false
+    // Right edge: rect.right
+    if (!clipTest(dx, rect.right - p1.x)) return false
+    // Top edge: rect.top
+    if (!clipTest(-dy, p1.y - rect.top)) return false
+    // Bottom edge: rect.bottom
+    if (!clipTest(dy, rect.bottom - p1.y)) return false
+
+    // If t0 > t1, the segment is completely outside or misses the clip window.
+    // Also, the valid intersection must be within the segment [0,1].
+    // Since t0 and t1 are initialized to 0 and 1, and clamped,
+    // this also ensures the intersection lies on the segment.
+    return t0 <= t1
+  }
+
   private isMouseInExpandedArea = (
     area: Rect,
     clientPoint: Point,
@@ -348,10 +400,11 @@ export class ForesightManager {
       let linkStateChanged = false
 
       if (this.globalSettings.enableMouseTrajectory && !isHoveringInArea) {
+        // Check if the trajectory line segment intersects the expanded rect
         if (
-          this.pointIntersectsRect(
-            this.predictedPoint.x,
-            this.predictedPoint.y,
+          this.lineSegmentIntersectsRect(
+            this.currentPoint,
+            this.predictedPoint,
             elementData.elementBounds.expandedRect
           )
         ) {
@@ -361,18 +414,22 @@ export class ForesightManager {
               ...elementData,
               isTrajectoryHit: true,
               trajectoryHitTime: performance.now(),
-              isHovering: isHoveringInArea,
+              isHovering: isHoveringInArea, // isHoveringInArea is false here
             })
             linkStateChanged = true
           }
         }
+        // Note: No 'else' here to turn off isTrajectoryHit immediately.
+        // It's managed by checkTrajectoryHitExpiration or when actual hover occurs.
       }
 
       if (elementData.isHovering !== isHoveringInArea) {
         this.links.set(element, {
           ...elementData,
           isHovering: isHoveringInArea,
-          // Preserve trajectory hit state if it was already hit
+          // Preserve trajectory hit state if it was already hit,
+          // unless actual hover is now false and trajectory also doesn't hit
+          // (though trajectory hit is primarily for non-hovering states)
           isTrajectoryHit: this.links.get(element)!.isTrajectoryHit,
           trajectoryHitTime: this.links.get(element)!.trajectoryHitTime,
         })
