@@ -9,9 +9,10 @@ import type {
   Point,
   Rect,
 } from "../types/types"
+import { captureRejectionSymbol } from "events"
 
 export class ForesightManager {
-  private static instance: ForesightManager
+  private static manager: ForesightManager
   private links: Map<ForesightElement, ElementData> = new Map()
 
   private isSetup: boolean = false
@@ -35,37 +36,35 @@ export class ForesightManager {
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   private constructor() {
-    // Ensure defaultHitSlop is normalized if it's a number initially
     this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop)
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
   public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
-    if (!ForesightManager.instance) {
-      ForesightManager.instance = new ForesightManager()
-      // Apply initial props, which also handles initial debugger setup
+    if (!ForesightManager.manager) {
+      ForesightManager.manager = new ForesightManager()
       if (props) {
-        ForesightManager.instance.alterGlobalSettings(props)
+        ForesightManager.manager.alterGlobalSettings(props)
       } else {
-        // If no props, but default globalSettings.debug is true, ensure debugger is on
-        if (ForesightManager.instance.globalSettings.debug) {
-          ForesightManager.instance.turnOnDebugMode()
+        if (ForesightManager.manager.globalSettings.debug) {
+          ForesightManager.manager.turnOnDebugMode()
         }
       }
     } else if (props) {
-      // Instance exists, apply new props (handles debugger lifecycle and UI updates)
-      ForesightManager.instance.alterGlobalSettings(props)
+      console.error(
+        "ForesightManager is already initialized. Use alterGlobalSettings to update settings. Make sure to not put the ForesightManager.initialize() in a place that rerenders often."
+      )
+      ForesightManager.manager.alterGlobalSettings(props)
     }
-    // Ensure internal debugMode flag is synced
-    ForesightManager.instance.debugMode = ForesightManager.instance.globalSettings.debug
-    return ForesightManager.instance
+    ForesightManager.manager.debugMode = ForesightManager.manager.globalSettings.debug
+    return ForesightManager.manager
   }
 
-  public static getInstance() {
-    if (!ForesightManager.instance) {
-      return this.initialize() // Initialize with defaults
+  public static get instance() {
+    if (!ForesightManager.manager) {
+      return this.initialize()
     }
-    return ForesightManager.instance
+    return ForesightManager.manager
   }
 
   private checkTrajectoryHitExpiration(): void {
@@ -74,7 +73,7 @@ export class ForesightManager {
     const updatedForesightElements: ForesightElement[] = []
 
     this.links.forEach((elementData, element) => {
-      if (elementData.isTrajectoryHit && now - elementData.trajectoryHitTime > 300) {
+      if (elementData.isTrajectoryHit && now - elementData.trajectoryHitTime > 100) {
         this.links.set(element, {
           ...elementData,
           isTrajectoryHit: false,
@@ -113,7 +112,7 @@ export class ForesightManager {
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized
+      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized in constructor
     const originalRect = element.getBoundingClientRect()
     const newElementData: ElementData = {
       callback,
@@ -303,10 +302,6 @@ export class ForesightManager {
     const predictedX = x + vx * trajectoryPredictionTimeInSeconds
     const predictedY = y + vy * trajectoryPredictionTimeInSeconds
     return { x: predictedX, y: predictedY }
-  }
-
-  private pointIntersectsRect = (x: number, y: number, rect: Rect): boolean => {
-    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
   }
 
   /**

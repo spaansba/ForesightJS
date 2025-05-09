@@ -13,12 +13,7 @@ const ReactPage: React.FC = () => {
   const box2Ref = useRef<HTMLDivElement>(null)
   const box3Ref = useRef<HTMLDivElement>(null)
   const unregisterFuncsRef = useRef<(() => void)[]>([])
-
-  const manager = ForesightManager.initialize({
-    debug: debugMode,
-    defaultHitSlop: 0,
-  })
-
+  const manager = ForesightManager.instance
   // Initialize ForesightManager
   useEffect(() => {
     // Box 1 - standard hitSlop
@@ -84,7 +79,7 @@ const ReactPage: React.FC = () => {
 
   // Update debug mode
   useEffect(() => {
-    ForesightManager.initialize({ debug: debugMode })
+    manager.alterGlobalSettings({ debug: debugMode })
   }, [debugMode])
 
   // Show notification
@@ -112,7 +107,7 @@ const ReactPage: React.FC = () => {
     unregisterFuncsRef.current = []
 
     // Generate new elements
-    const manager = ForesightManager.getInstance()
+    const manager = ForesightManager.instance
     const newElements: JSX.Element[] = []
 
     for (let i = 0; i < 50; i++) {
