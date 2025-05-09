@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Next.js Integration
+# Next.js
 
 ## The Problem with Default Next.js Prefetching
 
@@ -22,7 +22,7 @@ ForesightJS optimizes prefetching by only triggering for links the user is likel
 
 ## ForesightLink Component
 
-```jsx
+```tsx
 // components/ForesightLink.tsx
 "use client"
 import type { LinkProps } from "next/link"
@@ -59,9 +59,9 @@ function Foresight({ children, className, ...props }: ForesightLinkProps) {
 
   const router = useRouter()
 
+  // instead of this useEffect you can also use the useForesight React hook (see React integrations)
   useEffect(() => {
-
-    if (!LinkRef.current){
+    if (!LinkRef.current) {
       return
     }
     const callBack = () => router.prefetch(props.href.toString())
@@ -79,49 +79,23 @@ function Foresight({ children, className, ...props }: ForesightLinkProps) {
 export default ForesightLink
 ```
 
-## Quick Setup
+**Use ForesightLink in Your Navigation**
 
-1. **Initialize ForesightManager**
-
-```jsx
-// app/layout.tsx
-"use client"
-import { useEffect } from 'react'
-import { ForesightManager } from 'js.foresight'
-
-function ForesightProvider({ children }) {
-  useEffect(() => {
-    ForesightManager.initialize({
-      trajectoryPredictionTime: 80,
-      debug: process.env.NODE_ENV === 'development'
-    })
-  }, [])
-  
-  return children
-}
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body>
-        <ForesightProvider>{children}</ForesightProvider>
-      </body>
-    </html>
-  )
-}
-```
-
-2. **Use ForesightLink in Your Navigation**
-
-```jsx
-import ForesightLink from './ForesightLink'
+```tsx
+import ForesightLink from "./ForesightLink"
 
 export default function Navigation() {
   return (
     <nav>
-      <ForesightLink href="/" prefetch="foresight">Home</ForesightLink>
-      <ForesightLink href="/products" prefetch="foresight">Products</ForesightLink>
-      <ForesightLink href="/contact" prefetch="foresight">Contact</ForesightLink>
+      <ForesightLink href="/" prefetch="foresight">
+        Home
+      </ForesightLink>
+      <ForesightLink href="/products" prefetch="foresight">
+        Products
+      </ForesightLink>
+      <ForesightLink href="/contact" prefetch="foresight">
+        Contact
+      </ForesightLink>
     </nav>
   )
 }

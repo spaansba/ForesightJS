@@ -11,15 +11,13 @@ ForesightJS provides two levels of configuration:
 
 ## Global Configuration
 
-Global settings are specified when initializing the ForesightManager. This should be done once at your application's entry point:
+Global settings are specified when initializing the ForesightManager. This should be done once at your application's entry point. If you want the default global options you dont need to initialize the ForesightManager.
 
 ```javascript
 import { ForesightManager } from "foresightjs"
 
 // Initialize the manager if you want custom global settings (do this once at app startup)
-// If you dont want global settings, you dont have to initialize the manager
 ForesightManager.initialize({
-  // Configuration options here
   debug: false,
   enableMousePrediction: true,
   positionHistorySize: 8,
@@ -57,6 +55,9 @@ const unregister = ForesightManager.instance.register(
   { top: 20, left: 10, bottom: 100, right: 50 }, // Hit slop (also accepts a singular number for all sides)
   "Navigation Button" // Optional name (useful for debugging)
 )
+
+// its best practice to unregister the element if you are done with it (return of an useEffect in React for example)
+unregister(element)
 ```
 
 ### Element Registration Parameters
@@ -67,54 +68,3 @@ const unregister = ForesightManager.instance.register(
 | `callback` | function       | Yes      | Function that executes when interaction is predicted or occurs                  |
 | `hitSlop`  | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox |
 | `name`     | string         | No       | A descriptive name, useful in debug mode                                        |
-
-### Hit Slop Explained
-
-The `hitSlop` parameter defines how much to expand the element's bounding box for detection purposes. It can be:
-
-- A single number (applied equally to all sides)
-- A `Rect` object for granular control:
-
-```javascript
-// Uniform 20px hit slop on all sides
-manager.register(element, callback, 20)
-
-// Custom hit slop with different values per side
-manager.register(element, callback, {
-  top: 30, // 30px above the element
-  right: 100, // 100px to the right
-  bottom: 10, // 10px below
-  left: 50, // 50px to the left
-})
-```
-
-This is especially useful for:
-
-- Small targets that need larger hit areas
-- Elements where approaching from one direction is more common
-- Creating "lanes" for nested interactive elements
-
-## Configuration Best Practices
-
-1. **Adjust `trajectoryPredictionTime` based on your use case**:
-
-   - Smaller values (40-60ms) for subtle, quick optimizations
-   - Larger values (80-150ms) for pre-loading resource-intensive content
-
-2. **Be conservative with `positionHistorySize`**:
-
-   - Smaller values (4-6) for more responsive but potentially jittery predictions
-   - Larger values (8-12) for smoother but slightly delayed predictions
-
-3. **Use custom `hitSlop` values aligned with UI design**:
-
-   - Consider the approach angles and design of your UI
-   - Use larger hit areas for important or commonly used elements
-
-4. **Set meaningful debug names for complex UIs**:
-
-   - When debugging, the element name helps identify which element is being interacted with
-
-5. **Consider performance with many elements**:
-   - Register/unregister elements as they enter/exit the viewport
-   - Increase `resizeScrollThrottleDelay` for performance if you have many elements
