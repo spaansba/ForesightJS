@@ -20,6 +20,7 @@ export class ForesightManager {
 
   private positionHistorySize = 6
   private trajectoryPredictionTime = 50
+  private defaultHitSlop: Rect = { top: 0, left: 0, right: 0, bottom: 0 }
   private positions: MousePosition[] = []
   private enableMouseTrajectory: boolean = true
   private currentPoint: Point = { x: 0, y: 0 }
@@ -38,11 +39,7 @@ export class ForesightManager {
       ForesightManager.instance = new ForesightManager()
     }
     if (props) {
-      ForesightManager.instance.setTrajectorySettings({
-        historySize: props.positionHistorySize,
-        predictionTime: props.trajectoryPredictionTime,
-        enabled: props.enableMouseTrajectory,
-      })
+      ForesightManager.instance.setTrajectorySettings(props)
     }
     if (props?.debug) {
       this.instance.turnOnDebugMode()
@@ -90,10 +87,7 @@ export class ForesightManager {
     }
   }
 
-  private normalizeHitSlop = (hitSlop: number | Rect | undefined): Rect => {
-    if (!hitSlop) {
-      return { top: 0, left: 0, right: 0, bottom: 0 }
-    }
+  private normalizeHitSlop = (hitSlop: number | Rect): Rect => {
     if (typeof hitSlop === "number") {
       return {
         top: hitSlop,
@@ -110,7 +104,7 @@ export class ForesightManager {
     callback: ForesightCallback,
     hitSlop?: number | Rect
   ): () => void {
-    const normalizedHitSlop = this.normalizeHitSlop(hitSlop)
+    const normalizedHitSlop = hitSlop ? this.normalizeHitSlop(hitSlop) : this.defaultHitSlop
     const originalRect = element.getBoundingClientRect()
     const newElementData: ElementData = {
       callback,
@@ -145,14 +139,13 @@ export class ForesightManager {
     }
   }
 
-  public setTrajectorySettings(settings: {
-    historySize?: number
-    predictionTime?: number
-    enabled?: boolean
-  }): void {
+  public setTrajectorySettings(props?: Partial<ForesightManagerProps>): void {
     let changed = false
-    if (settings.historySize !== undefined && this.positionHistorySize !== settings.historySize) {
-      this.positionHistorySize = settings.historySize
+    if (
+      props?.positionHistorySize !== undefined &&
+      this.positionHistorySize !== props.positionHistorySize
+    ) {
+      this.positionHistorySize = props.positionHistorySize
       while (this.positions.length > this.positionHistorySize) {
         this.positions.shift()
       }
@@ -160,15 +153,23 @@ export class ForesightManager {
     }
 
     if (
-      settings.predictionTime !== undefined &&
-      this.trajectoryPredictionTime !== settings.predictionTime
+      props?.trajectoryPredictionTime !== undefined &&
+      this.trajectoryPredictionTime !== props?.trajectoryPredictionTime
     ) {
-      this.trajectoryPredictionTime = settings.predictionTime
+      this.trajectoryPredictionTime = props?.trajectoryPredictionTime
       changed = true
     }
 
-    if (settings.enabled !== undefined && this.enableMouseTrajectory !== settings.enabled) {
-      this.enableMouseTrajectory = settings.enabled
+    if (
+      props?.enableMouseTrajectory !== undefined &&
+      this.enableMouseTrajectory !== props?.enableMouseTrajectory
+    ) {
+      this.enableMouseTrajectory = props?.enableMouseTrajectory
+      changed = true
+    }
+
+    if (props?.defaultHitSlop !== undefined) {
+      this.defaultHitSlop = this.normalizeHitSlop(props?.defaultHitSlop)
       changed = true
     }
 

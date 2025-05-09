@@ -33,9 +33,13 @@ export type ElementData = {
   trajectoryHitTime: number
 }
 
+/**
+ * Configuration options for the ForesightManager
+ */
 export type ForesightManagerProps = {
-  positionHistorySize: number
-  trajectoryPredictionTime: number
-  enableMouseTrajectory: boolean
-  debug: boolean
+  positionHistorySize: number // Number of mouse positions to keep in history
+  trajectoryPredictionTime: number // How far ahead (ms) to predict mouse trajectory
+  enableMouseTrajectory: boolean // Whether to enable trajectory prediction
+  debug: boolean // Whether to show debug information
+  defaultHitSlop: Rect | number // Default hit slop to apply to all elements
 }

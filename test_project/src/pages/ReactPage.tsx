@@ -14,12 +14,13 @@ const ReactPage: React.FC = () => {
   const box3Ref = useRef<HTMLDivElement>(null)
   const unregisterFuncsRef = useRef<(() => void)[]>([])
 
+  const manager = ForesightManager.initialize({
+    debug: debugMode,
+    defaultHitSlop: 100,
+  })
+
   // Initialize ForesightManager
   useEffect(() => {
-    const manager = ForesightManager.initialize({
-      debug: debugMode,
-    })
-
     // Box 1 - standard hitSlop
     let box1CallbackCount = 0
     let unregisterBox1: (() => void) | null = null

@@ -24,8 +24,6 @@ export default class TypeScriptPage {
   private notificationArea: HTMLElement = document.createElement("div")
 
   constructor() {
-    console.log("TypeScriptPage: Constructor called")
-
     // Create page container
     this.container = document.createElement("div")
     this.container.className = "p-5 font-sans"
@@ -92,12 +90,12 @@ export default class TypeScriptPage {
       pageContainer.appendChild(this.container)
       this.initialized = true
       console.log("TypeScriptPage: Successfully initialized and appended to DOM")
-      
+
       // Trigger a resize event after initialization to update element positions
       setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-        console.log("TypeScriptPage: Triggered resize event to update positions");
-      }, 100);
+        window.dispatchEvent(new Event("resize"))
+        console.log("TypeScriptPage: Triggered resize event to update positions")
+      }, 100)
     } else {
       console.error("TypeScriptPage: Could not find typescript-page-container element")
     }
@@ -115,8 +113,8 @@ export default class TypeScriptPage {
     this.debugButton.className = this.debugEnabled
       ? "px-4 py-2 font-medium rounded text-white bg-red-500 hover:bg-red-600"
       : "px-4 py-2 font-medium rounded text-white bg-blue-500 hover:bg-blue-600"
-    
-    console.log(`TypeScriptPage: Debug mode ${this.debugEnabled ? 'enabled' : 'disabled'}`);
+
+    console.log(`TypeScriptPage: Debug mode ${this.debugEnabled ? "enabled" : "disabled"}`)
   }
 
   /**
@@ -278,12 +276,12 @@ export default class TypeScriptPage {
       resultsDisplay.textContent = `Generated and registered 50 elements in ${duration.toFixed(
         2
       )}ms`
-      
+
       // Trigger a resize event to ensure correct hitbox positions for new elements
       setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-        console.log("TypeScriptPage: Triggered resize after generating elements");
-      }, 50);
+        window.dispatchEvent(new Event("resize"))
+        console.log("TypeScriptPage: Triggered resize after generating elements")
+      }, 50)
     })
 
     perfSection.appendChild(generateButton)
@@ -365,7 +363,7 @@ export default class TypeScriptPage {
    */
   public cleanup(): void {
     console.log("TypeScriptPage: Cleanup method called")
-    
+
     // Unregister all elements
     this.unregisterFunctions.forEach((unregister) => {
       try {
