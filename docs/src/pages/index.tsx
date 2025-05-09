@@ -3,10 +3,17 @@ import clsx from "clsx"
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 import Layout from "@theme/Layout"
-import HomepageFeatures from "@site/src/components/HomepageFeatures"
 import Heading from "@theme/Heading"
-
 import styles from "./index.module.css"
+import ForesightPreview from "../components/ForesightPreview"
+import { ForesightManager } from "js.foresight"
+
+ForesightManager.initialize({
+  enableMousePrediction: true,
+  trajectoryPredictionTime: 80,
+  resizeScrollThrottleDelay: 0,
+  debug: true,
+})
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
@@ -36,7 +43,7 @@ export default function Home(): ReactNode {
     >
       <HomepageHeader />
       <main>
-        <HomepageFeatures />
+        <ForesightPreview />
       </main>
     </Layout>
   )

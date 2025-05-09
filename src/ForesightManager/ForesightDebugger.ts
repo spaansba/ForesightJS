@@ -69,24 +69,24 @@ export class ForesightDebugger {
         pointer-events: none; z-index: 9999;
       }
       .jsforesight-link-overlay {
-        position: absolute; border: 2px solid blue;
+        position: absolute; border: 2px solid transparent;
         background-color: rgba(0, 0, 255, 0.1); box-sizing: border-box;
         transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .jsforesight-link-overlay.active {
-        border-color: orange; background-color: rgba(255, 0, 0, 0.1);
+        border-color: oklch(83.7% 0.128 66.29); background-color: rgba(255, 0, 0, 0.1);
       }
       .jsforesight-link-overlay.trajectory-hit {
-        border-color: lime; background-color: rgba(0, 255, 0, 0.3);
+        border-color: oklch(89.7% 0.196 126.665); background-color: rgba(0, 255, 0, 0.3);
         box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
       }
       .jsforesight-expanded-overlay {
-        position: absolute; border: 1px dashed rgba(0, 0, 255, 0.5);
+        position: absolute; border: 1px dashed rgba(0, 0, 255, 0.3);
         background-color: rgba(0, 0, 255, 0.05); box-sizing: border-box;
       }
       .jsforesight-mouse-predicted {
         position: absolute; width: 20px; height: 20px; border-radius: 50%;
-        border: 2px solid orange; background-color: rgba(255, 165, 0, 0.3);
+        border: 2px solid oklch(83.7% 0.128 66.29); background-color: rgba(255, 165, 0, 0.3);
         transform: translate(-50%, -50%); z-index: 10000;
       }
       .jsforesight-trajectory-line {
