@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import styles from "./styles.module.css"
 import { useRef, useEffect, useState } from "react"
+import { ForesightManager } from "js.foresight"
 
 export default function ForesightPreview(): ReactNode {
   const [debugMode, setDebugMode] = useState(false)
@@ -16,7 +17,7 @@ export default function ForesightPreview(): ReactNode {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Foresight.js Interactive Demo</h2>
+        <h2 className={styles.title}>Interactive Demo</h2>
         <button
           className={`${styles.debugButton} ${debugMode ? styles.active : ""}`}
           onClick={toggleDebugMode}
@@ -55,10 +56,9 @@ function InteractiveButton({ color, label, name }: InteractiveButtonProps) {
         buttonRef.current,
         () => {
           setActivated(true)
-          unregister()
           setTimeout(() => setActivated(false), 1000)
         },
-        40, // Add hit slop of 40px around the button
+        40,
         name
       )
 

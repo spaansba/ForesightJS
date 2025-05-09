@@ -49,6 +49,7 @@
   margin-bottom: 2rem;
   color: #495057;
   line-height: 1.6;
+  font-size: 1.2rem;
 }
 
 .features {
@@ -57,9 +58,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 3rem 0;
   width: 100%;
-  min-height: 300px;
+  margin-top: 4rem;
 }
 
 .previewButton {
@@ -73,10 +73,6 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-}
-
-.previewButton:hover {
-  transform: translateY(-2px);
 }
 
 .previewButton.activated {
@@ -102,7 +98,6 @@
   }
 
   .features {
-    flex-direction: column;
-    padding: 2rem 0;
+    margin-top: 1rem;
   }
 }
