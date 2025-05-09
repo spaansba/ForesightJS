@@ -25,7 +25,7 @@ import type {
  */
 export class ForesightManager {
   private static manager: ForesightManager
-  private links: Map<ForesightElement, ForesightElementData> = new Map()
+  private elements: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
   private debugMode: boolean = false
@@ -106,12 +106,12 @@ export class ForesightManager {
     let needsVisualUpdate = false
     const updatedForesightElements: ForesightElement[] = []
 
-    this.links.forEach((foresightElementData, element) => {
+    this.elements.forEach((foresightElementData, element) => {
       if (
         foresightElementData.isTrajectoryHit &&
         now - foresightElementData.trajectoryHitTime > 100
       ) {
-        this.links.set(element, {
+        this.elements.set(element, {
           ...foresightElementData,
           isTrajectoryHit: false,
         })
@@ -122,7 +122,7 @@ export class ForesightManager {
 
     if (needsVisualUpdate && this.debugMode && this.debugger) {
       updatedForesightElements.forEach((element) => {
-        const data = this.links.get(element)
+        const data = this.elements.get(element)
         if (data && this.debugger) {
           this.debugger.createOrUpdateLinkOverlay(element, data)
         }
@@ -177,10 +177,10 @@ export class ForesightManager {
       trajectoryHitTime: 0,
       name: name ?? "Unnamed",
     }
-    this.links.set(element, newForesightElementData)
+    this.elements.set(element, newForesightElementData)
     this.setupGlobalListeners()
     if (this.debugMode && this.debugger) {
-      const data = this.links.get(element)
+      const data = this.elements.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
     }
 
@@ -188,11 +188,12 @@ export class ForesightManager {
   }
 
   private unregister(element: ForesightElement): void {
-    this.links.delete(element)
+    console.log("Unregistering element:", element)
+    this.elements.delete(element)
     if (this.debugMode && this.debugger) {
       this.debugger.removeLinkOverlay(element)
     }
-    if (this.links.size === 0 && this.isSetup) {
+    if (this.elements.size === 0 && this.isSetup) {
       this.removeGlobalListeners()
     }
   }
@@ -281,7 +282,7 @@ export class ForesightManager {
     if (!this.debugger) {
       this.debugger = new ForesightDebugger(this)
       this.debugger.initialize(
-        this.links,
+        this.elements,
         this.globalSettings,
         this.currentPoint,
         this.predictedPoint
@@ -306,7 +307,7 @@ export class ForesightManager {
   }
 
   private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
-    const foresightElementData = this.links.get(element)
+    const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
     const expandedRect = this.getExpandedRect(element.getBoundingClientRect(), hitSlop)
@@ -315,7 +316,7 @@ export class ForesightManager {
       JSON.stringify(expandedRect) !==
       JSON.stringify(foresightElementData.elementBounds.expandedRect)
     ) {
-      this.links.set(element, {
+      this.elements.set(element, {
         ...foresightElementData,
         elementBounds: {
           ...foresightElementData.elementBounds,
@@ -325,13 +326,13 @@ export class ForesightManager {
     }
 
     if (this.debugMode && this.debugger) {
-      const updatedData = this.links.get(element)
+      const updatedData = this.elements.get(element)
       if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
     }
   }
 
   private updateAllRects(): void {
-    this.links.forEach((data, element) => {
+    this.elements.forEach((data, element) => {
       this.updateExpandedRect(element, data.elementBounds.hitSlop)
     })
   }
@@ -446,9 +447,9 @@ export class ForesightManager {
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
-    const linksToUpdateInDebugger: ForesightElement[] = []
+    const elementsToUpdateInDebugger: ForesightElement[] = []
 
-    this.links.forEach((foresightElementData, element) => {
+    this.elements.forEach((foresightElementData, element) => {
       if (!foresightElementData.elementBounds.expandedRect) return
 
       const { isHoveringInArea, shouldRunCallback } = this.isMouseInExpandedArea(
@@ -457,7 +458,7 @@ export class ForesightManager {
         foresightElementData.isHovering
       )
 
-      let linkStateChanged = false
+      let elementStateChanged = false
 
       if (this.globalSettings.enableMousePrediction && !isHoveringInArea) {
         // Check if the trajectory line segment intersects the expanded rect
@@ -470,13 +471,13 @@ export class ForesightManager {
         ) {
           if (!foresightElementData.isTrajectoryHit) {
             foresightElementData.callback()
-            this.links.set(element, {
+            this.elements.set(element, {
               ...foresightElementData,
               isTrajectoryHit: true,
               trajectoryHitTime: performance.now(),
               isHovering: isHoveringInArea, // isHoveringInArea is false here
             })
-            linkStateChanged = true
+            elementStateChanged = true
           }
         }
         // Note: No 'else' here to turn off isTrajectoryHit immediately.
@@ -484,20 +485,20 @@ export class ForesightManager {
       }
 
       if (foresightElementData.isHovering !== isHoveringInArea) {
-        this.links.set(element, {
+        this.elements.set(element, {
           ...foresightElementData,
           isHovering: isHoveringInArea,
           // Preserve trajectory hit state if it was already hit,
           // unless actual hover is now false and trajectory also doesn't hit
           // (though trajectory hit is primarily for non-hovering states)
-          isTrajectoryHit: this.links.get(element)!.isTrajectoryHit,
-          trajectoryHitTime: this.links.get(element)!.trajectoryHitTime,
+          isTrajectoryHit: this.elements.get(element)!.isTrajectoryHit,
+          trajectoryHitTime: this.elements.get(element)!.trajectoryHitTime,
         })
-        linkStateChanged = true
+        elementStateChanged = true
       }
 
-      if (linkStateChanged) {
-        linksToUpdateInDebugger.push(element)
+      if (elementStateChanged) {
+        elementsToUpdateInDebugger.push(element)
       }
 
       if (shouldRunCallback) {
@@ -511,8 +512,8 @@ export class ForesightManager {
     })
 
     if (this.debugMode && this.debugger) {
-      linksToUpdateInDebugger.forEach((element) => {
-        const data = this.links.get(element)
+      elementsToUpdateInDebugger.forEach((element) => {
+        const data = this.elements.get(element)
         if (data) this.debugger!.createOrUpdateLinkOverlay(element, data)
       })
       this.debugger.updateTrajectoryVisuals(
