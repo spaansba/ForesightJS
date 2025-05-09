@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { ForesightManager } from "../../../src/ForesightManager/ForesightManager"
 import type { JSX } from "react/jsx-dev-runtime"
+import type { ForesightElementData } from "../../../src/types/types"
 
 const ReactPage: React.FC = () => {
   // Start with debug mode on by default
@@ -8,13 +9,15 @@ const ReactPage: React.FC = () => {
   const [notification, setNotification] = useState("")
   const [performanceResult, setPerformanceResult] = useState("")
   const [elementsGenerated, setElementsGenerated] = useState<JSX.Element[]>([])
-
+  const [isThirdButton, setIsThirdButton] = useState(false)
+  const [isResizeSecondButton, setIsResizeSecondButton] = useState(false)
   const box1Ref = useRef<HTMLDivElement>(null)
   const box2Ref = useRef<HTMLDivElement>(null)
   const box3Ref = useRef<HTMLDivElement>(null)
   const unregisterFuncsRef = useRef<(() => void)[]>([])
   const manager = ForesightManager.instance
-  // Initialize ForesightManager
+  const [trackedElements, setTrackedElements] = useState<ForesightElementData[]>([])
+
   useEffect(() => {
     // Box 1 - standard hitSlop
     let box1CallbackCount = 0
@@ -31,6 +34,7 @@ const ReactPage: React.FC = () => {
         50,
         "big hitslop"
       )
+
       if (unregisterBox1) unregisterFuncsRef.current.push(unregisterBox1)
     }
 
@@ -46,7 +50,8 @@ const ReactPage: React.FC = () => {
           console.log(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
           showNotification(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
         },
-        { top: 20, right: 100, bottom: 20, left: 100 } // Custom hitSlop
+        { top: 20, right: 100, bottom: 20, left: 100 },
+        "custom hitslop"
       )
       if (unregisterBox2) unregisterFuncsRef.current.push(unregisterBox2)
     }
@@ -56,11 +61,16 @@ const ReactPage: React.FC = () => {
     let unregisterBox3: (() => void) | null = null
 
     if (box3Ref.current) {
-      unregisterBox3 = manager.register(box3Ref.current, () => {
-        box3CallbackCount++
-        console.log(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
-        showNotification(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
-      })
+      unregisterBox3 = manager.register(
+        box3Ref.current,
+        () => {
+          box3CallbackCount++
+          console.log(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
+          showNotification(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
+        },
+        0,
+        "no hitslop"
+      )
       if (unregisterBox3) unregisterFuncsRef.current.push(unregisterBox3)
     }
 
@@ -76,7 +86,34 @@ const ReactPage: React.FC = () => {
       })
       unregisterFuncsRef.current = []
     }
-  }, [debugMode])
+  }, [debugMode, isThirdButton])
+
+  useEffect(() => {
+    // Function to fetch and update the elements from the manager
+    const updateElementsDisplay = () => {
+      // 1. Convert Map values to an array
+      const elementsArray = Array.from(manager.elements.values())
+      setTrackedElements(elementsArray)
+    }
+
+    // Initial load
+    updateElementsDisplay()
+
+    // 2. How to get live updates:
+    // This is the crucial part. ForesightManager doesn't currently have a
+    // built-in way to subscribe to its internal state changes for external UI.
+    // For a simple debug UI, you could use a polling interval.
+    // A more robust solution would involve ForesightManager emitting events
+    // or providing a subscription mechanism.
+
+    // Option A: Simple Polling (for debug purposes)
+    const intervalId = setInterval(updateElementsDisplay, 250) // Update every 250ms
+
+    // Cleanup on component unmount
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, []) //
 
   // Update debug mode
   useEffect(() => {
@@ -150,6 +187,25 @@ const ReactPage: React.FC = () => {
         Hover over the colored boxes to test the ForesightManager functionality.
       </p>
 
+      {/* Buttons to test resizing and adding elements */}
+      <div className="flex flex-row gap-4 mb-4">
+        <button
+          className="h-20 w-50 bg-amber-300"
+          onClick={() => {
+            setIsThirdButton(!isThirdButton)
+          }}
+        >
+          add third button to see if mutation observer works
+        </button>
+        <button
+          className="h-20 w-50 bg-amber-300"
+          onClick={() => {
+            setIsResizeSecondButton(!isResizeSecondButton)
+          }}
+        >
+          resize second button to check if resizeobserver works
+        </button>
+      </div>
       <div className="mb-5 p-4 bg-gray-100 rounded-lg">
         <h3 className="text-lg font-semibold mb-2">ForesightManager Settings</h3>
 
@@ -168,18 +224,22 @@ const ReactPage: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold mb-2">Demo Elements</h3>
 
-        <div className="flex flex-wrap gap-10 justify-center">
-          <div
-            ref={box1Ref}
-            className="w-36 h-36 bg-green-500 flex flex-col justify-center items-center text-white font-bold rounded"
-          >
-            Box 1<br />
-            <span className="text-xs font-normal">50px HitSlop</span>
-          </div>
+        <div className="flex flex-wrap gap-10 justify-between">
+          {isThirdButton && (
+            <div
+              ref={box1Ref}
+              className="w-36 h-36 bg-green-500 flex flex-col justify-center items-center text-white font-bold rounded"
+            >
+              Box 1<br />
+              <span className="text-xs font-normal">50px HitSlop</span>
+            </div>
+          )}
 
           <div
             ref={box2Ref}
-            className="w-36 h-36 bg-blue-500 flex flex-col justify-center items-center text-white font-bold rounded"
+            className={`${
+              isResizeSecondButton ? "size-20" : "size-36"
+            } bg-blue-500 flex flex-col justify-center items-center text-white font-bold rounded`}
           >
             Box 2<br />
             <span className="text-xs font-normal">Custom HitSlop</span>
@@ -217,23 +277,18 @@ const ReactPage: React.FC = () => {
         {/* Container for generated elements */}
         <div className="flex flex-wrap gap-1 mt-4 justify-center">{elementsGenerated}</div>
       </div>
-
-      <div className="mt-8 pt-5 border-t border-gray-200">
-        <h3 className="text-lg font-semibold mb-2">How ForesightManager Works:</h3>
-        <ul className="list-disc pl-5">
-          <li className="mb-2">
-            The ForesightManager tracks mouse movement and predicts its trajectory
-          </li>
-          <li className="mb-2">
-            When your mouse is predicted to enter an element's hitSlop area, the callback triggers
-          </li>
-          <li className="mb-2">
-            Enable Debug Mode to visualize the hitSlop areas and trajectory prediction
-          </li>
-          <li className="mb-2">
-            Adjust the settings to see how they affect the prediction behavior
-          </li>
-        </ul>
+      <div className="mb-5">
+        {trackedElements.map((elementData, index) => (
+          // Use a more stable key if elementData.name is unique and persistent,
+          // or if you have another unique ID. Index is a fallback.
+          <div key={elementData.name || index} className="mb-3 p-2 border-b border-gray-300">
+            <span className="text-sm font-semibold text-blue-600">{elementData.name}</span>
+            <div className="text-xs text-gray-700">
+              {`isHovering: ${elementData.isHovering}, isTrajectoryHit: ${elementData.isTrajectoryHit}`}
+            </div>
+            {/* You could add more details here if needed, e.g., from elementData.elementBounds */}
+          </div>
+        ))}
       </div>
     </div>
   )

@@ -27,12 +27,6 @@ export default function ForesightPreview(): ReactNode {
       </div>
       <div className={styles.descriptionText}>
         Hover over or move your cursor toward any button to see how Foresight predicts user intent.
-        {debugMode && (
-          <p>
-            Debug mode is active - you can see the trajectory visualization and adjust settings in
-            the panel.
-          </p>
-        )}
       </div>
       <section className={styles.features}>
         <InteractiveButton color="#3498db" label="Button 1" name="button-name" />
@@ -42,10 +36,6 @@ export default function ForesightPreview(): ReactNode {
         <InteractiveButton color="#9b59b6" label="Button 5" />
         <InteractiveButton color="#1abc9c" label="Button 6" />
       </section>
-      <div className={styles.statsPanel}>
-        <p>Move your cursor toward a button to see intent prediction in action.</p>
-        <p>The callback will trigger before you physically hover the element.</p>
-      </div>
     </div>
   )
 }
@@ -66,6 +56,7 @@ function InteractiveButton({ color, label, name }: InteractiveButtonProps) {
         buttonRef.current,
         () => {
           setActivated(true)
+          unregister()
           setTimeout(() => setActivated(false), 1000)
         },
         40, // Add hit slop of 40px around the button

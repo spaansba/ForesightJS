@@ -19,13 +19,16 @@ import type {
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
  * - Handling global settings for prediction behavior (e.g., history size, prediction time).
  * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
+ * - Automatically updating element bounds on resize using {@link ResizeObserver}.
+ * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
+ * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
  *
  * It should be initialized once using {@link ForesightManager.initialize} and then
  * accessed via the static getter {@link ForesightManager.instance}.
  */
 export class ForesightManager {
   private static manager: ForesightManager
-  private elements: Map<ForesightElement, ForesightElementData> = new Map()
+  public elements: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
   private debugMode: boolean = false
@@ -44,8 +47,18 @@ export class ForesightManager {
   private currentPoint: Point = { x: 0, y: 0 }
   private predictedPoint: Point = { x: 0, y: 0 }
 
+  // Throttling for window resize/scroll triggered updates
   private lastResizeScrollCallTimestamp: number = 0
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  // For automatic unregistration and detecting layout shifts
+  private domObserver: MutationObserver | null = null
+  // Throttling for DOM mutation-triggered rect updates
+  private lastDomMutationRectsUpdateTimestamp: number = 0
+  private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  // For observing individual element resizes
+  private elementResizeObserver: ResizeObserver | null = null
 
   private constructor() {
     this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop)
@@ -54,17 +67,6 @@ export class ForesightManager {
 
   /**
    * Initializes the ForesightManager singleton instance with optional global settings.
-   *
-   * This method sets up the manager, applying any provided configuration. If the manager
-   * is already initialized and this method is called again with new props, it will
-   * log an error and apply the new settings using `alterGlobalSettings`.
-   * It's recommended to call this method only once at the application's entry point.
-   *
-   * If `props.debug` is true or becomes true, the {@link ForesightDebugger} will be initialized or updated.
-   *
-   * @param {Partial<ForesightManagerProps>} [props] - Optional initial global settings
-   *        to configure the manager. See {@link ForesightManagerProps} for details.
-   * @returns {ForesightManager} The singleton instance of the ForesightManager.
    */
   public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
@@ -72,6 +74,7 @@ export class ForesightManager {
       if (props) {
         ForesightManager.manager.alterGlobalSettings(props)
       } else {
+        // Ensure debugger is initialized if debug is true by default and no props are passed
         if (ForesightManager.manager.globalSettings.debug) {
           ForesightManager.manager.turnOnDebugMode()
         }
@@ -82,49 +85,43 @@ export class ForesightManager {
       )
       ForesightManager.manager.alterGlobalSettings(props)
     }
+    // Ensure debugMode property reflects the potentially updated globalSettings.debug
     ForesightManager.manager.debugMode = ForesightManager.manager.globalSettings.debug
     return ForesightManager.manager
   }
 
   /**
    * Gets the singleton instance of the ForesightManager.
-   *
-   * If the manager has not been initialized yet, this getter will call
-   * {@link ForesightManager.initialize} with default settings to create the instance.
-   *
-   * @returns {ForesightManager} The singleton instance of the ForesightManager.
    */
   public static get instance() {
     if (!ForesightManager.manager) {
-      return this.initialize()
+      return this.initialize() // Initializes with defaults if not already done
     }
     return ForesightManager.manager
   }
 
   private checkTrajectoryHitExpiration(): void {
     const now = performance.now()
-    let needsVisualUpdate = false
     const updatedForesightElements: ForesightElement[] = []
 
     this.elements.forEach((foresightElementData, element) => {
       if (
         foresightElementData.isTrajectoryHit &&
-        now - foresightElementData.trajectoryHitTime > 200
+        now - foresightElementData.trajectoryHitTime > 200 // Expiration time for trajectory hit state
       ) {
         this.elements.set(element, {
           ...foresightElementData,
           isTrajectoryHit: false,
         })
-        needsVisualUpdate = true
         updatedForesightElements.push(element)
       }
     })
 
-    if (needsVisualUpdate && this.debugMode && this.debugger) {
+    if (updatedForesightElements.length > 0 && this.debugMode && this.debugger) {
       updatedForesightElements.forEach((element) => {
         const data = this.elements.get(element)
-        if (data && this.debugger) {
-          this.debugger.createOrUpdateLinkOverlay(element, data)
+        if (data) {
+          this.debugger!.createOrUpdateLinkOverlay(element, data)
         }
       })
     }
@@ -143,17 +140,7 @@ export class ForesightManager {
   }
 
   /**
-   * Registers an element with the ForesightManager to monitor for predicted interactions.
-   *
-   * @param element The HTML element to monitor.
-   * @param callback The function to execute when an interaction is predicted or occurs.
-   *                 (Corresponds to {@link ForesightElementConfig.callback})
-   * @param hitSlop Optional. The amount of "slop" to add to the element's bounding box
-   *                for hit detection. Can be a single number or a Rect object.
-   *                This will overwrite the default global hitSlop set by the initializer of foresight.
-   * @param name Optional. A descriptive name for the element, useful for debugging.
-   *             Defaults to "Unnamed".
-   * @returns A function to unregister the element.
+   * Registers an element with the ForesightManager.
    */
   public register(
     element: ForesightElement,
@@ -161,9 +148,10 @@ export class ForesightManager {
     hitSlop?: number | Rect,
     name?: string
   ): () => void {
+    // console.log("Registering element:", name || element);
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : (this.globalSettings.defaultHitSlop as Rect) // Already normalized in constructor
+      : (this.globalSettings.defaultHitSlop as Rect)
     const originalRect = element.getBoundingClientRect()
     const newForesightElementData: ForesightElementData = {
       callback,
@@ -178,7 +166,15 @@ export class ForesightManager {
       name: name ?? "Unnamed",
     }
     this.elements.set(element, newForesightElementData)
-    this.setupGlobalListeners()
+
+    if (!this.isSetup) {
+      this.setupGlobalListeners()
+    }
+
+    if (this.elementResizeObserver) {
+      this.elementResizeObserver.observe(element)
+    }
+
     if (this.debugMode && this.debugger) {
       const data = this.elements.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
@@ -188,40 +184,28 @@ export class ForesightManager {
   }
 
   private unregister(element: ForesightElement): void {
-    console.log("Unregistering element:", element)
-    this.elements.delete(element)
-    if (this.debugMode && this.debugger) {
-      this.debugger.removeLinkOverlay(element)
-    }
-    if (this.elements.size === 0 && this.isSetup) {
-      this.removeGlobalListeners()
+    const isRegistered = this.elements.has(element)
+    if (isRegistered) {
+      console.log("Unregistering element:", this.elements.get(element)?.name || element)
+      if (this.elementResizeObserver) {
+        this.elementResizeObserver.unobserve(element)
+      }
+
+      if (this.debugMode && this.debugger) {
+        this.debugger.removeLinkOverlay(element)
+      }
+      this.elements.delete(element)
+
+      if (this.elements.size === 0 && this.isSetup) {
+        this.removeGlobalListeners()
+      }
+    } else {
+      console.log("Attempted to unregister element not found:", element)
     }
   }
 
   /**
    * Alters the global settings of the ForesightManager at runtime.
-   *
-   * This method allows dynamic updates to global configuration properties such as
-   * prediction parameters (`positionHistorySize`, `trajectoryPredictionTime`),
-   * `defaultHitSlop`, `debug` mode, and more.
-   *
-   * While global settings are typically best configured once via
-   * {@link ForesightManager.initialize} at the application's start, this method
-   * provides a way to modify them post-initialization. It is notably used by the
-   * {@link ForesightDebugger} UI to allow real-time adjustments for testing and
-   * tuning prediction behavior.
-   *
-   * For element-specific configurations (like an individual element's `hitSlop` or `name`),
-   * those should be provided during the element's registration via the
-   * {@link ForesightManager.register} method.
-   *
-   * If debug mode is active (`globalSettings.debug` is true) and any settings
-   * that affect the debugger's display or controls are changed, the
-   * {@link ForesightDebugger} instance will be updated accordingly.
-   *
-   * @param {Partial<ForesightManagerProps>} [props] - An object containing the global
-   *        settings to update. Only properties provided in this object will be changed.
-   *        See {@link ForesightManagerProps} for available settings.
    */
   public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
     let settingsActuallyChanged = false
@@ -262,16 +246,9 @@ export class ForesightManager {
     ) {
       this.globalSettings.defaultHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
       settingsActuallyChanged = true
-      // This requires updating all existing elements' expandedRects if they use default
       this.elements.forEach((data, el) => {
-        // Check if the element is using the (old) default hitSlop
-        // This comparison is tricky if the old default was a number and normalized.
-        // For simplicity, we might just update all, or be more precise.
-        // Assuming if a specific hitSlop was provided at registration, it's stored in data.elementBounds.hitSlop
-        // If data.elementBounds.hitSlop matches the *old* global default, update it.
-        // A simpler approach for now: if global defaultHitSlop changes, re-evaluate all rects
-        // that might have been using it. The most robust is to update all.
-        this.updateExpandedRect(el, data.elementBounds.hitSlop) // This will use its own hitSlop or the new default if it was using default
+        // Re-evaluate expandedRect for all elements as default has changed
+        this.updateExpandedRect(el, data.elementBounds.hitSlop)
       })
     }
 
@@ -304,8 +281,6 @@ export class ForesightManager {
         this.predictedPoint,
         this.globalSettings.enableMousePrediction
       )
-      // If settings affecting element visuals (like hitSlop indirectly) changed,
-      // ensure all overlays are up-to-date.
       this.elements.forEach((data, el) => {
         this.debugger!.createOrUpdateLinkOverlay(el, data)
       })
@@ -323,9 +298,8 @@ export class ForesightManager {
         this.predictedPoint
       )
     } else {
-      // If debugger exists, ensure its view of elements and settings is current
       this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals(this.elements) // Ensure all overlays are correct
+      this.debugger.updateAllLinkVisuals(this.elements)
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -343,12 +317,17 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
+  private updateExpandedRect(
+    element: ForesightElement,
+    hitSlop: Rect // This should be the element's specific hitSlop
+  ): void {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
     const newOriginalRect = element.getBoundingClientRect()
-    const expandedRect = this.getExpandedRect(newOriginalRect, hitSlop)
+    // Use the element's own hitSlop, not the global default, unless it is the default
+    const currentHitSlop = foresightElementData.elementBounds.hitSlop
+    const expandedRect = this.getExpandedRect(newOriginalRect, currentHitSlop)
 
     if (
       JSON.stringify(expandedRect) !==
@@ -360,19 +339,20 @@ export class ForesightManager {
         ...foresightElementData,
         elementBounds: {
           ...foresightElementData.elementBounds,
-          originalRect: newOriginalRect, // Update originalRect as well
+          originalRect: newOriginalRect,
           expandedRect,
         },
       })
-    }
 
-    if (this.debugMode && this.debugger) {
-      const updatedData = this.elements.get(element)
-      if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
+      if (this.debugMode && this.debugger) {
+        const updatedData = this.elements.get(element)
+        if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
+      }
     }
   }
 
   private updateAllRects(): void {
+    // console.log('Updating all rects due to scroll, resize, or DOM mutation.');
     this.elements.forEach((data, element) => {
       this.updateExpandedRect(element, data.elementBounds.hitSlop)
     })
@@ -411,14 +391,6 @@ export class ForesightManager {
     return { x: predictedX, y: predictedY }
   }
 
-  /**
-   * Checks if a line segment intersects with an axis-aligned rectangle.
-   * Uses the Liang-Barsky line clipping algorithm.
-   * @param p1 Start point of the line segment.
-   * @param p2 End point of the line segment.
-   * @param rect The rectangle to check against.
-   * @returns True if the line segment intersects the rectangle, false otherwise.
-   */
   private lineSegmentIntersectsRect(p1: Point, p2: Point, rect: Rect): boolean {
     let t0 = 0.0
     let t1 = 1.0
@@ -427,9 +399,7 @@ export class ForesightManager {
 
     const clipTest = (p: number, q: number): boolean => {
       if (p === 0) {
-        if (q < 0) {
-          return false
-        }
+        if (q < 0) return false
       } else {
         const r = q / p
         if (p < 0) {
@@ -460,8 +430,7 @@ export class ForesightManager {
     const elementsToUpdateInDebugger: ForesightElement[] = []
 
     this.elements.forEach((currentData, element) => {
-      // Capture the state of the element before this event's processing
-      const previousData = { ...currentData }
+      const previousData = { ...currentData } // Shallow copy for comparison
 
       let callbackFiredThisCycle = false
       let finalIsHovering = previousData.isHovering
@@ -470,58 +439,48 @@ export class ForesightManager {
 
       const { expandedRect } = previousData.elementBounds
 
-      // --- 1. Determine Current Physical Hover State ---
       const isCurrentlyPhysicallyHovering =
         this.currentPoint.x >= expandedRect.left &&
         this.currentPoint.x <= expandedRect.right &&
         this.currentPoint.y >= expandedRect.top &&
         this.currentPoint.y <= expandedRect.bottom
 
-      // --- 2. Determine Potential New Trajectory Hit (Prediction Logic) ---
       let isNewTrajectoryActivation = false
       if (
         this.globalSettings.enableMousePrediction &&
-        !isCurrentlyPhysicallyHovering && // Only predict if not physically hovering
-        !previousData.isTrajectoryHit // And not already in a trajectory hit state from previous cycles
+        !isCurrentlyPhysicallyHovering &&
+        !previousData.isTrajectoryHit
       ) {
         if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
         }
       }
 
-      // --- 3. Process Trajectory Hit Activation (if any) ---
       if (isNewTrajectoryActivation) {
-        previousData.callback() // Fire callback based on the state that led to this event
+        previousData.callback()
         callbackFiredThisCycle = true
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
-        // If a trajectory activates, it implies the mouse isn't physically hovering at this exact moment for this logic path
-        // finalIsHovering will be updated based on isCurrentlyPhysicallyHovering later.
       }
 
-      // --- 4. Process Hover State Change and Potential Hover Callback ---
       const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !previousData.isHovering
 
       if (isNewPhysicalHoverEvent) {
-        // Conditions for firing callback due to hover:
-        // 1. No callback has been fired by trajectory logic in this cycle.
-        // 2. AND (Either no prior trajectory hit OR prediction is disabled (making hover always primary))
         const hoverCanTriggerCallback =
           !previousData.isTrajectoryHit ||
           (previousData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
           previousData.callback()
-          // callbackFiredThisCycle = true; // Optional: mark if needed for further logic, though not used after this.
+          // callbackFiredThisCycle = true; // Not strictly needed here as it's the last callback check
         }
       }
 
-      // Set the definitive hover state for this cycle based on physical mouse position
       finalIsHovering = isCurrentlyPhysicallyHovering
 
-      // --- 5. Construct New Element Data and Update if State Changed ---
       const newElementData: ForesightElementData = {
-        ...previousData,
+        ...previousData, // Start with previous data
+        elementBounds: previousData.elementBounds, // Keep existing bounds object
         isHovering: finalIsHovering,
         isTrajectoryHit: finalIsTrajectoryHit,
         trajectoryHitTime: finalTrajectoryHitTime,
@@ -530,7 +489,6 @@ export class ForesightManager {
       const stateActuallyChanged =
         newElementData.isHovering !== previousData.isHovering ||
         newElementData.isTrajectoryHit !== previousData.isTrajectoryHit ||
-        // Ensure time change is also considered a state change if trajectory hit status is true
         (newElementData.isTrajectoryHit &&
           newElementData.trajectoryHitTime !== previousData.trajectoryHitTime)
 
@@ -540,7 +498,6 @@ export class ForesightManager {
       }
     })
 
-    // --- 6. Update Debugger Visuals (if enabled) ---
     if (this.debugMode && this.debugger) {
       elementsToUpdateInDebugger.forEach((element) => {
         const data = this.elements.get(element)
@@ -576,21 +533,104 @@ export class ForesightManager {
     }
   }
 
+  private handleElementResize = (entries: ResizeObserverEntry[]): void => {
+    for (const entry of entries) {
+      const element = entry.target as ForesightElement
+      const foresightElementData = this.elements.get(element)
+
+      if (foresightElementData) {
+        // console.log('ResizeObserver detected resize for:', foresightElementData.name || element);
+        this.updateExpandedRect(element, foresightElementData.elementBounds.hitSlop)
+      }
+    }
+  }
+
+  private handleDomMutations = (mutationsList: MutationRecord[]): void => {
+    let structuralChangeDetected = false
+    for (const mutation of mutationsList) {
+      if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
+        const currentElements = Array.from(this.elements.keys())
+        for (const element of currentElements) {
+          if (!element.isConnected) {
+            if (this.elements.has(element)) {
+              this.unregister(element)
+            }
+          }
+        }
+      }
+      if (
+        mutation.type === "childList" ||
+        (mutation.type === "attributes" &&
+          (mutation.attributeName === "style" || mutation.attributeName === "class"))
+      ) {
+        structuralChangeDetected = true
+      }
+    }
+
+    if (structuralChangeDetected && this.elements.size > 0) {
+      if (this.domMutationRectsUpdateTimeoutId) {
+        clearTimeout(this.domMutationRectsUpdateTimeoutId)
+      }
+      const now = performance.now()
+      const delay = this.globalSettings.resizeScrollThrottleDelay
+      const timeSinceLastCall = now - this.lastDomMutationRectsUpdateTimestamp
+
+      if (timeSinceLastCall >= delay) {
+        console.log("DOM Mutation: Updating all rects immediately")
+        this.updateAllRects()
+        this.lastDomMutationRectsUpdateTimestamp = now
+        this.domMutationRectsUpdateTimeoutId = null
+      }
+    }
+  }
+
   private setupGlobalListeners(): void {
+    console.log("Setting up global listeners")
     if (this.isSetup) return
+    // console.log("Setting up global listeners");
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
+
+    if (!this.domObserver) {
+      this.domObserver = new MutationObserver(this.handleDomMutations)
+    }
+    this.domObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true, // Observe attribute changes that might affect layout
+      // attributeFilter: ['style', 'class'], // More targeted, but broader is safer
+    })
+
+    if (!this.elementResizeObserver) {
+      this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
+      // Existing elements (if any from a re-setup, though unlikely with singleton)
+      // would need to be re-observed. New elements are observed in register().
+      this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
+    }
     this.isSetup = true
   }
 
   private removeGlobalListeners(): void {
+    // console.log("Removing global listeners");
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
+
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
       this.resizeScrollThrottleTimeoutId = null
+    }
+    if (this.domMutationRectsUpdateTimeoutId) {
+      clearTimeout(this.domMutationRectsUpdateTimeoutId)
+      this.domMutationRectsUpdateTimeoutId = null
+    }
+
+    if (this.domObserver) {
+      this.domObserver.disconnect()
+    }
+    if (this.elementResizeObserver) {
+      this.elementResizeObserver.disconnect()
     }
     this.isSetup = false
   }
