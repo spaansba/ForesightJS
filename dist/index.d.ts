@@ -74,7 +74,7 @@ type ForesightManagerProps = {
  */
 declare class ForesightManager {
     private static manager;
-    private links;
+    private elements;
     private isSetup;
     private debugMode;
     private debugger;
@@ -166,7 +166,6 @@ declare class ForesightManager {
      * @returns True if the line segment intersects the rectangle, false otherwise.
      */
     private lineSegmentIntersectsRect;
-    private isMouseInExpandedArea;
     private handleMouseMove;
     private handleResizeOrScroll;
     private setupGlobalListeners;
