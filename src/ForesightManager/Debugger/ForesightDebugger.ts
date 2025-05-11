@@ -1,27 +1,18 @@
-import type { ForesightManager } from "./ForesightManager"
+// ForesightDebugger.ts
+import type { ForesightManager } from "../ForesightManager"
+import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new class
 import type {
   ForesightElementData,
   ForesightElement,
   ForesightManagerProps,
   Point,
-} from "../types/types"
+} from "../../types/types"
 
-/**
- * Manages the visual debugging interface for the ForesightManager.
- *
- * This class is responsible for creating and updating all visual elements
- * related to debugging, such as element overlays, trajectory lines,
- * predicted mouse indicators, and control panels. It operates within a
- * shadow DOM to avoid interfering with the host page's styles and structure.
- *
- * The ForesightDebugger is typically instantiated and controlled by the
- * {@link ForesightManager} when its debug mode is enabled.
- */
 export class ForesightDebugger {
   private foresightManagerInstance: ForesightManager
   private shadowHost: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
-  private debugContainer: HTMLElement | null = null
+  private debugContainer: HTMLElement | null = null // For overlays, trajectory, etc.
   private debugLinkOverlays: Map<
     ForesightElement,
     {
@@ -32,8 +23,9 @@ export class ForesightDebugger {
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
-  private debugControlsContainer: HTMLElement | null = null
   private debugStyleElement: HTMLStyleElement | null = null
+
+  private controlPanel: DebuggerControlPanel | null = null
 
   private currentGlobalSettings: ForesightManagerProps | null = null
   private lastElementData: Map<
@@ -41,13 +33,10 @@ export class ForesightDebugger {
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
-  // For displaying the list of registered elements
-  private debugElementListContainer: HTMLElement | null = null
-  private debugElementListItems: Map<ForesightElement, HTMLElement> = new Map()
-  private elementCountSpan: HTMLSpanElement | null = null
-
   constructor(intentManager: ForesightManager) {
     this.foresightManagerInstance = intentManager
+    // Instantiate controlPanel here, but initialize it later when shadowRoot is available
+    this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
   }
 
   public initialize(
@@ -57,7 +46,7 @@ export class ForesightDebugger {
     predictedPoint: Point
   ): void {
     if (typeof window === "undefined") return
-    this.cleanup() // Clears all previous debug elements
+    this.cleanup()
 
     this.currentGlobalSettings = { ...currentSettings }
 
@@ -68,8 +57,9 @@ export class ForesightDebugger {
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
     this.debugStyleElement = document.createElement("style")
+    // ... (style content remains the same) ...
     this.debugStyleElement.textContent = `
-      #jsforesight-debug-container {
+      #jsforesight-debug-container { /* For on-page overlays */
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 9999;
       }
@@ -110,6 +100,7 @@ export class ForesightDebugger {
         white-space: nowrap;
         pointer-events: none;
       }
+      /* Styles for #jsforesight-debug-controls and its children are still needed here */
       #jsforesight-debug-controls {
         position: fixed; bottom: 10px; right: 10px;
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
@@ -171,7 +162,7 @@ export class ForesightDebugger {
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background-color: #777; /* Default */
+        background-color: #777;
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
@@ -198,9 +189,9 @@ export class ForesightDebugger {
         color: #ccc;
         flex-shrink: 0;
       }
-      .jsforesight-element-list-item .hit-behavior { /* Renamed for clarity */
-        font-size: 10px; /* Slightly larger for better readability */
-        color: #b0b0b0; /* Lighter grey */
+      .jsforesight-element-list-item .hit-behavior {
+        font-size: 10px;
+        color: #b0b0b0;
         margin-right: 5px;
         padding: 1px 3px;
         border-radius: 2px;
@@ -222,8 +213,11 @@ export class ForesightDebugger {
     this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
     this.debugContainer.appendChild(this.debugTrajectoryLine)
 
-    this.createDebugControls(currentSettings)
-    this.populateDebugElementList()
+    // Initialize the control panel AND PASS THE SHADOW ROOT
+    if (this.shadowRoot) {
+      // Ensure shadowRoot is available
+      this.controlPanel?.initialize(this.shadowRoot, currentSettings)
+    }
 
     links.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
@@ -236,8 +230,14 @@ export class ForesightDebugger {
     )
   }
 
+  // ... rest of the ForesightDebugger class ...
   public cleanup(): void {
     console.log("[ForesightDebugger] cleanup() called. All debug elements will be removed.")
+    this.controlPanel?.cleanup()
+    // No need to re-assign this.controlPanel to null here, as a new one is made in constructor
+    // if ForesightDebugger is re-initialized. If only cleanup is called (e.g. debug off),
+    // then the instance might still be around but its DOM is gone.
+
     this.shadowHost?.remove()
     this.shadowHost = null
     this.shadowRoot = null
@@ -245,62 +245,9 @@ export class ForesightDebugger {
 
     this.debugLinkOverlays.clear()
     this.lastElementData.clear()
-    this.debugElementListItems.clear()
-    this.debugElementListContainer = null
-    this.elementCountSpan = null
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
-    this.debugControlsContainer = null
     this.debugStyleElement = null
-  }
-
-  private populateDebugElementList(): void {
-    if (!this.debugElementListContainer) return
-
-    this.debugElementListContainer.innerHTML = ""
-    this.debugElementListItems.clear()
-
-    const elementsMap = this.foresightManagerInstance.elements
-
-    if (this.elementCountSpan) {
-      this.elementCountSpan.textContent = elementsMap.size.toString()
-    }
-
-    if (elementsMap.size === 0) {
-      this.debugElementListContainer.innerHTML = "<em>No elements registered.</em>"
-      return
-    }
-
-    elementsMap.forEach((data, element) => {
-      const listItem = document.createElement("div")
-      listItem.className = "jsforesight-element-list-item"
-      this.updateListItemContent(listItem, data)
-
-      this.debugElementListContainer!.appendChild(listItem)
-      this.debugElementListItems.set(element, listItem)
-    })
-  }
-
-  private updateListItemContent(listItem: HTMLElement, data: ForesightElementData): void {
-    listItem.classList.toggle("hovering", data.isHovering)
-    listItem.classList.toggle("trajectory-hit", data.isTrajectoryHit)
-
-    const statusIndicatorHTML = `<span class="status-indicator"></span>`
-    const hitBehaviorText = data.unregisterOnCallback ? "Single Callback" : "Multi Callback"
-    const hitBehaviorTitle = data.unregisterOnCallback
-      ? "Callback triggers once, then element unregisters."
-      : "Callback can trigger multiple times."
-
-    listItem.innerHTML = `
-      ${statusIndicatorHTML}
-      <span class="element-name" title="${data.name || "Unnamed Element"}">${
-      data.name || "Unnamed Element"
-    }</span>
-      <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-      <span class="element-details">(H: ${data.isHovering ? "Y" : "N"}, T: ${
-      data.isTrajectoryHit ? "Y" : "N"
-    })</span>
-    `
   }
 
   public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData): void {
@@ -362,10 +309,7 @@ export class ForesightDebugger {
       nameLabel.style.display = "none"
     }
 
-    const listItem = this.debugElementListItems.get(element)
-    if (listItem) {
-      this.updateListItemContent(listItem, newData)
-    }
+    this.controlPanel?.refreshElementList()
   }
 
   public removeLinkOverlay(element: ForesightElement): void {
@@ -378,18 +322,31 @@ export class ForesightDebugger {
     }
     this.lastElementData.delete(element)
 
-    const listItem = this.debugElementListItems.get(element)
-    if (listItem) {
-      listItem.remove()
-      this.debugElementListItems.delete(element)
-    }
+    this.controlPanel?.refreshElementList()
   }
 
   public refreshDisplayedElements(): void {
-    this.populateDebugElementList()
+    const currentManagerElements = new Set(this.foresightManagerInstance.elements.keys())
+
+    // Update or add overlays for currently registered elements
     this.foresightManagerInstance.elements.forEach((data, element) => {
-      this.createOrUpdateLinkOverlay(element, data)
+      this.createOrUpdateLinkOverlay(element, data) // This also triggers controlPanel.refreshElementList
     })
+
+    // Remove overlays for elements that are no longer in the manager
+    const overlaysToRemove = Array.from(this.debugLinkOverlays.keys()).filter(
+      (el) => !currentManagerElements.has(el)
+    )
+    overlaysToRemove.forEach((el) => {
+      const specificOverlays = this.debugLinkOverlays.get(el)
+      specificOverlays?.linkOverlay.remove()
+      specificOverlays?.expandedOverlay.remove()
+      specificOverlays?.nameLabel.remove()
+      this.debugLinkOverlays.delete(el)
+      this.lastElementData.delete(el)
+    })
+
+    this.controlPanel?.refreshElementList()
   }
 
   public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
@@ -441,167 +398,8 @@ export class ForesightDebugger {
     }
   }
 
-  private createDebugControls(initialSettings: ForesightManagerProps): void {
-    if (!this.shadowRoot) return
-
-    this.debugControlsContainer = document.createElement("div")
-    this.debugControlsContainer.id = "jsforesight-debug-controls"
-
-    let controlsHTML = `
-      <div class="jsforesight-debugger-title-container">
-        <h3>Foresight Debugger</h3>
-        <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-trajectory-enabled">
-          Enable Mouse Prediction
-          <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions.">i</span>
-        </label>
-        <input type="checkbox" id="jsforesight-trajectory-enabled" ${
-          initialSettings.enableMousePrediction ? "checked" : ""
-        }>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-history-size">
-          History Size
-          <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation (Min: 2, Max: 20). Higher values smooth predictions but add latency.">i</span>
-        </label>
-        <input type="range" id="jsforesight-history-size" min="2" max="20" value="${
-          initialSettings.positionHistorySize
-        }">
-        <span id="jsforesight-history-value">${initialSettings.positionHistorySize}</span>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-prediction-time">
-          Prediction Time (ms)
-          <span class="jsforesight-info-icon" title="How far (ms) to project trajectory (Min: 10, Max: 500). Larger values detect intent sooner.">i</span>
-        </label>
-        <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10" value="${
-          initialSettings.trajectoryPredictionTime
-        }">
-        <span id="jsforesight-prediction-value">${initialSettings.trajectoryPredictionTime}</span>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-throttle-delay">
-          Scroll/Resize Throttle (ms)
-          <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
-        </label>
-        <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10" value="${
-          initialSettings.resizeScrollThrottleDelay
-        }">
-        <span id="jsforesight-throttle-value">${initialSettings.resizeScrollThrottleDelay}</span>
-      </div>
-    `
-
-    controlsHTML += `
-      <div class="jsforesight-debugger-section">
-        <h4>Registered Elements (<span id="jsforesight-element-count">0</span>)</h4>
-        <div id="jsforesight-element-list-items-container" class="jsforesight-element-list">
-          <em>Initializing...</em>
-        </div>
-      </div>
-    `
-    this.debugControlsContainer.innerHTML = controlsHTML
-    this.shadowRoot.appendChild(this.debugControlsContainer)
-
-    this.debugElementListContainer = this.debugControlsContainer.querySelector(
-      "#jsforesight-element-list-items-container"
-    )
-    this.elementCountSpan = this.debugControlsContainer.querySelector("#jsforesight-element-count")
-
-    const enabledCheckbox = this.debugControlsContainer.querySelector(
-      "#jsforesight-trajectory-enabled"
-    ) as HTMLInputElement
-    enabledCheckbox.addEventListener("change", () => {
-      this.foresightManagerInstance.alterGlobalSettings({
-        enableMousePrediction: enabledCheckbox.checked,
-      })
-    })
-
-    const historySlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-history-size"
-    ) as HTMLInputElement
-    const historyValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-history-value"
-    ) as HTMLSpanElement
-    historySlider.addEventListener("input", () => {
-      const value = parseInt(historySlider.value)
-      historyValueSpan.textContent = value.toString()
-      this.foresightManagerInstance.alterGlobalSettings({
-        positionHistorySize: value,
-      })
-    })
-
-    const predictionSlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-prediction-time"
-    ) as HTMLInputElement
-    const predictionValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-prediction-value"
-    ) as HTMLSpanElement
-    predictionSlider.addEventListener("input", () => {
-      const value = parseInt(predictionSlider.value)
-      predictionValueSpan.textContent = value.toString()
-      this.foresightManagerInstance.alterGlobalSettings({
-        trajectoryPredictionTime: value,
-      })
-    })
-
-    const throttleSlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-throttle-delay"
-    ) as HTMLInputElement
-    const throttleValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-throttle-value"
-    ) as HTMLSpanElement
-    throttleSlider.addEventListener("input", () => {
-      const value = parseInt(throttleSlider.value)
-      throttleValueSpan.textContent = value.toString()
-      this.foresightManagerInstance.alterGlobalSettings({
-        resizeScrollThrottleDelay: value,
-      })
-    })
-  }
-
   public updateControlsState(settings: ForesightManagerProps): void {
     this.currentGlobalSettings = { ...settings }
-
-    if (!this.debugControlsContainer) return
-
-    const enabledCheckbox = this.debugControlsContainer.querySelector(
-      "#jsforesight-trajectory-enabled"
-    ) as HTMLInputElement
-    if (enabledCheckbox) enabledCheckbox.checked = settings.enableMousePrediction
-
-    const historySlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-history-size"
-    ) as HTMLInputElement
-    const historyValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-history-value"
-    ) as HTMLSpanElement
-    if (historySlider && historyValueSpan) {
-      historySlider.value = settings.positionHistorySize.toString()
-      historyValueSpan.textContent = settings.positionHistorySize.toString()
-    }
-
-    const predictionSlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-prediction-time"
-    ) as HTMLInputElement
-    const predictionValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-prediction-value"
-    ) as HTMLSpanElement
-    if (predictionSlider && predictionValueSpan) {
-      predictionSlider.value = settings.trajectoryPredictionTime.toString()
-      predictionValueSpan.textContent = settings.trajectoryPredictionTime.toString()
-    }
-
-    const throttleSlider = this.debugControlsContainer.querySelector(
-      "#jsforesight-throttle-delay"
-    ) as HTMLInputElement
-    const throttleValueSpan = this.debugControlsContainer.querySelector(
-      "#jsforesight-throttle-value"
-    ) as HTMLSpanElement
-    if (throttleSlider && throttleValueSpan) {
-      throttleSlider.value = settings.resizeScrollThrottleDelay.toString()
-      throttleValueSpan.textContent = settings.resizeScrollThrottleDelay.toString()
-    }
+    this.controlPanel?.updateControlsState(settings)
   }
 }

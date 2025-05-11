@@ -1,4 +1,4 @@
-import { ForesightDebugger } from "./ForesightDebugger"
+import { ForesightDebugger } from "./Debugger/ForesightDebugger"
 import type {
   ForesightCallback,
   ForesightManagerProps,
