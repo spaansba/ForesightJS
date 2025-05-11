@@ -67,6 +67,8 @@ export type ForesightElementData = {
   isTrajectoryHit: boolean
   /** The timestamp when the last trajectory hit occurred. */
   trajectoryHitTime: number
+  /** If the callback should be ran multiple times. @default true */
+  unregisterOnCallback: boolean
 }
 
 /**

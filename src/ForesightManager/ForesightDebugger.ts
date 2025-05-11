@@ -57,7 +57,7 @@ export class ForesightDebugger {
     predictedPoint: Point
   ): void {
     if (typeof window === "undefined") return
-    this.cleanup() // Clears all previous debug elements including list items
+    this.cleanup() // Clears all previous debug elements
 
     this.currentGlobalSettings = { ...currentSettings }
 
@@ -115,7 +115,7 @@ export class ForesightDebugger {
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
-        min-width: 300px; max-width: 350px; /* Added max-width */
+        min-width: 300px; max-width: 350px;
       }
       .jsforesight-debugger-title-container {
         display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
@@ -135,22 +135,6 @@ export class ForesightDebugger {
         font-family: 'Georgia', serif;
         cursor: help; user-select: none;
         flex-shrink: 0;
-      }
-      .jsforesight-prefetch-indicator {
-        position: absolute;
-        background-color: black;
-        color: white;
-        padding: 3px 6px;
-        font-size: 10px;
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-        border-radius: 4px;
-        z-index: 10002;
-        white-space: nowrap;
-        pointer-events: none;
-        opacity: 1;
-        transition: transform 0.6s cubic-bezier(0.15, 0.5, 0.35, 1),
-                    opacity 0.6s cubic-bezier(0.4, 0, 0.8, 1);
       }
       .jsforesight-debugger-section {
         margin-top: 15px;
@@ -214,6 +198,15 @@ export class ForesightDebugger {
         color: #ccc;
         flex-shrink: 0;
       }
+      .jsforesight-element-list-item .hit-behavior { /* Renamed for clarity */
+        font-size: 10px; /* Slightly larger for better readability */
+        color: #b0b0b0; /* Lighter grey */
+        margin-right: 5px;
+        padding: 1px 3px;
+        border-radius: 2px;
+        background-color: rgba(0,0,0,0.2);
+        flex-shrink: 0;
+      }
     `
     this.shadowRoot.appendChild(this.debugStyleElement)
 
@@ -229,10 +222,9 @@ export class ForesightDebugger {
     this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
     this.debugContainer.appendChild(this.debugTrajectoryLine)
 
-    this.createDebugControls(currentSettings) // Creates controls and element list container
-    this.populateDebugElementList() // Populates the element list
+    this.createDebugControls(currentSettings)
+    this.populateDebugElementList()
 
-    // Initialize overlays for existing links (this will also update their list item states)
     links.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
     })
@@ -245,63 +237,27 @@ export class ForesightDebugger {
   }
 
   public cleanup(): void {
+    console.log("[ForesightDebugger] cleanup() called. All debug elements will be removed.")
     this.shadowHost?.remove()
     this.shadowHost = null
     this.shadowRoot = null
-    this.debugLinkOverlays.forEach((overlays) => {
-      overlays.linkOverlay.remove()
-      overlays.expandedOverlay.remove()
-      overlays.nameLabel.remove()
-    })
+    this.debugContainer = null
+
     this.debugLinkOverlays.clear()
     this.lastElementData.clear()
-    this.debugElementListItems.clear() // Clear the map for list items
+    this.debugElementListItems.clear()
     this.debugElementListContainer = null
     this.elementCountSpan = null
-    if (this.debugContainer) {
-      this.debugContainer
-        .querySelectorAll(".jsforesight-prefetch-indicator")
-        .forEach((el) => el.remove())
-    }
-  }
-
-  private showPrefetchAnimation(element: ForesightElement): void {
-    if (!this.debugContainer) return
-
-    const rect = element.getBoundingClientRect()
-    if (rect.width === 0 && rect.height === 0) return
-
-    const indicator = document.createElement("div")
-    indicator.className = "jsforesight-prefetch-indicator"
-    indicator.textContent = "Prefetched"
-
-    this.debugContainer.appendChild(indicator)
-
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-
-    const randomXEnd = (Math.random() - 0.5) * 80
-    const randomYEnd = -50 - Math.random() * 30
-
-    indicator.style.left = `${centerX}px`
-    indicator.style.top = `${centerY}px`
-    indicator.style.opacity = "1"
-    indicator.style.transform = `translate(-50%, -50%) translate(0px, 0px) scale(0.7)`
-
-    void indicator.offsetWidth // Force reflow
-
-    indicator.style.opacity = "0"
-    indicator.style.transform = `translate(-50%, -50%) translate(${randomXEnd}px, ${randomYEnd}px) scale(1)`
-
-    setTimeout(() => {
-      indicator.remove()
-    }, 800)
+    this.debugPredictedMouseIndicator = null
+    this.debugTrajectoryLine = null
+    this.debugControlsContainer = null
+    this.debugStyleElement = null
   }
 
   private populateDebugElementList(): void {
     if (!this.debugElementListContainer) return
 
-    this.debugElementListContainer.innerHTML = "" // Clear previous items
+    this.debugElementListContainer.innerHTML = ""
     this.debugElementListItems.clear()
 
     const elementsMap = this.foresightManagerInstance.elements
@@ -318,7 +274,7 @@ export class ForesightDebugger {
     elementsMap.forEach((data, element) => {
       const listItem = document.createElement("div")
       listItem.className = "jsforesight-element-list-item"
-      this.updateListItemContent(listItem, data) // Set initial content
+      this.updateListItemContent(listItem, data)
 
       this.debugElementListContainer!.appendChild(listItem)
       this.debugElementListItems.set(element, listItem)
@@ -330,12 +286,17 @@ export class ForesightDebugger {
     listItem.classList.toggle("trajectory-hit", data.isTrajectoryHit)
 
     const statusIndicatorHTML = `<span class="status-indicator"></span>`
+    const hitBehaviorText = data.unregisterOnCallback ? "Single Callback" : "Multi Callback"
+    const hitBehaviorTitle = data.unregisterOnCallback
+      ? "Callback triggers once, then element unregisters."
+      : "Callback can trigger multiple times."
 
     listItem.innerHTML = `
       ${statusIndicatorHTML}
       <span class="element-name" title="${data.name || "Unnamed Element"}">${
       data.name || "Unnamed Element"
     }</span>
+      <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
       <span class="element-details">(H: ${data.isHovering ? "Y" : "N"}, T: ${
       data.isTrajectoryHit ? "Y" : "N"
     })</span>
@@ -345,28 +306,6 @@ export class ForesightDebugger {
   public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData): void {
     if (!this.debugContainer || !this.shadowRoot) return
 
-    if (this.currentGlobalSettings) {
-      const oldData = this.lastElementData.get(element)
-      let callbackLikelyTriggered = false
-
-      const newTrajectoryHit = newData.isTrajectoryHit && (!oldData || !oldData.isTrajectoryHit)
-      const newHover = newData.isHovering && (!oldData || !oldData.isHovering)
-
-      if (newTrajectoryHit) {
-        callbackLikelyTriggered = true
-      } else if (newHover) {
-        if (
-          !newData.isTrajectoryHit ||
-          (newData.isTrajectoryHit && !this.currentGlobalSettings.enableMousePrediction)
-        ) {
-          callbackLikelyTriggered = true
-        }
-      }
-
-      if (callbackLikelyTriggered) {
-        this.showPrefetchAnimation(element)
-      }
-    }
     this.lastElementData.set(element, {
       isHovering: newData.isHovering,
       isTrajectoryHit: newData.isTrajectoryHit,
@@ -423,12 +362,10 @@ export class ForesightDebugger {
       nameLabel.style.display = "none"
     }
 
-    // Update the corresponding list item in the debug panel
     const listItem = this.debugElementListItems.get(element)
     if (listItem) {
       this.updateListItemContent(listItem, newData)
     }
-    // If listItem is not found, refreshDisplayedElements called by manager will handle it
   }
 
   public removeLinkOverlay(element: ForesightElement): void {
@@ -441,22 +378,15 @@ export class ForesightDebugger {
     }
     this.lastElementData.delete(element)
 
-    // Remove from the debug element list
     const listItem = this.debugElementListItems.get(element)
     if (listItem) {
       listItem.remove()
       this.debugElementListItems.delete(element)
     }
-    // The count will be updated by refreshDisplayedElements called by the manager
   }
 
-  /**
-   * Rebuilds the displayed list of elements and updates their visual overlays.
-   * Called by ForesightManager when elements are registered/unregistered or debug settings change.
-   */
   public refreshDisplayedElements(): void {
     this.populateDebugElementList()
-    // After populating, ensure overlays and list item content are up-to-date
     this.foresightManagerInstance.elements.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
     })
@@ -464,9 +394,6 @@ export class ForesightDebugger {
 
   public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
     if (!this.shadowRoot || !this.debugContainer) return
-
-    // This method is typically called when debug mode is turned on or settings change.
-    // It ensures the entire visual state is correct.
     this.refreshDisplayedElements()
   }
 
@@ -477,17 +404,29 @@ export class ForesightDebugger {
   ): void {
     if (!this.shadowRoot || !this.debugContainer) return
 
+    const hasRegisteredElements = this.foresightManagerInstance.elements.size > 0
+    const showVisuals = enableMousePrediction && hasRegisteredElements
+
     if (this.debugPredictedMouseIndicator) {
-      this.debugPredictedMouseIndicator.style.left = `${predictedPoint?.x || 0}px`
-      this.debugPredictedMouseIndicator.style.top = `${predictedPoint?.y || 0}px`
-      this.debugPredictedMouseIndicator.style.display =
-        enableMousePrediction && predictedPoint ? "block" : "none"
+      if (showVisuals && predictedPoint) {
+        this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
+        this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
+        this.debugPredictedMouseIndicator.style.display = "block"
+      } else {
+        this.debugPredictedMouseIndicator.style.display = "none"
+      }
     }
 
     if (this.debugTrajectoryLine) {
-      if (enableMousePrediction && currentPoint && predictedPoint) {
+      if (showVisuals && currentPoint && predictedPoint) {
         const dx = predictedPoint.x - currentPoint.x
         const dy = predictedPoint.y - currentPoint.y
+
+        if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+          this.debugTrajectoryLine.style.display = "none"
+          return
+        }
+
         const length = Math.sqrt(dx * dx + dy * dy)
         const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
@@ -508,7 +447,6 @@ export class ForesightDebugger {
     this.debugControlsContainer = document.createElement("div")
     this.debugControlsContainer.id = "jsforesight-debug-controls"
 
-    // Main controls HTML
     let controlsHTML = `
       <div class="jsforesight-debugger-title-container">
         <h3>Foresight Debugger</h3>
@@ -555,7 +493,6 @@ export class ForesightDebugger {
       </div>
     `
 
-    // Element list section HTML
     controlsHTML += `
       <div class="jsforesight-debugger-section">
         <h4>Registered Elements (<span id="jsforesight-element-count">0</span>)</h4>
@@ -567,13 +504,11 @@ export class ForesightDebugger {
     this.debugControlsContainer.innerHTML = controlsHTML
     this.shadowRoot.appendChild(this.debugControlsContainer)
 
-    // Store references to the element list parts
     this.debugElementListContainer = this.debugControlsContainer.querySelector(
       "#jsforesight-element-list-items-container"
     )
     this.elementCountSpan = this.debugControlsContainer.querySelector("#jsforesight-element-count")
 
-    // Event listeners for controls
     const enabledCheckbox = this.debugControlsContainer.querySelector(
       "#jsforesight-trajectory-enabled"
     ) as HTMLInputElement

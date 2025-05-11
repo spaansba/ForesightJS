@@ -17,6 +17,7 @@ import type {
  * - Tracking mouse movements and predicting future cursor positions.
  * - Detecting when a predicted trajectory intersects with a registered element's bounds.
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
+ * - Optionally unregistering elements after their callback is triggered.
  * - Handling global settings for prediction behavior (e.g., history size, prediction time).
  * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
  * - Automatically updating element bounds on resize using {@link ResizeObserver}.
@@ -141,12 +142,19 @@ export class ForesightManager {
 
   /**
    * Registers an element with the ForesightManager.
+   * @param element The HTML element to monitor.
+   * @param callback The function to call upon predicted or actual interaction.
+   * @param hitSlop Optional. Extra padding around the element for hit detection.
+   * @param name Optional. A name for the element, used in debugging.
+   * @param unregisterOnCallback Optional. If true (default), unregisters the element after its callback is triggered.
+   * @returns A function to manually unregister the element.
    */
   public register(
     element: ForesightElement,
     callback: ForesightCallback,
     hitSlop?: number | Rect,
-    name?: string
+    name?: string,
+    unregisterOnCallback: boolean = true // New parameter
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
@@ -163,6 +171,7 @@ export class ForesightManager {
       isTrajectoryHit: false,
       trajectoryHitTime: 0,
       name: name ?? "Unnamed",
+      unregisterOnCallback, // Store the new option
     }
     this.elements.set(element, newForesightElementData)
 
@@ -186,16 +195,22 @@ export class ForesightManager {
   private unregister(element: ForesightElement): void {
     const isRegistered = this.elements.has(element)
     if (isRegistered) {
-      console.log("Unregistering element:", this.elements.get(element)?.name || element)
+      const elementName = this.elements.get(element)?.name || "Element"
+      console.log(`Unregistering element: "${elementName}"`, element)
+
       if (this.elementResizeObserver) {
         this.elementResizeObserver.unobserve(element)
       }
 
-      if (this.debugMode && this.debugger) {
-        this.debugger.removeLinkOverlay(element)
-        this.debugger.refreshDisplayedElements()
-      }
+      // First, remove the element from the manager's collection
       this.elements.delete(element)
+
+      // Then, notify the debugger to remove its visuals and refresh its list
+      // based on the now-updated manager's collection.
+      if (this.debugMode && this.debugger) {
+        this.debugger.removeLinkOverlay(element) // Removes specific overlay and list item
+        this.debugger.refreshDisplayedElements() // Rebuilds list from manager.elements
+      }
 
       if (this.elements.size === 0 && this.isSetup) {
         this.removeGlobalListeners()
@@ -423,13 +438,20 @@ export class ForesightManager {
       ? this.predictMousePosition(this.currentPoint)
       : this.currentPoint
 
-    // Conditionally prepare for debugger updates
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
     if (this.debugMode && this.debugger) {
       elementsToUpdateInDebugger = []
     }
 
+    const elementsToUnregister: ForesightElement[] = [] // Collect elements to unregister
+
     this.elements.forEach((currentData, element) => {
+      // If element was already unregistered in a previous iteration of this same mousemove
+      // (e.g. if multiple elements are hit and unregistered), skip it.
+      if (!this.elements.has(element)) {
+        return
+      }
+
       const previousDataState = {
         isHovering: currentData.isHovering,
         isTrajectoryHit: currentData.isTrajectoryHit,
@@ -441,7 +463,7 @@ export class ForesightManager {
       let finalIsTrajectoryHit = currentData.isTrajectoryHit
       let finalTrajectoryHitTime = currentData.trajectoryHitTime
 
-      const { expandedRect } = currentData.elementBounds // Use currentData directly
+      const { expandedRect } = currentData.elementBounds
 
       const isCurrentlyPhysicallyHovering =
         this.currentPoint.x >= expandedRect.left &&
@@ -453,7 +475,7 @@ export class ForesightManager {
       if (
         this.globalSettings.enableMousePrediction &&
         !isCurrentlyPhysicallyHovering &&
-        !currentData.isTrajectoryHit // Check against currentData
+        !currentData.isTrajectoryHit
       ) {
         if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
@@ -461,34 +483,39 @@ export class ForesightManager {
       }
 
       if (isNewTrajectoryActivation) {
-        currentData.callback() // Call callback from currentData
+        currentData.callback()
         callbackFiredThisCycle = true
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
       }
 
-      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering // Check against currentData
+      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering
 
       if (isNewPhysicalHoverEvent) {
         const hoverCanTriggerCallback =
-          !currentData.isTrajectoryHit || // Check against currentData
-          (currentData.isTrajectoryHit && // Check against currentData
-            !this.globalSettings.enableMousePrediction)
+          !currentData.isTrajectoryHit ||
+          (currentData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
-          currentData.callback() // Call callback from currentData
+          currentData.callback()
+          callbackFiredThisCycle = true // Mark callback as fired for physical hover too
         }
       }
 
       finalIsHovering = isCurrentlyPhysicallyHovering
 
-      // Determine if the core state actually changed
+      // If callback fired and element is set to unregister on callback
+      if (callbackFiredThisCycle && currentData.unregisterOnCallback) {
+        elementsToUnregister.push(element) // Mark for unregistration
+      }
+
       const coreStateActuallyChanged =
         finalIsHovering !== previousDataState.isHovering ||
         finalIsTrajectoryHit !== previousDataState.isTrajectoryHit ||
         (finalIsTrajectoryHit && finalTrajectoryHitTime !== previousDataState.trajectoryHitTime)
 
-      if (coreStateActuallyChanged) {
+      if (coreStateActuallyChanged && this.elements.has(element)) {
+        // Check .has(element) again in case it was unregistered by a previous element's callback in the same event cycle
         const newElementData: ForesightElementData = {
           ...currentData,
           isHovering: finalIsHovering,
@@ -503,11 +530,32 @@ export class ForesightManager {
       }
     })
 
-    if (elementsToUpdateInDebugger && this.debugger) {
-      // Check elementsToUpdateInDebugger first
-      elementsToUpdateInDebugger.forEach((element) => {
+    // Unregister elements marked for unregistration
+    if (elementsToUnregister.length > 0) {
+      elementsToUnregister.forEach((element) => {
+        if (this.elements.has(element)) {
+          // Check if still registered
+          const elementName = this.elements.get(element)?.name || "Unnamed"
+          console.log(
+            `Unregistering element "${elementName}" due to callback and unregisterOnCallback=true.`
+          )
+          this.unregister(element)
+        }
+      })
+      // After unregistering, if debugger is active, it might need a final refresh
+      // if elementsToUpdateInDebugger contained any of the now-unregistered elements.
+      // The unregister method itself calls refreshDisplayedElements, which should handle the list.
+      // We just need to ensure elementsToUpdateInDebugger doesn't try to update a removed element.
+    }
+
+    if (this.debugMode && this.debugger) {
+      // Check debugMode and debugger existence
+      elementsToUpdateInDebugger?.forEach((element) => {
+        // Optional chaining for elementsToUpdateInDebugger
         const data = this.elements.get(element)
-        if (data) this.debugger!.createOrUpdateLinkOverlay(element, data)
+        if (data) {
+          this.debugger!.createOrUpdateLinkOverlay(element, data)
+        }
       })
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,

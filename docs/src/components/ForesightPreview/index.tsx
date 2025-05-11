@@ -29,12 +29,12 @@ export default function ForesightPreview(): ReactNode {
         Hover over or move your cursor toward any button to see how Foresight predicts user intent.
       </div>
       <section className={styles.features}>
-        <InteractiveButton color="#3498db" label="Button 1" name="button-name" />
-        <InteractiveButton color="#e74c3c" label="Button 2" />
-        <InteractiveButton color="#2ecc71" label="Button 3" />
-        <InteractiveButton color="#f39c12" label="Button 4" />
-        <InteractiveButton color="#9b59b6" label="Button 5" />
-        <InteractiveButton color="#1abc9c" label="Button 6" />
+        <InteractiveButton color="#3498db" label="Button 1" name="button-1" />
+        <InteractiveButton color="#e74c3c" label="Button 2" name="button-2" />
+        <InteractiveButton color="#2ecc71" label="Button 3" name="button-3" />
+        <InteractiveButton color="#f39c12" label="Button 4" name="button-4" />
+        <InteractiveButton color="#9b59b6" label="Button 5" name="button-5" />
+        <InteractiveButton color="#1abc9c" label="Button 6" name="button-6" />
       </section>
     </div>
   )

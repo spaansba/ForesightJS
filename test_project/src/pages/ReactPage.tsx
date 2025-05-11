@@ -27,7 +27,8 @@ const ReactPage: React.FC = () => {
           showNotification(`Box 1 callback triggered! Count: ${box1CallbackCount}`)
         },
         50,
-        "big hitslop"
+        "big hitslop",
+        false
       )
     }
 
