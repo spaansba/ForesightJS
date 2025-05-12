@@ -6,27 +6,14 @@ import type * as Preset from "@docusaurus/preset-classic"
 
 const config: Config = {
   title: "ForesightJS",
-  tagline:
-    "Predicts mouse trajectory to trigger actions such as prefetching as users approach elements",
+  tagline: "What if we could only prefetch data the user actually needs?",
   favicon: "img/favicon.ico",
-
-  // Set the production url of your site here
-  url: "https://your-docusaurus-site.example.com",
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
+  url: "https://foresightjs.com",
   baseUrl: "/",
-
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: "spaansba", // Usually your GitHub org/user name.
-  projectName: "ForesightJS", // Usually your repo name.
-
+  organizationName: "spaansba",
+  projectName: "ForesightJS",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
-
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -38,8 +25,6 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           editUrl: "https://github.com/spaansba/ForesightJS/tree/main/docs",
         },
         // blog: {
@@ -64,7 +49,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     navbar: {
       title: "ForesightJS",
@@ -129,11 +113,16 @@ const config: Config = {
       //     ],
       //   },
       // ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} ForesightJS, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+    },
+    colorMode: {
+      defaultMode: "light",
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
   } satisfies Preset.ThemeConfig,
 }

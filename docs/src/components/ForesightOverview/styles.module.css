@@ -27,7 +27,6 @@
   color: #4b5563;
 }
 
-.basicTag,
 .advancedTag {
   display: inline-block;
   font-size: 0.75rem;
@@ -37,11 +36,6 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.basicTag {
-  background-color: #e2e8f0;
-  color: #475569;
 }
 
 .advancedTag {
@@ -213,8 +207,8 @@
 
 .buttonGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
   margin: 2rem 0;
 }
 

@@ -42,7 +42,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title={`${siteConfig.title} - Predictive Mouse Intent Library`}
-      description="ForeSightJs is a library for predictive mouse intent detection, enabling optimized prefetching and improved user experience."
+      description="ForesightJs is a library for predictive mouse intent detection, enabling optimized prefetching and improved user experience."
     >
       <HomepageHeader />
       <main>

@@ -4,8 +4,8 @@ import { HoverCard } from "./HoverCard"
 import { ForesightCard } from "./ForesightCard"
 import styles from "../../styles.module.css"
 import useDebugMode from "@site/src/hooks/useDebugMode"
+import DebugButton from "../../DebugButton"
 function CardsWrapper() {
-  const { toggleDebugMode, debugMode } = useDebugMode()
   const [resetTrigger, setResetTrigger] = useState(0)
 
   const handleResetAll = () => {
@@ -19,14 +19,7 @@ function CardsWrapper() {
         <button className={styles.resetAllButton} onClick={handleResetAll}>
           {resetButtonText}
         </button>
-        <div className={styles.debugButtonContainer}>
-          <button
-            className={`${styles.debugButton} ${debugMode ? styles.active : ""}`}
-            onClick={toggleDebugMode}
-          >
-            Debug Mode: {debugMode ? "ON" : "OFF"}
-          </button>
-        </div>
+        <DebugButton />
       </div>
 
       <div className={styles.cardGrid}>
@@ -37,7 +30,7 @@ function CardsWrapper() {
 
       <div className={styles.comparisonNote}>
         <p>
-          <strong>Try it:</strong> Move your cursor toward the ForeSightJs card from different
+          <strong>Try it:</strong> Move your cursor toward the ForesightJs card from different
           angles. Notice how it starts loading <strong>before</strong> you hover over it!
         </p>
       </div>

@@ -23,10 +23,9 @@ export const Demo = () => {
     <>
       {[
         { name: "button-1", color: "#3498db", label: "No Hit Slop" },
-        { name: "button-2", color: "#e74c3c", label: "Small (20px)", hitSlop: 30 },
-        { name: "button-3", color: "#2ecc71", label: "Medium (40px)", hitSlop: 60 },
+        { name: "button-2", color: "#2ecc71", label: "Medium (40px)", hitSlop: 60 },
         {
-          name: "button-4",
+          name: "button-3",
           color: "#9b59b6",
           label: "Custom",
           hitSlop: { top: 70, left: 20, right: 20, bottom: 120 },

@@ -5,7 +5,7 @@ export const Overview = () => {
   return (
     <div className={styles.overviewContainer}>
       <div className={styles.descriptionText}>
-        <h2>What is ForeSightJs?</h2>
+        <h2>What is ForesightJs?</h2>
         <p>
           ForesightJS is a JavaScript library that predicts user intent by analyzing mouse movements
           and trajectories. It allows web applications to anticipate user actions before they
@@ -20,17 +20,17 @@ export const Overview = () => {
       <div className={styles.cardGrid}>
         <FeatureCard
           title="Trajectory Prediction"
-          description="Predicts the path of the user's cursor based on its movement and velocity, allowing for early prefetching."
+          description="Predict based on movement and volicity where the user's cursor is heading, allowing for early prefetching."
           icon="📈"
         />
         <FeatureCard
           title="Element Hit Slop"
-          description="Define custom hit areas around elements to trigger actions before the user actually hovers over the element itself."
+          description="Add custom hit areas around elements to trigger actions before the user actually hovers over the element itself."
           icon="🎯"
         />
         <FeatureCard
-          title="Efficient Data Prefetching"
-          description="Save bandwidth by only prefetching what users will actually need, instead of loading everything in the viewport like traditional approaches."
+          title="Efficient Prefetching"
+          description="Save bandwidth by only prefetching what users will actually need, instead of prefetching everything in the viewport like traditional approaches."
           icon="🔋"
         />
       </div>

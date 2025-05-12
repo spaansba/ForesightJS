@@ -12,15 +12,13 @@ function ComparisonInfo() {
         </p>
         <ul className={styles.comparisonList}>
           <li>
-            <strong>Regular:</strong> <span className={styles.basicTag}>Traditional</span> - Loads
-            data only when clicked
+            <strong>Regular:</strong> Loads data only when clicked
           </li>
           <li>
-            <strong>On Hover:</strong> <span className={styles.basicTag}>Traditional</span> - Loads
-            data only after hovering
+            <strong>On Hover:</strong> Loads data only after hovering
           </li>
           <li>
-            <strong>ForeSightJS:</strong> Loads data when the mouse trajectory predicts you'll
+            <strong>ForesightJS:</strong> Loads data when the mouse trajectory predicts you'll
             interact with the card
           </li>
         </ul>

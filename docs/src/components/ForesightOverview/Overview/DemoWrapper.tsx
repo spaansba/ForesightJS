@@ -3,20 +3,13 @@ import styles from "../styles.module.css"
 import useDebugMode from "@site/src/hooks/useDebugMode"
 import { Demo } from "./Demo"
 import MobileMessage from "../MobileMessage"
+import DebugButton from "../DebugButton"
 function DemoWrapper() {
-  const { toggleDebugMode, debugMode } = useDebugMode()
   return (
     <div className={styles.demoSection}>
       <div className={styles.demoHeader}>
         <h2>Try It Yourself</h2>
-        <div className={styles.debugButtonContainer}>
-          <button
-            className={`${styles.debugButton} ${debugMode ? styles.active : ""}`}
-            onClick={toggleDebugMode}
-          >
-            Debug Mode: {debugMode ? "ON" : "OFF"}
-          </button>
-        </div>
+        <DebugButton />
       </div>
       <div className={styles.mobileMessage}>
         <MobileMessage />
