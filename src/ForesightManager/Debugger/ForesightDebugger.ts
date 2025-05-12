@@ -216,7 +216,11 @@ export class ForesightDebugger {
     // Initialize the control panel AND PASS THE SHADOW ROOT
     if (this.shadowRoot) {
       // Ensure shadowRoot is available
-      this.controlPanel?.initialize(this.shadowRoot, currentSettings)
+      this.controlPanel?.initialize(
+        this.shadowRoot,
+        currentSettings,
+        currentSettings.debuggerSettings
+      )
     }
 
     links.forEach((data, element) => {
@@ -365,13 +369,9 @@ export class ForesightDebugger {
     const showVisuals = enableMousePrediction && hasRegisteredElements
 
     if (this.debugPredictedMouseIndicator) {
-      if (showVisuals && predictedPoint) {
-        this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
-        this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
-        this.debugPredictedMouseIndicator.style.display = "block"
-      } else {
-        this.debugPredictedMouseIndicator.style.display = "none"
-      }
+      this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
+      this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
+      this.debugPredictedMouseIndicator.style.display = "block"
     }
 
     if (this.debugTrajectoryLine) {

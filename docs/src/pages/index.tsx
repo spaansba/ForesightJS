@@ -5,7 +5,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 import Layout from "@theme/Layout"
 import Heading from "@theme/Heading"
 import styles from "./index.module.css"
-import ForesightPreview from "../components/ForesightPreview"
+import ForeSightDemo from "../components/ForeSightDemo"
 import { ForesightManager } from "js.foresight"
 
 ForesightManager.initialize({
@@ -25,7 +25,7 @@ function HomepageHeader() {
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link className="button button--secondary button--lg" to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            Documentation
           </Link>
         </div>
       </div>
@@ -37,12 +37,12 @@ export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext()
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />"
+      title={`${siteConfig.title} - Predictive Mouse Intent Library`}
+      description="ForeSightJs is a library for predictive mouse intent detection, enabling optimized prefetching and improved user experience."
     >
       <HomepageHeader />
       <main>
-        <ForesightPreview />
+        <ForeSightDemo />
       </main>
     </Layout>
   )

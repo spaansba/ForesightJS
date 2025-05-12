@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic"
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: "JS.Foresight",
+  title: "ForesightJS",
   tagline:
     "Predicts mouse trajectory to trigger actions such as prefetching as users approach elements",
   favicon: "img/favicon.ico",

@@ -4,6 +4,7 @@ import type {
   ForesightElementData,
   ForesightElement,
   ForesightManagerProps,
+  DebuggerSettings,
 } from "../../types/types"
 
 export class DebuggerControlPanel {
@@ -32,9 +33,18 @@ export class DebuggerControlPanel {
     this.foresightManagerInstance = manager
   }
 
-  public initialize(shadowRoot: ShadowRoot, initialSettings: ForesightManagerProps) {
+  public initialize(
+    shadowRoot: ShadowRoot,
+    initialSettings: ForesightManagerProps,
+    debuggerSettings: DebuggerSettings
+  ) {
     this.shadowRoot = shadowRoot
     this._createDOM() // Create and append the panel's HTML structure
+
+    if (debuggerSettings.isControlPanelDefaultMinimized) {
+      this.isMinimized = true
+    }
+
     if (this.controlsContainer) {
       this.shadowRoot.appendChild(this.controlsContainer)
       this._queryDOMElements()

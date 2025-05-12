@@ -42,6 +42,9 @@ export class ForesightManager {
     trajectoryPredictionTime: 80,
     defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     resizeScrollThrottleDelay: 50,
+    debuggerSettings: {
+      isControlPanelDefaultMinimized: false,
+    },
   }
 
   private positions: MousePosition[] = []
@@ -207,6 +210,12 @@ export class ForesightManager {
           }
         })
       }
+    }
+
+    if (props?.debuggerSettings?.isControlPanelDefaultMinimized !== undefined) {
+      this.globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
+        props.debuggerSettings.isControlPanelDefaultMinimized
+      settingsActuallyChanged = true
     }
 
     if (props?.defaultHitSlop !== undefined) {

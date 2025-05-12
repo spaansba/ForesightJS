@@ -51,6 +51,11 @@ type ElementBounds = {
   hitSlop: Rect
 }
 
+export type DebuggerSettings = {
+  /** If the control panel should be minimized on default @default false */
+  isControlPanelDefaultMinimized: boolean
+}
+
 /**
  * Represents the data associated with a registered foresight element.
  */
@@ -107,6 +112,9 @@ type BaseForesightManagerProps = {
    * @default 50
    */
   resizeScrollThrottleDelay: number
+
+  /** Options for the debugger */
+  debuggerSettings: DebuggerSettings
 }
 
 /**
