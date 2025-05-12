@@ -134,7 +134,6 @@ export class ForesightManager {
     if (isRegistered) {
       const foresightElementData = this.elements.get(element)
       const elementName = foresightElementData?.name || "Element"
-      console.log(`Unregistering element: "${elementName}"`, element)
 
       // Clear any pending trajectory expiration timeout
       if (foresightElementData?.trajectoryHitExpirationTimeoutId) {
@@ -156,7 +155,7 @@ export class ForesightManager {
         this.removeGlobalListeners()
       }
     } else {
-      console.log("Attempted to unregister element not found:", element)
+      console.warn("Attempted to unregister element not found:", element)
     }
   }
 

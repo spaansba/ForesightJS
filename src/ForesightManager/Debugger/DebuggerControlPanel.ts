@@ -256,7 +256,6 @@ export class DebuggerControlPanel {
 
     // Clear references for minimize functionality
     this.minimizeButton = null
-    this.infoWrapper = null
     this.debuggerSection = null
     // Event listeners are on elements within controlsContainer, so they'll be GC'd.
   }
