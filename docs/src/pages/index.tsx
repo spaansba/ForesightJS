@@ -5,14 +5,17 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 import Layout from "@theme/Layout"
 import Heading from "@theme/Heading"
 import styles from "./index.module.css"
-import ForeSightDemo from "../components/ForeSightDemo"
 import { ForesightManager } from "js.foresight"
+import { ForesightDemo } from "../components/ForesightOverview"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
   trajectoryPredictionTime: 80,
   resizeScrollThrottleDelay: 0,
   defaultHitSlop: 0,
+  debuggerSettings: {
+    isControlPanelDefaultMinimized: true,
+  },
 })
 
 function HomepageHeader() {
@@ -43,7 +46,7 @@ export default function Home(): ReactNode {
     >
       <HomepageHeader />
       <main>
-        <ForeSightDemo />
+        <ForesightDemo />
       </main>
     </Layout>
   )
