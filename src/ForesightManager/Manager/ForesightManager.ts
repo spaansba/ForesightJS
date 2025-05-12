@@ -180,7 +180,7 @@ export class ForesightManager {
     return () => this.unregister(element)
   }
 
-  private unregister(element: ForesightElement): void {
+  private unregister(element: ForesightElement) {
     const isRegistered = this.elements.has(element)
     if (isRegistered) {
       const elementName = this.elements.get(element)?.name || "Element"
@@ -302,7 +302,7 @@ export class ForesightManager {
       )
     } else {
       this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals(this.elements) // This will refresh the element list too
+      this.debugger.updateAllLinkVisuals(this.elements)
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -340,7 +340,7 @@ export class ForesightManager {
       rect1.bottom === rect2.bottom
     )
   }
-  private updateExpandedRect(element: ForesightElement): void {
+  private updateExpandedRect(element: ForesightElement) {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
@@ -368,7 +368,7 @@ export class ForesightManager {
     }
   }
 
-  private updateAllRects(): void {
+  private updateAllRects() {
     this.elements.forEach((data, element) => {
       this.updateExpandedRect(element)
     })
@@ -437,7 +437,7 @@ export class ForesightManager {
     return t0 <= t1
   }
 
-  private handleMouseMove = (e: MouseEvent): void => {
+  private handleMouseMove = (e: MouseEvent) => {
     this.currentPoint = { x: e.clientX, y: e.clientY }
     this.predictedPoint = this.globalSettings.enableMousePrediction
       ? this.predictMousePosition(this.currentPoint)
@@ -592,7 +592,7 @@ export class ForesightManager {
     }
   }
 
-  private handleElementResize = (entries: ResizeObserverEntry[]): void => {
+  private handleElementResize = (entries: ResizeObserverEntry[]) => {
     for (const entry of entries) {
       const element = entry.target as ForesightElement
       const foresightElementData = this.elements.get(element)
@@ -603,7 +603,7 @@ export class ForesightManager {
     }
   }
 
-  private handleDomMutations = (mutationsList: MutationRecord[]): void => {
+  private handleDomMutations = (mutationsList: MutationRecord[]) => {
     let structuralChangeDetected = false
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
@@ -649,7 +649,7 @@ export class ForesightManager {
     }
   }
 
-  private setupGlobalListeners(): void {
+  private setupGlobalListeners() {
     console.log("Setting up global listeners")
     if (this.isSetup) return
     document.addEventListener("mousemove", this.handleMouseMove)
@@ -672,7 +672,7 @@ export class ForesightManager {
     this.isSetup = true
   }
 
-  private removeGlobalListeners(): void {
+  private removeGlobalListeners() {
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
