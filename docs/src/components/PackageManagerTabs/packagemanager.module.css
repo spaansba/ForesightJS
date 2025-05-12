@@ -1,0 +1,86 @@
+/* Package manager tabs styles */
+.packageManagerTabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tabsHeader {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tabButton {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tabButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.activeTab {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid white;
+}
+
+.tabContent {
+  position: relative;
+}
+
+.tabPanel {
+  display: none;
+}
+
+.activeTabPanel {
+  display: block;
+}
+
+/* Code block styles */
+.installCodeBlock {
+  text-align: left;
+  font-family: monospace;
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  background-color: rgba(0, 0, 0, 0.15);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.codeBlock code {
+  color: white;
+  flex-grow: 1;
+}
+
+.copyButton {
+  background-color: transparent;
+  border: none;
+  color: white;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.copyButton:hover {
+  opacity: 1;
+}

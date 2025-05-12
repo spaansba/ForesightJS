@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useState, useRef } from "react"
 import clsx from "clsx"
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
@@ -7,6 +8,7 @@ import Heading from "@theme/Heading"
 import styles from "./index.module.css"
 import { ForesightManager } from "js.foresight"
 import { ForesightDemo } from "../components/ForesightOverview"
+import { PackageManagerTabs } from "../components/PackageManagerTabs"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -26,11 +28,18 @@ function HomepageHeader() {
         <Heading as="h1" className="hero__title">
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p className="hero__subtitle">
+          What if we could only prefetch data the user <i>actually</i> needs?
+        </p>
+
         <div className={styles.buttons}>
           <Link className="button button--secondary button--lg" to="/docs/intro">
             Documentation
           </Link>
+        </div>
+
+        <div className={styles.installSection}>
+          <PackageManagerTabs />
         </div>
       </div>
     </header>
@@ -45,6 +54,7 @@ export default function Home(): ReactNode {
       description="ForesightJs is a library for predictive mouse intent detection, enabling optimized prefetching and improved user experience."
     >
       <HomepageHeader />
+
       <main>
         <ForesightDemo />
       </main>
