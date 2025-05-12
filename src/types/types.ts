@@ -57,6 +57,8 @@ type ElementBounds = {
 export type ForesightElementData = {
   /** The callback function to execute on interaction. */
   callback: ForesightCallback
+  /** If the callback should be ran multiple times. @default true */
+  unregisterOnCallback: boolean
   /** The boundary information for the element. */
   elementBounds: ElementBounds
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
@@ -67,8 +69,8 @@ export type ForesightElementData = {
   isTrajectoryHit: boolean
   /** The timestamp when the last trajectory hit occurred. */
   trajectoryHitTime: number
-  /** If the callback should be ran multiple times. @default true */
-  unregisterOnCallback: boolean
+  /** The timestamp when the last trajectory hit occurred. */
+  trajectoryHitExpirationTimeoutId?: ReturnType<typeof setTimeout> // Add this line
 }
 
 type BaseForesightManagerProps = {

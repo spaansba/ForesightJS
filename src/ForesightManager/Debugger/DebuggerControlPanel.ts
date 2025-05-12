@@ -27,7 +27,7 @@ export class DebuggerControlPanel {
     this.foresightManagerInstance = manager
   }
 
-  public initialize(shadowRoot: ShadowRoot, initialSettings: ForesightManagerProps): void {
+  public initialize(shadowRoot: ShadowRoot, initialSettings: ForesightManagerProps) {
     this.shadowRoot = shadowRoot
     this._createDOM() // Create and append the panel's HTML structure
     if (this.controlsContainer) {
@@ -39,7 +39,7 @@ export class DebuggerControlPanel {
     }
   }
 
-  private _createDOM(): void {
+  private _createDOM() {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls" // Use existing ID for styles
 
@@ -92,7 +92,7 @@ export class DebuggerControlPanel {
     this.controlsContainer.innerHTML = controlsHTML
   }
 
-  private _queryDOMElements(): void {
+  private _queryDOMElements() {
     if (!this.controlsContainer) return
 
     this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector(
@@ -110,7 +110,7 @@ export class DebuggerControlPanel {
     this.elementCountSpan = this.controlsContainer.querySelector("#jsforesight-element-count")
   }
 
-  private _setupEventListeners(): void {
+  private _setupEventListeners() {
     this.trajectoryEnabledCheckbox?.addEventListener("change", (e) => {
       this.foresightManagerInstance.alterGlobalSettings({
         enableMousePrediction: (e.target as HTMLInputElement).checked,
@@ -142,7 +142,7 @@ export class DebuggerControlPanel {
     })
   }
 
-  public updateControlsState(settings: ForesightManagerProps): void {
+  public updateControlsState(settings: ForesightManagerProps) {
     if (this.trajectoryEnabledCheckbox) {
       this.trajectoryEnabledCheckbox.checked = settings.enableMousePrediction
     }
@@ -160,7 +160,7 @@ export class DebuggerControlPanel {
     }
   }
 
-  public refreshElementList(): void {
+  public refreshElementList() {
     if (!this.elementListContainer) return
 
     this.elementListContainer.innerHTML = "" // Clear previous items
@@ -187,7 +187,7 @@ export class DebuggerControlPanel {
     })
   }
 
-  private _updateListItemContent(listItem: HTMLElement, data: ForesightElementData): void {
+  private _updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
     listItem.classList.toggle("hovering", data.isHovering)
     listItem.classList.toggle("trajectory-hit", data.isTrajectoryHit)
 
@@ -209,7 +209,7 @@ export class DebuggerControlPanel {
     `
   }
 
-  public cleanup(): void {
+  public cleanup() {
     this.controlsContainer?.remove()
     this.controlsContainer = null
     this.elementListContainer = null

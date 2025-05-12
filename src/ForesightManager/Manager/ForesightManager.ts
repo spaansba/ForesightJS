@@ -7,33 +7,18 @@ import type {
   MousePosition,
   Point,
   Rect,
-  UpdateForsightManagerProps,
+  UpdateForsightManagerProps, // Assuming this is Partial<ForesightManagerProps>
 } from "../../types/types"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
- *
- * ForesightManager is a singleton class responsible for:
- * - Registering HTML elements to monitor.
- * - Tracking mouse movements and predicting future cursor positions.
- * - Detecting when a predicted trajectory intersects with a registered element's bounds.
- * - Invoking callbacks associated with elements upon predicted or actual interaction.
- * - Optionally unregistering elements after their callback is triggered.
- * - Handling global settings for prediction behavior (e.g., history size, prediction time).
- * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
- * - Automatically updating element bounds on resize using {@link ResizeObserver}.
- * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
- * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
- *
- * It should be initialized once using {@link ForesightManager.initialize} and then
- * accessed via the static getter {@link ForesightManager.instance}.
+ * // ... (rest of the class comments)
  */
 export class ForesightManager {
   private static manager: ForesightManager
   public elements: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
-  private debugMode: boolean = false
   private debugger: ForesightDebugger | null = null
 
   private globalSettings: ForesightManagerProps = {
@@ -41,7 +26,7 @@ export class ForesightManager {
     enableMousePrediction: true,
     positionHistorySize: 8,
     trajectoryPredictionTime: 80,
-    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
+    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 }, // Initialized as Rect
     resizeScrollThrottleDelay: 50,
   }
 
@@ -49,33 +34,27 @@ export class ForesightManager {
   private currentPoint: Point = { x: 0, y: 0 }
   private predictedPoint: Point = { x: 0, y: 0 }
 
-  // Throttling for window resize/scroll triggered updates
   private lastResizeScrollCallTimestamp: number = 0
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
 
-  // For automatic unregistration and detecting layout shifts
   private domObserver: MutationObserver | null = null
-  // Throttling for DOM mutation-triggered rect updates
   private lastDomMutationRectsUpdateTimestamp: number = 0
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
 
-  // For observing individual element resizes
   private elementResizeObserver: ResizeObserver | null = null
 
   private constructor() {
-    setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
+    // REMOVED: setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
+    // defaultHitSlop is already normalized at declaration or can be normalized if needed
+    // this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop);
   }
 
-  /**
-   * Initializes the ForesightManager singleton instance with optional global settings.
-   */
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
       ForesightManager.manager = new ForesightManager()
       if (props) {
         ForesightManager.manager.alterGlobalSettings(props)
       } else {
-        // Ensure debugger is initialized if debug is true by default and no props are passed
         if (ForesightManager.manager.globalSettings.debug) {
           ForesightManager.manager.turnOnDebugMode()
         }
@@ -86,67 +65,28 @@ export class ForesightManager {
       )
       ForesightManager.manager.alterGlobalSettings(props)
     }
-    // Ensure debugMode property reflects the potentially updated globalSettings.debug
-    ForesightManager.manager.debugMode = ForesightManager.manager.globalSettings.debug
     return ForesightManager.manager
   }
 
-  /**
-   * Gets the singleton instance of the ForesightManager.
-   */
   public static get instance() {
     if (!ForesightManager.manager) {
-      return this.initialize() // Initializes with defaults if not already done
+      return this.initialize()
     }
     return ForesightManager.manager
   }
 
-  private checkTrajectoryHitExpiration(): void {
-    const now = performance.now()
-    const updatedForesightElements: ForesightElement[] = []
+  // REMOVED: private checkTrajectoryHitExpiration(): void { ... }
 
-    this.elements.forEach((foresightElementData, element) => {
-      if (
-        foresightElementData.isTrajectoryHit &&
-        now - foresightElementData.trajectoryHitTime > 200 // Expiration time for trajectory hit state
-      ) {
-        this.elements.set(element, {
-          ...foresightElementData,
-          isTrajectoryHit: false,
-        })
-        updatedForesightElements.push(element)
-      }
-    })
-
-    if (updatedForesightElements.length > 0 && this.debugMode && this.debugger) {
-      updatedForesightElements.forEach((element) => {
-        const data = this.elements.get(element)
-        if (data) {
-          this.debugger!.createOrUpdateLinkOverlay(element, data)
-        }
-      })
-    }
-  }
-
-  /**
-   * Registers an element with the ForesightManager.
-   * @param element The HTML element to monitor.
-   * @param callback The function to call upon predicted or actual interaction.
-   * @param hitSlop Optional. Extra padding around the element for hit detection.
-   * @param name Optional. A name for the element, used in debugging.
-   * @param unregisterOnCallback Optional. If true (default), unregisters the element after its callback is triggered.
-   * @returns A function to manually unregister the element.
-   */
   public register(
     element: ForesightElement,
     callback: ForesightCallback,
     hitSlop?: number | Rect,
     name?: string,
-    unregisterOnCallback: boolean = true // New parameter
+    unregisterOnCallback: boolean = true
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : this.globalSettings.defaultHitSlop
+      : this.globalSettings.defaultHitSlop // Already a Rect
     const originalRect = element.getBoundingClientRect()
     const newForesightElementData: ForesightElementData = {
       callback,
@@ -159,7 +99,8 @@ export class ForesightManager {
       isTrajectoryHit: false,
       trajectoryHitTime: 0,
       name: name ?? "Unnamed",
-      unregisterOnCallback, // Store the new option
+      unregisterOnCallback,
+      trajectoryHitExpirationTimeoutId: undefined, // Initialize
     }
     this.elements.set(element, newForesightElementData)
 
@@ -171,7 +112,7 @@ export class ForesightManager {
       this.elementResizeObserver.observe(element)
     }
 
-    if (this.debugMode && this.debugger) {
+    if (this.debugger) {
       const data = this.elements.get(element)
       if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
       this.debugger.refreshDisplayedElements()
@@ -183,21 +124,24 @@ export class ForesightManager {
   private unregister(element: ForesightElement) {
     const isRegistered = this.elements.has(element)
     if (isRegistered) {
-      const elementName = this.elements.get(element)?.name || "Element"
+      const foresightElementData = this.elements.get(element)
+      const elementName = foresightElementData?.name || "Element"
       console.log(`Unregistering element: "${elementName}"`, element)
+
+      // Clear any pending trajectory expiration timeout
+      if (foresightElementData?.trajectoryHitExpirationTimeoutId) {
+        clearTimeout(foresightElementData.trajectoryHitExpirationTimeoutId)
+      }
 
       if (this.elementResizeObserver) {
         this.elementResizeObserver.unobserve(element)
       }
 
-      // First, remove the element from the manager's collection
       this.elements.delete(element)
 
-      // Then, notify the debugger to remove its visuals and refresh its list
-      // based on the now-updated manager's collection.
-      if (this.debugMode && this.debugger) {
-        this.debugger.removeLinkOverlay(element) // Removes specific overlay and list item
-        this.debugger.refreshDisplayedElements() // Rebuilds list from manager.elements
+      if (this.debugger) {
+        this.debugger.removeLinkOverlay(element)
+        this.debugger.refreshDisplayedElements()
       }
 
       if (this.elements.size === 0 && this.isSetup) {
@@ -208,9 +152,6 @@ export class ForesightManager {
     }
   }
 
-  /**
-   * Alters the global settings of the ForesightManager at runtime.
-   */
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
     let settingsActuallyChanged = false
 
@@ -240,6 +181,24 @@ export class ForesightManager {
         this.predictedPoint = this.predictMousePosition(this.currentPoint)
       } else {
         this.predictedPoint = this.currentPoint
+        // When disabling prediction, clear active trajectory hits and their timeouts
+        this.elements.forEach((data, el) => {
+          if (data.isTrajectoryHit) {
+            if (data.trajectoryHitExpirationTimeoutId) {
+              clearTimeout(data.trajectoryHitExpirationTimeoutId)
+            }
+            const updatedElementData: ForesightElementData = {
+              ...data,
+              isTrajectoryHit: false,
+              trajectoryHitTime: 0,
+              trajectoryHitExpirationTimeoutId: undefined,
+            }
+            this.elements.set(el, updatedElementData)
+            if (this.debugger) {
+              this.debugger.createOrUpdateLinkOverlay(el, updatedElementData)
+            }
+          }
+        })
       }
     }
 
@@ -248,6 +207,10 @@ export class ForesightManager {
       if (!this.areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this.globalSettings.defaultHitSlop = normalizedNewHitSlop
         settingsActuallyChanged = true
+        // This recomputes expandedRects using each element's own stored hitSlop.
+        // If an element's hitSlop itself needs to change because it was using the
+        // old default, that logic would need to be more explicit here.
+        // For now, this just updates the global default for future use and forces re-calc.
         this.elements.forEach((data, element) => {
           this.updateExpandedRect(element)
         })
@@ -273,7 +236,6 @@ export class ForesightManager {
           this.debugger = null
         }
       }
-      this.debugMode = this.globalSettings.debug
     }
 
     if (settingsActuallyChanged && this.globalSettings.debug && this.debugger) {
@@ -291,7 +253,6 @@ export class ForesightManager {
   }
 
   private turnOnDebugMode() {
-    this.debugMode = true
     if (!this.debugger) {
       this.debugger = new ForesightDebugger(this)
       this.debugger.initialize(
@@ -333,6 +294,7 @@ export class ForesightManager {
   }
 
   private areRectsEqual(rect1: Rect, rect2: Rect): boolean {
+    if (!rect1 || !rect2) return rect1 === rect2
     return (
       rect1.left === rect2.left &&
       rect1.right === rect2.right &&
@@ -361,7 +323,7 @@ export class ForesightManager {
         },
       })
 
-      if (this.debugMode && this.debugger) {
+      if (this.debugger) {
         const updatedData = this.elements.get(element)
         if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
       }
@@ -408,6 +370,7 @@ export class ForesightManager {
   }
 
   private lineSegmentIntersectsRect(p1: Point, p2: Point, rect: Rect): boolean {
+    // (Liang-Barsky algorithm implementation)
     let t0 = 0.0
     let t1 = 1.0
     const dx = p2.x - p1.x
@@ -444,15 +407,13 @@ export class ForesightManager {
       : this.currentPoint
 
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
-    if (this.debugMode && this.debugger) {
+    if (this.debugger) {
       elementsToUpdateInDebugger = []
     }
 
-    const elementsToUnregister: ForesightElement[] = [] // Collect elements to unregister
+    const elementsToUnregister: ForesightElement[] = []
 
     this.elements.forEach((currentData, element) => {
-      // If element was already unregistered in a previous iteration of this same mousemove
-      // (e.g. if multiple elements are hit and unregistered), skip it.
       if (!this.elements.has(element)) {
         return
       }
@@ -461,6 +422,7 @@ export class ForesightManager {
         isHovering: currentData.isHovering,
         isTrajectoryHit: currentData.isTrajectoryHit,
         trajectoryHitTime: currentData.trajectoryHitTime,
+        trajectoryHitExpirationTimeoutId: currentData.trajectoryHitExpirationTimeoutId,
       }
 
       let callbackFiredThisCycle = false
@@ -480,7 +442,7 @@ export class ForesightManager {
       if (
         this.globalSettings.enableMousePrediction &&
         !isCurrentlyPhysicallyHovering &&
-        !currentData.isTrajectoryHit
+        !currentData.isTrajectoryHit // Only activate if not already hit
       ) {
         if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
@@ -498,20 +460,23 @@ export class ForesightManager {
 
       if (isNewPhysicalHoverEvent) {
         const hoverCanTriggerCallback =
-          !currentData.isTrajectoryHit ||
-          (currentData.isTrajectoryHit && !this.globalSettings.enableMousePrediction)
+          !currentData.isTrajectoryHit || // If not trajectory hit, hover can trigger
+          (currentData.isTrajectoryHit && !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
           currentData.callback()
-          callbackFiredThisCycle = true // Mark callback as fired for physical hover too
+          callbackFiredThisCycle = true
         }
       }
 
       finalIsHovering = isCurrentlyPhysicallyHovering
 
-      // If callback fired and element is set to unregister on callback
+      // If physically hovering, it overrides any "trajectory hit" state for expiration purposes
+      // but the visual/logical state of isTrajectoryHit might persist if it happened first.
+      // The main change is how the expiration timeout is handled.
+
       if (callbackFiredThisCycle && currentData.unregisterOnCallback) {
-        elementsToUnregister.push(element) // Mark for unregistration
+        elementsToUnregister.push(element)
       }
 
       const coreStateActuallyChanged =
@@ -520,13 +485,48 @@ export class ForesightManager {
         (finalIsTrajectoryHit && finalTrajectoryHitTime !== previousDataState.trajectoryHitTime)
 
       if (coreStateActuallyChanged && this.elements.has(element)) {
-        // Check .has(element) again in case it was unregistered by a previous element's callback in the same event cycle
-        const newElementData: ForesightElementData = {
+        let newElementData: ForesightElementData = {
           ...currentData,
           isHovering: finalIsHovering,
           isTrajectoryHit: finalIsTrajectoryHit,
           trajectoryHitTime: finalTrajectoryHitTime,
+          trajectoryHitExpirationTimeoutId: previousDataState.trajectoryHitExpirationTimeoutId, // Preserve existing initially
         }
+
+        // Manage trajectory hit expiration timeout
+        if (newElementData.isTrajectoryHit && !previousDataState.isTrajectoryHit) {
+          // Just became a trajectory hit (or re-hit after expiration)
+          if (newElementData.trajectoryHitExpirationTimeoutId) {
+            clearTimeout(newElementData.trajectoryHitExpirationTimeoutId)
+          }
+          newElementData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
+            const currentElementData = this.elements.get(element)
+            if (
+              currentElementData &&
+              currentElementData.isTrajectoryHit &&
+              currentElementData.trajectoryHitTime === newElementData.trajectoryHitTime // Ensure it's the same hit instance
+            ) {
+              const expiredData: ForesightElementData = {
+                ...currentElementData,
+                isTrajectoryHit: false,
+                trajectoryHitExpirationTimeoutId: undefined,
+              }
+              this.elements.set(element, expiredData)
+              if (this.debugger) {
+                this.debugger.createOrUpdateLinkOverlay(element, expiredData)
+              }
+            }
+          }, 200)
+        } else if (!newElementData.isTrajectoryHit && previousDataState.isTrajectoryHit) {
+          // No longer a trajectory hit (e.g. mouse moved away, physical hover, or prediction disabled)
+          if (newElementData.trajectoryHitExpirationTimeoutId) {
+            clearTimeout(newElementData.trajectoryHitExpirationTimeoutId)
+            newElementData.trajectoryHitExpirationTimeoutId = undefined
+          }
+        }
+        // If it was already a trajectory hit and remains one (e.g. mouse still on trajectory path
+        // without physical hover, and timeout hasn't fired), the existing timeout continues.
+
         this.elements.set(element, newElementData)
 
         if (elementsToUpdateInDebugger) {
@@ -535,29 +535,21 @@ export class ForesightManager {
       }
     })
 
-    // Unregister elements marked for unregistration
     if (elementsToUnregister.length > 0) {
       elementsToUnregister.forEach((element) => {
         if (this.elements.has(element)) {
-          // Check if still registered
           const elementName = this.elements.get(element)?.name || "Unnamed"
           console.log(
             `Unregistering element "${elementName}" due to callback and unregisterOnCallback=true.`
           )
-          this.unregister(element)
+          this.unregister(element) // unregister will clear its own timeout
         }
       })
-      // After unregistering, if debugger is active, it might need a final refresh
-      // if elementsToUpdateInDebugger contained any of the now-unregistered elements.
-      // The unregister method itself calls refreshDisplayedElements, which should handle the list.
-      // We just need to ensure elementsToUpdateInDebugger doesn't try to update a removed element.
     }
 
-    if (this.debugMode && this.debugger) {
-      // Check debugMode and debugger existence
+    if (this.debugger) {
       elementsToUpdateInDebugger?.forEach((element) => {
-        // Optional chaining for elementsToUpdateInDebugger
-        const data = this.elements.get(element)
+        const data = this.elements.get(element) // Get potentially updated data
         if (data) {
           this.debugger!.createOrUpdateLinkOverlay(element, data)
         }
@@ -611,7 +603,7 @@ export class ForesightManager {
         for (const element of currentElements) {
           if (!element.isConnected) {
             if (this.elements.has(element)) {
-              this.unregister(element)
+              this.unregister(element) // unregister will clear its own timeout
             }
           }
         }
@@ -634,13 +626,11 @@ export class ForesightManager {
       const timeSinceLastCall = now - this.lastDomMutationRectsUpdateTimestamp
 
       if (timeSinceLastCall >= delay) {
-        console.log("DOM Mutation: Updating all rects immediately")
         this.updateAllRects()
         this.lastDomMutationRectsUpdateTimestamp = now
         this.domMutationRectsUpdateTimeoutId = null
       } else {
         this.domMutationRectsUpdateTimeoutId = setTimeout(() => {
-          console.log("DOM Mutation: Updating all rects after throttle delay")
           this.updateAllRects()
           this.lastDomMutationRectsUpdateTimestamp = performance.now()
           this.domMutationRectsUpdateTimeoutId = null
@@ -650,7 +640,6 @@ export class ForesightManager {
   }
 
   private setupGlobalListeners() {
-    console.log("Setting up global listeners")
     if (this.isSetup) return
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)

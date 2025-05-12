@@ -42,7 +42,7 @@ export class ForesightDebugger {
     currentSettings: ForesightManagerProps,
     currentPoint: Point,
     predictedPoint: Point
-  ): void {
+  ) {
     if (typeof window === "undefined") return
     this.cleanup()
 
@@ -227,7 +227,7 @@ export class ForesightDebugger {
   }
 
   // ... rest of the ForesightDebugger class ...
-  public cleanup(): void {
+  public cleanup() {
     console.log("[ForesightDebugger] cleanup() called. All debug elements will be removed.")
     this.controlPanel?.cleanup()
     // No need to re-assign this.controlPanel to null here, as a new one is made in constructor
@@ -246,7 +246,7 @@ export class ForesightDebugger {
     this.debugStyleElement = null
   }
 
-  public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData): void {
+  public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
 
     this.lastElementData.set(element, {
@@ -308,7 +308,7 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public removeLinkOverlay(element: ForesightElement): void {
+  public removeLinkOverlay(element: ForesightElement) {
     const overlays = this.debugLinkOverlays.get(element)
     if (overlays) {
       overlays.linkOverlay.remove()
@@ -321,7 +321,7 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public refreshDisplayedElements(): void {
+  public refreshDisplayedElements() {
     const currentManagerElements = new Set(this.foresightManagerInstance.elements.keys())
 
     // Update or add overlays for currently registered elements
@@ -345,7 +345,7 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>): void {
+  public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>) {
     if (!this.shadowRoot || !this.debugContainer) return
     this.refreshDisplayedElements()
   }
@@ -354,7 +354,7 @@ export class ForesightDebugger {
     currentPoint: Point,
     predictedPoint: Point,
     enableMousePrediction: boolean
-  ): void {
+  ) {
     if (!this.shadowRoot || !this.debugContainer) return
 
     const hasRegisteredElements = this.foresightManagerInstance.elements.size > 0
@@ -394,7 +394,7 @@ export class ForesightDebugger {
     }
   }
 
-  public updateControlsState(settings: ForesightManagerProps): void {
+  public updateControlsState(settings: ForesightManagerProps) {
     this.controlPanel?.updateControlsState(settings)
   }
 }
