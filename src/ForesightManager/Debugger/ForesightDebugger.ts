@@ -236,7 +236,6 @@ export class ForesightDebugger {
 
   // ... rest of the ForesightDebugger class ...
   public cleanup() {
-    console.log("[ForesightDebugger] cleanup() called. All debug elements will be removed.")
     this.controlPanel?.cleanup()
     // No need to re-assign this.controlPanel to null here, as a new one is made in constructor
     // if ForesightDebugger is re-initialized. If only cleanup is called (e.g. debug off),
