@@ -4,7 +4,6 @@ import ReactPage from "./pages/ReactPage"
 
 ForesightManager.initialize({
   debug: true,
-  defaultHitSlop: 0,
   debuggerSettings: {
     isControlPanelDefaultMinimized: true,
   },

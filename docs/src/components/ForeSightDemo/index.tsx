@@ -5,14 +5,11 @@ import { ForesightManager } from "js.foresight"
 const ForeSightDemo = () => {
   const [debugMode, setDebugMode] = useState(true)
   const [selectedTab, setSelectedTab] = useState("overview")
-  const hitSlop = 40
-
   useEffect(() => {
     ForesightManager.instance.alterGlobalSettings({
       debug: debugMode,
-      defaultHitSlop: hitSlop,
     })
-  }, [debugMode, hitSlop])
+  }, [debugMode])
 
   const toggleDebugMode = () => {
     setDebugMode(!debugMode)
@@ -44,11 +41,7 @@ const ForeSightDemo = () => {
       )}
 
       {selectedTab === "comparison" && (
-        <LoadingComparison
-          hitSlop={hitSlop}
-          debugMode={debugMode}
-          toggleDebugMode={toggleDebugMode}
-        />
+        <LoadingComparison debugMode={debugMode} toggleDebugMode={toggleDebugMode} />
       )}
     </div>
   )
@@ -105,15 +98,28 @@ const Overview = ({ debugMode, toggleDebugMode }) => {
             </button>
           </div>
         </div>
-        <p>Move your mouse toward any of these buttons to see ForeSightJs in action:</p>
+        <p>
+          Move your mouse toward these buttons to see ForeSightJs in action with different hit slop
+          sizes:
+        </p>
 
         <div className={styles.buttonGrid}>
           <InteractiveDemo />
         </div>
 
+        <div className={styles.demoNote}>
+          <p>
+            <strong>Note:</strong> In this demo, <code>unregisterOnCallback</code> is set to{" "}
+            <code>false</code> so you can see the prefetch effect multiple times. In a production
+            environment, you would typically set it to <code>true</code> (the default) to prefetch
+            data only once per element.
+          </p>
+        </div>
+
         <p className={styles.demoHint}>
-          Notice how the buttons light up <strong>before</strong> you actually hover over them. This
-          is ForeSightJs predicting your intent based on your mouse movement.
+          Each button has a different <code>hitSlop</code> value, which controls how far from the
+          element the prediction will trigger. Larger values will activate the button from further
+          away. Notice how the buttons light up <strong>before</strong> you hover over them!
         </p>
       </div>
     </div>
@@ -148,26 +154,32 @@ const InteractiveDemo = () => {
   return (
     <>
       {[
-        { name: "button-1", color: "#3498db", label: "Home" },
-        { name: "button-2", color: "#e74c3c", label: "Products" },
-        { name: "button-3", color: "#2ecc71", label: "About" },
-        { name: "button-4", color: "#f39c12", label: "Contact" },
-        { name: "button-5", color: "#9b59b6", label: "Blog" },
-        { name: "button-6", color: "#1abc9c", label: "Settings" },
+        { name: "button-1", color: "#3498db", label: "No Hit Slop" },
+        { name: "button-2", color: "#e74c3c", label: "Small (20px)", hitSlop: 30 },
+        { name: "button-3", color: "#2ecc71", label: "Medium (40px)", hitSlop: 60 },
+        {
+          name: "button-4",
+          color: "#9b59b6",
+          label: "Custom",
+          hitSlop: { top: 70, left: 20, right: 20, bottom: 120 },
+        },
       ].map((button) => (
-        <ForesightButton
-          name={button.name}
-          color={button.color}
-          label={button.label}
-          isActive={activeButtons[button.name] || false}
-          onActivation={() => handleActivation(button.name)}
-        />
+        <React.Fragment key={button.name}>
+          <ForesightButton
+            name={button.name}
+            color={button.color}
+            label={button.label}
+            isActive={activeButtons[button.name] || false}
+            onActivation={() => handleActivation(button.name)}
+            hitSlop={button.hitSlop}
+          />
+        </React.Fragment>
       ))}
     </>
   )
 }
 
-const ForesightButton = ({ name, color, label, isActive, onActivation }) => {
+const ForesightButton = ({ name, color, label, isActive, onActivation, hitSlop }) => {
   const buttonRef = useRef(null)
 
   useEffect(() => {
@@ -175,14 +187,14 @@ const ForesightButton = ({ name, color, label, isActive, onActivation }) => {
       const unregister = ForesightManager.instance.register(
         buttonRef.current,
         onActivation,
-        40,
+        hitSlop,
         name,
         false
       )
 
       return () => unregister()
     }
-  }, [buttonRef, name, onActivation])
+  }, [buttonRef, name, onActivation, hitSlop])
 
   return (
     <button
@@ -199,7 +211,7 @@ const ForesightButton = ({ name, color, label, isActive, onActivation }) => {
 }
 
 // Loading comparison component
-const LoadingComparison = ({ hitSlop, debugMode, toggleDebugMode }) => {
+const LoadingComparison = ({ debugMode, toggleDebugMode }) => {
   const [resetTrigger, setResetTrigger] = useState(0)
 
   const handleResetAll = () => {
@@ -247,7 +259,7 @@ const LoadingComparison = ({ hitSlop, debugMode, toggleDebugMode }) => {
       <div className={styles.cardGrid}>
         <RegularCard key={`regular-${resetTrigger}`} />
         <HoverCard key={`hover-${resetTrigger}`} />
-        <ForesightCard hitSlop={hitSlop} />
+        <ForesightCard />
       </div>
 
       <div className={styles.comparisonNote}>
@@ -373,7 +385,7 @@ const HoverCard = () => {
   )
 }
 
-const ForesightCard = ({ hitSlop }) => {
+const ForesightCard = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [loadTime, setLoadTime] = useState(null)
@@ -396,14 +408,14 @@ const ForesightCard = ({ hitSlop }) => {
             }, 250)
           }
         },
-        hitSlop,
+        80,
         "foresight-card",
         false
       )
 
       return () => unregister()
     }
-  }, [cardRef, hitSlop, isLoading, isLoaded])
+  }, [cardRef, isLoading, isLoaded])
 
   const reset = () => {
     setIsLoaded(false)
@@ -433,7 +445,6 @@ const ForesightCard = ({ hitSlop }) => {
             <div className={styles.notLoadedIcon}>✗</div>
             <p className={styles.statusText}>NOT LOADED</p>
             <p>Move your mouse toward this card</p>
-            <p className={styles.smallText}>It will predict your intent!</p>
           </div>
         )}
       </div>

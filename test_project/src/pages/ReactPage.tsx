@@ -42,8 +42,9 @@ const ReactPage: React.FC = () => {
           console.log(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
           showNotification(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
         },
-        { top: 20, right: 100, bottom: 20, left: 100 },
-        "custom hitslop"
+        0,
+        "custom hitslop",
+        false
       )
     }
 

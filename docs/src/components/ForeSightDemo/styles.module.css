@@ -6,6 +6,34 @@
   padding: 2rem;
 }
 
+.demoNote, .comparisonNote {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.demoNote p, .comparisonNote p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #664d03;
+}
+
+.demoNote p + p, .comparisonNote p + p {
+  margin-top: 0.75rem;
+}
+
+.demoNote code {
+  background-color: #fff9db;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #664d03;
+}
+
 .demoHeader {
   display: flex;
   justify-content: space-between;
@@ -131,7 +159,7 @@
 
 .buttonGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin: 2rem 0;
 }
@@ -163,10 +191,22 @@
 }
 
 .demoHint {
-  font-size: 0.9rem;
-  color: #666;
-  text-align: center;
-  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #495057;
+  background-color: #e8f4fd;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  margin: 1.5rem 0;
+}
+
+.demoHint code {
+  background-color: #d1ecff;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #0366d6;
 }
 
 /* Settings section */
@@ -311,10 +351,9 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 3rem;
   margin: 1rem 0;
-  justify-content: space-between;
 }
 
 .loadingCard {
@@ -354,6 +393,7 @@
   text-align: center;
   flex-grow: 1;
   cursor: pointer;
+  min-height: 220px;
 }
 
 .cardState {
@@ -440,24 +480,7 @@
   background-color: #e9ecef;
 }
 
-.comparisonNote {
-  background-color: #fff3cd;
-  padding: 1rem;
-  border-radius: 8px;
-  border-left: 5px solid #ffc107;
-  margin-top: 1rem;
-}
 
-.comparisonNote p {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: #664d03;
-}
-
-.comparisonNote p + p {
-  margin-top: 0.75rem;
-}
 
 .smallInstruction {
   font-size: 0.85rem !important;
@@ -509,7 +532,11 @@
     width: 100%;
   }
   
-  .featureGrid, .buttonGrid, .cardGrid {
+  .featureGrid, .cardGrid {
     grid-template-columns: 1fr;
+  }
+  
+  .buttonGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }
