@@ -9,6 +9,16 @@ ForesightJS is a lightweight JavaScript library that predicts user intent based 
 
 [ForesightJS docs](https://foresightjs.com/)
 
+## Download
+
+```bash
+npm install react-hover-slop
+# or
+yarn add react-hover-slop
+# or
+pnpm add react-hover-slop
+```
+
 ## Why Use ForesightJS?
 
 ### Problem 1: On-Hover Prefetching is Too Late
@@ -75,7 +85,9 @@ unregister()
 In the following sections, you'll learn how to configure ForesightJS, debug interactions, and integrate it with popular frameworks.
 
 ## Configuration
+
 [Docs](https://foresightjs.com/docs/config)
 
 ## Debugging visualization
+
 [Docs](https://foresightjs.com/docs/debugging)
