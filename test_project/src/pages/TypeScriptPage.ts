@@ -1,4 +1,4 @@
-import { ForesightManager } from "../../../src/ForesightManager/ForesightManager"
+import { ForesightManager } from "../../../src/ForesightManager/Manager/ForesightManager"
 
 /**
  * Define the types locally instead of importing them

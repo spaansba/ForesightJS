@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
-import { ForesightManager } from "../../../src/ForesightManager/ForesightManager"
+import { ForesightManager } from "../../../src/ForesightManager/Manager/ForesightManager"
 import type { JSX } from "react/jsx-dev-runtime"
 
 const ReactPage: React.FC = () => {

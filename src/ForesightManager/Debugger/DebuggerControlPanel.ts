@@ -1,5 +1,5 @@
 // DebuggerControlPanel.ts
-import type { ForesightManager } from "../ForesightManager"
+import type { ForesightManager } from "../Manager/ForesightManager"
 import type {
   ForesightElementData,
   ForesightElement,

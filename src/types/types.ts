@@ -71,10 +71,7 @@ export type ForesightElementData = {
   unregisterOnCallback: boolean
 }
 
-/**
- * Configuration options for the ForesightManager
- */
-export type ForesightManagerProps = {
+type BaseForesightManagerProps = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.
    * A higher number might lead to smoother but slightly delayed predictions.
@@ -104,6 +101,28 @@ export type ForesightManagerProps = {
   debug: boolean
 
   /**
+   * Amount of time in ms the element bounds get recalculated on scroll/resize of the page.
+   * @default 50
+   */
+  resizeScrollThrottleDelay: number
+}
+
+/**
+ * Configuration options for the ForesightManager
+ */
+export type ForesightManagerProps = BaseForesightManagerProps & {
+  /**
+   * Default hit slop to apply to all registered elements if no specific
+   * hit slop is provided during registration.
+   * Can be a single number for uniform slop on all sides, or a Rect object
+   * for different values per side.
+   * @default { top: 0, left: 0, right: 0, bottom: 0 }
+   */
+  defaultHitSlop: Rect
+}
+
+export type UpdateForsightManagerProps = BaseForesightManagerProps & {
+  /**
    * Default hit slop to apply to all registered elements if no specific
    * hit slop is provided during registration.
    * Can be a single number for uniform slop on all sides, or a Rect object
@@ -111,10 +130,4 @@ export type ForesightManagerProps = {
    * @default { top: 0, left: 0, right: 0, bottom: 0 }
    */
   defaultHitSlop: Rect | number
-
-  /**
-   * Amount of time in ms the element bounds get recalculated on scroll/resize of the page.
-   * @default 50
-   */
-  resizeScrollThrottleDelay: number
 }

@@ -1,5 +1,5 @@
 // ForesightDebugger.ts
-import type { ForesightManager } from "../ForesightManager"
+import type { ForesightManager } from "../Manager/ForesightManager"
 import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new class
 import type {
   ForesightElementData,
@@ -26,8 +26,6 @@ export class ForesightDebugger {
   private debugStyleElement: HTMLStyleElement | null = null
 
   private controlPanel: DebuggerControlPanel | null = null
-
-  private currentGlobalSettings: ForesightManagerProps | null = null
   private lastElementData: Map<
     ForesightElement,
     { isHovering: boolean; isTrajectoryHit: boolean }
@@ -47,8 +45,6 @@ export class ForesightDebugger {
   ): void {
     if (typeof window === "undefined") return
     this.cleanup()
-
-    this.currentGlobalSettings = { ...currentSettings }
 
     this.shadowHost = document.createElement("div")
     this.shadowHost.id = "jsforesight-debugger-shadow-host"
@@ -399,7 +395,6 @@ export class ForesightDebugger {
   }
 
   public updateControlsState(settings: ForesightManagerProps): void {
-    this.currentGlobalSettings = { ...settings }
     this.controlPanel?.updateControlsState(settings)
   }
 }

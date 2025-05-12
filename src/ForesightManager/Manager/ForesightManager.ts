@@ -1,4 +1,4 @@
-import { ForesightDebugger } from "./Debugger/ForesightDebugger"
+import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import type {
   ForesightCallback,
   ForesightManagerProps,
@@ -7,7 +7,8 @@ import type {
   MousePosition,
   Point,
   Rect,
-} from "../types/types"
+  UpdateForsightManagerProps,
+} from "../../types/types"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -62,14 +63,13 @@ export class ForesightManager {
   private elementResizeObserver: ResizeObserver | null = null
 
   private constructor() {
-    this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop)
     setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
   }
 
   /**
    * Initializes the ForesightManager singleton instance with optional global settings.
    */
-  public static initialize(props?: Partial<ForesightManagerProps>): ForesightManager {
+  public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
       ForesightManager.manager = new ForesightManager()
       if (props) {
@@ -128,18 +128,6 @@ export class ForesightManager {
     }
   }
 
-  private normalizeHitSlop = (hitSlop: number | Rect): Rect => {
-    if (typeof hitSlop === "number") {
-      return {
-        top: hitSlop,
-        left: hitSlop,
-        right: hitSlop,
-        bottom: hitSlop,
-      }
-    }
-    return hitSlop
-  }
-
   /**
    * Registers an element with the ForesightManager.
    * @param element The HTML element to monitor.
@@ -158,7 +146,7 @@ export class ForesightManager {
   ): () => void {
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : (this.globalSettings.defaultHitSlop as Rect)
+      : this.globalSettings.defaultHitSlop
     const originalRect = element.getBoundingClientRect()
     const newForesightElementData: ForesightElementData = {
       callback,
@@ -223,7 +211,7 @@ export class ForesightManager {
   /**
    * Alters the global settings of the ForesightManager at runtime.
    */
-  public alterGlobalSettings(props?: Partial<ForesightManagerProps>): void {
+  public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
     let settingsActuallyChanged = false
 
     if (
@@ -255,16 +243,15 @@ export class ForesightManager {
       }
     }
 
-    if (
-      props?.defaultHitSlop !== undefined &&
-      JSON.stringify(this.globalSettings.defaultHitSlop) !==
-        JSON.stringify(this.normalizeHitSlop(props.defaultHitSlop))
-    ) {
-      this.globalSettings.defaultHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
-      settingsActuallyChanged = true
-      this.elements.forEach((data, el) => {
-        this.updateExpandedRect(el, data.elementBounds.hitSlop)
-      })
+    if (props?.defaultHitSlop !== undefined) {
+      const normalizedNewHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
+      if (!this.areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
+        this.globalSettings.defaultHitSlop = normalizedNewHitSlop
+        settingsActuallyChanged = true
+        this.elements.forEach((data, element) => {
+          this.updateExpandedRect(element)
+        })
+      }
     }
 
     if (
@@ -324,6 +311,18 @@ export class ForesightManager {
     }
   }
 
+  private normalizeHitSlop = (hitSlop: number | Rect): Rect => {
+    if (typeof hitSlop === "number") {
+      return {
+        top: hitSlop,
+        left: hitSlop,
+        right: hitSlop,
+        bottom: hitSlop,
+      }
+    }
+    return hitSlop
+  }
+
   private getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
     return {
       left: baseRect.left - hitSlop.left,
@@ -333,7 +332,15 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(element: ForesightElement, hitSlop: Rect): void {
+  private areRectsEqual(rect1: Rect, rect2: Rect): boolean {
+    return (
+      rect1.left === rect2.left &&
+      rect1.right === rect2.right &&
+      rect1.top === rect2.top &&
+      rect1.bottom === rect2.bottom
+    )
+  }
+  private updateExpandedRect(element: ForesightElement): void {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
@@ -342,10 +349,8 @@ export class ForesightManager {
     const expandedRect = this.getExpandedRect(newOriginalRect, currentHitSlop)
 
     if (
-      JSON.stringify(expandedRect) !==
-        JSON.stringify(foresightElementData.elementBounds.expandedRect) ||
-      JSON.stringify(newOriginalRect) !==
-        JSON.stringify(foresightElementData.elementBounds.originalRect)
+      !this.areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect) ||
+      !this.areRectsEqual(newOriginalRect, foresightElementData.elementBounds.originalRect)
     ) {
       this.elements.set(element, {
         ...foresightElementData,
@@ -365,7 +370,7 @@ export class ForesightManager {
 
   private updateAllRects(): void {
     this.elements.forEach((data, element) => {
-      this.updateExpandedRect(element, data.elementBounds.hitSlop)
+      this.updateExpandedRect(element)
     })
   }
 
@@ -593,7 +598,7 @@ export class ForesightManager {
       const foresightElementData = this.elements.get(element)
 
       if (foresightElementData) {
-        this.updateExpandedRect(element, foresightElementData.elementBounds.hitSlop)
+        this.updateExpandedRect(element)
       }
     }
   }

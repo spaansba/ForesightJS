@@ -1,4 +1,4 @@
-import { ForesightManager } from "../../src/ForesightManager/ForesightManager"
+import { ForesightManager } from "../../src/ForesightManager/Manager/ForesightManager"
 import PageRouter from "./PageRouter"
 
 ForesightManager.initialize({

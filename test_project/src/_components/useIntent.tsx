@@ -1,4 +1,4 @@
-import { ForesightManager } from "../../../src/ForesightManager/ForesightManager"
+import { ForesightManager } from "../../../src/ForesightManager/Manager/ForesightManager"
 import { useEffect } from "react"
 
 function useIntent<T extends Element>(onCallback: () => void, linkRef: React.RefObject<T | null>) {

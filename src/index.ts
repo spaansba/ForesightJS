@@ -1,4 +1,4 @@
-export { ForesightManager } from "./ForesightManager/ForesightManager"
+export { ForesightManager } from "./ForesightManager/Manager/ForesightManager"
 // Export any types you need
 export type {
   // Types directly used in ForesightManager's public API
