@@ -6,6 +6,20 @@ sidebar_position: 1
 
 ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements. By analyzing cursor trajectory in real-time, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
+## How to download
+
+```bash
+npm install js.foresight
+```
+
+```bash
+yarn add js.foresight
+```
+
+```bash
+pnpm add js.foresight
+```
+
 ## Why Use ForesightJS?
 
 ### Problem 1: On-Hover Prefetching is Too Late
