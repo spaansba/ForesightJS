@@ -107,6 +107,11 @@ export class ForesightDebugger {
       .jsforesight-debugger-title-container {
         display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
       }
+      .jsforesight-minimize-button{
+        background: none; border: none; color: white;
+        font-size: 22px; cursor: pointer; padding: 0;
+        position: absolute; top: 10px; left: 15px;
+      }
       .jsforesight-debugger-title-container h3 { margin: 0; font-size: 15px; }
       #jsforesight-debug-controls label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
       #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
@@ -124,12 +129,11 @@ export class ForesightDebugger {
         flex-shrink: 0;
       }
       .jsforesight-debugger-section {
-        margin-top: 15px;
-        padding-top: 10px;
+        display: flex; flex-direction: column; gap: 6px;
         border-top: 1px solid #444;
       }
       .jsforesight-debugger-section h4 {
-        margin: 0 0 8px 0;
+        margin: 5px 0 2px 0;
         font-size: 14px;
         font-weight: bold;
       }

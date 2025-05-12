@@ -12,7 +12,21 @@ import type {
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
- * // ... (rest of the class comments)
+ *
+ * ForesightManager is a singleton class responsible for:
+ * - Registering HTML elements to monitor.
+ * - Tracking mouse movements and predicting future cursor positions.
+ * - Detecting when a predicted trajectory intersects with a registered element's bounds.
+ * - Invoking callbacks associated with elements upon predicted or actual interaction.
+ * - Optionally unregistering elements after their callback is triggered.
+ * - Handling global settings for prediction behavior (e.g., history size, prediction time).
+ * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
+ * - Automatically updating element bounds on resize using {@link ResizeObserver}.
+ * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
+ * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
+ *
+ * It should be initialized once using {@link ForesightManager.initialize} and then
+ * accessed via the static getter {@link ForesightManager.instance}.
  */
 export class ForesightManager {
   private static manager: ForesightManager
@@ -26,7 +40,7 @@ export class ForesightManager {
     enableMousePrediction: true,
     positionHistorySize: 8,
     trajectoryPredictionTime: 80,
-    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 }, // Initialized as Rect
+    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     resizeScrollThrottleDelay: 50,
   }
 
@@ -43,11 +57,7 @@ export class ForesightManager {
 
   private elementResizeObserver: ResizeObserver | null = null
 
-  private constructor() {
-    // REMOVED: setInterval(this.checkTrajectoryHitExpiration.bind(this), 100)
-    // defaultHitSlop is already normalized at declaration or can be normalized if needed
-    // this.globalSettings.defaultHitSlop = this.normalizeHitSlop(this.globalSettings.defaultHitSlop);
-  }
+  private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
@@ -74,8 +84,6 @@ export class ForesightManager {
     }
     return ForesightManager.manager
   }
-
-  // REMOVED: private checkTrajectoryHitExpiration(): void { ... }
 
   public register(
     element: ForesightElement,

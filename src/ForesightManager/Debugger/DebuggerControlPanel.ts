@@ -23,6 +23,11 @@ export class DebuggerControlPanel {
   private throttleDelaySlider: HTMLInputElement | null = null
   private throttleValueSpan: HTMLSpanElement | null = null
 
+  // For minimize functionality
+  private minimizeButton: HTMLButtonElement | null = null
+  private debuggerSection: HTMLElement | null = null // Contains the element list
+  private isMinimized: boolean = false
+
   constructor(manager: ForesightManager) {
     this.foresightManagerInstance = manager
   }
@@ -36,6 +41,7 @@ export class DebuggerControlPanel {
       this._setupEventListeners()
       this.updateControlsState(initialSettings)
       this.refreshElementList()
+      this._applyMinimizedStateVisuals() // Ensure initial state is applied
     }
   }
 
@@ -43,44 +49,48 @@ export class DebuggerControlPanel {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls" // Use existing ID for styles
 
+    // Note: The minimize button already exists in your HTML structure
     let controlsHTML = `
       <div class="jsforesight-debugger-title-container">
+        <button class="jsforesight-minimize-button">-</button>
         <h3>Foresight Debugger</h3>
         <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
       </div>
-      <div class="control-row">
-        <label for="jsforesight-trajectory-enabled">
-          Enable Mouse Prediction
-          <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions.">i</span>
-        </label>
-        <input type="checkbox" id="jsforesight-trajectory-enabled">
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-history-size">
-          History Size
-          <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation (Min: 2, Max: 20). Higher values smooth predictions but add latency.">i</span>
-        </label>
-        <input type="range" id="jsforesight-history-size" min="2" max="20">
-        <span id="jsforesight-history-value"></span>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-prediction-time">
-          Prediction Time (ms)
-          <span class="jsforesight-info-icon" title="How far (ms) to project trajectory (Min: 10, Max: 500). Larger values detect intent sooner.">i</span>
-        </label>
-        <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10">
-        <span id="jsforesight-prediction-value"></span>
-      </div>
-      <div class="control-row">
-        <label for="jsforesight-throttle-delay">
-          Scroll/Resize Throttle (ms)
-          <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
-        </label>
-        <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10">
-        <span id="jsforesight-throttle-value"></span>
-      </div>
-    `
 
+      <div class="jsforesight-debugger-section">
+        <h4>Session Settings</h4>
+        <div class="control-row">
+          <label for="jsforesight-trajectory-enabled">
+            Enable Mouse Prediction
+            <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions.">i</span>
+          </label>
+          <input type="checkbox" id="jsforesight-trajectory-enabled">
+        </div>
+        <div class="control-row">
+          <label for="jsforesight-history-size">
+            History Size
+            <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation (Min: 2, Max: 20). Higher values smooth predictions but add latency.">i</span>
+          </label>
+          <input type="range" id="jsforesight-history-size" min="2" max="20">
+          <span id="jsforesight-history-value"></span>
+        </div>
+        <div class="control-row">
+          <label for="jsforesight-prediction-time">
+            Prediction Time (ms)
+            <span class="jsforesight-info-icon" title="How far (ms) to project trajectory (Min: 10, Max: 500). Larger values detect intent sooner.">i</span>
+          </label>
+          <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10">
+          <span id="jsforesight-prediction-value"></span>
+        </div>
+        <div class="control-row">
+          <label for="jsforesight-throttle-delay">
+            Scroll/Resize Throttle (ms)
+            <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
+          </label>
+          <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10">
+          <span id="jsforesight-throttle-value"></span>
+        </div>
+      `
     controlsHTML += `
       <div class="jsforesight-debugger-section">
         <h4>Registered Elements (<span id="jsforesight-element-count">0</span>)</h4>
@@ -88,7 +98,9 @@ export class DebuggerControlPanel {
           <em>Initializing...</em>
         </div>
       </div>
+    </div>
     `
+
     this.controlsContainer.innerHTML = controlsHTML
   }
 
@@ -108,6 +120,10 @@ export class DebuggerControlPanel {
       "#jsforesight-element-list-items-container"
     )
     this.elementCountSpan = this.controlsContainer.querySelector("#jsforesight-element-count")
+
+    // Query elements for minimize functionality
+    this.minimizeButton = this.controlsContainer.querySelector(".jsforesight-minimize-button")
+    this.debuggerSection = this.controlsContainer.querySelector(".jsforesight-debugger-section")
   }
 
   private _setupEventListeners() {
@@ -140,6 +156,28 @@ export class DebuggerControlPanel {
         resizeScrollThrottleDelay: value,
       })
     })
+
+    // Add event listener for the minimize button
+    this.minimizeButton?.addEventListener("click", () => {
+      this.isMinimized = !this.isMinimized
+      this._applyMinimizedStateVisuals()
+    })
+  }
+
+  private _applyMinimizedStateVisuals() {
+    if (!this.minimizeButton || !this.debuggerSection || !this.controlsContainer) return
+
+    if (this.isMinimized) {
+      this.debuggerSection.style.display = "none"
+      this.minimizeButton.textContent = "+"
+      // Optional: Add a class to controlsContainer for more specific styling if needed
+      // this.controlsContainer.classList.add("minimized")
+    } else {
+      this.debuggerSection.style.display = "" // Reset to default
+      this.minimizeButton.textContent = "-"
+      // Optional: Remove the class
+      // this.controlsContainer.classList.remove("minimized")
+    }
   }
 
   public updateControlsState(settings: ForesightManagerProps) {
@@ -215,6 +253,11 @@ export class DebuggerControlPanel {
     this.elementListContainer = null
     this.elementCountSpan = null
     this.elementListItems.clear()
+
+    // Clear references for minimize functionality
+    this.minimizeButton = null
+    this.infoWrapper = null
+    this.debuggerSection = null
     // Event listeners are on elements within controlsContainer, so they'll be GC'd.
   }
 }
