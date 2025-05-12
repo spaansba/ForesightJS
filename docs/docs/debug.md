@@ -15,6 +15,9 @@ import { ForesightManager } from "foresightjs"
 
 ForesightManager.initialize({
   debug: true, // Enable debug mode
+  debuggerSettings: {
+    isControlPanelDefaultMinimized: true, // optional debug setting which allows you to minimize the control panel on default
+  },
 })
 ```
 
@@ -43,6 +46,8 @@ When debug mode is enabled, ForesightJS adds several visual elements to your app
 
 A control panel appears in the bottom-right corner of the screen, allowing you to:
 
+#### Change session settings
+
 1. **Toggle Mouse Prediction**: Turn prediction on/off while testing
 2. **Adjust History Size**: Change how many positions are used for calculations
 3. **Adjust Prediction Time**: Modify how far ahead the mouse trajectory is predicted
@@ -50,28 +55,9 @@ A control panel appears in the bottom-right corner of the screen, allowing you t
 
 These controls affect the ForesightManager configuration in real-time, allowing you to see how different settings impact the behavior of your UI. They are however only applicable to your current session, to save these values change them in your configuration.
 
-## Debug Mode in Different Environments
+#### View currently registered elements
 
-### Development
-
-In development, you might want to enable debug mode by default:
-
-```javascript
-ForesightManager.initialize({
-  debug: process.env.NODE_ENV === "development",
-})
-```
-
-### Production
-
-For production, you might want to provide a way for testers or developers to enable debug mode when needed:
-
-```javascript
-// Example: Enable debug with a special query parameter
-if (window.location.search.includes("debug=foresight")) {
-  ForesightManager.instance.alterGlobalSettings({ debug: true })
-}
-```
+The control panel also shows an overview of the currently registered elements. Here the `name` attribute on the element is used to display the hover/trajectory state of the element. This section also displays the element's `unregisterOnCallback` value (Single for `true` and Multi for `false`)
 
 ## Performance Considerations
 

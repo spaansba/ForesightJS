@@ -6,11 +6,7 @@ sidebar_position: 1
 
 ## The Problem with Default Next.js Prefetching
 
-Next.js automatically prefetches links as they enter the viewport, which can lead to significant unnecessary data transfer:
-
-- Scrolling up and down on the [Next.js homepage](https://nextjs.org/) can trigger **~1.59MB** of prefetch requests
-- Every link in the viewport gets prefetched, regardless of user intent
-- This can waste bandwidth and server resources on mobile devices or slower connections
+Next.js automatically prefetches links as they enter the viewport, which can lead to significant unnecessary data transfer. For example by scrolling down the [Next.js homepage](https://nextjs.org/) it triggers **~1.59MB** of prefetch requests as every single link on the page gets prefetched, regardless of user intent. This wastes bandwidth and server resources.
 
 ## ForesightJS Solution: Predictive Prefetching
 
@@ -22,61 +18,43 @@ ForesightJS optimizes prefetching by only triggering for links the user is likel
 
 ## ForesightLink Component
 
-```tsx
-// components/ForesightLink.tsx
-"use client"
-import type { LinkProps } from "next/link"
-import Link from "next/link"
-import React, { useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
-import { ForesightManager } from "js.foresight"
-type ForesightPrefetch = "foresight"
+ForesightJS can be implemented within NextJS in many ways. Below is an example of creating an wrapper around the NextJS Link component that allows the use of "foresight" as prefetch option.
 
+```tsx
 interface ForesightLinkProps extends Omit<LinkProps, "prefetch"> {
   children: React.ReactNode
-  prefetch?: boolean | null | ForesightPrefetch
   className?: string
+  hitSlop?: number | ForesightRect
+  name?: string
 }
 
-function ForesightLink({ children, prefetch, className, ...props }: ForesightLinkProps) {
-  if (prefetch !== "foresight") {
-    return (
-      <Link {...props} prefetch={prefetch}>
-        {children}
-      </Link>
-    )
-  } else {
-    return (
-      <Foresight {...props} className={className}>
-        {children}
-      </Foresight>
-    )
-  }
-}
-
-function Foresight({ children, className, ...props }: ForesightLinkProps) {
+export function ForesightLink({
+  children,
+  className,
+  hitSlop = 0,
+  name,
+  ...props
+}: ForesightLinkProps) {
   const LinkRef = useRef<HTMLAnchorElement>(null)
 
   const router = useRouter()
 
-  // instead of this useEffect you can also use the useForesight React hook (see React integrations)
   useEffect(() => {
     if (!LinkRef.current) {
       return
     }
-    const callBack = () => router.prefetch(props.href.toString())
-    const unregister = ForesightManager.instance.register(LinkRef.current, callBack)
+    const callback = () => router.prefetch(props.href.toString())
+    const unregister = ForesightManager.instance.register(LinkRef.current, callback, hitSlop, name)
 
-    return unregister
-  }, [LinkRef, router, props.href])
+    return unregister()
+  }, [LinkRef, router, props.href, hitSlop, name])
+
   return (
     <Link {...props} prefetch={false} ref={LinkRef} className={className}>
       {children}
     </Link>
   )
 }
-
-export default ForesightLink
 ```
 
 **Use ForesightLink in Your Navigation**

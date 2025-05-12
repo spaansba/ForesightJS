@@ -47,17 +47,14 @@ import { ForesightManager } from "foresightjs"
 // If you dont want global settings, you dont have to initialize the manager
 ForesightManager.initialize({
   debug: false, // Set to true to see visualization
-  defaultHitSlop: { top: 30, left: 30, bottom: 30, right: 30 }, // Adds 30 px of invisible margin around an element to increase its hitbox
+  defaultHitSlop: { top: 30, left: 30, bottom: 80, right: 30 }, // Adds invisible margin around an element to increase its hitbox
 })
 
 // Register an element to be tracked
 const myButton = document.getElementById("my-button")
 const unregister = ForesightManager.instance.register(
   myButton, // The element to track.
-  () => {
-    // Callback when user is predicted to interact
-    preloadData() // Do something ahead of time
-  },
+  () => {preloadData()} // Callback when user is predicted to interact with the element,
   20 // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
 )
 

@@ -62,9 +62,10 @@ unregister(element)
 
 ### Element Registration Parameters
 
-| Parameter  | Type           | Required | Description                                                                     |
-| ---------- | -------------- | -------- | ------------------------------------------------------------------------------- |
-| `element`  | HTMLElement    | Yes      | The DOM element to monitor                                                      |
-| `callback` | function       | Yes      | Function that executes when interaction is predicted or occurs                  |
-| `hitSlop`  | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox |
-| `name`     | string         | No       | A descriptive name, useful in debug mode                                        |
+| Parameter              | Type           | Required | Description                                                                     | Default                             |
+| ---------------------- | -------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------- |
+| `element`              | HTMLElement    | Yes      | The DOM element to monitor                                                      |                                     |
+| `callback`             | function       | Yes      | Function that executes when interaction is predicted or occurs                  |                                     |
+| `hitSlop`              | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox | 0 or defaultHitSlop from initialize |
+| `name`                 | string         | No       | A descriptive name, useful in debug mode                                        |                                     |
+| `unregisterOnCallback` | bool           | No       | Should the callback be ran more than ones?                                      | false                               |
