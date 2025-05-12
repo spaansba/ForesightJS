@@ -75,15 +75,6 @@ const unregister = ForesightManager.instance.register(
 unregister()
 ```
 
-## Real-World Benefits
-
-- **Better Than Viewport Prefetching**: Only loads resources for elements the user is likely to interact with
-- **Better Than Hover Prefetching**: Starts loading resources 80-150ms earlier than hover events
-- **Improved Perceived Performance**: Interactions feel instant instead of slightly delayed
-- **Reduced Server Load**: Minimizes unnecessary API calls and data fetching
-
-In the following sections, you'll learn how to configure ForesightJS, debug interactions, and integrate it with popular frameworks.
-
 ## Configuration
 
 [Docs](https://foresightjs.com/docs/config)
