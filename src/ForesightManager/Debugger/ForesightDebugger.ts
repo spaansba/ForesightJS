@@ -258,7 +258,7 @@ export class ForesightDebugger {
 
     this.lastElementData.set(element, {
       isHovering: newData.isHovering,
-      isTrajectoryHit: newData.isTrajectoryHit,
+      isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
     })
 
     let overlays = this.debugLinkOverlays.get(element)
@@ -286,7 +286,7 @@ export class ForesightDebugger {
     linkOverlay.style.top = `${rect.top}px`
     linkOverlay.style.width = `${rect.width}px`
     linkOverlay.style.height = `${rect.height}px`
-    linkOverlay.classList.toggle("trajectory-hit", newData.isTrajectoryHit)
+    linkOverlay.classList.toggle("trajectory-hit", newData.trajectoryHitData.isTrajectoryHit)
     linkOverlay.classList.toggle("active", newData.isHovering)
 
     if (newData.elementBounds.expandedRect) {

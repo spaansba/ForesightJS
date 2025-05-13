@@ -46,35 +46,15 @@ export function ForesightLink({
     const callback = () => router.prefetch(props.href.toString())
     const unregister = ForesightManager.instance.register(LinkRef.current, callback, hitSlop, name)
 
-    return unregister()
+    return () => {
+      unregister()
+    }
   }, [LinkRef, router, props.href, hitSlop, name])
 
   return (
     <Link {...props} prefetch={false} ref={LinkRef} className={className}>
       {children}
     </Link>
-  )
-}
-```
-
-**Use ForesightLink in Your Navigation**
-
-```tsx
-import ForesightLink from "./ForesightLink"
-
-export default function Navigation() {
-  return (
-    <nav>
-      <ForesightLink href="/" prefetch="foresight">
-        Home
-      </ForesightLink>
-      <ForesightLink href="/products" prefetch="foresight">
-        Products
-      </ForesightLink>
-      <ForesightLink href="/contact" prefetch="foresight">
-        Contact
-      </ForesightLink>
-    </nav>
   )
 }
 ```

@@ -19,51 +19,53 @@ const ReactPage: React.FC = () => {
     let box1CallbackCount = 0
 
     if (box1Ref.current) {
-      manager.register(
-        box1Ref.current,
-        () => {
+      manager.register({
+        element: box1Ref.current,
+        callback: () => {
           box1CallbackCount++
           console.log(`Box 1 callback triggered! Count: ${box1CallbackCount}`)
           showNotification(`Box 1 callback triggered! Count: ${box1CallbackCount}`)
         },
-        50,
-        "big hitslop"
-      )
+        hitSlop: 50,
+        name: "box1",
+        unregisterOnCallback: false,
+      })
     }
 
     // Box 2 - custom hitSlop rectangle
     let box2CallbackCount = 0
 
     if (box2Ref.current) {
-      manager.register(
-        box2Ref.current,
-        () => {
+      manager.register({
+        element: box2Ref.current,
+        callback: () => {
           box2CallbackCount++
           console.log(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
           showNotification(`Box 2 callback triggered! Count: ${box2CallbackCount}`)
         },
-        0,
-        "custom hitslop",
-        false
-      )
+        hitSlop: 0,
+        name: "box2",
+        unregisterOnCallback: true,
+      })
     }
 
     // Box 3 - no hitSlop
     let box3CallbackCount = 0
 
     if (box3Ref.current) {
-      manager.register(
-        box3Ref.current,
-        () => {
+      manager.register({
+        element: box3Ref.current,
+        callback: () => {
           box3CallbackCount++
-          console.log(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
-          showNotification(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
+          console.log(`Box 2 callback triggered! Count: ${box3CallbackCount}`)
+          showNotification(`Box 2 callback triggered! Count: ${box3CallbackCount}`)
         },
-        0,
-        "no hitslop"
-      )
+        hitSlop: 40,
+        name: "box3",
+        unregisterOnCallback: true,
+      })
     }
-  }, [debugMode, isThirdButton])
+  }, [debugMode, isThirdButton, manager])
 
   // Update debug mode
   useEffect(() => {
@@ -96,7 +98,11 @@ const ReactPage: React.FC = () => {
           style={{ backgroundColor: `hsl(${(i * 7) % 360}, 70%, 80%)` }}
           ref={(el) => {
             if (el) {
-              manager.register(el, () => showNotification(`Element ${i + 1} triggered`), 5)
+              manager.register({
+                element: el,
+                callback: () => showNotification(`Element ${i + 1} triggered`),
+                hitSlop: 5,
+              })
             }
           }}
         >

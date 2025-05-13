@@ -57,6 +57,24 @@ export type DebuggerSettings = {
 }
 
 /**
+ * Represents trajectory hit related data for a foresight element.
+ */
+export type TrajectoryHitData = {
+  /** True if the predicted mouse trajectory has intersected the element's expanded bounds. */
+  isTrajectoryHit: boolean
+  /** The timestamp when the last trajectory hit occurred. */
+  trajectoryHitTime: number
+  /** Timeout ID for expiring the trajectory hit state. */
+  trajectoryHitExpirationTimeoutId?: ReturnType<typeof setTimeout>
+}
+
+export type ForesightElementRegisterResult = {
+  /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
+  isTouchDevice: boolean
+  /** Function to unregister the element */
+  unregister: () => void
+}
+/**
  * Represents the data associated with a registered foresight element.
  */
 export type ForesightElementData = {
@@ -70,12 +88,10 @@ export type ForesightElementData = {
   isHovering: boolean
   /** The name of the element, usefull for debugging */
   name: string
-  /** True if the predicted mouse trajectory has intersected the element's expanded bounds. */
-  isTrajectoryHit: boolean
-  /** The timestamp when the last trajectory hit occurred. */
-  trajectoryHitTime: number
-  /** The timestamp when the last trajectory hit occurred. */
-  trajectoryHitExpirationTimeoutId?: ReturnType<typeof setTimeout> // Add this line
+  /**
+   * Represents trajectory hit related data for a foresight element.
+   */
+  trajectoryHitData: TrajectoryHitData
 }
 
 type BaseForesightManagerProps = {

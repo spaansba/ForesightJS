@@ -7,7 +7,8 @@ import type {
   MousePosition,
   Point,
   Rect,
-  UpdateForsightManagerProps, // Assuming this is Partial<ForesightManagerProps>
+  UpdateForsightManagerProps,
+  ForesightElementRegisterResult, // Assuming this is Partial<ForesightManagerProps>
 } from "../../types/types"
 
 /**
@@ -88,17 +89,37 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
-  public register(
-    element: ForesightElement,
-    callback: ForesightCallback,
-    hitSlop?: number | Rect,
-    name?: string,
-    unregisterOnCallback: boolean = true
-  ): () => void {
+  private isTouchDevice = () => {
+    return window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0
+  }
+
+  public register({
+    element,
+    callback,
+    hitSlop,
+    unregisterOnCallback,
+    name,
+  }: {
+    element: ForesightElement
+    callback: ForesightCallback
+    hitSlop?: Rect | number
+    unregisterOnCallback?: boolean
+    name?: string
+  }): ForesightElementRegisterResult {
+    if (this.isTouchDevice()) {
+      return { isTouchDevice: true, unregister: () => {} }
+    }
+
     const normalizedHitSlop = hitSlop
       ? this.normalizeHitSlop(hitSlop)
-      : this.globalSettings.defaultHitSlop // Already a Rect
+      : this.globalSettings.defaultHitSlop
+
     const originalRect = element.getBoundingClientRect()
+
+    // Use the destructured unregisterOnCallback directly with a default value
+    // instead of options.unregisterOnCallback
+    const finalUnregisterOnCallback = unregisterOnCallback ?? true
+
     const newForesightElementData: ForesightElementData = {
       callback,
       elementBounds: {
@@ -107,11 +128,13 @@ export class ForesightManager {
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
-      isTrajectoryHit: false,
-      trajectoryHitTime: 0,
+      trajectoryHitData: {
+        isTrajectoryHit: false,
+        trajectoryHitTime: 0,
+        trajectoryHitExpirationTimeoutId: undefined,
+      },
       name: name ?? "Unnamed",
-      unregisterOnCallback,
-      trajectoryHitExpirationTimeoutId: undefined, // Initialize
+      unregisterOnCallback: finalUnregisterOnCallback,
     }
     this.elements.set(element, newForesightElementData)
 
@@ -129,7 +152,7 @@ export class ForesightManager {
       this.debugger.refreshDisplayedElements()
     }
 
-    return () => this.unregister(element)
+    return { isTouchDevice: false, unregister: () => this.unregister(element) }
   }
 
   private unregister(element: ForesightElement) {
@@ -139,8 +162,8 @@ export class ForesightManager {
       const elementName = foresightElementData?.name || "Element"
 
       // Clear any pending trajectory expiration timeout
-      if (foresightElementData?.trajectoryHitExpirationTimeoutId) {
-        clearTimeout(foresightElementData.trajectoryHitExpirationTimeoutId)
+      if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+        clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
       }
 
       if (this.elementResizeObserver) {
@@ -193,15 +216,17 @@ export class ForesightManager {
         this.predictedPoint = this.currentPoint
         // When disabling prediction, clear active trajectory hits and their timeouts
         this.elements.forEach((data, el) => {
-          if (data.isTrajectoryHit) {
-            if (data.trajectoryHitExpirationTimeoutId) {
-              clearTimeout(data.trajectoryHitExpirationTimeoutId)
+          if (data.trajectoryHitData.isTrajectoryHit) {
+            if (data.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+              clearTimeout(data.trajectoryHitData.trajectoryHitExpirationTimeoutId)
             }
             const updatedElementData: ForesightElementData = {
               ...data,
-              isTrajectoryHit: false,
-              trajectoryHitTime: 0,
-              trajectoryHitExpirationTimeoutId: undefined,
+              trajectoryHitData: {
+                isTrajectoryHit: false,
+                trajectoryHitTime: 0,
+                trajectoryHitExpirationTimeoutId: undefined,
+              },
             }
             this.elements.set(el, updatedElementData)
             if (this.debugger) {
@@ -436,15 +461,13 @@ export class ForesightManager {
 
       const previousDataState = {
         isHovering: currentData.isHovering,
-        isTrajectoryHit: currentData.isTrajectoryHit,
-        trajectoryHitTime: currentData.trajectoryHitTime,
-        trajectoryHitExpirationTimeoutId: currentData.trajectoryHitExpirationTimeoutId,
+        trajectoryHitData: currentData.trajectoryHitData,
       }
 
       let callbackFiredThisCycle = false
       let finalIsHovering = currentData.isHovering
-      let finalIsTrajectoryHit = currentData.isTrajectoryHit
-      let finalTrajectoryHitTime = currentData.trajectoryHitTime
+      let finalIsTrajectoryHit = currentData.trajectoryHitData.isTrajectoryHit
+      let finalTrajectoryHitTime = currentData.trajectoryHitData.trajectoryHitTime
 
       const { expandedRect } = currentData.elementBounds
 
@@ -458,7 +481,7 @@ export class ForesightManager {
       if (
         this.globalSettings.enableMousePrediction &&
         !isCurrentlyPhysicallyHovering &&
-        !currentData.isTrajectoryHit // Only activate if not already hit
+        !currentData.trajectoryHitData.isTrajectoryHit // Only activate if not already hit
       ) {
         if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
@@ -476,8 +499,9 @@ export class ForesightManager {
 
       if (isNewPhysicalHoverEvent) {
         const hoverCanTriggerCallback =
-          !currentData.isTrajectoryHit || // If not trajectory hit, hover can trigger
-          (currentData.isTrajectoryHit && !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
+          !currentData.trajectoryHitData.isTrajectoryHit || // If not trajectory hit, hover can trigger
+          (currentData.trajectoryHitData.isTrajectoryHit &&
+            !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
           currentData.callback()
@@ -497,35 +521,46 @@ export class ForesightManager {
 
       const coreStateActuallyChanged =
         finalIsHovering !== previousDataState.isHovering ||
-        finalIsTrajectoryHit !== previousDataState.isTrajectoryHit ||
-        (finalIsTrajectoryHit && finalTrajectoryHitTime !== previousDataState.trajectoryHitTime)
+        finalIsTrajectoryHit !== previousDataState.trajectoryHitData.isTrajectoryHit ||
+        (finalIsTrajectoryHit &&
+          finalTrajectoryHitTime !== previousDataState.trajectoryHitData.trajectoryHitTime)
 
       if (coreStateActuallyChanged && this.elements.has(element)) {
         let newElementData: ForesightElementData = {
           ...currentData,
           isHovering: finalIsHovering,
-          isTrajectoryHit: finalIsTrajectoryHit,
-          trajectoryHitTime: finalTrajectoryHitTime,
-          trajectoryHitExpirationTimeoutId: previousDataState.trajectoryHitExpirationTimeoutId, // Preserve existing initially
+          trajectoryHitData: {
+            isTrajectoryHit: finalIsTrajectoryHit,
+            trajectoryHitTime: finalTrajectoryHitTime,
+            trajectoryHitExpirationTimeoutId:
+              previousDataState.trajectoryHitData.trajectoryHitExpirationTimeoutId, // Preserve existing initially
+          },
         }
 
         // Manage trajectory hit expiration timeout
-        if (newElementData.isTrajectoryHit && !previousDataState.isTrajectoryHit) {
+        if (
+          newElementData.trajectoryHitData.isTrajectoryHit &&
+          !previousDataState.trajectoryHitData.isTrajectoryHit
+        ) {
           // Just became a trajectory hit (or re-hit after expiration)
-          if (newElementData.trajectoryHitExpirationTimeoutId) {
-            clearTimeout(newElementData.trajectoryHitExpirationTimeoutId)
+          if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+            clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
           }
-          newElementData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
+          newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
             const currentElementData = this.elements.get(element)
             if (
               currentElementData &&
-              currentElementData.isTrajectoryHit &&
-              currentElementData.trajectoryHitTime === newElementData.trajectoryHitTime // Ensure it's the same hit instance
+              currentElementData.trajectoryHitData.isTrajectoryHit &&
+              currentElementData.trajectoryHitData.trajectoryHitTime ===
+                newElementData.trajectoryHitData.trajectoryHitTime // Ensure it's the same hit instance
             ) {
               const expiredData: ForesightElementData = {
                 ...currentElementData,
-                isTrajectoryHit: false,
-                trajectoryHitExpirationTimeoutId: undefined,
+                trajectoryHitData: {
+                  isTrajectoryHit: false,
+                  trajectoryHitExpirationTimeoutId: undefined,
+                  trajectoryHitTime: currentElementData.trajectoryHitData.trajectoryHitTime,
+                },
               }
               this.elements.set(element, expiredData)
               if (this.debugger) {
@@ -533,11 +568,14 @@ export class ForesightManager {
               }
             }
           }, 200)
-        } else if (!newElementData.isTrajectoryHit && previousDataState.isTrajectoryHit) {
+        } else if (
+          !newElementData.trajectoryHitData.isTrajectoryHit &&
+          previousDataState.trajectoryHitData.isTrajectoryHit
+        ) {
           // No longer a trajectory hit (e.g. mouse moved away, physical hover, or prediction disabled)
-          if (newElementData.trajectoryHitExpirationTimeoutId) {
-            clearTimeout(newElementData.trajectoryHitExpirationTimeoutId)
-            newElementData.trajectoryHitExpirationTimeoutId = undefined
+          if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+            clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+            newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = undefined
           }
         }
         // If it was already a trajectory hit and remains one (e.g. mouse still on trajectory path

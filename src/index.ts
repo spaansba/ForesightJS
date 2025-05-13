@@ -4,4 +4,5 @@ export type {
   Rect as ForesightRect,
   ForesightCallback,
   ForesightElement,
+  ForesightElementRegisterResult,
 } from "./types/types"

@@ -237,7 +237,7 @@ export class DebuggerControlPanel {
 
   private _updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
     listItem.classList.toggle("hovering", data.isHovering)
-    listItem.classList.toggle("trajectory-hit", data.isTrajectoryHit)
+    listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
 
     const statusIndicatorHTML = `<span class="status-indicator"></span>`
     const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
@@ -252,7 +252,7 @@ export class DebuggerControlPanel {
     }</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
       <span class="element-details">(H: ${data.isHovering ? "Y" : "N"}, T: ${
-      data.isTrajectoryHit ? "Y" : "N"
+      data.trajectoryHitData.isTrajectoryHit ? "Y" : "N"
     })</span>
     `
   }
