@@ -5,4 +5,5 @@ export type {
   ForesightCallback,
   ForesightElement,
   ForesightElementRegisterResult,
+  UpdateForsightManagerProps,
 } from "./types/types"
