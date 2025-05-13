@@ -1,6 +1,6 @@
 {
   "name": "js.foresight",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Predicts mouse trajectory to trigger actions as users approach elements, enabling anticipatory UI updates or pre-loading. Made with vanilla javascript and usable in every framework.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
