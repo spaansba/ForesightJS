@@ -116,8 +116,6 @@ export class ForesightManager {
 
     const originalRect = element.getBoundingClientRect()
 
-    // Use the destructured unregisterOnCallback directly with a default value
-    // instead of options.unregisterOnCallback
     const finalUnregisterOnCallback = unregisterOnCallback ?? true
 
     const newForesightElementData: ForesightElementData = {
@@ -133,7 +131,7 @@ export class ForesightManager {
         trajectoryHitTime: 0,
         trajectoryHitExpirationTimeoutId: undefined,
       },
-      name: name ?? "Unnamed",
+      name: name ?? "",
       unregisterOnCallback: finalUnregisterOnCallback,
     }
     this.elements.set(element, newForesightElementData)
@@ -159,7 +157,6 @@ export class ForesightManager {
     const isRegistered = this.elements.has(element)
     if (isRegistered) {
       const foresightElementData = this.elements.get(element)
-      const elementName = foresightElementData?.name || "Element"
 
       // Clear any pending trajectory expiration timeout
       if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
