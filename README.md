@@ -65,20 +65,30 @@ ForesightManager.initialize({
 
 // Register an element to be tracked
 const myButton = document.getElementById("my-button")
-const unregister = ForesightManager.instance.register(
-  myButton, // The element to track.
-  () => {preloadData()} // Callback when user is predicted to interact with the element,
-  20 // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
-)
+
+const { isTouchDevice, unregister } = ForesightManager.instance.register({
+  element: myButton,
+  callback: () => {
+    console.log("prefetching")
+  }, // Callback when user is predicted to interact with the element,
+  hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
+})
 
 // Later, when done with this element:
 unregister()
 ```
+## What about touch devices? 
+ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
+
+An example of what to do with touch devices can be found in the [Next.JS](https://foresightjs.com/docs/integrations/nextjs) or [React Router](https://foresightjs.com/docs/integrations/react) ForesightLink components.
+
+## Integrations
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [React Router](https://foresightjs.com/docs/integrations/react) and [Next.js](https://foresightjs.com/docs/integrations/nextjs) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
+ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/config).
 
-[Docs](https://foresightjs.com/docs/config)
 
 ## Debugging visualization
+ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
-[Docs](https://foresightjs.com/docs/debugging)
