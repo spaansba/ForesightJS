@@ -83,4 +83,5 @@ unregister()
 
 ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
 
-An example of what to do with touch devices can be found in the [Next.JS ForesightLink component](/docs/integrations/nextjs#foresightlink-component)
+An example of what to do with touch devices can be found in the [Next.JS ForesightLink component](/docs/integrations/nextjs#foresightlink-component) integrations
+An example of what to do with touch devices can be found in the [Next.JS](/docs/integrations/nextjs#foresightlink-component) or [React Router](/docs/integrations/react#foresightlink-component) ForesightLink components.

@@ -22,7 +22,7 @@ ForesightJS enhances this with a more **predictive** approach. By analyzing mous
 
 ---
 
-## ForesightLink Component for React Router
+## ForesightLink Component
 
 You can integrate ForesightJS with React Router in various ways. Below is an example of creating a `ForesightLink` component that wraps React Router's `Link`. It uses `ForesightManager` to predict intent and `useFetcher` to prefetch route data.
 
