@@ -1,7 +1,6 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react"
+import { useRef, useState } from "react"
 import styles from "./packagemanager.module.css"
-import { ForesightManager } from "js.foresight"
 export function InstallCodeBlock({ code }) {
   const [copied, setCopied] = useState(false)
   const codeRef = useRef(null)
@@ -15,7 +14,6 @@ export function InstallCodeBlock({ code }) {
     }
   }
 
-  // SVG clipboard icon
   const ClipboardIcon = () => (
     <svg
       width="16"
@@ -32,7 +30,6 @@ export function InstallCodeBlock({ code }) {
     </svg>
   )
 
-  // Checkmark icon for copied state
   const CheckIcon = () => (
     <svg
       width="16"

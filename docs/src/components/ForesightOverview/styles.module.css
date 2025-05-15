@@ -6,43 +6,6 @@
   padding: 2rem;
 }
 
-.highlightBanner {
-  background-color: #edf2ff;
-  border-left: 4px solid #3b82f6;
-  border-radius: 4px;
-  padding: 1rem;
-  margin: 1.5rem 0;
-  position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.highlightBanner h3 {
-  margin-top: 0;
-  color: #3b82f6;
-  font-size: 1.2rem;
-}
-
-.highlightBanner p {
-  margin-bottom: 0;
-  color: #4b5563;
-}
-
-.advancedTag {
-  display: inline-block;
-  font-size: 0.75rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  margin-left: 0.5rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.advancedTag {
-  background-color: #dbeafe;
-  color: #2563eb;
-}
-
 .mobileMessage {
   display: none;
   background-color: #f8f1ff;
@@ -59,8 +22,7 @@
   color: #42275a;
 }
 
-.demoNote,
-.comparisonNote {
+.demoNote {
   background-color: #fff3cd;
   border-left: 4px solid #ffc107;
   padding: 1rem;
@@ -68,16 +30,14 @@
   border-radius: 0 4px 4px 0;
 }
 
-.demoNote p,
-.comparisonNote p {
+.demoNote p {
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
   color: #664d03;
 }
 
-.demoNote p + p,
-.comparisonNote p + p {
+.demoNote p + p {
   margin-top: 0.75rem;
 }
 
@@ -157,7 +117,8 @@
   color: #2c3e50;
 }
 
-.descriptionText p {
+.descriptionText p,
+.demoDescription p {
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
@@ -205,30 +166,6 @@
   color: #2c3e50;
 }
 
-.buttonGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
-  margin: 2rem 0;
-}
-
-.previewButton {
-  color: white;
-  border: none;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.previewButton.activated {
-  animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1);
-}
-
 @keyframes pulse {
   0%,
   100% {
@@ -256,33 +193,6 @@
   font-family: monospace;
   font-size: 0.9em;
   color: #0366d6;
-}
-
-/* Settings section */
-.settingsPanel {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.settingCard {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.settingCard h3 {
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
-  color: #2c3e50;
-}
-
-.settingCard p {
-  color: #555;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
 }
 
 .debugButtonContainer {
@@ -319,13 +229,6 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.slider {
-  width: 100%;
-  height: 8px;
-  outline: none;
-  cursor: pointer;
-}
-
 .codeBlock {
   background-color: #f1f3f5;
   padding: 1rem;
@@ -343,11 +246,8 @@
   gap: 2rem;
 }
 
-.controlsContainer {
-  gap: 1rem;
-  margin-top: 4rem;
-}
 .resetAllButton {
+  margin-top: 4rem;
   background-color: #e74c3c;
   color: white;
   border: none;
@@ -364,34 +264,6 @@
   background-color: #c0392b;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.comparisonInfo {
-  background-color: #e8f4fd;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border-left: 5px solid #3498db;
-}
-
-.comparisonInfo h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.comparisonInfo p {
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.comparisonList {
-  margin-left: 1.5rem;
-  list-style-type: disc;
-}
-
-.comparisonList li {
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
 }
 
 .cardGrid {
@@ -481,18 +353,6 @@
   background-color: #e9ecef;
 }
 
-.smallInstruction {
-  font-size: 0.85rem !important;
-  color: #777 !important;
-  font-style: italic;
-}
-
-.smallText {
-  font-size: 0.85rem;
-  color: #777;
-  margin-top: 0.5rem;
-}
-
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -534,18 +394,12 @@
     grid-template-columns: 1fr;
   }
 
-  .buttonGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
   /* Show mobile message and hide interactive elements on mobile */
   .mobileMessage {
     display: block;
   }
 
-  .buttonGrid,
   .comparisonInfo,
-  .comparisonNote,
   .loadingComparisonSection,
   .demoDescription,
   .tryItYourselfText,
