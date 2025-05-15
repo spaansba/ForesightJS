@@ -9,6 +9,9 @@ ForesightJS is an free and open-source JavaScript library that predicts user int
 
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
+![](https://github.com/spaansba/ForesightJS/blob/main/static/ForesightJSDemo.gif)
+_In the GIF above, [debug mode](https://foresightjs.com/docs/debug) is on. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
+
 ## Download
 
 ```bash
