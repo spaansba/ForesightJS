@@ -6,6 +6,10 @@
   padding: 2rem;
 }
 
+p {
+  text-wrap: pretty;
+}
+
 .mobileMessage {
   display: none;
   background-color: #f8f1ff;
@@ -391,6 +395,8 @@
   }
 
   .cardGrid {
+    margin: 0;
+    gap: 1rem;
     grid-template-columns: 1fr;
   }
 

@@ -22,6 +22,10 @@ ForesightManager.initialize({
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
+
+  const turnOffDebugMode = () => {
+    ForesightManager.instance.alterGlobalSettings({ debug: false })
+  }
   return (
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
@@ -33,7 +37,11 @@ function HomepageHeader() {
         </p>
 
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/intro">
+          <Link
+            className="button button--secondary button--lg"
+            to="/docs/intro"
+            onClick={turnOffDebugMode}
+          >
             Documentation
           </Link>
         </div>
