@@ -7,7 +7,7 @@ export const Overview = () => {
       <div className={styles.descriptionText}>
         <h2>What is ForesightJs?</h2>
         <p>
-          ForesightJS is an free and open-source JavaScript library that predicts user intent by
+          ForesightJS is a free and open-source JavaScript library that predicts user intent by
           analyzing mouse movements and trajectories. It allows developers to prefetch data based on
           user intent instead of the classic on-click or on-hover.
         </p>
