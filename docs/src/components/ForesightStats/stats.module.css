@@ -1,0 +1,53 @@
+/* stats.module.css */
+
+.statsContainer {
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 4rem;
+  border-radius: 0.5rem;
+  color: #2c3e50;
+}
+
+.statItem {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.statIcon {
+  margin-top: 0.25rem;
+}
+
+.statContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+
+  margin: 0;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.statItem:hover .statIcon {
+  color: #000;
+}
+
+.statItem:hover .statValue {
+  color: #000;
+}
+
+.statItem:hover .statLabel {
+  color: #000;
+}

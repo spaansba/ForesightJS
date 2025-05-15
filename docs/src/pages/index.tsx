@@ -7,8 +7,10 @@ import Layout from "@theme/Layout"
 import Heading from "@theme/Heading"
 import styles from "./index.module.css"
 import { ForesightManager } from "js.foresight"
-import { ForesightDemo } from "../components/ForesightOverview"
 import { PackageManagerTabs } from "../components/PackageManagerTabs"
+import ForesightStats from "../components/ForesightStats/ForesightStats"
+import DemoWrapper from "../components/ForesightOverview/Overview/DemoWrapper"
+import { Overview } from "../components/ForesightOverview/Overview/Overview"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -64,7 +66,11 @@ export default function Home(): ReactNode {
       <HomepageHeader />
 
       <main>
-        <ForesightDemo />
+        <div className={styles.container}>
+          <Overview />
+          <DemoWrapper />
+          <ForesightStats />
+        </div>
       </main>
     </Layout>
   )
