@@ -10,6 +10,7 @@ import type {
   UpdateForsightManagerProps,
   ForesightElementRegisterResult, // Assuming this is Partial<ForesightManagerProps>
 } from "../../types/types"
+import { isTouchDevice } from "../helpers/isTouchDevice"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -89,10 +90,6 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
-  private isTouchDevice = () => {
-    return window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0
-  }
-
   public register({
     element,
     callback,
@@ -106,7 +103,7 @@ export class ForesightManager {
     unregisterOnCallback?: boolean
     name?: string
   }): ForesightElementRegisterResult {
-    if (this.isTouchDevice()) {
+    if (isTouchDevice()) {
       return { isTouchDevice: true, unregister: () => {} }
     }
 
@@ -488,7 +485,7 @@ export class ForesightManager {
       if (isNewTrajectoryActivation) {
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
-        callbackFiredThisCycle = true // always call before callback
+        callbackFiredThisCycle = true
         currentData.callback()
       }
 
@@ -501,7 +498,7 @@ export class ForesightManager {
             !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
-          callbackFiredThisCycle = true // always call before callback
+          callbackFiredThisCycle = true
           currentData.callback()
         }
       }

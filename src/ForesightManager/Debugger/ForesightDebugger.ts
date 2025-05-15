@@ -7,6 +7,7 @@ import type {
   ForesightManagerProps,
   Point,
 } from "../../types/types"
+import { isTouchDevice } from "../helpers/isTouchDevice"
 
 export class ForesightDebugger {
   private foresightManagerInstance: ForesightManager
@@ -43,7 +44,7 @@ export class ForesightDebugger {
     currentPoint: Point,
     predictedPoint: Point
   ) {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined" || isTouchDevice()) return
     this.cleanup()
 
     this.shadowHost = document.createElement("div")
