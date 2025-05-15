@@ -34,7 +34,6 @@ export const Overview = () => {
           icon="🔋"
         />
       </div>
-      <DemoWrapper />
     </div>
   )
 }

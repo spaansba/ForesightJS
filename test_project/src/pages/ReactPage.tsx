@@ -10,10 +10,20 @@ const ReactPage: React.FC = () => {
   const [elementsGenerated, setElementsGenerated] = useState<JSX.Element[]>([])
   const [isThirdButton, setIsThirdButton] = useState(false)
   const [isResizeSecondButton, setIsResizeSecondButton] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const box1Ref = useRef<HTMLDivElement>(null)
   const box2Ref = useRef<HTMLDivElement>(null)
   const box3Ref = useRef<HTMLDivElement>(null)
   const manager = ForesightManager.instance
+
+  const button3Callback = () => {
+    if (!isLoading) {
+      setTimeout(() => {
+        setIsLoading(true)
+      }, 300)
+    }
+    setIsLoading(false)
+  }
   useEffect(() => {
     // Box 1 - standard hitSlop
     let box1CallbackCount = 0
@@ -56,16 +66,17 @@ const ReactPage: React.FC = () => {
       manager.register({
         element: box3Ref.current,
         callback: () => {
+          button3Callback()
           box3CallbackCount++
-          console.log(`Box 2 callback triggered! Count: ${box3CallbackCount}`)
-          showNotification(`Box 2 callback triggered! Count: ${box3CallbackCount}`)
+          console.log(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
+          showNotification(`Box 3 callback triggered! Count: ${box3CallbackCount}`)
         },
         hitSlop: 40,
         name: "box3",
         unregisterOnCallback: true,
       })
     }
-  }, [debugMode, isThirdButton, manager])
+  }, [debugMode, isThirdButton, manager, button3Callback])
 
   // Update debug mode
   useEffect(() => {

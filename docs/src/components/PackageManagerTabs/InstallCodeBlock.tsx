@@ -1,5 +1,7 @@
-import React, { useState, useRef } from "react"
+"use client"
+import React, { useState, useEffect, useRef } from "react"
 import styles from "./packagemanager.module.css"
+import { ForesightManager } from "js.foresight"
 export function InstallCodeBlock({ code }) {
   const [copied, setCopied] = useState(false)
   const codeRef = useRef(null)

@@ -344,13 +344,9 @@
 }
 
 .controlsContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   gap: 1rem;
-  margin: 1.5rem 0;
+  margin-top: 4rem;
 }
-
 .resetAllButton {
   background-color: #e74c3c;
   color: white;
@@ -401,7 +397,7 @@
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
+  gap: 5rem;
   margin: 1rem 0;
 }
 
@@ -438,11 +434,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 0.75rem;
+  padding: 1 0.75rem;
   text-align: center;
   flex-grow: 1;
   cursor: pointer;
-  min-height: 220px;
+  min-height: 120px;
 }
 
 .cardState {
@@ -452,16 +448,6 @@
   justify-content: center;
 }
 
-.loadingSpinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -469,44 +455,6 @@
   100% {
     transform: rotate(360deg);
   }
-}
-
-.successIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  background-color: #e8f8f5;
-  color: #27ae60;
-  font-size: 1.5rem;
-  border-radius: 50%;
-  margin-bottom: 1rem;
-}
-
-.instructionIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  background-color: #f1f3f5;
-  font-size: 1.5rem;
-  border-radius: 50%;
-  margin-bottom: 1rem;
-}
-
-.notLoadedIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  background-color: #fee2e2;
-  color: #dc2626;
-  font-size: 1.5rem;
-  border-radius: 50%;
-  margin-bottom: 1rem;
 }
 
 .statusText {
@@ -599,10 +547,8 @@
   .comparisonInfo,
   .comparisonNote,
   .loadingComparisonSection,
-  .demoNote,
-  .demoHint,
+  .demoDescription,
   .tryItYourselfText,
-  .controlsContainer,
   .debugButtonContainer {
     display: none;
   }

@@ -486,10 +486,10 @@ export class ForesightManager {
       }
 
       if (isNewTrajectoryActivation) {
-        currentData.callback()
-        callbackFiredThisCycle = true
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
+        callbackFiredThisCycle = true // always call before callback
+        currentData.callback()
       }
 
       const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering
@@ -501,8 +501,8 @@ export class ForesightManager {
             !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
+          callbackFiredThisCycle = true // always call before callback
           currentData.callback()
-          callbackFiredThisCycle = true
         }
       }
 

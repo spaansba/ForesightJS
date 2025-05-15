@@ -1,10 +1,10 @@
 import React, { useState } from "react"
 import styles from "../styles.module.css"
-import { RegularCard } from "./Cards/RegularCard"
-import { HoverCard } from "./Cards/HoverCard"
-import { ForesightCard } from "./Cards/ForesightCard"
+import { RegularCard } from "../Overview/Cards/RegularCard"
+import { HoverCard } from "../Overview/Cards/HoverCard"
+import { ForesightCard } from "../Overview/Cards/ForesightCard"
 import ComparisonInfo from "./ComparisonInfo"
-import CardsWrapper from "./Cards/CardsWrapper"
+import CardsWrapper from "../Overview/Cards/CardsWrapper"
 export const LoadingComparisonWrapper = () => {
   return (
     <div className={styles.comparisonContainer}>

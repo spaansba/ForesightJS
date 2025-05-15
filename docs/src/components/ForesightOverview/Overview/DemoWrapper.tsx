@@ -1,9 +1,7 @@
-import React from "react"
-import styles from "../styles.module.css"
-import useDebugMode from "@site/src/hooks/useDebugMode"
-import { Demo } from "./Demo"
-import MobileMessage from "../MobileMessage"
 import DebugButton from "../DebugButton"
+import MobileMessage from "../MobileMessage"
+import styles from "../styles.module.css"
+import CardsWrapper from "./Cards/CardsWrapper"
 function DemoWrapper() {
   return (
     <div className={styles.demoSection}>
@@ -14,30 +12,14 @@ function DemoWrapper() {
       <div className={styles.mobileMessage}>
         <MobileMessage />
       </div>
-
-      <p className={styles.tryItYourselfText}>
-        Move your cursor toward these buttons to see ForesightJS in action with different hit slop
-        sizes:
+      <p className={styles.demoDescription}>
+        This demo shows how ForesightJS improves on traditional loading strategies. All cards have a
+        300ms fetch delay to simulate loading data from a server.
       </p>
 
-      <div className={styles.buttonGrid}>
-        <Demo />
+      <div className={styles.comparisonContainer}>
+        <CardsWrapper />
       </div>
-
-      <div className={styles.demoNote}>
-        <p>
-          <strong>Note:</strong> In this demo, <code>unregisterOnCallback</code> is set to{" "}
-          <code>false</code> so you can see the prefetch effect multiple times. In a production
-          environment, you would typically set it to <code>true</code> (the default) to prefetch
-          data only once per element.
-        </p>
-      </div>
-
-      <p className={styles.demoHint}>
-        Each button has a different <code>hitSlop</code> value, which controls how far from the
-        element the prediction will trigger. Larger values will activate the button from further
-        away. Notice how the buttons light up <strong>before</strong> you hover over them!
-      </p>
     </div>
   )
 }

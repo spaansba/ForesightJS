@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react"
 import styles from "../../styles.module.css"
+import BaseCard from "./BaseCard"
 
 export const HoverCard = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -17,13 +18,8 @@ export const HoverCard = () => {
         setLoadTime(Math.round(endTime - startTime))
         setIsLoaded(true)
         setIsLoading(false)
-      }, 250)
+      }, 300)
     }
-  }
-
-  const reset = () => {
-    setIsLoaded(false)
-    setLoadTime(null)
   }
 
   return (
@@ -38,23 +34,7 @@ export const HoverCard = () => {
       </div>
 
       <div className={styles.cardContent}>
-        {isLoading ? (
-          <div className={styles.cardState}>
-            <div className={styles.loadingSpinner} style={{ borderTopColor: "#9b59b6" }}></div>
-            <p className={styles.statusText}>Loading...</p>
-          </div>
-        ) : isLoaded ? (
-          <div className={styles.cardState}>
-            <div className={styles.successIcon}>✓</div>
-            <p className={styles.statusText}>PREFETCHED!</p>
-          </div>
-        ) : (
-          <div className={styles.cardState}>
-            <div className={styles.notLoadedIcon}>✗</div>
-            <p className={styles.statusText}>NOT LOADED</p>
-            <p>Hover to load data</p>
-          </div>
-        )}
+        <BaseCard isLoaded={isLoaded} isLoading={isLoading} text="Hover to load data" />
       </div>
     </div>
   )

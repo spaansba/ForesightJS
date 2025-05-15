@@ -6,10 +6,7 @@ function ComparisonInfo() {
     <>
       <div className={styles.comparisonInfo}>
         <h2>Loading Strategy Comparison</h2>
-        <p>
-          This demo shows how ForesightJS improves on traditional loading strategies. All cards have
-          a <strong>250ms fetch delay</strong> to simulate loading data from a server:
-        </p>
+
         <ul className={styles.comparisonList}>
           <li>
             <strong>Regular:</strong> Loads data only when clicked
