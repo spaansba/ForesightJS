@@ -1,6 +1,6 @@
 import { ForesightManager } from "../../src/ForesightManager/Manager/ForesightManager"
 
-import ReactPage from "./pages/ReactPage"
+import { Main } from "./_components/MainWrapper"
 
 ForesightManager.initialize({
   debug: true,
@@ -10,7 +10,7 @@ ForesightManager.initialize({
 })
 
 function App() {
-  return <ReactPage />
+  return <Main />
 }
 
 export default App

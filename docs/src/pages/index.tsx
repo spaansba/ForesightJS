@@ -1,16 +1,15 @@
-import type { ReactNode } from "react"
-import { useState, useRef } from "react"
-import clsx from "clsx"
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
-import Layout from "@theme/Layout"
 import Heading from "@theme/Heading"
-import styles from "./index.module.css"
+import Layout from "@theme/Layout"
+import clsx from "clsx"
 import { ForesightManager } from "js.foresight"
-import { PackageManagerTabs } from "../components/PackageManagerTabs"
-import ForesightStats from "../components/ForesightStats/ForesightStats"
+import type { ReactNode } from "react"
 import DemoWrapper from "../components/ForesightOverview/Overview/DemoWrapper"
 import { Overview } from "../components/ForesightOverview/Overview/Overview"
+import ForesightStats from "../components/ForesightStats/ForesightStats"
+import { PackageManagerTabs } from "../components/PackageManagerTabs"
+import styles from "./index.module.css"
 
 ForesightManager.initialize({
   enableMousePrediction: true,

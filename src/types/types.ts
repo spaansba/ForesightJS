@@ -8,7 +8,6 @@ export type Rect = {
 /**
  * A callback function that is executed when a foresight interaction
  * (e.g., hover, trajectory hit) occurs on a registered element.
- * Only triggers ones per interaction
  */
 export type ForesightCallback = () => void
 
@@ -29,9 +28,6 @@ export type MousePosition = {
   time: number
 }
 
-/**
- * Represents a 2D point with x and y coordinates.
- */
 export type Point = {
   x: number
   y: number
@@ -53,7 +49,7 @@ type ElementBounds = {
 
 export type DebuggerSettings = {
   /** If the control panel should be minimized on default @default false */
-  isControlPanelDefaultMinimized: boolean
+  isControlPanelDefaultMinimized?: boolean
 }
 
 /**
@@ -68,26 +64,23 @@ export type TrajectoryHitData = {
   trajectoryHitExpirationTimeoutId?: ReturnType<typeof setTimeout>
 }
 
-export type ForesightElementRegisterResult = {
+export type ForesightRegisterResult = {
   /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
   isTouchDevice: boolean
   /** Function to unregister the element */
   unregister: () => void
 }
+
 /**
  * Represents the data associated with a registered foresight element.
  */
-export type ForesightElementData = {
-  /** The callback function to execute on interaction. */
-  callback: ForesightCallback
-  /** If the callback should be ran multiple times. @default true */
-  unregisterOnCallback: boolean
+export type ForesightElementData = Required<
+  Pick<ForesightRegisterOptions, "callback" | "unregisterOnCallback" | "name">
+> & {
   /** The boundary information for the element. */
   elementBounds: ElementBounds
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
   isHovering: boolean
-  /** The name of the element, usefull for debugging */
-  name: string
   /**
    * Represents trajectory hit related data for a foresight element.
    */
@@ -137,23 +130,25 @@ type BaseForesightManagerProps = {
  * Configuration options for the ForesightManager
  */
 export type ForesightManagerProps = BaseForesightManagerProps & {
-  /**
-   * Default hit slop to apply to all registered elements if no specific
-   * hit slop is provided during registration.
-   * Can be a single number for uniform slop on all sides, or a Rect object
-   * for different values per side.
-   * @default { top: 0, left: 0, right: 0, bottom: 0 }
-   */
   defaultHitSlop: Rect
 }
 
 export type UpdateForsightManagerProps = BaseForesightManagerProps & {
-  /**
-   * Default hit slop to apply to all registered elements if no specific
-   * hit slop is provided during registration.
-   * Can be a single number for uniform slop on all sides, or a Rect object
-   * for different values per side.
-   * @default { top: 0, left: 0, right: 0, bottom: 0 }
-   */
   defaultHitSlop: Rect | number
+}
+
+export type ForesightRegisterOptions = {
+  element: ForesightElement
+  callback: ForesightCallback
+  hitSlop?: Rect | number
+  unregisterOnCallback?: boolean
+  name?: string
+}
+
+export type ForesightRegisterOptionsWithNullableElement = Omit<
+  ForesightRegisterOptions,
+  "element"
+> & {
+  /** The HTML element to be tracked, or null if not applicable/available. */
+  element: ForesightElement | null
 }

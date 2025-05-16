@@ -1,9 +1,9 @@
 export { ForesightManager } from "./ForesightManager/Manager/ForesightManager"
 export type {
-  ForesightManagerProps,
   Rect as ForesightRect,
-  ForesightCallback,
   ForesightElement,
-  ForesightElementRegisterResult,
+  ForesightRegisterResult,
   UpdateForsightManagerProps,
+  ForesightRegisterOptions,
+  ForesightRegisterOptionsWithNullableElement,
 } from "./types/types"

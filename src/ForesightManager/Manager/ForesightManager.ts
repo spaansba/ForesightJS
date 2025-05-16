@@ -1,15 +1,15 @@
-import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import type {
-  ForesightCallback,
-  ForesightManagerProps,
-  ForesightElementData,
   ForesightElement,
+  ForesightElementData,
+  ForesightRegisterResult,
+  ForesightManagerProps,
+  ForesightRegisterOptions,
   MousePosition,
   Point,
   Rect,
   UpdateForsightManagerProps,
-  ForesightElementRegisterResult, // Assuming this is Partial<ForesightManagerProps>
 } from "../../types/types"
+import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 
 /**
@@ -30,6 +30,7 @@ import { isTouchDevice } from "../helpers/isTouchDevice"
  * It should be initialized once using {@link ForesightManager.initialize} and then
  * accessed via the static getter {@link ForesightManager.instance}.
  */
+
 export class ForesightManager {
   private static manager: ForesightManager
   public elements: Map<ForesightElement, ForesightElementData> = new Map()
@@ -96,13 +97,7 @@ export class ForesightManager {
     hitSlop,
     unregisterOnCallback,
     name,
-  }: {
-    element: ForesightElement
-    callback: ForesightCallback
-    hitSlop?: Rect | number
-    unregisterOnCallback?: boolean
-    name?: string
-  }): ForesightElementRegisterResult {
+  }: ForesightRegisterOptions): ForesightRegisterResult {
     if (isTouchDevice()) {
       return { isTouchDevice: true, unregister: () => {} }
     }
@@ -115,7 +110,7 @@ export class ForesightManager {
 
     const finalUnregisterOnCallback = unregisterOnCallback ?? true
 
-    const newForesightElementData: ForesightElementData = {
+    const elementData: ForesightElementData = {
       callback,
       elementBounds: {
         expandedRect: this.getExpandedRect(originalRect, normalizedHitSlop),
@@ -131,7 +126,7 @@ export class ForesightManager {
       name: name ?? "",
       unregisterOnCallback: finalUnregisterOnCallback,
     }
-    this.elements.set(element, newForesightElementData)
+    this.elements.set(element, elementData)
 
     if (!this.isSetup) {
       this.setupGlobalListeners()
