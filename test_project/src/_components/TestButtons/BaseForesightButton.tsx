@@ -1,6 +1,6 @@
 import React from "react"
-import useForesight from "../../hooks/useForesight"
 import type { ForesightRegisterOptionsWithNullableElement } from "../../../../src/types/types"
+import useForesight from "../../hooks/useForesight"
 
 type ForesightButtonProps = {
   registerOptions: ForesightRegisterOptionsWithNullableElement
