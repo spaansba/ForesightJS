@@ -9,7 +9,6 @@ function ForesightButtonToggelable({ isVisible }: ForesightButtonToggelableProps
     <div className={`${isVisible ? "block" : "hidden"} bg-amber-200 size-40`}>
       <BaseForesightButton
         registerOptions={{
-          element: null,
           callback: () => {
             console.log("toggelable")
           },

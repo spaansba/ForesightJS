@@ -5,5 +5,5 @@ export type {
   ForesightRegisterResult,
   UpdateForsightManagerProps,
   ForesightRegisterOptions,
-  ForesightRegisterOptionsWithNullableElement,
+  ForesightRegisterOptionsWithoutElement,
 } from "./types/types"

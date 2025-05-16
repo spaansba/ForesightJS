@@ -10,7 +10,6 @@ function ForesightButtonResizeable({ isResized }: ForesightButtonResizeableProps
     <div className={`${isResized ? "size-40" : "size-20"} bg-blue-200`}>
       <BaseForesightButton
         registerOptions={{
-          element: null,
           callback: () => {
             console.log("resizeable")
           },

@@ -1,4 +1,3 @@
-import React from "react"
 import BaseForesightButton from "./BaseForesightButton"
 
 function ForesightButtonRegular() {
@@ -6,7 +5,6 @@ function ForesightButtonRegular() {
     <div className="size-20 bg-green-200">
       <BaseForesightButton
         registerOptions={{
-          element: null,
           callback: () => {
             console.log("regular button")
           },

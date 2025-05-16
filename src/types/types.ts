@@ -145,10 +145,4 @@ export type ForesightRegisterOptions = {
   name?: string
 }
 
-export type ForesightRegisterOptionsWithNullableElement = Omit<
-  ForesightRegisterOptions,
-  "element"
-> & {
-  /** The HTML element to be tracked, or null if not applicable/available. */
-  element: ForesightElement | null
-}
+export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">

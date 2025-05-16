@@ -1,23 +1,33 @@
-import React from "react"
-import type { ForesightRegisterOptionsWithNullableElement } from "../../../../src/types/types"
-import useForesight from "../../hooks/useForesight"
+import { useEffect, useRef } from "react"
+import { ForesightManager } from "../../../../src/ForesightManager/Manager/ForesightManager"
+import type { ForesightRegisterOptionsWithoutElement } from "../../../../src/types/types"
 
 type ForesightButtonProps = {
-  registerOptions: ForesightRegisterOptionsWithNullableElement
+  registerOptions: ForesightRegisterOptionsWithoutElement
 }
 
 function ForesightButton({ registerOptions }: ForesightButtonProps) {
-  const buttonRef = React.useRef<HTMLDivElement>(null)
-  const newOptions = {
-    ...registerOptions,
-    element: buttonRef.current,
-  }
-  useForesight({ ...newOptions })
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!buttonRef.current) {
+      return
+    }
+
+    const { unregister } = ForesightManager.instance.register({
+      element: buttonRef.current,
+      ...registerOptions,
+    })
+
+    return () => {
+      unregister()
+    }
+  }, [buttonRef, registerOptions])
 
   return (
-    <div ref={buttonRef} className="flex justify-center items-center h-full w-full">
+    <button ref={buttonRef} className="flex justify-center items-center h-full w-full">
       <span>{registerOptions.name}</span>
-    </div>
+    </button>
   )
 }
 

@@ -5,7 +5,7 @@ import { Main } from "./_components/MainWrapper"
 ForesightManager.initialize({
   debug: true,
   debuggerSettings: {
-    isControlPanelDefaultMinimized: true,
+    isControlPanelDefaultMinimized: false,
   },
 })
 
