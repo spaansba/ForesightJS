@@ -79,3 +79,7 @@ export function ForesightLink({
 :::caution
 If you dont see the correct prefetching behaviour make sure you are in production. Next.JS only prefetches in production and not in development
 :::
+
+:::note
+For more complex scenarios or to reuse the ForesightJS integration logic across different elements (not just links), creating a custom React hook like `useForesight` is often the most flexible and maintainable approach. An example of useForesight can be found [here](/docs/typescript#addressing-initially-null-element-refs).
+:::

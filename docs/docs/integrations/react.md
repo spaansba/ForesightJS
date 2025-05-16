@@ -90,7 +90,7 @@ export function ForesightLink({
 }
 ```
 
-### Usage of ForsightLink
+### Usage of ForesightLink
 
 ```tsx
 export function Navigation() {
@@ -108,5 +108,5 @@ export function Navigation() {
 ```
 
 :::note
-For more complex scenarios or to reuse the ForesightJS integration logic across different elements (not just links), creating a custom React hook like `useForesight` is often the most flexible and maintainable approach.
+For more complex scenarios or to reuse the ForesightJS integration logic across different elements (not just links), creating a custom React hook like `useForesight` is often the most flexible and maintainable approach. An example of useForesight can be found [here](/docs/typescript#addressing-initially-null-element-refs).
 :::
