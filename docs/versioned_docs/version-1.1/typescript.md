@@ -6,47 +6,39 @@ sidebar_position: 3
 
 ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possbile.
 
-### Addressing Initially Null Element Refs
+## Helper Types
 
-In modern frameworks like React you might want to create a seperate hook for using the `ForesightManager.instance.register()` function. The problem you will run in to is that since the `ForesightRegisterOptions` type has an required Element you cant use it like this:
+### ForesightRegisterOptionsWithoutElement
 
-```typscript
-function useForesight(registerOptions: ForesightRegisterOptions){}
-```
-
-Since now in your function calling useForesight you will have the following:
+Usefull for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
 
 ```typescript
-function ForesightButton() {
-  const linkRef = React.useRef<HTMLLinkElement>(null)
-  const registerOptions: ForesightRegisterOptions = {
-    element: linkRef.current, // This will be null on the first render
-    callback: () => {},
-  }
-  useForesight({ ...registerOptions })
-
-  return <link ref={linkRef}></link>
+type ForesightButtonProps = {
+  registerOptions: ForesightRegisterOptionsWithoutElement
 }
-```
 
-However with this `linkRef.current` will always be null on first render as React has not yet rendered the link element to the DOM. As you know you cant check for if `linkRef.current` is null since you cant call hooks conditionally in React. The solution would be to create your own type omitting the element on `ForesightRegisterOptions` and setting your own. Well that is exactly what the `ForesightRegisterOptionsWithNullableElement` type does.
+function ForesightButton({ registerOptions }: ForesightButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
-Your new hook would look something like this:
-
-```typescript
-function useForesight(registerOptions: ForesightRegisterOptionsWithNullableElement) {
   useEffect(() => {
-    if (!registerOptions.element) {
+    if (!buttonRef.current) {
       return
     }
 
     const { unregister } = ForesightManager.instance.register({
-      ...(registerOptions as ForesightRegisterOptions),
+      element: buttonRef.current,
+      ...registerOptions,
     })
 
     return () => {
       unregister()
     }
-  }, [registerOptions])
+  }, [buttonRef, registerOptions])
+
+  return (
+    <button ref={buttonRef}>
+      <span>{registerOptions.name}</span>
+    </button>
+  )
 }
 ```
