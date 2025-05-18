@@ -11,6 +11,7 @@ import type {
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
+import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/RectAndHitSlop"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -76,9 +77,6 @@ export class ForesightManager {
         }
       }
     } else if (props) {
-      console.warn(
-        "ForesightManager is already initialized. Use alterGlobalSettings to update settings. Make sure to not put the ForesightManager.initialize() in a place that rerenders often."
-      )
       ForesightManager.manager.alterGlobalSettings(props)
     }
     return ForesightManager.manager
@@ -103,7 +101,7 @@ export class ForesightManager {
     }
 
     const normalizedHitSlop = hitSlop
-      ? this.normalizeHitSlop(hitSlop)
+      ? normalizeHitSlop(hitSlop)
       : this.globalSettings.defaultHitSlop
 
     const originalRect = element.getBoundingClientRect()
@@ -113,7 +111,7 @@ export class ForesightManager {
     const elementData: ForesightElementData = {
       callback,
       elementBounds: {
-        expandedRect: this.getExpandedRect(originalRect, normalizedHitSlop),
+        expandedRect: getExpandedRect(originalRect, normalizedHitSlop),
         originalRect: originalRect,
         hitSlop: normalizedHitSlop,
       },
@@ -233,8 +231,8 @@ export class ForesightManager {
     }
 
     if (props?.defaultHitSlop !== undefined) {
-      const normalizedNewHitSlop = this.normalizeHitSlop(props.defaultHitSlop)
-      if (!this.areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
+      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
+      if (!areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this.globalSettings.defaultHitSlop = normalizedNewHitSlop
         settingsActuallyChanged = true
         // This recomputes expandedRects using each element's own stored hitSlop.
@@ -302,47 +300,17 @@ export class ForesightManager {
     }
   }
 
-  private normalizeHitSlop = (hitSlop: number | Rect): Rect => {
-    if (typeof hitSlop === "number") {
-      return {
-        top: hitSlop,
-        left: hitSlop,
-        right: hitSlop,
-        bottom: hitSlop,
-      }
-    }
-    return hitSlop
-  }
-
-  private getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
-    return {
-      left: baseRect.left - hitSlop.left,
-      right: baseRect.right + hitSlop.right,
-      top: baseRect.top - hitSlop.top,
-      bottom: baseRect.bottom + hitSlop.bottom,
-    }
-  }
-
-  private areRectsEqual(rect1: Rect, rect2: Rect): boolean {
-    if (!rect1 || !rect2) return rect1 === rect2
-    return (
-      rect1.left === rect2.left &&
-      rect1.right === rect2.right &&
-      rect1.top === rect2.top &&
-      rect1.bottom === rect2.bottom
-    )
-  }
   private updateExpandedRect(element: ForesightElement) {
     const foresightElementData = this.elements.get(element)
     if (!foresightElementData) return
 
     const newOriginalRect = element.getBoundingClientRect()
     const currentHitSlop = foresightElementData.elementBounds.hitSlop
-    const expandedRect = this.getExpandedRect(newOriginalRect, currentHitSlop)
+    const expandedRect = getExpandedRect(newOriginalRect, currentHitSlop)
 
     if (
-      !this.areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect) ||
-      !this.areRectsEqual(newOriginalRect, foresightElementData.elementBounds.originalRect)
+      !areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect) ||
+      !areRectsEqual(newOriginalRect, foresightElementData.elementBounds.originalRect)
     ) {
       this.elements.set(element, {
         ...foresightElementData,

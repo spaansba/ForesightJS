@@ -44,7 +44,7 @@ type ElementBounds = {
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
   originalRect: DOMRect
   /** The hit slop values applied to this element. */
-  hitSlop: Rect
+  hitSlop: Exclude<HitSlop, number>
 }
 
 export type DebuggerSettings = {
@@ -130,19 +130,21 @@ type BaseForesightManagerProps = {
  * Configuration options for the ForesightManager
  */
 export type ForesightManagerProps = BaseForesightManagerProps & {
-  defaultHitSlop: Rect
+  defaultHitSlop: Exclude<HitSlop, number>
 }
 
 export type UpdateForsightManagerProps = BaseForesightManagerProps & {
-  defaultHitSlop: Rect | number
+  defaultHitSlop: HitSlop
 }
 
 export type ForesightRegisterOptions = {
   element: ForesightElement
   callback: ForesightCallback
-  hitSlop?: Rect | number
+  hitSlop?: HitSlop
   unregisterOnCallback?: boolean
   name?: string
 }
 
 export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">
+
+type HitSlop = Rect | number
