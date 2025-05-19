@@ -1,4 +1,4 @@
-import type { HitSlop, Rect } from "../../types/types"
+import type { HitSlop, Point, Rect } from "../../types/types"
 
 /**
  * Normalizes a `hitSlop` value into a {@link Rect} object.
@@ -55,5 +55,11 @@ export function areRectsEqual(rect1: Rect, rect2: Rect): boolean {
     rect1.right === rect2.right &&
     rect1.top === rect2.top &&
     rect1.bottom === rect2.bottom
+  )
+}
+
+export function isPointInRectangle(point: Point, rect: Rect): boolean {
+  return (
+    point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
   )
 }

@@ -13,7 +13,12 @@ import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
 import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
-import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
+import {
+  areRectsEqual,
+  getExpandedRect,
+  isPointInRectangle,
+  normalizeHitSlop,
+} from "../helpers/rectAndHitSlop"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -375,11 +380,7 @@ export class ForesightManager {
 
       const { expandedRect } = currentData.elementBounds
 
-      const isCurrentlyPhysicallyHovering =
-        this.currentPoint.x >= expandedRect.left &&
-        this.currentPoint.x <= expandedRect.right &&
-        this.currentPoint.y >= expandedRect.top &&
-        this.currentPoint.y <= expandedRect.bottom
+      const isCurrentlyPhysicallyHovering = isPointInRectangle(this.currentPoint, expandedRect)
 
       let isNewTrajectoryActivation = false
       if (
