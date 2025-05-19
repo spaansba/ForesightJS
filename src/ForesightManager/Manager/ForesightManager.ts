@@ -347,8 +347,6 @@ export class ForesightManager {
 
   private updatePointerState(e: MouseEvent): void {
     this.currentPoint = { x: e.clientX, y: e.clientY }
-
-    // Predict based on the new currentPoint and the *previous* history
     this.predictedPoint = this.globalSettings.enableMousePrediction
       ? predictNextMousePosition(
           this.currentPoint,
@@ -356,7 +354,7 @@ export class ForesightManager {
           this.globalSettings.positionHistorySize,
           this.globalSettings.trajectoryPredictionTime
         )
-      : { ...this.currentPoint } // Create a new object if not predicting
+      : { ...this.currentPoint }
   }
 
   private handleMouseMove = (e: MouseEvent) => {
@@ -504,9 +502,6 @@ export class ForesightManager {
       elementsToUnregister.forEach((element) => {
         if (this.elements.has(element)) {
           const elementName = this.elements.get(element)?.name || "Unnamed"
-          console.log(
-            `Unregistering element "${elementName}" due to callback and unregisterOnCallback=true.`
-          )
           this.unregister(element) // unregister will clear its own timeout
         }
       })
@@ -609,7 +604,6 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
     }
