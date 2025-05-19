@@ -345,16 +345,22 @@ export class ForesightManager {
     })
   }
 
-  private handleMouseMove = (e: MouseEvent) => {
+  private updatePointerState(e: MouseEvent): void {
     this.currentPoint = { x: e.clientX, y: e.clientY }
+
+    // Predict based on the new currentPoint and the *previous* history
     this.predictedPoint = this.globalSettings.enableMousePrediction
       ? predictNextMousePosition(
           this.currentPoint,
-          this.positions,
+          this.positions, // History before the currentPoint was added
           this.globalSettings.positionHistorySize,
           this.globalSettings.trajectoryPredictionTime
         )
-      : this.currentPoint
+      : { ...this.currentPoint } // Create a new object if not predicting
+  }
+
+  private handleMouseMove = (e: MouseEvent) => {
+    this.updatePointerState(e)
 
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
     if (this.debugger) {
