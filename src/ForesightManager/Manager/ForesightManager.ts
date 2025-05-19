@@ -11,7 +11,8 @@ import type {
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
-import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/RectAndHitSlop"
+import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -305,13 +306,12 @@ export class ForesightManager {
     if (!foresightElementData) return
 
     const newOriginalRect = element.getBoundingClientRect()
-    const currentHitSlop = foresightElementData.elementBounds.hitSlop
-    const expandedRect = getExpandedRect(newOriginalRect, currentHitSlop)
 
-    if (
-      !areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect) ||
-      !areRectsEqual(newOriginalRect, foresightElementData.elementBounds.originalRect)
-    ) {
+    const expandedRect = getExpandedRect(
+      newOriginalRect,
+      foresightElementData.elementBounds.hitSlop
+    )
+    if (!areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect)) {
       this.elements.set(element, {
         ...foresightElementData,
         elementBounds: {
@@ -329,7 +329,7 @@ export class ForesightManager {
   }
 
   private updateAllRects() {
-    this.elements.forEach((data, element) => {
+    this.elements.forEach((_, element) => {
       this.updateExpandedRect(element)
     })
   }
@@ -365,37 +365,6 @@ export class ForesightManager {
     const predictedX = x + vx * trajectoryPredictionTimeInSeconds
     const predictedY = y + vy * trajectoryPredictionTimeInSeconds
     return { x: predictedX, y: predictedY }
-  }
-
-  private lineSegmentIntersectsRect(p1: Point, p2: Point, rect: Rect): boolean {
-    // (Liang-Barsky algorithm implementation)
-    let t0 = 0.0
-    let t1 = 1.0
-    const dx = p2.x - p1.x
-    const dy = p2.y - p1.y
-
-    const clipTest = (p: number, q: number): boolean => {
-      if (p === 0) {
-        if (q < 0) return false
-      } else {
-        const r = q / p
-        if (p < 0) {
-          if (r > t1) return false
-          if (r > t0) t0 = r
-        } else {
-          if (r < t0) return false
-          if (r < t1) t1 = r
-        }
-      }
-      return true
-    }
-
-    if (!clipTest(-dx, p1.x - rect.left)) return false
-    if (!clipTest(dx, rect.right - p1.x)) return false
-    if (!clipTest(-dy, p1.y - rect.top)) return false
-    if (!clipTest(dy, rect.bottom - p1.y)) return false
-
-    return t0 <= t1
   }
 
   private handleMouseMove = (e: MouseEvent) => {
@@ -440,7 +409,7 @@ export class ForesightManager {
         !isCurrentlyPhysicallyHovering &&
         !currentData.trajectoryHitData.isTrajectoryHit // Only activate if not already hit
       ) {
-        if (this.lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
+        if (lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
           isNewTrajectoryActivation = true
         }
       }
