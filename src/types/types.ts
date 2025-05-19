@@ -147,4 +147,4 @@ export type ForesightRegisterOptions = {
 
 export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">
 
-type HitSlop = Rect | number
+export type HitSlop = Rect | number

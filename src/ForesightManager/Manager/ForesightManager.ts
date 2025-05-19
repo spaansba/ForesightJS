@@ -12,6 +12,7 @@ import type {
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
 
 /**
@@ -199,7 +200,12 @@ export class ForesightManager {
       this.globalSettings.enableMousePrediction = props.enableMousePrediction
       settingsActuallyChanged = true
       if (this.globalSettings.enableMousePrediction) {
-        this.predictedPoint = this.predictMousePosition(this.currentPoint)
+        this.predictedPoint = predictNextMousePosition(
+          this.currentPoint,
+          this.positions,
+          this.globalSettings.positionHistorySize,
+          this.globalSettings.trajectoryPredictionTime
+        )
       } else {
         this.predictedPoint = this.currentPoint
         // When disabling prediction, clear active trajectory hits and their timeouts
@@ -334,43 +340,15 @@ export class ForesightManager {
     })
   }
 
-  private predictMousePosition = (point: Point): Point => {
-    const now = performance.now()
-    const currentPosition: MousePosition = { point, time: now }
-    const { x, y } = point
-
-    this.positions.push(currentPosition)
-    if (this.positions.length > this.globalSettings.positionHistorySize) {
-      this.positions.shift()
-    }
-
-    if (this.positions.length < 2) {
-      return { x, y }
-    }
-
-    const first = this.positions[0]
-    const last = this.positions[this.positions.length - 1]
-    const dt = (last.time - first.time) / 1000
-
-    if (dt === 0) {
-      return { x, y }
-    }
-
-    const dx = last.point.x - first.point.x
-    const dy = last.point.y - first.point.y
-    const vx = dx / dt
-    const vy = dy / dt
-
-    const trajectoryPredictionTimeInSeconds = this.globalSettings.trajectoryPredictionTime / 1000
-    const predictedX = x + vx * trajectoryPredictionTimeInSeconds
-    const predictedY = y + vy * trajectoryPredictionTimeInSeconds
-    return { x: predictedX, y: predictedY }
-  }
-
   private handleMouseMove = (e: MouseEvent) => {
     this.currentPoint = { x: e.clientX, y: e.clientY }
     this.predictedPoint = this.globalSettings.enableMousePrediction
-      ? this.predictMousePosition(this.currentPoint)
+      ? predictNextMousePosition(
+          this.currentPoint,
+          this.positions,
+          this.globalSettings.positionHistorySize,
+          this.globalSettings.trajectoryPredictionTime
+        )
       : this.currentPoint
 
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
