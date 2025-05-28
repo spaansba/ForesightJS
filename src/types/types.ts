@@ -114,6 +114,7 @@ type BaseForesightManagerProps = {
   enableMousePrediction: boolean
 
   enableTabPrediction: boolean
+  tabOffset: number
 
   /**
    * Whether to show visual debugging information on the screen.

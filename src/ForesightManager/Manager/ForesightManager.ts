@@ -58,6 +58,7 @@ export class ForesightManager {
       isControlPanelDefaultMinimized: false,
     },
     enableTabPrediction: true,
+    tabOffset: 2,
   }
 
   private positions: MousePosition[] = []
@@ -615,8 +616,11 @@ export class ForesightManager {
 
     this.elements.forEach((registeredElement, key) => {
       const index = tabbableElements.findIndex((element) => element === key)
-      if (index === currentIndex + 2) {
+      if (index === currentIndex + this.globalSettings.tabOffset) {
         registeredElement.callback()
+        if (registeredElement.unregisterOnCallback) {
+          this.unregister(key)
+        }
       }
     })
   }
@@ -626,7 +630,9 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-    window.addEventListener("keyup", this.handleKeyUp)
+    if (this.globalSettings.enableTabPrediction) {
+      window.addEventListener("keyup", this.handleKeyUp)
+    }
 
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
