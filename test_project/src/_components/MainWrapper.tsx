@@ -17,6 +17,7 @@ export const Main = () => {
           onClick={() => {
             setIsVisible(!isVisible)
           }}
+          id="Visibility"
           className="size-20 bg-amber-200"
         >
           Toggle Visibility
@@ -26,6 +27,7 @@ export const Main = () => {
             setIsResized(!isResized)
           }}
           className="size-20 bg-amber-200"
+          id="Resize"
         >
           Toggle Resize
         </button>

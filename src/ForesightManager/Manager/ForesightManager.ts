@@ -19,7 +19,7 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
-import { tabbable } from "tabbable"
+import { getTabIndex, tabbable } from "tabbable"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -604,9 +604,17 @@ export class ForesightManager {
     if (e.key !== "Tab") {
       return
     }
-    console.log(e)
-    const x = tabbable(document.documentElement)
+    const currentElement = e.target
+    if (!(currentElement instanceof HTMLElement)) {
+      return
+    }
+    const tabbableElements = tabbable(document.documentElement)
+    console.log(tabbableElements)
+    console.log(currentElement)
+    const x = getTabIndex(currentElement as Element)
     console.log(x)
+    const y = this.elements.has(tabbableElements[4])
+    console.log(y)
   }
 
   private setupGlobalListeners() {
