@@ -623,6 +623,7 @@ export class ForesightManager {
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
     window.addEventListener("keydown", this.handleKeyDown)
+
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
     }
