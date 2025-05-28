@@ -8,6 +8,7 @@ import type {
   Point,
   Rect,
   UpdateForsightManagerProps,
+  ForesightElementDataWithTabIndex,
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
@@ -600,7 +601,7 @@ export class ForesightManager {
     }
   }
 
-  private handleKeyDown = (e: KeyboardEvent) => {
+  private handleKeyUp = (e: KeyboardEvent) => {
     if (e.key !== "Tab") {
       return
     }
@@ -608,13 +609,16 @@ export class ForesightManager {
     if (!(currentElement instanceof HTMLElement)) {
       return
     }
+
     const tabbableElements = tabbable(document.documentElement)
-    console.log(tabbableElements)
-    console.log(currentElement)
-    const x = getTabIndex(currentElement as Element)
-    console.log(x)
-    const y = this.elements.has(tabbableElements[4])
-    console.log(y)
+    const currentIndex = tabbableElements.findIndex((element) => element === currentElement)
+
+    this.elements.forEach((registeredElement, key) => {
+      const index = tabbableElements.findIndex((element) => element === key)
+      if (index === currentIndex + 2) {
+        registeredElement.callback()
+      }
+    })
   }
 
   private setupGlobalListeners() {
@@ -622,7 +626,7 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-    window.addEventListener("keydown", this.handleKeyDown)
+    window.addEventListener("keyup", this.handleKeyUp)
 
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
@@ -644,7 +648,7 @@ export class ForesightManager {
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
-    window.removeEventListener("keydown", this.handleKeyDown)
+    window.removeEventListener("keyup", this.handleKeyUp)
 
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
