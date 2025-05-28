@@ -109,6 +109,8 @@ type BaseForesightManagerProps = {
    */
   enableMousePrediction: boolean
 
+  enableTabPrediction: boolean
+
   /**
    * Whether to show visual debugging information on the screen.
    * This includes overlays for elements, hit slop areas, and the predicted mouse path.

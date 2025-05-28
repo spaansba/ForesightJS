@@ -19,7 +19,7 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
-
+import { tabbable } from "tabbable"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -56,6 +56,7 @@ export class ForesightManager {
     debuggerSettings: {
       isControlPanelDefaultMinimized: false,
     },
+    enableTabPrediction: true,
   }
 
   private positions: MousePosition[] = []
@@ -303,7 +304,7 @@ export class ForesightManager {
       )
     } else {
       this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals(this.elements)
+      this.debugger.updateAllLinkVisuals()
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -599,11 +600,21 @@ export class ForesightManager {
     }
   }
 
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Tab") {
+      return
+    }
+    console.log(e)
+    const x = tabbable(document.documentElement)
+    console.log(x)
+  }
+
   private setupGlobalListeners() {
     if (this.isSetup) return
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
+    window.addEventListener("keydown", this.handleKeyDown)
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
     }
@@ -624,6 +635,7 @@ export class ForesightManager {
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
+    window.removeEventListener("keydown", this.handleKeyDown)
 
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
