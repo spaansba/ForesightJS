@@ -180,7 +180,10 @@ export class ForesightManager {
     }
 
     if (this.elements.size === 0 && this.isSetup) {
-      this.removeGlobalListeners()
+      if (!this.debugger) {
+        // Normally we want to remove all event listeners but not in debug mode to preserve the mouse event
+        this.removeGlobalListeners()
+      }
     }
   }
 
@@ -653,9 +656,7 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-    // Add keydown listener to track Tab presses
     document.addEventListener("keydown", this.handleKeyDown)
-    // Add focusin listener to react to focus changes
     document.addEventListener("focusin", this.handleFocusIn)
 
     if (!this.domObserver) {

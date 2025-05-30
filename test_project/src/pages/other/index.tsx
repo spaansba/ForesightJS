@@ -1,5 +1,6 @@
 import { ForesightManager } from "js.foresight"
 import { Link } from "react-router-dom"
+import BaseForesightButton from "../../_components/TestButtons/BaseForesightButton"
 
 function Other() {
   // Convert Map to array for rendering
@@ -27,6 +28,18 @@ function Other() {
             </div>
           ))
         )}
+      </div>
+      <div className={`size-20 mt-30 bg-blue-200`}>
+        <BaseForesightButton
+          registerOptions={{
+            callback: () => {
+              console.log("other button")
+            },
+            hitSlop: 30,
+            name: "other",
+            unregisterOnCallback: true,
+          }}
+        ></BaseForesightButton>
       </div>
     </div>
   )

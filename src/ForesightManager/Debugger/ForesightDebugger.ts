@@ -34,7 +34,6 @@ export class ForesightDebugger {
 
   constructor(intentManager: ForesightManager) {
     this.foresightManagerInstance = intentManager
-    // Instantiate controlPanel here, but initialize it later when shadowRoot is available
     this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
   }
 
@@ -359,9 +358,6 @@ export class ForesightDebugger {
   ) {
     if (!this.shadowRoot || !this.debugContainer) return
 
-    const hasRegisteredElements = this.foresightManagerInstance.elements.size > 0
-    const showVisuals = enableMousePrediction && hasRegisteredElements
-
     if (this.debugPredictedMouseIndicator) {
       this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
       this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
@@ -369,7 +365,7 @@ export class ForesightDebugger {
     }
 
     if (this.debugTrajectoryLine) {
-      if (showVisuals && currentPoint && predictedPoint) {
+      if (enableMousePrediction && currentPoint && predictedPoint) {
         const dx = predictedPoint.x - currentPoint.x
         const dy = predictedPoint.y - currentPoint.y
 

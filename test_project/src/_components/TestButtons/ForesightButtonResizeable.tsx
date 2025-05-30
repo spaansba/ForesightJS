@@ -1,4 +1,3 @@
-import React from "react"
 import BaseForesightButton from "./BaseForesightButton"
 
 type ForesightButtonResizeableProps = {
