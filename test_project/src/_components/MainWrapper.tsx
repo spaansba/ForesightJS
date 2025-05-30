@@ -1,7 +1,6 @@
 import { useState } from "react"
 import ForesightButtonRegular from "./TestButtons/ForesightButtonRegular"
 import ForesightButtonResizeable from "./TestButtons/ForesightButtonResizeable"
-import FakeButton from "./TestButtons/FakeButton"
 import ForesightButtonVisibility from "./TestButtons/ForesightButtonVisibility"
 import ForesightButtonRemoveable from "./TestButtons/ForesightButtonRemoveable"
 
@@ -12,8 +11,6 @@ export const Main = () => {
   return (
     <div className="p-5 font-sans">
       <div className="flex gap-4 flex-row">
-        <FakeButton />
-        <FakeButton />
         <button
           onClick={() => {
             setIsVisible(!isVisible)
@@ -42,7 +39,7 @@ export const Main = () => {
           Remove: {shouldBeRemoved.toString()}
         </button>
       </div>
-      <div className="flex gap-20 flex-row mt-20 justify-center items-center">
+      <div className="flex gap-20 flex-row mt-50 justify-center items-center">
         <ForesightButtonVisibility isVisible={isVisible} />
         <ForesightButtonResizeable isResized={isResized} />
         <ForesightButtonRemoveable shouldBeRemoved={shouldBeRemoved} />
