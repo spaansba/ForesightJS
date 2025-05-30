@@ -10,7 +10,9 @@ import type {
 import { isTouchDevice } from "../helpers/isTouchDevice"
 
 export class ForesightDebugger {
-  private foresightManagerInstance: ForesightManager
+  private static debuggerInstance: ForesightDebugger // Static instance
+
+  private foresightManagerInstance: ForesightManager // Still need a reference to the manager
   private shadowHost: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
   private debugContainer: HTMLElement | null = null // For overlays, trajectory, etc.
@@ -32,9 +34,20 @@ export class ForesightDebugger {
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
-  constructor(intentManager: ForesightManager) {
+  // Make the constructor private
+  private constructor(intentManager: ForesightManager) {
     this.foresightManagerInstance = intentManager
+    // The control panel also depends on the debugger, so initialize it here
+    // It will need the shadow root later in the initialize method
     this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
+  }
+
+  // Static method to get the singleton instance
+  public static getInstance(intentManager: ForesightManager): ForesightDebugger {
+    if (!ForesightDebugger.debuggerInstance) {
+      ForesightDebugger.debuggerInstance = new ForesightDebugger(intentManager)
+    }
+    return ForesightDebugger.debuggerInstance
   }
 
   public initialize(
@@ -43,12 +56,33 @@ export class ForesightDebugger {
     currentPoint: Point,
     predictedPoint: Point
   ) {
-    if (typeof window === "undefined" || isTouchDevice()) return
-    this.cleanup()
+    if (typeof window === "undefined" || isTouchDevice()) {
+      // If already initialized but touch device, cleanup
+      if (this.shadowHost) {
+        this.cleanup()
+      }
+      return
+    }
+
+    // Avoid re-initialization if already setup and not a touch device
+    if (this.shadowHost) {
+      console.warn("ForesightDebugger already initialized.")
+      // If it was initialized on a non-touch device and now we call initialize again,
+      // we might just want to update settings and visuals, not rebuild the DOM.
+      // This depends on desired behavior, but for a singleton, avoid recreating everything.
+      this.updateControlsState(currentSettings)
+      this.updateTrajectoryVisuals(
+        currentPoint,
+        predictedPoint,
+        currentSettings.enableMousePrediction
+      )
+      this.refreshDisplayedElements() // Ensure all elements are visualized
+      return
+    }
 
     this.shadowHost = document.createElement("div")
     this.shadowHost.id = "jsforesight-debugger-shadow-host"
-    this.shadowHost.style.pointerEvents = "none"
+    this.shadowHost.style.pointerEvents = "none" // Debugger UI shouldn't interfere with page
     document.body.appendChild(this.shadowHost)
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
@@ -214,9 +248,8 @@ export class ForesightDebugger {
     this.debugContainer.appendChild(this.debugTrajectoryLine)
 
     // Initialize the control panel AND PASS THE SHADOW ROOT
-    if (this.shadowRoot) {
-      // Ensure shadowRoot is available
-      this.controlPanel?.initialize(
+    if (this.shadowRoot && this.controlPanel) {
+      this.controlPanel.initialize(
         this.shadowRoot,
         currentSettings,
         currentSettings.debuggerSettings
@@ -247,6 +280,9 @@ export class ForesightDebugger {
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
     this.debugStyleElement = null
+
+    // Clear the static instance reference on cleanup
+    ForesightDebugger.debuggerInstance = undefined as any // Use `any` to allow setting to undefined
   }
 
   public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData) {
@@ -325,6 +361,11 @@ export class ForesightDebugger {
   }
 
   public refreshDisplayedElements() {
+    if (!this.shadowRoot || !this.debugContainer) {
+      // If not initialized, do nothing
+      return
+    }
+
     const currentManagerElements = new Set(this.foresightManagerInstance.elements.keys())
 
     this.foresightManagerInstance.elements.forEach((data, element) => {
@@ -361,7 +402,7 @@ export class ForesightDebugger {
     if (this.debugPredictedMouseIndicator) {
       this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
       this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
-      this.debugPredictedMouseIndicator.style.display = "block"
+      this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none" // Hide if prediction is off
     }
 
     if (this.debugTrajectoryLine) {
@@ -369,19 +410,19 @@ export class ForesightDebugger {
         const dx = predictedPoint.x - currentPoint.x
         const dy = predictedPoint.y - currentPoint.y
 
-        if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+        // Only show trajectory if there's significant movement or prediction is active
+        if (enableMousePrediction && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+          const length = Math.sqrt(dx * dx + dy * dy)
+          const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+          this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
+          this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
+          this.debugTrajectoryLine.style.width = `${length}px`
+          this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
+          this.debugTrajectoryLine.style.display = "block"
+        } else {
           this.debugTrajectoryLine.style.display = "none"
-          return
         }
-
-        const length = Math.sqrt(dx * dx + dy * dy)
-        const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-        this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
-        this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
-        this.debugTrajectoryLine.style.width = `${length}px`
-        this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
-        this.debugTrajectoryLine.style.display = "block"
       } else {
         this.debugTrajectoryLine.style.display = "none"
       }
@@ -390,5 +431,10 @@ export class ForesightDebugger {
 
   public updateControlsState(settings: ForesightManagerProps) {
     this.controlPanel?.updateControlsState(settings)
+  }
+
+  // Provide a way for the Control Panel to get element data for its list
+  public getAllElementData(): Map<ForesightElement, ForesightElementData> {
+    return this.foresightManagerInstance.elements
   }
 }

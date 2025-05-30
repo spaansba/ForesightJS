@@ -285,11 +285,18 @@ export class ForesightManager {
       this.globalSettings.debug = props.debug
       settingsActuallyChanged = true
       if (this.globalSettings.debug) {
-        this.turnOnDebugMode()
+        this.turnOnDebugMode() // This will now get or create the singleton
       } else {
         if (this.debugger) {
-          this.debugger.cleanup()
-          this.debugger = null
+          this.debugger.cleanup() // Cleanup the DOM elements
+          // We don't necessarily set `this.debugger = null` here
+          // unless you want to completely dispose of the singleton
+          // instance so it can be recreated later. If you want
+          // to reuse the same singleton instance after turning
+          // debug off and on, you might keep the reference.
+          // However, clearing the instance on cleanup makes sense
+          // if cleanup means fully removing the debugger from memory.
+          this.debugger = null // Let's keep this for clarity in this case.
         }
       }
     }
@@ -309,8 +316,10 @@ export class ForesightManager {
   }
 
   private turnOnDebugMode() {
+    // Get the debugger instance, passing 'this' (the manager instance)
     if (!this.debugger) {
-      this.debugger = new ForesightDebugger(this)
+      this.debugger = ForesightDebugger.getInstance(this)
+      // Then initialize it as before, passing the necessary data
       this.debugger.initialize(
         this.elements,
         this.globalSettings,
@@ -318,6 +327,7 @@ export class ForesightManager {
         this.predictedPoint
       )
     } else {
+      // If already exists, just update visuals/state
       this.debugger.updateControlsState(this.globalSettings)
       this.debugger.updateAllLinkVisuals()
       this.debugger.updateTrajectoryVisuals(
