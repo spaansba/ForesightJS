@@ -275,33 +275,23 @@ export class DebuggerControlPanel {
       #jsforesight-debug-controls.minimized .jsforesight-info-icon {
         display: none;
       }
-      #jsforesight-debug-controls.minimized .jsforesight-minimize-button {
-         /* No longer absolute, so static positioning is default */
-         margin-right: 0; /* Reset margin if any was added for non-minimized */
-         padding: 0 3px;
-         line-height: 1;
-      }
 
       .jsforesight-debugger-title-container {
         display: flex;
         align-items: center;
         justify-content: space-between; /* Key change for layout */
-        padding: 0 10px; /* Provides spacing from edges for buttons */
-        /* gap: 8px; Removed, space-between handles distribution */
-        /* position: relative; No longer needed for these buttons */
+        padding: 0 0px; /* Provides spacing from edges for buttons */
       }
       .jsforesight-title-group { /* New style for grouping title and info icon */
         display: flex;
         align-items: center;
         gap: 8px; /* Spacing between title and info icon */
-        /* flex-grow: 1; Optional: if title group should expand */
-        /* justify-content: center; Optional: to center content within the group */
+
       }
       .jsforesight-minimize-button {
         background: none; border: none; color: white;
-        font-size: 22px; cursor: pointer; padding: 0 5px;
+        font-size: 22px; cursor: pointer;
         line-height: 1;
-        /* Removed absolute positioning properties */
       }
       .jsforesight-debugger-title-container h2 { margin: 0; font-size: 15px; }
 
@@ -309,8 +299,6 @@ export class DebuggerControlPanel {
         background: none; border: none; color: white;
         cursor: pointer; padding: 0;
         display: flex; align-items: center; justify-content: center;
-        width: 24px; height: 24px; /* Maintain size */
-        /* Removed absolute positioning properties */
       }
       .jsforesight-copy-settings-button svg {
         width: 16px; height: 16px;
