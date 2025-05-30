@@ -3,6 +3,7 @@ import ForesightButtonRegular from "./TestButtons/ForesightButtonRegular"
 import ForesightButtonResizeable from "./TestButtons/ForesightButtonResizeable"
 import ForesightButtonVisibility from "./TestButtons/ForesightButtonVisibility"
 import ForesightButtonRemoveable from "./TestButtons/ForesightButtonRemoveable"
+import { Link } from "react-router-dom"
 
 export const Main = () => {
   const [isVisible, setIsVisible] = useState(true)
@@ -11,6 +12,9 @@ export const Main = () => {
   return (
     <div className="p-5 font-sans">
       <div className="flex gap-4 flex-row">
+        <Link className="size-30 bg-green-200 flex justify-center items-center" to="/other">
+          Switch to other page
+        </Link>
         <button
           onClick={() => {
             setIsVisible(!isVisible)
