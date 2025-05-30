@@ -7,11 +7,18 @@ import type {
   DebuggerSettings,
 } from "../../types/types"
 
+interface SectionStates {
+  mouse: boolean
+  keyboard: boolean
+  general: boolean
+  elements: boolean
+}
+
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private shadowRoot: ShadowRoot | null = null
   private controlsContainer: HTMLElement | null = null
-  private elementListContainer: HTMLElement | null = null
+  private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
   private controlPanelStyleElement: HTMLStyleElement | null = null
@@ -28,20 +35,29 @@ export class DebuggerControlPanel {
   private tabOffsetValueSpan: HTMLSpanElement | null = null
 
   private minimizeButton: HTMLButtonElement | null = null
-  private debuggerSettingsSection: HTMLElement | null = null
+  private allSettingsSectionsContainer: HTMLElement | null = null
   private debuggerElementsSection: HTMLElement | null = null
   private isMinimized: boolean = false
 
-  private mouseSettingsSection: HTMLElement | null = null
+  private mouseSettingsHeader: HTMLElement | null = null
+  private mouseSettingsSectionContent: HTMLElement | null = null
   private mouseSettingsMinimizeButton: HTMLButtonElement | null = null
-  private keyboardSettingsSection: HTMLElement | null = null
+  private keyboardSettingsHeader: HTMLElement | null = null
+  private keyboardSettingsSectionContent: HTMLElement | null = null
   private keyboardSettingsMinimizeButton: HTMLButtonElement | null = null
-  private elementsListSection: HTMLElement | null = null
+  private generalSettingsHeader: HTMLElement | null = null
+  private generalSettingsSectionContent: HTMLElement | null = null
+  private generalSettingsMinimizeButton: HTMLButtonElement | null = null
+  private elementsListHeader: HTMLElement | null = null
+  private elementsListSectionContent: HTMLElement | null = null
   private elementsListMinimizeButton: HTMLButtonElement | null = null
 
   private isMouseSettingsMinimized: boolean = false
   private isKeyboardSettingsMinimized: boolean = false
+  private isGeneralSettingsMinimized: boolean = false
   private isElementsListMinimized: boolean = false
+
+  private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
 
   constructor(manager: ForesightManager) {
     this.foresightManagerInstance = manager
@@ -59,6 +75,8 @@ export class DebuggerControlPanel {
       this.isMinimized = true
     }
 
+    this._loadSectionStatesFromSessionStorage()
+
     if (this.controlsContainer && this.shadowRoot) {
       this.controlPanelStyleElement = document.createElement("style")
       this.controlPanelStyleElement.textContent = this._getStyles()
@@ -74,6 +92,37 @@ export class DebuggerControlPanel {
     }
   }
 
+  private _loadSectionStatesFromSessionStorage() {
+    const storedStatesRaw = sessionStorage.getItem(this.SESSION_STORAGE_KEY)
+    let loadedStates: Partial<SectionStates> = {}
+
+    if (storedStatesRaw) {
+      try {
+        loadedStates = JSON.parse(storedStatesRaw)
+      } catch (e) {
+        console.error("Foresight Debugger: Could not parse section states from session storage.", e)
+      }
+    }
+    this.isMouseSettingsMinimized = loadedStates.mouse ?? true
+    this.isKeyboardSettingsMinimized = loadedStates.keyboard ?? true
+    this.isGeneralSettingsMinimized = loadedStates.general ?? true
+    this.isElementsListMinimized = loadedStates.elements ?? false
+  }
+
+  private _saveSectionStatesToSessionStorage() {
+    const states: SectionStates = {
+      mouse: this.isMouseSettingsMinimized,
+      keyboard: this.isKeyboardSettingsMinimized,
+      general: this.isGeneralSettingsMinimized,
+      elements: this.isElementsListMinimized,
+    }
+    try {
+      sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(states))
+    } catch (e) {
+      console.error("Foresight Debugger: Could not save section states to session storage.", e)
+    }
+  }
+
   private _createDOM() {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls"
@@ -85,64 +134,77 @@ export class DebuggerControlPanel {
         <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
       </div>
 
-      <div class="jsforesight-debugger-section jsforesight-debugger-settings">
-        <div class="jsforesight-debugger-section-header mouse-settings-header">
-          <h3>Mouse Settings</h3>
-          <button class="jsforesight-section-minimize-button">-</button>
-        </div>
-        <div class="jsforesight-debugger-section-content jsforesight-mouse-settings">
-          <div class="control-row">
-            <label for="jsforesight-trajectory-enabled">
-              Enable Mouse Prediction
-              <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions (or tab if enabled).">i</span>
-            </label>
-            <input type="checkbox" id="jsforesight-trajectory-enabled">
+      <div class="jsforesight-all-settings-sections-container">
+        <div class="jsforesight-debugger-section jsforesight-mouse-settings-section">
+          <div class="jsforesight-debugger-section-header mouse-settings-header">
+            <h3>Mouse Settings</h3>
+            <button class="jsforesight-section-minimize-button">-</button>
           </div>
-          <div class="control-row">
-            <label for="jsforesight-history-size">
-              History Size
-              <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation (Min: 2, Max: 20). Higher values smooth predictions but add latency.">i</span>
-            </label>
-            <input type="range" id="jsforesight-history-size" min="2" max="20">
-            <span id="jsforesight-history-value"></span>
-          </div>
-          <div class="control-row">
-            <label for="jsforesight-prediction-time">
-              Prediction Time
-              <span class="jsforesight-info-icon" title="How far (ms) to project trajectory (Min: 10, Max: 500). Larger values detect intent sooner.">i</span>
-            </label>
-            <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10">
-            <span id="jsforesight-prediction-value"></span>
-          </div>
-          <div class="control-row">
-            <label for="jsforesight-throttle-delay">
-              Scroll/Resize Throttle
-              <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll (Min: 0, Max: 500). Higher values improve performance during rapid events.">i</span>
-            </label>
-            <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10">
-            <span id="jsforesight-throttle-value"></span>
+          <div class="jsforesight-debugger-section-content jsforesight-mouse-settings-content">
+            <div class="control-row">
+              <label for="jsforesight-trajectory-enabled">
+                Enable Mouse Prediction
+                <span class="jsforesight-info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions (or tab if enabled).">i</span>
+              </label>
+              <input type="checkbox" id="jsforesight-trajectory-enabled">
+            </div>
+            <div class="control-row">
+              <label for="jsforesight-history-size">
+                History Size
+                <span class="jsforesight-info-icon" title="Number of past mouse positions for velocity calculation. Higher values smooth predictions but add latency.">i</span>
+              </label>
+              <input type="range" id="jsforesight-history-size" min="2" max="20">
+              <span id="jsforesight-history-value"></span>
+            </div>
+            <div class="control-row">
+              <label for="jsforesight-prediction-time">
+                Prediction Time
+                <span class="jsforesight-info-icon" title="How far (ms) to project trajectory. Larger values detect intent sooner.">i</span>
+              </label>
+              <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10">
+              <span id="jsforesight-prediction-value"></span>
+            </div>
           </div>
         </div>
 
-        <div class="jsforesight-debugger-section-header keyboard-settings-header">
-          <h3>Keyboard Settings</h3>
-          <button class="jsforesight-section-minimize-button">-</button>
-        </div>
-        <div class="jsforesight-debugger-section-content jsforesight-keyboard-settings">
-          <div class="control-row">
-            <label for="jsforesight-tab-enabled">
-              Enable Tab Prediction
-              <span class="jsforesight-info-icon" title="Toggles tab prediction.">i</span>
-            </label>
-            <input type="checkbox" id="jsforesight-tab-enabled">
+        <div class="jsforesight-debugger-section jsforesight-keyboard-settings-section">
+          <div class="jsforesight-debugger-section-header keyboard-settings-header">
+            <h3>Keyboard Settings</h3>
+            <button class="jsforesight-section-minimize-button">-</button>
           </div>
-          <div class="control-row">
-            <label for="jsforesight-tab-offset">
-              Tab Prediction Offset
-              <span class="jsforesight-info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key (Min: 0, Max: 10).">i</span>
-            </label>
-            <input type="range" id="jsforesight-tab-offset" min="0" max="10">
-            <span id="jsforesight-tab-offset-value"></span>
+          <div class="jsforesight-debugger-section-content jsforesight-keyboard-settings-content">
+            <div class="control-row">
+              <label for="jsforesight-tab-enabled">
+                Enable Tab Prediction
+                <span class="jsforesight-info-icon" title="Toggles tab prediction.">i</span>
+              </label>
+              <input type="checkbox" id="jsforesight-tab-enabled">
+            </div>
+            <div class="control-row">
+              <label for="jsforesight-tab-offset">
+                Tab Prediction Offset
+                <span class="jsforesight-info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key.">i</span>
+              </label>
+              <input type="range" id="jsforesight-tab-offset" min="0" max="10">
+              <span id="jsforesight-tab-offset-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="jsforesight-debugger-section jsforesight-general-settings-section">
+          <div class="jsforesight-debugger-section-header general-settings-header">
+            <h3>General Settings</h3>
+            <button class="jsforesight-section-minimize-button">-</button>
+          </div>
+          <div class="jsforesight-debugger-section-content jsforesight-general-settings-content">
+            <div class="control-row">
+              <label for="jsforesight-throttle-delay">
+                Scroll/Resize Throttle
+                <span class="jsforesight-info-icon" title="Delay (ms) for recalculating element positions on resize/scroll. Higher values improve performance during rapid events.">i</span>
+              </label>
+              <input type="range" id="jsforesight-throttle-delay" min="0" max="500" step="10">
+              <span id="jsforesight-throttle-value"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -160,11 +222,20 @@ export class DebuggerControlPanel {
         </div>
       </div>
     `
-
     this.controlsContainer.innerHTML = controlsHTML
   }
 
   private _getStyles(): string {
+    const elementItemHeight = 35 // px
+    const elementListGap = 6 // px
+    const elementListItemsContainerPadding = 6 // px
+    const numRowsToShow = 3
+    const numItemsPerRow = 2
+
+    const rowsContentHeight =
+      elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
+    const elementListContainerHeight = rowsContentHeight + elementListItemsContainerPadding * 2
+
     return `
       #jsforesight-debug-controls {
         position: fixed; bottom: 10px; right: 10px;
@@ -217,6 +288,12 @@ export class DebuggerControlPanel {
       }
       .jsforesight-debugger-title-container h2 { margin: 0; font-size: 15px; }
 
+      .jsforesight-all-settings-sections-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
       .jsforesight-debugger-section-header {
         display: flex;
         align-items: center;
@@ -225,6 +302,7 @@ export class DebuggerControlPanel {
         margin-bottom: 2px;
         padding-bottom: 2px;
         border-bottom: 1px solid #444;
+        cursor: pointer;
       }
       .jsforesight-debugger-section-header h3 {
          margin: 0;
@@ -249,150 +327,115 @@ export class DebuggerControlPanel {
         justify-content: space-between;
         gap: 8px;
       }
-
       #jsforesight-debug-controls label {
         display: flex;
         align-items: center;
         gap: 5px;
         cursor: pointer;
       }
-
       #jsforesight-debug-controls .control-row:has(input[type="checkbox"]) label {
         flex-grow: 1;
       }
-
-      /* Modern Toggle Switch Styles */
       #jsforesight-debug-controls .control-row input[type="checkbox"] {
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        position: relative;
-        width: 40px;  /* Track width */
-        height: 18px; /* Track height */
-        background-color: #555;
-        border-radius: 10px; /* (Track height / 2) */
-        cursor: pointer;
-        outline: none;
-        transition: background-color 0.2s ease;
-        vertical-align: middle;
-        flex-shrink: 0;
-        margin: 0; /* Rely on parent gap for spacing */
+        appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        position: relative; width: 40px; height: 18px;
+        background-color: #555; border-radius: 10px; cursor: pointer;
+        outline: none; transition: background-color 0.2s ease;
+        vertical-align: middle; flex-shrink: 0; margin: 0;
       }
-
       #jsforesight-debug-controls .control-row input[type="checkbox"]::before {
-        content: "";
-        position: absolute;
-        width: 14px;  /* Thumb width */
-        height: 14px; /* Thumb height */
-        border-radius: 50%;
-        background-color: white;
-        top: 2px;  /* (Track height - Thumb height) / 2 */
-        left: 2px; /* Padding from left */
-        transition: transform 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        content: ""; position: absolute; width: 14px; height: 14px;
+        border-radius: 50%; background-color: white; top: 2px; left: 2px;
+        transition: transform 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
       }
-
       #jsforesight-debug-controls .control-row input[type="checkbox"]:checked {
         background-color: #b0c4de;
       }
-
       #jsforesight-debug-controls .control-row input[type="checkbox"]:checked::before {
-        transform: translateX(22px); /* MODIFIED: Track width - Thumb width - Left padding - Right padding (assuming 2px right padding) = 40 - 14 - 2 - 2 = 22 */
+        transform: translateX(22px);
       }
-      /* END Modern Toggle Switch Styles */
-
-
       #jsforesight-debug-controls .control-row:has(input[type="range"]) label {
-        flex-basis: 170px;
-        flex-shrink: 0;
+        flex-basis: 170px; flex-shrink: 0;
       }
-
       #jsforesight-debug-controls input[type="range"] {
-        flex-grow: 1;
-        margin: 0 0;
-        cursor: pointer;
-        -webkit-appearance: none;
-        appearance: none;
-        background: transparent;
-        height: 18px; /* Keep smaller height */
-        vertical-align: middle;
+        flex-grow: 1; margin: 0; cursor: pointer; -webkit-appearance: none;
+        appearance: none; background: transparent; height: 18px; vertical-align: middle;
       }
-
       #jsforesight-debug-controls input[type="range"]::-webkit-slider-runnable-track {
-        height: 6px;
-        background: #555;
-        border-radius: 3px;
+        height: 6px; background: #555; border-radius: 3px;
       }
       #jsforesight-debug-controls input[type="range"]::-moz-range-track {
-        height: 6px;
-        background: #555;
-        border-radius: 3px;
+        height: 6px; background: #555; border-radius: 3px;
       }
-
       #jsforesight-debug-controls input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        margin-top: -5px; /* (Track height (6px) - Thumb height (16px)) / 2 = -5px */
-        background: #b0c4de;
-        height: 16px;
-        width: 16px;
-        border-radius: 50%;
-        border: 1px solid #333;
+        -webkit-appearance: none; appearance: none; margin-top: -5px;
+        background: #b0c4de; height: 16px; width: 16px;
+        border-radius: 50%; border: 1px solid #333;
       }
       #jsforesight-debug-controls input[type="range"]::-moz-range-thumb {
-        background: #b0c4de;
-        height: 16px;
-        width: 16px;
-        border-radius: 50%;
-        border: 1px solid #333;
-        border: none;
+        background: #b0c4de; height: 16px; width: 16px;
+        border-radius: 50%; border: 1px solid #333; border: none;
       }
-
       #jsforesight-debug-controls .control-row:has(input[type="range"]) span:not(.jsforesight-info-icon) {
-        width: 55px;
-        min-width: 55px;
-        text-align: right;
-        flex-shrink: 0;
+        width: 55px; min-width: 55px; text-align: right; flex-shrink: 0;
       }
-
       .jsforesight-info-icon {
         display: inline-flex; align-items: center; justify-content: center;
         width: 16px; height: 16px; border-radius: 50%;
-        background-color: #555; color: white;
-        font-size: 10px; font-style: italic; font-weight: bold;
-        font-family: 'Georgia', serif;
-        cursor: help; user-select: none;
-        flex-shrink: 0;
+        background-color: #555; color: white; font-size: 10px;
+        font-style: italic; font-weight: bold; font-family: 'Georgia', serif;
+        cursor: help; user-select: none; flex-shrink: 0;
       }
       .jsforesight-debugger-section {
         display: flex; flex-direction: column; gap: 6px;
       }
       .jsforesight-debugger-section-content {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        display: flex; flex-direction: column; gap: 8px;
       }
 
-      .jsforesight-element-list {
-        max-height: 150px;
+      /* Element List Styles */
+      .jsforesight-element-list { /* Scroll container */
+        min-height: ${elementListContainerHeight}px;
+        max-height: ${elementListContainerHeight}px; /* Fixed height for 3 rows */
         overflow-y: auto;
         background-color: rgba(20, 20, 20, 0.5);
         border-radius: 3px;
-        padding: 5px;
+        padding: 0;
+      }
+      #jsforesight-element-list-items-container { /* Flex container for items */
+        display: flex;
+        flex-wrap: wrap;
+        gap: ${elementListGap}px;
+        padding: ${elementListItemsContainerPadding}px;
+        min-height: ${rowsContentHeight}px;
+        box-sizing: border-box;
+        align-content: flex-start;
+      }
+      #jsforesight-element-list-items-container > em {
+        flex-basis: 100%;
+        text-align: center;
+        padding: 10px 0;
+        font-style: italic;
+        color: #ccc;
         font-size: 12px;
       }
       .jsforesight-element-list-item {
-        padding: 4px 6px;
-        margin-bottom: 3px;
+        flex-basis: calc((100% - (${
+          numItemsPerRow - 1
+        } * ${elementListGap}px)) / ${numItemsPerRow});
+        flex-grow: 0;
+        flex-shrink: 0;
+        height: ${elementItemHeight}px;
+        box-sizing: border-box;
+        padding: 3px 5px;
         border-radius: 2px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         background-color: rgba(50,50,50,0.7);
         transition: background-color 0.2s ease;
-      }
-      .jsforesight-element-list-item:last-child {
-        margin-bottom: 0;
+        font-size: 11px;
+        overflow: hidden;
       }
       .jsforesight-element-list-item .status-indicator {
         width: 10px;
@@ -420,19 +463,14 @@ export class DebuggerControlPanel {
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .jsforesight-element-list-item .element-details {
-        font-size: 10px;
-        color: #ccc;
-        flex-shrink: 0;
-      }
       .jsforesight-element-list-item .hit-behavior {
-        font-size: 10px;
+        font-size: 9px;
         color: #b0b0b0;
-        margin-right: 5px;
         padding: 1px 3px;
         border-radius: 2px;
         background-color: rgba(0,0,0,0.2);
         flex-shrink: 0;
+        margin-left: auto;
       }
     `
   }
@@ -453,35 +491,64 @@ export class DebuggerControlPanel {
     this.tabOffsetSlider = this.controlsContainer.querySelector("#jsforesight-tab-offset")
     this.tabOffsetValueSpan = this.controlsContainer.querySelector("#jsforesight-tab-offset-value")
 
-    this.elementListContainer = this.controlsContainer.querySelector(
+    this.elementListItemsContainer = this.controlsContainer.querySelector(
       "#jsforesight-element-list-items-container"
     )
     this.elementCountSpan = this.controlsContainer.querySelector("#jsforesight-element-count")
 
     this.minimizeButton = this.controlsContainer.querySelector(".jsforesight-minimize-button")
-    this.debuggerSettingsSection = this.controlsContainer.querySelector(
-      ".jsforesight-debugger-settings"
+    this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
+      ".jsforesight-all-settings-sections-container"
     )
     this.debuggerElementsSection = this.controlsContainer.querySelector(
       ".jsforesight-debugger-elements"
     )
 
-    const sectionContents = this.controlsContainer.querySelectorAll(
-      ".jsforesight-debugger-section-content"
-    )
-    if (sectionContents.length > 0) {
-      this.mouseSettingsSection = sectionContents[0] as HTMLElement
-      this.keyboardSettingsSection = sectionContents[1] as HTMLElement
-      this.elementsListSection = sectionContents[2] as HTMLElement
+    const mouseSection = this.controlsContainer.querySelector(".jsforesight-mouse-settings-section")
+    if (mouseSection) {
+      this.mouseSettingsHeader = mouseSection.querySelector(".mouse-settings-header")
+      this.mouseSettingsSectionContent = mouseSection.querySelector(
+        ".jsforesight-mouse-settings-content"
+      )
+      this.mouseSettingsMinimizeButton = mouseSection.querySelector(
+        ".jsforesight-section-minimize-button"
+      )
     }
 
-    const sectionMinimizeButtons = this.controlsContainer.querySelectorAll(
-      ".jsforesight-section-minimize-button"
+    const keyboardSection = this.controlsContainer.querySelector(
+      ".jsforesight-keyboard-settings-section"
     )
-    if (sectionMinimizeButtons.length > 0) {
-      this.mouseSettingsMinimizeButton = sectionMinimizeButtons[0] as HTMLButtonElement
-      this.keyboardSettingsMinimizeButton = sectionMinimizeButtons[1] as HTMLButtonElement
-      this.elementsListMinimizeButton = sectionMinimizeButtons[2] as HTMLButtonElement
+    if (keyboardSection) {
+      this.keyboardSettingsHeader = keyboardSection.querySelector(".keyboard-settings-header")
+      this.keyboardSettingsSectionContent = keyboardSection.querySelector(
+        ".jsforesight-keyboard-settings-content"
+      )
+      this.keyboardSettingsMinimizeButton = keyboardSection.querySelector(
+        ".jsforesight-section-minimize-button"
+      )
+    }
+
+    const generalSection = this.controlsContainer.querySelector(
+      ".jsforesight-general-settings-section"
+    )
+    if (generalSection) {
+      this.generalSettingsHeader = generalSection.querySelector(".general-settings-header")
+      this.generalSettingsSectionContent = generalSection.querySelector(
+        ".jsforesight-general-settings-content"
+      )
+      this.generalSettingsMinimizeButton = generalSection.querySelector(
+        ".jsforesight-section-minimize-button"
+      )
+    }
+
+    if (this.debuggerElementsSection) {
+      this.elementsListHeader = this.debuggerElementsSection.querySelector(".elements-list-header")
+      this.elementsListSectionContent = this.debuggerElementsSection.querySelector(
+        ".jsforesight-element-list"
+      )
+      this.elementsListMinimizeButton = this.debuggerElementsSection.querySelector(
+        ".jsforesight-section-minimize-button"
+      )
     }
   }
 
@@ -491,43 +558,30 @@ export class DebuggerControlPanel {
         enableMousePrediction: (e.target as HTMLInputElement).checked,
       })
     })
-
     this.tabEnabledCheckbox?.addEventListener("change", (e) => {
       this.foresightManagerInstance.alterGlobalSettings({
         enableTabPrediction: (e.target as HTMLInputElement).checked,
       })
     })
-
     this.historySizeSlider?.addEventListener("input", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value)
       if (this.historyValueSpan) this.historyValueSpan.textContent = `${value} points`
-      this.foresightManagerInstance.alterGlobalSettings({
-        positionHistorySize: value,
-      })
+      this.foresightManagerInstance.alterGlobalSettings({ positionHistorySize: value })
     })
-
     this.predictionTimeSlider?.addEventListener("input", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value)
       if (this.predictionValueSpan) this.predictionValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({
-        trajectoryPredictionTime: value,
-      })
+      this.foresightManagerInstance.alterGlobalSettings({ trajectoryPredictionTime: value })
     })
-
     this.throttleDelaySlider?.addEventListener("input", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value)
       if (this.throttleValueSpan) this.throttleValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({
-        resizeScrollThrottleDelay: value,
-      })
+      this.foresightManagerInstance.alterGlobalSettings({ resizeScrollThrottleDelay: value })
     })
-
     this.tabOffsetSlider?.addEventListener("input", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value)
       if (this.tabOffsetValueSpan) this.tabOffsetValueSpan.textContent = `${value} tabs`
-      this.foresightManagerInstance.alterGlobalSettings({
-        tabOffset: value,
-      })
+      this.foresightManagerInstance.alterGlobalSettings({ tabOffset: value })
     })
 
     this.minimizeButton?.addEventListener("click", () => {
@@ -535,20 +589,50 @@ export class DebuggerControlPanel {
       this._applyMinimizedStateVisuals()
     })
 
-    this.mouseSettingsMinimizeButton?.addEventListener("click", () => {
-      this.isMouseSettingsMinimized = !this.isMouseSettingsMinimized
-      this._applySectionMinimizedStateVisuals()
-    })
+    const setupSectionToggle = (
+      header: HTMLElement | null,
+      button: HTMLButtonElement | null,
+      isMinimizedFlagName: // Explicit union of known boolean keys
+      | "isMouseSettingsMinimized"
+        | "isKeyboardSettingsMinimized"
+        | "isGeneralSettingsMinimized"
+        | "isElementsListMinimized"
+    ) => {
+      const toggleAction = () => {
+        this[isMinimizedFlagName] = !this[isMinimizedFlagName]
+        this._applySectionMinimizedStateVisuals()
+        this._saveSectionStatesToSessionStorage()
+      }
+      button?.addEventListener("click", (e) => {
+        e.stopPropagation()
+        toggleAction()
+      })
+      header?.addEventListener("click", (e) => {
+        if (button && button.contains(e.target as Node)) return
+        toggleAction()
+      })
+    }
 
-    this.keyboardSettingsMinimizeButton?.addEventListener("click", () => {
-      this.isKeyboardSettingsMinimized = !this.isKeyboardSettingsMinimized
-      this._applySectionMinimizedStateVisuals()
-    })
-
-    this.elementsListMinimizeButton?.addEventListener("click", () => {
-      this.isElementsListMinimized = !this.isElementsListMinimized
-      this._applySectionMinimizedStateVisuals()
-    })
+    setupSectionToggle(
+      this.mouseSettingsHeader,
+      this.mouseSettingsMinimizeButton,
+      "isMouseSettingsMinimized"
+    )
+    setupSectionToggle(
+      this.keyboardSettingsHeader,
+      this.keyboardSettingsMinimizeButton,
+      "isKeyboardSettingsMinimized"
+    )
+    setupSectionToggle(
+      this.generalSettingsHeader,
+      this.generalSettingsMinimizeButton,
+      "isGeneralSettingsMinimized"
+    )
+    setupSectionToggle(
+      this.elementsListHeader,
+      this.elementsListMinimizeButton,
+      "isElementsListMinimized"
+    )
   }
 
   private _applyMinimizedStateVisuals() {
@@ -557,49 +641,59 @@ export class DebuggerControlPanel {
     if (this.isMinimized) {
       this.controlsContainer.classList.add("minimized")
       this.minimizeButton.textContent = "+"
-      if (this.debuggerSettingsSection) this.debuggerSettingsSection.style.display = "none"
+      if (this.allSettingsSectionsContainer)
+        this.allSettingsSectionsContainer.style.display = "none"
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = "none"
     } else {
       this.controlsContainer.classList.remove("minimized")
       this.minimizeButton.textContent = "-"
-      if (this.debuggerSettingsSection) this.debuggerSettingsSection.style.display = ""
+      if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
       this._applySectionMinimizedStateVisuals()
     }
   }
 
   private _applySectionMinimizedStateVisuals() {
-    if (!this.isMinimized) {
-      if (this.mouseSettingsSection && this.mouseSettingsMinimizeButton) {
-        if (this.isMouseSettingsMinimized) {
-          this.mouseSettingsSection.style.display = "none"
-          this.mouseSettingsMinimizeButton.textContent = "+"
-        } else {
-          this.mouseSettingsSection.style.display = "flex"
-          this.mouseSettingsMinimizeButton.textContent = "-"
-        }
-      }
+    if (this.isMinimized) return
 
-      if (this.keyboardSettingsSection && this.keyboardSettingsMinimizeButton) {
-        if (this.isKeyboardSettingsMinimized) {
-          this.keyboardSettingsSection.style.display = "none"
-          this.keyboardSettingsMinimizeButton.textContent = "+"
+    const updateSectionDisplay = (
+      contentElement: HTMLElement | null,
+      buttonElement: HTMLButtonElement | null,
+      isMinimized: boolean,
+      displayType: string = "flex"
+    ) => {
+      if (contentElement && buttonElement) {
+        if (isMinimized) {
+          contentElement.style.display = "none"
+          buttonElement.textContent = "+"
         } else {
-          this.keyboardSettingsSection.style.display = "flex"
-          this.keyboardSettingsMinimizeButton.textContent = "-"
-        }
-      }
-
-      if (this.elementsListSection && this.elementsListMinimizeButton) {
-        if (this.isElementsListMinimized) {
-          this.elementsListSection.style.display = "none"
-          this.elementsListMinimizeButton.textContent = "+"
-        } else {
-          this.elementsListSection.style.display = ""
-          this.elementsListMinimizeButton.textContent = "-"
+          contentElement.style.display = displayType
+          buttonElement.textContent = "-"
         }
       }
     }
+
+    updateSectionDisplay(
+      this.mouseSettingsSectionContent,
+      this.mouseSettingsMinimizeButton,
+      this.isMouseSettingsMinimized
+    )
+    updateSectionDisplay(
+      this.keyboardSettingsSectionContent,
+      this.keyboardSettingsMinimizeButton,
+      this.isKeyboardSettingsMinimized
+    )
+    updateSectionDisplay(
+      this.generalSettingsSectionContent,
+      this.generalSettingsMinimizeButton,
+      this.isGeneralSettingsMinimized
+    )
+    updateSectionDisplay(
+      this.elementsListSectionContent,
+      this.elementsListMinimizeButton,
+      this.isElementsListMinimized,
+      "" // Reverts to CSS default (e.g., block for .jsforesight-element-list)
+    )
   }
 
   public updateControlsState(settings: ForesightManagerProps) {
@@ -628,9 +722,9 @@ export class DebuggerControlPanel {
   }
 
   public refreshElementList() {
-    if (!this.elementListContainer) return
+    if (!this.elementListItemsContainer) return
 
-    this.elementListContainer.innerHTML = ""
+    this.elementListItemsContainer.innerHTML = ""
     this.elementListItems.clear()
 
     const elementsMap = this.foresightManagerInstance.elements
@@ -640,7 +734,7 @@ export class DebuggerControlPanel {
     }
 
     if (elementsMap.size === 0) {
-      this.elementListContainer.innerHTML = "<em>No elements registered.</em>"
+      this.elementListItemsContainer.innerHTML = "<em>No elements registered.</em>"
       return
     }
 
@@ -649,7 +743,7 @@ export class DebuggerControlPanel {
       listItem.className = "jsforesight-element-list-item"
       this._updateListItemContent(listItem, data)
 
-      this.elementListContainer!.appendChild(listItem)
+      this.elementListItemsContainer!.appendChild(listItem)
       this.elementListItems.set(element, listItem)
     })
   }
@@ -670,31 +764,41 @@ export class DebuggerControlPanel {
       data.name || "Unnamed Element"
     }</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-      <span class="element-details">(H: ${data.isHovering ? "Y" : "N"}, T: ${
-      data.trajectoryHitData.isTrajectoryHit ? "Y" : "N"
-    })</span>
     `
   }
 
   public cleanup() {
     this.controlsContainer?.remove()
-    this.controlsContainer = null
-    this.elementListContainer = null
     this.controlPanelStyleElement?.remove()
+    this.controlsContainer = null
+    this.elementListItemsContainer = null
     this.controlPanelStyleElement = null
-
     this.elementCountSpan = null
     this.elementListItems.clear()
-
     this.minimizeButton = null
-    this.debuggerSettingsSection = null
+    this.allSettingsSectionsContainer = null
     this.debuggerElementsSection = null
-
-    this.mouseSettingsSection = null
+    this.mouseSettingsHeader = null
+    this.mouseSettingsSectionContent = null
     this.mouseSettingsMinimizeButton = null
-    this.keyboardSettingsSection = null
+    this.keyboardSettingsHeader = null
+    this.keyboardSettingsSectionContent = null
     this.keyboardSettingsMinimizeButton = null
-    this.elementsListSection = null
+    this.generalSettingsHeader = null
+    this.generalSettingsSectionContent = null
+    this.generalSettingsMinimizeButton = null
+    this.elementsListHeader = null
+    this.elementsListSectionContent = null
     this.elementsListMinimizeButton = null
+    this.trajectoryEnabledCheckbox = null
+    this.tabEnabledCheckbox = null
+    this.historySizeSlider = null
+    this.historyValueSpan = null
+    this.predictionTimeSlider = null
+    this.predictionValueSpan = null
+    this.throttleDelaySlider = null
+    this.throttleValueSpan = null
+    this.tabOffsetSlider = null
+    this.tabOffsetValueSpan = null
   }
 }
