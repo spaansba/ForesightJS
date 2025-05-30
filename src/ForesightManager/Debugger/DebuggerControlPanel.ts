@@ -56,8 +56,12 @@ export class DebuggerControlPanel {
   private isKeyboardSettingsMinimized: boolean = false
   private isGeneralSettingsMinimized: boolean = false
   private isElementsListMinimized: boolean = false
-
   private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
+
+  private copySettingsButton: HTMLButtonElement | null = null
+  private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+  private static readonly COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
+  private static readonly TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
   constructor(manager: ForesightManager) {
     this.foresightManagerInstance = manager
@@ -127,11 +131,17 @@ export class DebuggerControlPanel {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls"
 
+    // Updated HTML structure for the title container
     let controlsHTML = `
       <div class="jsforesight-debugger-title-container">
         <button class="jsforesight-minimize-button">-</button>
-        <h2>Foresight Debugger</h2>
-        <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
+        <div class="jsforesight-title-group">
+          <h2>Foresight Debugger</h2>
+          <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
+        </div>
+        <button class="jsforesight-copy-settings-button" title="Copy current settings to clipboard">
+          ${DebuggerControlPanel.COPY_SVG_ICON}
+        </button>
       </div>
 
       <div class="jsforesight-all-settings-sections-container">
@@ -161,7 +171,7 @@ export class DebuggerControlPanel {
                 Prediction Time
                 <span class="jsforesight-info-icon" title="How far (ms) to project trajectory. Larger values detect intent sooner.">i</span>
               </label>
-              <input type="range" id="jsforesight-prediction-time" min="10" max="500" step="10">
+              <input type="range" id="jsforesight-prediction-time" min="10" max="200" step="10">
               <span id="jsforesight-prediction-value"></span>
             </div>
           </div>
@@ -248,13 +258,13 @@ export class DebuggerControlPanel {
       #jsforesight-debug-controls.minimized {
         width: 220px;
         overflow: hidden;
-        padding: 12px 0;
+        padding: 12px 0; /* Adjusted padding for minimized state */
       }
       #jsforesight-debug-controls.minimized .jsforesight-debugger-title-container {
-        justify-content: flex-start;
-        padding-left: 10px;
-        padding-right: 10px;
-        gap: 10px;
+        justify-content: flex-start; /* Keep this for minimized */
+        padding-left: 10px; /* Keep padding for minimized */
+        padding-right: 10px; /* Keep padding for minimized */
+        gap: 10px; /* Keep gap for minimized */
       }
       #jsforesight-debug-controls.minimized .jsforesight-debugger-title-container h2 {
         display: inline;
@@ -266,27 +276,46 @@ export class DebuggerControlPanel {
         display: none;
       }
       #jsforesight-debug-controls.minimized .jsforesight-minimize-button {
-         position: static;
-         transform: none;
-         margin-right: 0;
+         /* No longer absolute, so static positioning is default */
+         margin-right: 0; /* Reset margin if any was added for non-minimized */
          padding: 0 3px;
          line-height: 1;
       }
 
       .jsforesight-debugger-title-container {
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Key change for layout */
+        padding: 0 10px; /* Provides spacing from edges for buttons */
+        /* gap: 8px; Removed, space-between handles distribution */
+        /* position: relative; No longer needed for these buttons */
+      }
+      .jsforesight-title-group { /* New style for grouping title and info icon */
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Spacing between title and info icon */
+        /* flex-grow: 1; Optional: if title group should expand */
+        /* justify-content: center; Optional: to center content within the group */
       }
       .jsforesight-minimize-button {
         background: none; border: none; color: white;
         font-size: 22px; cursor: pointer; padding: 0 5px;
         line-height: 1;
-        position: absolute;
-        top: 50%;
-        left: 10px;
-        transform: translateY(-50%);
+        /* Removed absolute positioning properties */
       }
       .jsforesight-debugger-title-container h2 { margin: 0; font-size: 15px; }
+
+      .jsforesight-copy-settings-button {
+        background: none; border: none; color: white;
+        cursor: pointer; padding: 0;
+        display: flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; /* Maintain size */
+        /* Removed absolute positioning properties */
+      }
+      .jsforesight-copy-settings-button svg {
+        width: 16px; height: 16px;
+        stroke: white;
+      }
 
       .jsforesight-all-settings-sections-container {
         display: flex;
@@ -504,6 +533,10 @@ export class DebuggerControlPanel {
       ".jsforesight-debugger-elements"
     )
 
+    this.copySettingsButton = this.controlsContainer.querySelector(
+      ".jsforesight-copy-settings-button"
+    )
+
     const mouseSection = this.controlsContainer.querySelector(".jsforesight-mouse-settings-section")
     if (mouseSection) {
       this.mouseSettingsHeader = mouseSection.querySelector(".mouse-settings-header")
@@ -552,6 +585,61 @@ export class DebuggerControlPanel {
     }
   }
 
+  private _handleCopySettings() {
+    if (!this.copySettingsButton) return
+
+    const enableMousePrediction = this.trajectoryEnabledCheckbox?.checked ?? false
+    const enableTabPrediction = this.tabEnabledCheckbox?.checked ?? false
+    const positionHistorySize = parseInt(this.historySizeSlider?.value ?? "8", 10)
+    const trajectoryPredictionTime = parseInt(this.predictionTimeSlider?.value ?? "80", 10)
+    const resizeScrollThrottleDelay = parseInt(this.throttleDelaySlider?.value ?? "50", 10)
+    const tabOffset = parseInt(this.tabOffsetSlider?.value ?? "2", 10)
+
+    const settingsToCopy = {
+      debug: true,
+      debuggerSettings: {
+        isControlPanelDefaultMinimized: this.isMinimized,
+      },
+      enableMousePrediction,
+      enableTabPrediction,
+      positionHistorySize,
+      resizeScrollThrottleDelay,
+      tabOffset,
+      trajectoryPredictionTime,
+    }
+
+    let settingsString = "ForesightManager.initialize({\n"
+    settingsString += `  debug: ${settingsToCopy.debug},\n`
+    settingsString += `  debuggerSettings: {\n`
+    settingsString += `    isControlPanelDefaultMinimized: ${settingsToCopy.debuggerSettings.isControlPanelDefaultMinimized},\n`
+    settingsString += `  },\n`
+    settingsString += `  enableMousePrediction: ${settingsToCopy.enableMousePrediction},\n`
+    settingsString += `  enableTabPrediction: ${settingsToCopy.enableTabPrediction},\n`
+    settingsString += `  positionHistorySize: ${settingsToCopy.positionHistorySize},\n`
+    settingsString += `  resizeScrollThrottleDelay: ${settingsToCopy.resizeScrollThrottleDelay},\n`
+    settingsString += `  tabOffset: ${settingsToCopy.tabOffset},\n`
+    settingsString += `  trajectoryPredictionTime: ${settingsToCopy.trajectoryPredictionTime},\n`
+    settingsString += "})"
+
+    navigator.clipboard
+      .writeText(settingsString)
+      .then(() => {
+        this.copySettingsButton!.innerHTML = DebuggerControlPanel.TICK_SVG_ICON
+        if (this.copyTimeoutId) {
+          clearTimeout(this.copyTimeoutId)
+        }
+        this.copyTimeoutId = setTimeout(() => {
+          if (this.copySettingsButton) {
+            this.copySettingsButton.innerHTML = DebuggerControlPanel.COPY_SVG_ICON
+          }
+          this.copyTimeoutId = null
+        }, 3000)
+      })
+      .catch((err) => {
+        console.error("Foresight Debugger: Could not copy settings to clipboard", err)
+      })
+  }
+
   private _setupEventListeners() {
     this.trajectoryEnabledCheckbox?.addEventListener("change", (e) => {
       this.foresightManagerInstance.alterGlobalSettings({
@@ -564,22 +652,28 @@ export class DebuggerControlPanel {
       })
     })
     this.historySizeSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value)
+      const value = parseInt((e.target as HTMLInputElement).value, 10)
       if (this.historyValueSpan) this.historyValueSpan.textContent = `${value} points`
-      this.foresightManagerInstance.alterGlobalSettings({ positionHistorySize: value })
+      this.foresightManagerInstance.alterGlobalSettings({
+        positionHistorySize: value,
+      })
     })
     this.predictionTimeSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value)
+      const value = parseInt((e.target as HTMLInputElement).value, 10)
       if (this.predictionValueSpan) this.predictionValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({ trajectoryPredictionTime: value })
+      this.foresightManagerInstance.alterGlobalSettings({
+        trajectoryPredictionTime: value,
+      })
     })
     this.throttleDelaySlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value)
+      const value = parseInt((e.target as HTMLInputElement).value, 10)
       if (this.throttleValueSpan) this.throttleValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({ resizeScrollThrottleDelay: value })
+      this.foresightManagerInstance.alterGlobalSettings({
+        resizeScrollThrottleDelay: value,
+      })
     })
     this.tabOffsetSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value)
+      const value = parseInt((e.target as HTMLInputElement).value, 10)
       if (this.tabOffsetValueSpan) this.tabOffsetValueSpan.textContent = `${value} tabs`
       this.foresightManagerInstance.alterGlobalSettings({ tabOffset: value })
     })
@@ -589,11 +683,13 @@ export class DebuggerControlPanel {
       this._applyMinimizedStateVisuals()
     })
 
+    this.copySettingsButton?.addEventListener("click", this._handleCopySettings.bind(this))
+
     const setupSectionToggle = (
       header: HTMLElement | null,
       button: HTMLButtonElement | null,
-      isMinimizedFlagName: // Explicit union of known boolean keys
-      | "isMouseSettingsMinimized"
+      isMinimizedFlagName:
+        | "isMouseSettingsMinimized"
         | "isKeyboardSettingsMinimized"
         | "isGeneralSettingsMinimized"
         | "isElementsListMinimized"
@@ -692,7 +788,7 @@ export class DebuggerControlPanel {
       this.elementsListSectionContent,
       this.elementsListMinimizeButton,
       this.isElementsListMinimized,
-      "" // Reverts to CSS default (e.g., block for .jsforesight-element-list)
+      ""
     )
   }
 
@@ -770,6 +866,12 @@ export class DebuggerControlPanel {
   public cleanup() {
     this.controlsContainer?.remove()
     this.controlPanelStyleElement?.remove()
+
+    if (this.copyTimeoutId) {
+      clearTimeout(this.copyTimeoutId)
+      this.copyTimeoutId = null
+    }
+
     this.controlsContainer = null
     this.elementListItemsContainer = null
     this.controlPanelStyleElement = null
@@ -800,5 +902,6 @@ export class DebuggerControlPanel {
     this.throttleValueSpan = null
     this.tabOffsetSlider = null
     this.tabOffsetValueSpan = null
+    this.copySettingsButton = null
   }
 }

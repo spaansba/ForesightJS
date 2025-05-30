@@ -213,6 +213,11 @@ export class ForesightManager {
       settingsActuallyChanged = true
     }
 
+    if (props?.tabOffset !== undefined && this.globalSettings.tabOffset !== props.tabOffset) {
+      this.globalSettings.tabOffset = props.tabOffset
+      settingsActuallyChanged = true
+    }
+
     if (
       props?.enableMousePrediction !== undefined &&
       this.globalSettings.enableMousePrediction !== props.enableMousePrediction

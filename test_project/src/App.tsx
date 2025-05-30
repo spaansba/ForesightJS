@@ -11,10 +11,9 @@ ForesightManager.initialize({
   enableMousePrediction: true,
   enableTabPrediction: true,
   positionHistorySize: 8,
-  resizeScrollThrottleDelay: 8,
+  resizeScrollThrottleDelay: 50,
   tabOffset: 4,
-  trajectoryPredictionTime: 10,
-  defaultHitSlop: { top: 10, right: 10, left: 10, bottom: 10 },
+  trajectoryPredictionTime: 80,
 })
 
 function App() {
