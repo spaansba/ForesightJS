@@ -640,7 +640,6 @@ export class ForesightManager {
     elementsToPredict.forEach((element) => {
       const registeredElement = this.elements.get(element)
       if (registeredElement) {
-        // Double-check it's still registered
         registeredElement.callback()
         if (registeredElement.unregisterOnCallback) {
           this.unregister(element)
