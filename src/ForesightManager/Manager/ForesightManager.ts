@@ -155,30 +155,30 @@ export class ForesightManager {
 
   private unregister(element: ForesightElement) {
     const isRegistered = this.elements.has(element)
-    if (isRegistered) {
-      const foresightElementData = this.elements.get(element)
+    if (!isRegistered) {
+      // The element is already unregistered by something else (e.g. after hitting callback)
+      return
+    }
+    const foresightElementData = this.elements.get(element)
 
-      // Clear any pending trajectory expiration timeout
-      if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-        clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-      }
+    // Clear any pending trajectory expiration timeout
+    if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
 
-      if (this.elementResizeObserver) {
-        this.elementResizeObserver.unobserve(element)
-      }
+    if (this.elementResizeObserver) {
+      this.elementResizeObserver.unobserve(element)
+    }
 
-      this.elements.delete(element)
+    this.elements.delete(element)
 
-      if (this.debugger) {
-        this.debugger.removeLinkOverlay(element)
-        this.debugger.refreshDisplayedElements()
-      }
+    if (this.debugger) {
+      this.debugger.removeLinkOverlay(element)
+      this.debugger.refreshDisplayedElements()
+    }
 
-      if (this.elements.size === 0 && this.isSetup) {
-        this.removeGlobalListeners()
-      }
-    } else {
-      console.warn("Attempted to unregister element not found:", element)
+    if (this.elements.size === 0 && this.isSetup) {
+      this.removeGlobalListeners()
     }
   }
 
@@ -512,7 +512,6 @@ export class ForesightManager {
     if (elementsToUnregister.length > 0) {
       elementsToUnregister.forEach((element) => {
         if (this.elements.has(element)) {
-          const elementName = this.elements.get(element)?.name || "Unnamed"
           this.unregister(element) // unregister will clear its own timeout
         }
       })
@@ -569,8 +568,8 @@ export class ForesightManager {
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
     let structuralChangeDetected = false
     for (const mutation of mutationsList) {
+      console.log("now")
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        console.log("now")
         const currentElements = Array.from(this.elements.keys())
         for (const element of currentElements) {
           if (!element.isConnected) {

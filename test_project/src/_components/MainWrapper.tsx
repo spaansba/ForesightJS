@@ -39,7 +39,7 @@ export const Main = () => {
           Remove: {shouldBeRemoved.toString()}
         </button>
       </div>
-      <div className="flex gap-20 flex-row mt-50 justify-center items-center">
+      <div className="flex gap-20 flex-wrap mt-50 justify-center items-center">
         <ForesightButtonVisibility isVisible={isVisible} />
         <ForesightButtonResizeable isResized={isResized} />
         <ForesightButtonRemoveable shouldBeRemoved={shouldBeRemoved} />
