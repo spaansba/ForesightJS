@@ -36,6 +36,10 @@ export class ForesightDebugger {
 
   // Make the constructor private
   private constructor(intentManager: ForesightManager) {
+    // Remove any stale debuggers
+    const oldDebuggers = document.querySelectorAll("#jsforesight-debugger-shadow-host")
+    oldDebuggers.forEach((element) => element.remove())
+
     this.foresightManagerInstance = intentManager
     // The control panel also depends on the debugger, so initialize it here
     // It will need the shadow root later in the initialize method
@@ -269,7 +273,6 @@ export class ForesightDebugger {
 
   public cleanup() {
     this.controlPanel?.cleanup()
-
     this.shadowHost?.remove()
     this.shadowHost = null
     this.shadowRoot = null

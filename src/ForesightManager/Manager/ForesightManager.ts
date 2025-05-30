@@ -68,7 +68,6 @@ export class ForesightManager {
   private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   private domObserver: MutationObserver | null = null
-  private lastDomMutationRectsUpdateTimestamp: number = 0
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   private elementResizeObserver: ResizeObserver | null = null
