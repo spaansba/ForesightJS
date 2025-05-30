@@ -19,6 +19,7 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
+
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -71,6 +72,9 @@ export class ForesightManager {
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   private elementResizeObserver: ResizeObserver | null = null
+
+  // Track the last keydown event to determine if focus change was due to Tab
+  private lastKeyDown: KeyboardEvent | null = null
 
   private constructor() {}
 
@@ -216,7 +220,7 @@ export class ForesightManager {
       if (this.globalSettings.enableMousePrediction) {
         this.predictedPoint = predictNextMousePosition(
           this.currentPoint,
-          this.positions,
+          this.positions, // History before the currentPoint was added
           this.globalSettings.positionHistorySize,
           this.globalSettings.trajectoryPredictionTime
         )
@@ -584,36 +588,62 @@ export class ForesightManager {
     }
   }
 
-  private handleKeyUp = (e: KeyboardEvent) => {
-    if (e.key !== "Tab" || !this.globalSettings.enableTabPrediction) {
+  // We store the last key for the FocusIn event, meaning we know if the user is tabbing around the page.
+  // We dont use handleKeyDown for the full event because of 2 main reasons:
+  // 1: handleKeyDown e.target returns the target on which the keydown is pressed (meaning we dont know which target got the focus)
+  // 2: handleKeyUp does return the correct e.target however when holding tab the event doesnt repeat (handleKeyDown does)
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Tab") {
+      this.lastKeyDown = e
+    } else {
+      this.lastKeyDown = null
+    }
+  }
+
+  private handleFocusIn = (e: FocusEvent) => {
+    if (!this.lastKeyDown || !this.globalSettings.enableTabPrediction) {
       return
     }
-
-    //If user is shift tabbing (tabbing in reverse), make the tabOffset negative
-    const tabOffset = e.shiftKey ? -this.globalSettings.tabOffset : this.globalSettings.tabOffset
-    const currentElement = e.target
-    if (!(currentElement instanceof HTMLElement)) {
+    const targetElement = e.target
+    if (!(targetElement instanceof HTMLElement)) {
       return
     }
 
     const tabbableElements = tabbable(document.documentElement)
-    const currentIndex = tabbableElements.findIndex((element) => element === currentElement)
-    const targetIndex = currentIndex + tabOffset
+    const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
 
-    this.elements.forEach((registeredElement, key) => {
-      const elementIndex = tabbableElements.findIndex((element) => element === key)
+    // Determine the range of elements to check based on the tab direction and offset
+    const tabOffset = this.lastKeyDown.shiftKey
+      ? -this.globalSettings.tabOffset
+      : this.globalSettings.tabOffset
 
-      // Check if the elementIndex is inbetween the currentIndex and targetIndex
-      // e.g elementIndex = 4, targetIndex = 6. We check for 4,5,6
-      const isInRange =
+    // Clear the lastKeyDown as we've processed this focus event
+    this.lastKeyDown = null
+    const elementsToPredict: ForesightElement[] = []
+
+    // Iterate through the tabbable elements to find those within the prediction range
+    for (let i = 0; i < tabbableElements.length; i++) {
+      const element = tabbableElements[i]
+
+      // Check if the current element is within the range defined by the current focus and the tabOffset
+      // The range includes the element that just received focus (at currentIndex)
+      let isInRange =
         tabOffset > 0
-          ? elementIndex >= currentIndex && elementIndex <= targetIndex
-          : elementIndex <= currentIndex && elementIndex >= targetIndex
+          ? i >= currentIndex && i <= currentIndex + tabOffset
+          : i <= currentIndex && i >= currentIndex + tabOffset
 
-      if (isInRange) {
+      if (isInRange && this.elements.has(element as ForesightElement)) {
+        elementsToPredict.push(element as ForesightElement)
+      }
+    }
+
+    elementsToPredict.forEach((element) => {
+      const registeredElement = this.elements.get(element)
+      if (registeredElement) {
+        // Double-check it's still registered
         registeredElement.callback()
         if (registeredElement.unregisterOnCallback) {
-          this.unregister(key)
+          this.unregister(element)
         }
       }
     })
@@ -624,7 +654,10 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-    window.addEventListener("keyup", this.handleKeyUp)
+    // Add keydown listener to track Tab presses
+    document.addEventListener("keydown", this.handleKeyDown)
+    // Add focusin listener to react to focus changes
+    document.addEventListener("focusin", this.handleFocusIn)
 
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
@@ -647,7 +680,8 @@ export class ForesightManager {
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
-    window.removeEventListener("keyup", this.handleKeyUp)
+    document.removeEventListener("keydown", this.handleKeyDown)
+    document.removeEventListener("focusin", this.handleFocusIn)
 
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)

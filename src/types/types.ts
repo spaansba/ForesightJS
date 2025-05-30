@@ -114,6 +114,8 @@ type BaseForesightManagerProps = {
   enableMousePrediction: boolean
 
   enableTabPrediction: boolean
+
+  // set it to 0 to act as onhover
   tabOffset: number
 
   /**
