@@ -26,7 +26,7 @@ export class ForesightDebugger {
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
-  private debugStyleElement: HTMLStyleElement | null = null
+  private debuggerStyleElement: HTMLStyleElement | null = null // Renamed for clarity
 
   private controlPanel: DebuggerControlPanel | null = null
   private lastElementData: Map<
@@ -90,9 +90,8 @@ export class ForesightDebugger {
     document.body.appendChild(this.shadowHost)
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
-    this.debugStyleElement = document.createElement("style")
-    // ... (style content remains the same) ...
-    this.debugStyleElement.textContent = `
+    this.debuggerStyleElement = document.createElement("style")
+    this.debuggerStyleElement.textContent = `
       #jsforesight-debug-container { /* For on-page overlays */
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 9999;
@@ -134,110 +133,8 @@ export class ForesightDebugger {
         white-space: nowrap;
         pointer-events: none;
       }
-      /* Styles for #jsforesight-debug-controls and its children are still needed here */
-      #jsforesight-debug-controls {
-        position: fixed; bottom: 10px; right: 10px;
-        background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
-        border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
-        z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
-        min-width: 300px; max-width: 350px;
-      }
-      .jsforesight-debugger-title-container {
-        display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
-      }
-      .jsforesight-minimize-button{
-        background: none; border: none; color: white;
-        font-size: 22px; cursor: pointer; padding: 0;
-        position: absolute; top: 10px; left: 15px;
-      }
-      .jsforesight-debugger-title-container h3 { margin: 0; font-size: 15px; }
-      #jsforesight-debug-controls label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-      #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
-      #jsforesight-debug-controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
-      #jsforesight-debug-controls .control-row { display: flex; align-items: center; justify-content: space-between; }
-      #jsforesight-debug-controls .control-row label { flex-basis: auto; }
-      #jsforesight-debug-controls .control-row span:not(.jsforesight-info-icon) { min-width: 30px; text-align: right; }
-      .jsforesight-info-icon {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 16px; height: 16px; border-radius: 50%;
-        background-color: #555; color: white;
-        font-size: 10px; font-style: italic; font-weight: bold;
-        font-family: 'Georgia', serif;
-        cursor: help; user-select: none;
-        flex-shrink: 0;
-      }
-      .jsforesight-debugger-section {
-        display: flex; flex-direction: column; gap: 6px;
-        border-top: 1px solid #444;
-      }
-      .jsforesight-debugger-section h4 {
-        margin: 5px 0 2px 0;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      .jsforesight-element-list {
-        max-height: 150px;
-        overflow-y: auto;
-        background-color: rgba(20, 20, 20, 0.5);
-        border-radius: 3px;
-        padding: 5px;
-        font-size: 12px;
-      }
-      .jsforesight-element-list-item {
-        padding: 4px 6px;
-        margin-bottom: 3px;
-        border-radius: 2px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background-color: rgba(50,50,50,0.7);
-        transition: background-color 0.2s ease;
-      }
-      .jsforesight-element-list-item:last-child {
-        margin-bottom: 0;
-      }
-      .jsforesight-element-list-item .status-indicator {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background-color: #777;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8px;
-      }
-      .jsforesight-element-list-item.hovering .status-indicator {
-        background-color: oklch(83.7% 0.128 66.29 / 0.7);
-      }
-      .jsforesight-element-list-item.trajectory-hit .status-indicator {
-        background-color: oklch(89.7% 0.196 126.665 / 0.7);
-      }
-      .jsforesight-element-list-item.hovering.trajectory-hit .status-indicator {
-        background: linear-gradient(45deg, oklch(89.7% 0.196 126.665 / 0.7) 50%, oklch(83.7% 0.128 66.29 / 0.7) 50%);
-      }
-      .jsforesight-element-list-item .element-name {
-        flex-grow: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .jsforesight-element-list-item .element-details {
-        font-size: 10px;
-        color: #ccc;
-        flex-shrink: 0;
-      }
-      .jsforesight-element-list-item .hit-behavior {
-        font-size: 10px;
-        color: #b0b0b0;
-        margin-right: 5px;
-        padding: 1px 3px;
-        border-radius: 2px;
-        background-color: rgba(0,0,0,0.2);
-        flex-shrink: 0;
-      }
     `
-    this.shadowRoot.appendChild(this.debugStyleElement)
+    this.shadowRoot.appendChild(this.debuggerStyleElement)
 
     this.debugContainer = document.createElement("div")
     this.debugContainer.id = "jsforesight-debug-container"
@@ -282,7 +179,7 @@ export class ForesightDebugger {
     this.lastElementData.clear()
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
-    this.debugStyleElement = null
+    this.debuggerStyleElement = null
 
     // Clear the static instance reference on cleanup
     ForesightDebugger.debuggerInstance = undefined as any // Use `any` to allow setting to undefined

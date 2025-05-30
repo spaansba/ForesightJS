@@ -14,6 +14,7 @@ export class DebuggerControlPanel {
   private elementListContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
+  private controlPanelStyleElement: HTMLStyleElement | null = null // Added for panel-specific styles
 
   // References to input elements for easy state updates
   private trajectoryEnabledCheckbox: HTMLInputElement | null = null
@@ -49,7 +50,12 @@ export class DebuggerControlPanel {
       this.isMinimized = true
     }
 
-    if (this.controlsContainer) {
+    if (this.controlsContainer && this.shadowRoot) {
+      // Append the control panel's styles first
+      this.controlPanelStyleElement = document.createElement("style")
+      this.controlPanelStyleElement.textContent = this._getStyles()
+      this.shadowRoot.appendChild(this.controlPanelStyleElement)
+
       this.shadowRoot.appendChild(this.controlsContainer)
       this._queryDOMElements()
       this._setupEventListeners()
@@ -136,6 +142,112 @@ export class DebuggerControlPanel {
     `
 
     this.controlsContainer.innerHTML = controlsHTML
+  }
+
+  private _getStyles(): string {
+    return `
+      #jsforesight-debug-controls {
+        position: fixed; bottom: 10px; right: 10px;
+        background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
+        border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
+        z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
+        min-width: 300px; max-width: 350px;
+      }
+      .jsforesight-debugger-title-container {
+        display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;
+      }
+      .jsforesight-minimize-button{
+        background: none; border: none; color: white;
+        font-size: 22px; cursor: pointer; padding: 0;
+        position: absolute; top: 10px; left: 15px;
+      }
+      .jsforesight-debugger-title-container h3 { margin: 0; font-size: 15px; }
+      #jsforesight-debug-controls label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+      #jsforesight-debug-controls input[type="range"] { flex-grow: 1; margin: 0 5px; cursor: pointer;}
+      #jsforesight-debug-controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
+      #jsforesight-debug-controls .control-row { display: flex; align-items: center; justify-content: space-between; }
+      #jsforesight-debug-controls .control-row label { flex-basis: auto; }
+      #jsforesight-debug-controls .control-row span:not(.jsforesight-info-icon) { min-width: 30px; text-align: right; }
+      .jsforesight-info-icon {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 16px; height: 16px; border-radius: 50%;
+        background-color: #555; color: white;
+        font-size: 10px; font-style: italic; font-weight: bold;
+        font-family: 'Georgia', serif;
+        cursor: help; user-select: none;
+        flex-shrink: 0;
+      }
+      .jsforesight-debugger-section {
+        display: flex; flex-direction: column; gap: 6px;
+        border-top: 1px solid #444;
+      }
+      .jsforesight-debugger-section h4 {
+        margin: 5px 0 2px 0;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .jsforesight-element-list {
+        max-height: 150px;
+        overflow-y: auto;
+        background-color: rgba(20, 20, 20, 0.5);
+        border-radius: 3px;
+        padding: 5px;
+        font-size: 12px;
+      }
+      .jsforesight-element-list-item {
+        padding: 4px 6px;
+        margin-bottom: 3px;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background-color: rgba(50,50,50,0.7);
+        transition: background-color 0.2s ease;
+      }
+      .jsforesight-element-list-item:last-child {
+        margin-bottom: 0;
+      }
+      .jsforesight-element-list-item .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #777;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+      }
+      .jsforesight-element-list-item.hovering .status-indicator {
+        background-color: oklch(83.7% 0.128 66.29 / 0.7);
+      }
+      .jsforesight-element-list-item.trajectory-hit .status-indicator {
+        background-color: oklch(89.7% 0.196 126.665 / 0.7);
+      }
+      .jsforesight-element-list-item.hovering.trajectory-hit .status-indicator {
+        background: linear-gradient(45deg, oklch(89.7% 0.196 126.665 / 0.7) 50%, oklch(83.7% 0.128 66.29 / 0.7) 50%);
+      }
+      .jsforesight-element-list-item .element-name {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .jsforesight-element-list-item .element-details {
+        font-size: 10px;
+        color: #ccc;
+        flex-shrink: 0;
+      }
+      .jsforesight-element-list-item .hit-behavior {
+        font-size: 10px;
+        color: #b0b0b0;
+        margin-right: 5px;
+        padding: 1px 3px;
+        border-radius: 2px;
+        background-color: rgba(0,0,0,0.2);
+        flex-shrink: 0;
+      }
+    `
   }
 
   private _queryDOMElements() {
@@ -322,6 +434,8 @@ export class DebuggerControlPanel {
     this.controlsContainer?.remove()
     this.controlsContainer = null
     this.elementListContainer = null
+    this.controlPanelStyleElement?.remove()
+    this.controlPanelStyleElement = null
 
     this.elementCountSpan = null
     this.elementListItems.clear()
