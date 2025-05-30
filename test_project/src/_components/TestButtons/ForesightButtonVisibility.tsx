@@ -1,19 +1,19 @@
 import BaseForesightButton from "./BaseForesightButton"
 
-type ForesightButtonToggelableProps = {
+type ForesightButtonVisibilityProps = {
   isVisible: boolean
 }
 
-function ForesightButtonToggelable({ isVisible }: ForesightButtonToggelableProps) {
+function ForesightButtonVisibility({ isVisible }: ForesightButtonVisibilityProps) {
   return (
     <div className={`${isVisible ? "block" : "hidden"} bg-amber-200 size-40`}>
       <BaseForesightButton
         registerOptions={{
           callback: () => {
-            console.log("toggelable")
+            console.log("visibility")
           },
           hitSlop: 0,
-          name: "toggleable",
+          name: "visibility",
           unregisterOnCallback: true,
         }}
       />
@@ -21,4 +21,4 @@ function ForesightButtonToggelable({ isVisible }: ForesightButtonToggelableProps
   )
 }
 
-export default ForesightButtonToggelable
+export default ForesightButtonVisibility

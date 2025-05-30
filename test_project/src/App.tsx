@@ -7,6 +7,7 @@ ForesightManager.initialize({
   debuggerSettings: {
     isControlPanelDefaultMinimized: false,
   },
+  enableTabPrediction: false,
 })
 
 function App() {

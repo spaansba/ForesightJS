@@ -1,12 +1,14 @@
 import { useState } from "react"
 import ForesightButtonRegular from "./TestButtons/ForesightButtonRegular"
 import ForesightButtonResizeable from "./TestButtons/ForesightButtonResizeable"
-import ForesightButtonToggelable from "./TestButtons/ForesightButtonToggelable"
 import FakeButton from "./TestButtons/FakeButton"
+import ForesightButtonVisibility from "./TestButtons/ForesightButtonVisibility"
+import ForesightButtonRemoveable from "./TestButtons/ForesightButtonRemoveable"
 
 export const Main = () => {
   const [isVisible, setIsVisible] = useState(true)
   const [isResized, setIsResized] = useState(false)
+  const [shouldBeRemoved, setShouldBeRemoved] = useState(false)
   return (
     <div className="p-5 font-sans">
       <div className="flex gap-4 flex-row">
@@ -17,23 +19,33 @@ export const Main = () => {
             setIsVisible(!isVisible)
           }}
           id="Visibility"
-          className="size-20 bg-amber-200"
+          className={`size-30 ${isVisible ? "bg-blue-400" : "bg-gray-400"}`}
         >
-          Toggle Visibility
+          Visibility: {isVisible.toString()}
         </button>
         <button
           onClick={() => {
             setIsResized(!isResized)
           }}
-          className="size-20 bg-amber-200"
+          className={`size-30 ${isResized ? "bg-blue-400" : "bg-gray-400"}`}
           id="Resize"
         >
-          Toggle Resize
+          Resize: {isResized.toString()}
+        </button>
+        <button
+          onClick={() => {
+            setShouldBeRemoved(!shouldBeRemoved)
+          }}
+          className={`size-30 ${shouldBeRemoved ? "bg-blue-400" : "bg-gray-400"}`}
+          id="Remove"
+        >
+          Remove: {shouldBeRemoved.toString()}
         </button>
       </div>
-      <div className="flex gap-20 flex-row mt-4 justify-center items-center">
-        <ForesightButtonToggelable isVisible={isVisible} />
+      <div className="flex gap-20 flex-row mt-20 justify-center items-center">
+        <ForesightButtonVisibility isVisible={isVisible} />
         <ForesightButtonResizeable isResized={isResized} />
+        <ForesightButtonRemoveable shouldBeRemoved={shouldBeRemoved} />
         <ForesightButtonRegular />
       </div>
     </div>

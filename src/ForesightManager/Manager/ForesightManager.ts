@@ -20,7 +20,7 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
-import { getTabIndex, tabbable } from "tabbable"
+import { tabbable } from "tabbable"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -198,6 +198,14 @@ export class ForesightManager {
       this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
     ) {
       this.globalSettings.trajectoryPredictionTime = props.trajectoryPredictionTime
+      settingsActuallyChanged = true
+    }
+
+    if (
+      props?.enableTabPrediction !== undefined &&
+      this.globalSettings.enableTabPrediction !== props.enableTabPrediction
+    ) {
+      this.globalSettings.enableTabPrediction = props.enableTabPrediction
       settingsActuallyChanged = true
     }
 
@@ -562,6 +570,7 @@ export class ForesightManager {
     let structuralChangeDetected = false
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
+        console.log("now")
         const currentElements = Array.from(this.elements.keys())
         for (const element of currentElements) {
           if (!element.isConnected) {
@@ -603,9 +612,10 @@ export class ForesightManager {
   }
 
   private handleKeyUp = (e: KeyboardEvent) => {
-    if (e.key !== "Tab") {
+    if (e.key !== "Tab" || !this.globalSettings.enableTabPrediction) {
       return
     }
+    console.log(this.globalSettings.enableTabPrediction)
     const currentElement = e.target
     if (!(currentElement instanceof HTMLElement)) {
       return
@@ -630,13 +640,12 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
-    if (this.globalSettings.enableTabPrediction) {
-      window.addEventListener("keyup", this.handleKeyUp)
-    }
+    window.addEventListener("keyup", this.handleKeyUp)
 
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
     }
+
     this.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
