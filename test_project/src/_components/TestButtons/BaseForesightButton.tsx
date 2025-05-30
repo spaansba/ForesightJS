@@ -25,7 +25,11 @@ function ForesightButton({ registerOptions }: ForesightButtonProps) {
   }, [buttonRef, registerOptions])
 
   return (
-    <button ref={buttonRef} className="flex justify-center items-center h-full w-full">
+    <button
+      ref={buttonRef}
+      id={registerOptions.name}
+      className="flex justify-center items-center h-full w-full"
+    >
       <span>{registerOptions.name}</span>
     </button>
   )

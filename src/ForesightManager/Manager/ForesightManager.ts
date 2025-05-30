@@ -1,12 +1,12 @@
+import { tabbable } from "tabbable"
 import type {
   ForesightElement,
   ForesightElementData,
-  ForesightRegisterResult,
   ForesightManagerProps,
   ForesightRegisterOptions,
+  ForesightRegisterResult,
   MousePosition,
   Point,
-  Rect,
   UpdateForsightManagerProps,
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
@@ -56,6 +56,8 @@ export class ForesightManager {
     debuggerSettings: {
       isControlPanelDefaultMinimized: false,
     },
+    enableTabPrediction: true,
+    tabOffset: 2,
   }
 
   private positions: MousePosition[] = []
@@ -70,6 +72,9 @@ export class ForesightManager {
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   private elementResizeObserver: ResizeObserver | null = null
+
+  // Track the last keydown event to determine if focus change was due to Tab
+  private lastKeyDown: KeyboardEvent | null = null
 
   private constructor() {}
 
@@ -152,30 +157,30 @@ export class ForesightManager {
 
   private unregister(element: ForesightElement) {
     const isRegistered = this.elements.has(element)
-    if (isRegistered) {
-      const foresightElementData = this.elements.get(element)
+    if (!isRegistered) {
+      // The element is already unregistered by something else (e.g. after hitting callback)
+      return
+    }
+    const foresightElementData = this.elements.get(element)
 
-      // Clear any pending trajectory expiration timeout
-      if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-        clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-      }
+    // Clear any pending trajectory expiration timeout
+    if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
 
-      if (this.elementResizeObserver) {
-        this.elementResizeObserver.unobserve(element)
-      }
+    if (this.elementResizeObserver) {
+      this.elementResizeObserver.unobserve(element)
+    }
 
-      this.elements.delete(element)
+    this.elements.delete(element)
 
-      if (this.debugger) {
-        this.debugger.removeLinkOverlay(element)
-        this.debugger.refreshDisplayedElements()
-      }
+    if (this.debugger) {
+      this.debugger.removeLinkOverlay(element)
+      this.debugger.refreshDisplayedElements()
+    }
 
-      if (this.elements.size === 0 && this.isSetup) {
-        this.removeGlobalListeners()
-      }
-    } else {
-      console.warn("Attempted to unregister element not found:", element)
+    if (this.elements.size === 0 && this.isSetup) {
+      this.removeGlobalListeners()
     }
   }
 
@@ -199,6 +204,14 @@ export class ForesightManager {
     }
 
     if (
+      props?.enableTabPrediction !== undefined &&
+      this.globalSettings.enableTabPrediction !== props.enableTabPrediction
+    ) {
+      this.globalSettings.enableTabPrediction = props.enableTabPrediction
+      settingsActuallyChanged = true
+    }
+
+    if (
       props?.enableMousePrediction !== undefined &&
       this.globalSettings.enableMousePrediction !== props.enableMousePrediction
     ) {
@@ -207,7 +220,7 @@ export class ForesightManager {
       if (this.globalSettings.enableMousePrediction) {
         this.predictedPoint = predictNextMousePosition(
           this.currentPoint,
-          this.positions,
+          this.positions, // History before the currentPoint was added
           this.globalSettings.positionHistorySize,
           this.globalSettings.trajectoryPredictionTime
         )
@@ -303,7 +316,7 @@ export class ForesightManager {
       )
     } else {
       this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals(this.elements)
+      this.debugger.updateAllLinkVisuals()
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
@@ -501,7 +514,6 @@ export class ForesightManager {
     if (elementsToUnregister.length > 0) {
       elementsToUnregister.forEach((element) => {
         if (this.elements.has(element)) {
-          const elementName = this.elements.get(element)?.name || "Unnamed"
           this.unregister(element) // unregister will clear its own timeout
         }
       })
@@ -555,8 +567,13 @@ export class ForesightManager {
     }
   }
 
+  /**
+   * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
+   *
+   * @param mutationsList - Array of MutationRecord objects describing the DOM changes
+   *
+   */
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
-    let structuralChangeDetected = false
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
         const currentElements = Array.from(this.elements.keys())
@@ -568,35 +585,68 @@ export class ForesightManager {
           }
         }
       }
-      if (
-        mutation.type === "childList" ||
-        (mutation.type === "attributes" &&
-          (mutation.attributeName === "style" || mutation.attributeName === "class"))
-      ) {
-        structuralChangeDetected = true
+    }
+  }
+
+  // We store the last key for the FocusIn event, meaning we know if the user is tabbing around the page.
+  // We dont use handleKeyDown for the full event because of 2 main reasons:
+  // 1: handleKeyDown e.target returns the target on which the keydown is pressed (meaning we dont know which target got the focus)
+  // 2: handleKeyUp does return the correct e.target however when holding tab the event doesnt repeat (handleKeyDown does)
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Tab") {
+      this.lastKeyDown = e
+    } else {
+      this.lastKeyDown = null
+    }
+  }
+
+  private handleFocusIn = (e: FocusEvent) => {
+    if (!this.lastKeyDown || !this.globalSettings.enableTabPrediction) {
+      return
+    }
+    const targetElement = e.target
+    if (!(targetElement instanceof HTMLElement)) {
+      return
+    }
+
+    const tabbableElements = tabbable(document.documentElement)
+    const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
+
+    // Determine the range of elements to check based on the tab direction and offset
+    const tabOffset = this.lastKeyDown.shiftKey
+      ? -this.globalSettings.tabOffset
+      : this.globalSettings.tabOffset
+
+    // Clear the lastKeyDown as we've processed this focus event
+    this.lastKeyDown = null
+    const elementsToPredict: ForesightElement[] = []
+
+    // Iterate through the tabbable elements to find those within the prediction range
+    for (let i = 0; i < tabbableElements.length; i++) {
+      const element = tabbableElements[i]
+
+      // Check if the current element is within the range defined by the current focus and the tabOffset
+      // The range includes the element that just received focus (at currentIndex)
+      let isInRange =
+        tabOffset > 0
+          ? i >= currentIndex && i <= currentIndex + tabOffset
+          : i <= currentIndex && i >= currentIndex + tabOffset
+
+      if (isInRange && this.elements.has(element as ForesightElement)) {
+        elementsToPredict.push(element as ForesightElement)
       }
     }
 
-    if (structuralChangeDetected && this.elements.size > 0) {
-      if (this.domMutationRectsUpdateTimeoutId) {
-        clearTimeout(this.domMutationRectsUpdateTimeoutId)
+    elementsToPredict.forEach((element) => {
+      const registeredElement = this.elements.get(element)
+      if (registeredElement) {
+        // Double-check it's still registered
+        registeredElement.callback()
+        if (registeredElement.unregisterOnCallback) {
+          this.unregister(element)
+        }
       }
-      const now = performance.now()
-      const delay = this.globalSettings.resizeScrollThrottleDelay
-      const timeSinceLastCall = now - this.lastDomMutationRectsUpdateTimestamp
-
-      if (timeSinceLastCall >= delay) {
-        this.updateAllRects()
-        this.lastDomMutationRectsUpdateTimestamp = now
-        this.domMutationRectsUpdateTimeoutId = null
-      } else {
-        this.domMutationRectsUpdateTimeoutId = setTimeout(() => {
-          this.updateAllRects()
-          this.lastDomMutationRectsUpdateTimestamp = performance.now()
-          this.domMutationRectsUpdateTimeoutId = null
-        }, delay - timeSinceLastCall)
-      }
-    }
+    })
   }
 
   private setupGlobalListeners() {
@@ -604,9 +654,15 @@ export class ForesightManager {
     document.addEventListener("mousemove", this.handleMouseMove)
     window.addEventListener("resize", this.handleResizeOrScroll)
     window.addEventListener("scroll", this.handleResizeOrScroll)
+    // Add keydown listener to track Tab presses
+    document.addEventListener("keydown", this.handleKeyDown)
+    // Add focusin listener to react to focus changes
+    document.addEventListener("focusin", this.handleFocusIn)
+
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
     }
+
     this.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -624,6 +680,8 @@ export class ForesightManager {
     document.removeEventListener("mousemove", this.handleMouseMove)
     window.removeEventListener("resize", this.handleResizeOrScroll)
     window.removeEventListener("scroll", this.handleResizeOrScroll)
+    document.removeEventListener("keydown", this.handleKeyDown)
+    document.removeEventListener("focusin", this.handleFocusIn)
 
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)

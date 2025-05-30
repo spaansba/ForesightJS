@@ -87,6 +87,10 @@ export type ForesightElementData = Required<
   trajectoryHitData: TrajectoryHitData
 }
 
+export type ForesightElementDataWithTabIndex = ForesightElementData & {
+  tabIndex: number
+}
+
 type BaseForesightManagerProps = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.
@@ -108,6 +112,11 @@ type BaseForesightManagerProps = {
    * @default true
    */
   enableMousePrediction: boolean
+
+  enableTabPrediction: boolean
+
+  // set it to 0 to act as onhover
+  tabOffset: number
 
   /**
    * Whether to show visual debugging information on the screen.

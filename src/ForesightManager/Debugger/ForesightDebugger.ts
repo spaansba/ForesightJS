@@ -235,12 +235,8 @@ export class ForesightDebugger {
     )
   }
 
-  // ... rest of the ForesightDebugger class ...
   public cleanup() {
     this.controlPanel?.cleanup()
-    // No need to re-assign this.controlPanel to null here, as a new one is made in constructor
-    // if ForesightDebugger is re-initialized. If only cleanup is called (e.g. debug off),
-    // then the instance might still be around but its DOM is gone.
 
     this.shadowHost?.remove()
     this.shadowHost = null
@@ -332,12 +328,10 @@ export class ForesightDebugger {
   public refreshDisplayedElements() {
     const currentManagerElements = new Set(this.foresightManagerInstance.elements.keys())
 
-    // Update or add overlays for currently registered elements
     this.foresightManagerInstance.elements.forEach((data, element) => {
-      this.createOrUpdateLinkOverlay(element, data) // This also triggers controlPanel.refreshElementList
+      this.createOrUpdateLinkOverlay(element, data)
     })
 
-    // Remove overlays for elements that are no longer in the manager
     const overlaysToRemove = Array.from(this.debugLinkOverlays.keys()).filter(
       (el) => !currentManagerElements.has(el)
     )
@@ -353,7 +347,7 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public updateAllLinkVisuals(links: Map<ForesightElement, ForesightElementData>) {
+  public updateAllLinkVisuals() {
     if (!this.shadowRoot || !this.debugContainer) return
     this.refreshDisplayedElements()
   }

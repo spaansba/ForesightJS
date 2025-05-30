@@ -40,16 +40,19 @@
   "author": "Bart Spaans",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^22.15.17",
-    "typescript": "^5.8.3",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.15.17",
     "rollup": "^4.40.1",
     "rollup-plugin-dts": "^6.2.1",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "tabbable": "^6.2.0"
   }
 }
