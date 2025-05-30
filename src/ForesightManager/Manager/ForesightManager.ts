@@ -591,8 +591,6 @@ export class ForesightManager {
 
     //If user is shift tabbing (tabbing in reverse), make the tabOffset negative
     const tabOffset = e.shiftKey ? -this.globalSettings.tabOffset : this.globalSettings.tabOffset
-
-    console.log(this.globalSettings.enableTabPrediction)
     const currentElement = e.target
     if (!(currentElement instanceof HTMLElement)) {
       return
@@ -600,10 +598,19 @@ export class ForesightManager {
 
     const tabbableElements = tabbable(document.documentElement)
     const currentIndex = tabbableElements.findIndex((element) => element === currentElement)
+    const targetIndex = currentIndex + tabOffset
 
     this.elements.forEach((registeredElement, key) => {
-      const index = tabbableElements.findIndex((element) => element === key)
-      if (index === currentIndex + tabOffset) {
+      const elementIndex = tabbableElements.findIndex((element) => element === key)
+
+      // Check if the elementIndex is inbetween the currentIndex and targetIndex
+      // e.g elementIndex = 4, targetIndex = 6. We check for 4,5,6
+      const isInRange =
+        tabOffset > 0
+          ? elementIndex >= currentIndex && elementIndex <= targetIndex
+          : elementIndex <= currentIndex && elementIndex >= targetIndex
+
+      if (isInRange) {
         registeredElement.callback()
         if (registeredElement.unregisterOnCallback) {
           this.unregister(key)
