@@ -1,14 +1,13 @@
+import { tabbable } from "tabbable"
 import type {
   ForesightElement,
   ForesightElementData,
-  ForesightRegisterResult,
   ForesightManagerProps,
   ForesightRegisterOptions,
+  ForesightRegisterResult,
   MousePosition,
   Point,
-  Rect,
   UpdateForsightManagerProps,
-  ForesightElementDataWithTabIndex,
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
@@ -20,7 +19,6 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
-import { tabbable } from "tabbable"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -565,10 +563,14 @@ export class ForesightManager {
     }
   }
 
+  /**
+   * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
+   *
+   * @param mutationsList - Array of MutationRecord objects describing the DOM changes
+   *
+   */
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
-    let structuralChangeDetected = false
     for (const mutation of mutationsList) {
-      console.log("now")
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
         const currentElements = Array.from(this.elements.keys())
         for (const element of currentElements) {
@@ -578,34 +580,6 @@ export class ForesightManager {
             }
           }
         }
-      }
-      if (
-        mutation.type === "childList" ||
-        (mutation.type === "attributes" &&
-          (mutation.attributeName === "style" || mutation.attributeName === "class"))
-      ) {
-        structuralChangeDetected = true
-      }
-    }
-
-    if (structuralChangeDetected && this.elements.size > 0) {
-      if (this.domMutationRectsUpdateTimeoutId) {
-        clearTimeout(this.domMutationRectsUpdateTimeoutId)
-      }
-      const now = performance.now()
-      const delay = this.globalSettings.resizeScrollThrottleDelay
-      const timeSinceLastCall = now - this.lastDomMutationRectsUpdateTimestamp
-
-      if (timeSinceLastCall >= delay) {
-        this.updateAllRects()
-        this.lastDomMutationRectsUpdateTimestamp = now
-        this.domMutationRectsUpdateTimeoutId = null
-      } else {
-        this.domMutationRectsUpdateTimeoutId = setTimeout(() => {
-          this.updateAllRects()
-          this.lastDomMutationRectsUpdateTimestamp = performance.now()
-          this.domMutationRectsUpdateTimeoutId = null
-        }, delay - timeSinceLastCall)
       }
     }
   }
