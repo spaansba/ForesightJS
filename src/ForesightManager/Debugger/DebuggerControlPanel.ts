@@ -333,11 +333,13 @@ export class DebuggerControlPanel {
       if (this.allSettingsSectionsContainer)
         this.allSettingsSectionsContainer.style.display = "none"
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = "none"
+      if (this.copySettingsButton) this.copySettingsButton.style.display = "none"
     } else {
       this.controlsContainer.classList.remove("minimized")
       this.containerMinimizeButton.textContent = "-"
       if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
+      if (this.copySettingsButton) this.copySettingsButton.style.display = ""
     }
   }
 
