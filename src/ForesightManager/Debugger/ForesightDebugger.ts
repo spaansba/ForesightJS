@@ -86,7 +86,7 @@ export class ForesightDebugger {
 
     this.shadowHost = document.createElement("div")
     this.shadowHost.id = "jsforesight-debugger-shadow-host"
-    this.shadowHost.style.pointerEvents = "none" // Debugger UI shouldn't interfere with page
+    this.shadowHost.style.pointerEvents = "none"
     document.body.appendChild(this.shadowHost)
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
