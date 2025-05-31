@@ -64,7 +64,6 @@ export class DebuggerControlPanel {
   public initialize(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
     this.shadowRoot = shadowRoot
     this.createDOM()
-    console.log(debuggerSettings)
     if (debuggerSettings.isControlPanelDefaultMinimized) {
       this.isContainerMinimized = true
     }

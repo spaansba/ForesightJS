@@ -6,6 +6,7 @@ import type {
   ForesightElement,
   ForesightManagerProps,
   Point,
+  Rect,
 } from "../../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 
@@ -27,6 +28,7 @@ export class ForesightDebugger {
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
   private debuggerStyleElement: HTMLStyleElement | null = null // Renamed for clarity
+  private debugCallbackIndicator: HTMLElement | null = null // Added for callback animation
 
   private controlPanel: DebuggerControlPanel | null = null
   private lastElementData: Map<
@@ -134,6 +136,30 @@ export class ForesightDebugger {
         white-space: nowrap;
         pointer-events: none;
       }
+      .jsforesight-callback-indicator {
+        position: absolute;
+        border: 4px solid oklch(60% 0.1 270); /* Example color */
+        border-radius: 5px;
+        box-sizing: border-box;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+        z-index: 10002;
+      }
+      .jsforesight-callback-indicator.animate {
+        animation: jsforesight-callback-pulse 0.6s ease-out forwards;
+      }
+
+      @keyframes jsforesight-callback-pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1.1);
+          opacity: 0;
+        }
+      }
     `
     this.shadowRoot.appendChild(this.debuggerStyleElement)
 
@@ -148,6 +174,10 @@ export class ForesightDebugger {
     this.debugTrajectoryLine = document.createElement("div")
     this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
     this.debugContainer.appendChild(this.debugTrajectoryLine)
+
+    this.debugCallbackIndicator = document.createElement("div")
+    this.debugCallbackIndicator.className = "jsforesight-callback-indicator"
+    this.debugContainer.appendChild(this.debugCallbackIndicator)
 
     // Initialize the control panel AND PASS THE SHADOW ROOT
     if (this.shadowRoot && this.controlPanel) {
@@ -177,6 +207,7 @@ export class ForesightDebugger {
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
     this.debuggerStyleElement = null
+    this.debugCallbackIndicator = null
 
     // Clear the static instance reference on cleanup
     ForesightDebugger.debuggerInstance = undefined as any // Use `any` to allow setting to undefined
@@ -236,7 +267,7 @@ export class ForesightDebugger {
       nameLabel.textContent = newData.name
       nameLabel.style.display = "block"
       nameLabel.style.left = `${rect.left}px`
-      nameLabel.style.top = `${rect.top - 22}px`
+      nameLabel.style.top = `${rect.top - 22}px` // Position above the element
     } else {
       nameLabel.style.display = "none"
     }
@@ -333,5 +364,25 @@ export class ForesightDebugger {
   // Provide a way for the Control Panel to get element data for its list
   public getAllElementData(): Map<ForesightElement, ForesightElementData> {
     return this.foresightManagerInstance.elements
+  }
+
+  public showCallbackPopup(whereToShow: Rect) {
+    if (!this.debugContainer || !this.shadowRoot || !this.debugCallbackIndicator) {
+      // Debugger not fully initialized or callback indicator not created, cannot show callback popup.
+      return
+    }
+
+    // Position and size the callback indicator
+    this.debugCallbackIndicator.style.left = `${whereToShow.left}px`
+    this.debugCallbackIndicator.style.top = `${whereToShow.top}px`
+    this.debugCallbackIndicator.style.width = `${whereToShow.right - whereToShow.left}px`
+    this.debugCallbackIndicator.style.height = `${whereToShow.bottom - whereToShow.top}px`
+
+    // Trigger the animation by adding and removing the class
+    this.debugCallbackIndicator.classList.remove("animate")
+    // Use a small timeout to ensure the class removal registers before adding it again
+    requestAnimationFrame(() => {
+      this.debugCallbackIndicator!.classList.add("animate")
+    })
   }
 }

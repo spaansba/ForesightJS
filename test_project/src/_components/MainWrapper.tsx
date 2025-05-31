@@ -4,6 +4,7 @@ import ForesightButtonResizeable from "./TestButtons/ForesightButtonResizeable"
 import ForesightButtonVisibility from "./TestButtons/ForesightButtonVisibility"
 import ForesightButtonRemoveable from "./TestButtons/ForesightButtonRemoveable"
 import { Link } from "react-router-dom"
+import ForesightButtonNoName from "./TestButtons/ForesightButtonNoName"
 
 export const Main = () => {
   const [isVisible, setIsVisible] = useState(true)
@@ -47,6 +48,7 @@ export const Main = () => {
         <ForesightButtonVisibility isVisible={isVisible} />
         <ForesightButtonResizeable isResized={isResized} />
         <ForesightButtonRemoveable shouldBeRemoved={shouldBeRemoved} />
+        <ForesightButtonNoName />
         <ForesightButtonRegular />
       </div>
     </div>

@@ -395,8 +395,6 @@ export class ForesightManager {
       elementsToUpdateInDebugger = []
     }
 
-    const elementsToUnregister: ForesightElement[] = []
-
     this.elements.forEach((currentData, element) => {
       if (!this.elements.has(element)) {
         return
@@ -431,7 +429,7 @@ export class ForesightManager {
         finalIsTrajectoryHit = true
         finalTrajectoryHitTime = performance.now()
         callbackFiredThisCycle = true
-        currentData.callback()
+        this.callCallback(currentData, element)
       }
 
       const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering
@@ -444,7 +442,7 @@ export class ForesightManager {
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
           callbackFiredThisCycle = true
-          currentData.callback()
+          this.callCallback(currentData, element)
         }
       }
 
@@ -453,10 +451,6 @@ export class ForesightManager {
       // If physically hovering, it overrides any "trajectory hit" state for expiration purposes
       // but the visual/logical state of isTrajectoryHit might persist if it happened first.
       // The main change is how the expiration timeout is handled.
-
-      if (callbackFiredThisCycle && currentData.unregisterOnCallback) {
-        elementsToUnregister.push(element)
-      }
 
       const coreStateActuallyChanged =
         finalIsHovering !== previousDataState.isHovering ||
@@ -527,14 +521,6 @@ export class ForesightManager {
         }
       }
     })
-
-    if (elementsToUnregister.length > 0) {
-      elementsToUnregister.forEach((element) => {
-        if (this.elements.has(element)) {
-          this.unregister(element) // unregister will clear its own timeout
-        }
-      })
-    }
 
     if (this.debugger) {
       elementsToUpdateInDebugger?.forEach((element) => {
@@ -655,14 +641,21 @@ export class ForesightManager {
     }
 
     elementsToPredict.forEach((element) => {
-      const registeredElement = this.elements.get(element)
-      if (registeredElement) {
-        registeredElement.callback()
-        if (registeredElement.unregisterOnCallback) {
-          this.unregister(element)
-        }
-      }
+      this.callCallback(this.elements.get(element), element)
     })
+  }
+
+  private callCallback(elementData: ForesightElementData | undefined, element: ForesightElement) {
+    if (elementData) {
+      elementData.callback()
+      if (this.debugger) {
+        this.debugger.showCallbackPopup(elementData.elementBounds.expandedRect)
+      }
+      // Do everything and then unregister. Always keep this at the end of the function
+      if (elementData.unregisterOnCallback) {
+        this.unregister(element)
+      }
+    }
   }
 
   private setupGlobalListeners() {
