@@ -151,11 +151,7 @@ export class ForesightDebugger {
 
     // Initialize the control panel AND PASS THE SHADOW ROOT
     if (this.shadowRoot && this.controlPanel) {
-      this.controlPanel.initialize(
-        this.shadowRoot,
-        currentSettings,
-        currentSettings.debuggerSettings
-      )
+      this.controlPanel.initialize(this.shadowRoot, currentSettings.debuggerSettings)
     }
 
     links.forEach((data, element) => {

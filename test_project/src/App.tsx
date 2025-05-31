@@ -12,8 +12,7 @@ ForesightManager.initialize({
   enableTabPrediction: true,
   positionHistorySize: 8,
   resizeScrollThrottleDelay: 50,
-  tabOffset: 4,
-  trajectoryPredictionTime: 80,
+  trajectoryPredictionTime: 90,
 })
 
 function App() {

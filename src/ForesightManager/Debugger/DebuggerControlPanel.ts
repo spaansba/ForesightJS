@@ -61,14 +61,10 @@ export class DebuggerControlPanel {
     this.foresightManagerInstance = manager
   }
 
-  public initialize(
-    shadowRoot: ShadowRoot,
-    initialSettings: ForesightManagerProps,
-    debuggerSettings: DebuggerSettings
-  ) {
+  public initialize(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
     this.shadowRoot = shadowRoot
     this.createDOM()
-
+    console.log(debuggerSettings)
     if (debuggerSettings.isControlPanelDefaultMinimized) {
       this.isContainerMinimized = true
     }
@@ -83,8 +79,7 @@ export class DebuggerControlPanel {
       this.queryDOMElements()
       this.originalSectionStates()
       this.setupEventListeners()
-      // this.updateControlsState(initialSettings)
-      // this.refreshElementList()
+      this.refreshElementList()
       this.applyMinimizedStateVisuals()
     }
   }
@@ -479,7 +474,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="history-size">
                 History Size
-                <span class="info-icon" title="Number of past mouse positions for velocity calculation. Higher values smooth predictions but add latency.">i</span>
+                <span class="info-icon" title="Number of past mouse positions to use for velocity calculation. Higher values smooth predictions but add latency.">i</span>
               </label>
               <input type="range" id="history-size" min="2" max="20">
               <span id="history-value"></span>
@@ -487,7 +482,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="prediction-time">
                 Prediction Time
-                <span class="info-icon" title="How far (ms) to project trajectory. Larger values detect intent sooner.">i</span>
+                <span class="info-icon" title="How many ms in the future to calculate the mouse trajectory. Larger values detect intent sooner.">i</span>
               </label>
               <input type="range" id="prediction-time" min="10" max="200" step="10">
               <span id="prediction-value"></span>
@@ -504,7 +499,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="tab-enabled">
                 Enable Tab Prediction
-                <span class="info-icon" title="Toggles tab prediction.">i</span>
+                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of tabs away from an registered element (works with reversed shift-tabs).">i</span>
               </label>
               <input type="checkbox" id="tab-enabled">
             </div>
