@@ -1,7 +1,7 @@
 import DebugButton from "../DebugButton"
 import MobileMessage from "../MobileMessage"
 import styles from "../styles.module.css"
-import CardsWrapper from "./Cards/CardsWrapper"
+import MouseCardsWrapper from "./Mouse/MouseCardsWrapper"
 function DemoWrapper() {
   return (
     <div className={styles.demoSection}>
@@ -18,7 +18,7 @@ function DemoWrapper() {
       </p>
 
       <div className={styles.comparisonContainer}>
-        <CardsWrapper />
+        <MouseCardsWrapper />
       </div>
     </div>
   )

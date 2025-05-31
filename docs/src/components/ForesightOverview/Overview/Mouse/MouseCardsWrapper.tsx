@@ -5,7 +5,7 @@ import { HoverCard } from "./HoverCard"
 import { RegularCard } from "./RegularCard"
 import ResetCardsButton from "./ResetCardsButton"
 
-function CardsWrapper() {
+function MouseCardsWrapper() {
   const [resetTrigger, setResetTrigger] = useState(0)
 
   const handleResetAll = () => {
@@ -26,4 +26,4 @@ function CardsWrapper() {
   )
 }
 
-export default CardsWrapper
+export default MouseCardsWrapper
