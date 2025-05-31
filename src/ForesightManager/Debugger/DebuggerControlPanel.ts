@@ -14,6 +14,9 @@ interface SectionStates {
   elements: boolean
 }
 
+const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
+const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private shadowRoot: ShadowRoot | null = null
@@ -60,8 +63,6 @@ export class DebuggerControlPanel {
 
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private static readonly COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
-  private static readonly TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
   constructor(manager: ForesightManager) {
     this.foresightManagerInstance = manager
@@ -84,6 +85,7 @@ export class DebuggerControlPanel {
     if (this.controlsContainer && this.shadowRoot) {
       this.controlPanelStyleElement = document.createElement("style")
       this.controlPanelStyleElement.textContent = this.getStyles()
+      this.controlPanelStyleElement.id = "debug-control-panel"
       this.shadowRoot.appendChild(this.controlPanelStyleElement)
 
       this.shadowRoot.appendChild(this.controlsContainer)
@@ -131,8 +133,7 @@ export class DebuggerControlPanel {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls"
 
-    // Updated HTML structure for the title container
-    let controlsHTML = `
+    this.controlsContainer.innerHTML = `
       <div class="jsforesight-debugger-title-container">
         <button class="jsforesight-minimize-button">-</button>
         <div class="jsforesight-title-group">
@@ -140,7 +141,7 @@ export class DebuggerControlPanel {
           <span class="jsforesight-info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
         </div>
         <button class="jsforesight-copy-settings-button" title="Copy current settings to clipboard">
-          ${DebuggerControlPanel.COPY_SVG_ICON}
+          ${COPY_SVG_ICON}
         </button>
       </div>
 
@@ -218,8 +219,7 @@ export class DebuggerControlPanel {
           </div>
         </div>
       </div>
-      `
-    controlsHTML += `
+
       <div class="jsforesight-debugger-section jsforesight-debugger-elements">
         <div class="jsforesight-debugger-section-header elements-list-header">
           <h3>Registered Elements (<span id="jsforesight-element-count">0</span>)</h3>
@@ -232,7 +232,6 @@ export class DebuggerControlPanel {
         </div>
       </div>
     `
-    this.controlsContainer.innerHTML = controlsHTML
   }
 
   private getStyles(): string {
@@ -612,13 +611,13 @@ export class DebuggerControlPanel {
     navigator.clipboard
       .writeText(settingsString)
       .then(() => {
-        this.copySettingsButton!.innerHTML = DebuggerControlPanel.TICK_SVG_ICON
+        this.copySettingsButton!.innerHTML = TICK_SVG_ICON
         if (this.copyTimeoutId) {
           clearTimeout(this.copyTimeoutId)
         }
         this.copyTimeoutId = setTimeout(() => {
           if (this.copySettingsButton) {
-            this.copySettingsButton.innerHTML = DebuggerControlPanel.COPY_SVG_ICON
+            this.copySettingsButton.innerHTML = COPY_SVG_ICON
           }
           this.copyTimeoutId = null
         }, 3000)

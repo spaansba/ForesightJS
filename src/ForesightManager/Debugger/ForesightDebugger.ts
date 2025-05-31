@@ -91,6 +91,7 @@ export class ForesightDebugger {
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
     this.debuggerStyleElement = document.createElement("style")
+    this.debuggerStyleElement.id = "debug-container"
     this.debuggerStyleElement.textContent = `
       #jsforesight-debug-container { /* For on-page overlays */
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
