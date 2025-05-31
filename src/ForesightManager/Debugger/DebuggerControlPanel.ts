@@ -73,30 +73,30 @@ export class DebuggerControlPanel {
     debuggerSettings: DebuggerSettings
   ) {
     this.shadowRoot = shadowRoot
-    this._createDOM()
+    this.createDOM()
 
     if (debuggerSettings.isControlPanelDefaultMinimized) {
       this.isMinimized = true
     }
 
-    this._loadSectionStatesFromSessionStorage()
+    this.loadSectionStatesFromSessionStorage()
 
     if (this.controlsContainer && this.shadowRoot) {
       this.controlPanelStyleElement = document.createElement("style")
-      this.controlPanelStyleElement.textContent = this._getStyles()
+      this.controlPanelStyleElement.textContent = this.getStyles()
       this.shadowRoot.appendChild(this.controlPanelStyleElement)
 
       this.shadowRoot.appendChild(this.controlsContainer)
-      this._queryDOMElements()
-      this._setupEventListeners()
+      this.queryDOMElements()
+      this.setupEventListeners()
       this.updateControlsState(initialSettings)
       this.refreshElementList()
-      this._applyMinimizedStateVisuals()
-      this._applySectionMinimizedStateVisuals()
+      this.applyMinimizedStateVisuals()
+      this.applySectionMinimizedStateVisuals()
     }
   }
 
-  private _loadSectionStatesFromSessionStorage() {
+  private loadSectionStatesFromSessionStorage() {
     const storedStatesRaw = sessionStorage.getItem(this.SESSION_STORAGE_KEY)
     let loadedStates: Partial<SectionStates> = {}
 
@@ -113,7 +113,7 @@ export class DebuggerControlPanel {
     this.isElementsListMinimized = loadedStates.elements ?? false
   }
 
-  private _saveSectionStatesToSessionStorage() {
+  private saveSectionStatesToSessionStorage() {
     const states: SectionStates = {
       mouse: this.isMouseSettingsMinimized,
       keyboard: this.isKeyboardSettingsMinimized,
@@ -127,7 +127,7 @@ export class DebuggerControlPanel {
     }
   }
 
-  private _createDOM() {
+  private createDOM() {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "jsforesight-debug-controls"
 
@@ -235,7 +235,7 @@ export class DebuggerControlPanel {
     this.controlsContainer.innerHTML = controlsHTML
   }
 
-  private _getStyles(): string {
+  private getStyles(): string {
     const elementItemHeight = 35 // px
     const elementListGap = 6 // px
     const elementListItemsContainerPadding = 6 // px
@@ -492,7 +492,7 @@ export class DebuggerControlPanel {
     `
   }
 
-  private _queryDOMElements() {
+  private queryDOMElements() {
     if (!this.controlsContainer) return
 
     this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector(
@@ -573,7 +573,7 @@ export class DebuggerControlPanel {
     }
   }
 
-  private _handleCopySettings() {
+  private handleCopySettings() {
     if (!this.copySettingsButton) return
 
     const enableMousePrediction = this.trajectoryEnabledCheckbox?.checked ?? false
@@ -628,7 +628,7 @@ export class DebuggerControlPanel {
       })
   }
 
-  private _setupEventListeners() {
+  private setupEventListeners() {
     this.trajectoryEnabledCheckbox?.addEventListener("change", (e) => {
       this.foresightManagerInstance.alterGlobalSettings({
         enableMousePrediction: (e.target as HTMLInputElement).checked,
@@ -668,10 +668,10 @@ export class DebuggerControlPanel {
 
     this.minimizeButton?.addEventListener("click", () => {
       this.isMinimized = !this.isMinimized
-      this._applyMinimizedStateVisuals()
+      this.applyMinimizedStateVisuals()
     })
 
-    this.copySettingsButton?.addEventListener("click", this._handleCopySettings.bind(this))
+    this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
 
     const setupSectionToggle = (
       header: HTMLElement | null,
@@ -684,8 +684,8 @@ export class DebuggerControlPanel {
     ) => {
       const toggleAction = () => {
         this[isMinimizedFlagName] = !this[isMinimizedFlagName]
-        this._applySectionMinimizedStateVisuals()
-        this._saveSectionStatesToSessionStorage()
+        this.applySectionMinimizedStateVisuals()
+        this.saveSectionStatesToSessionStorage()
       }
       button?.addEventListener("click", (e) => {
         e.stopPropagation()
@@ -719,7 +719,7 @@ export class DebuggerControlPanel {
     )
   }
 
-  private _applyMinimizedStateVisuals() {
+  private applyMinimizedStateVisuals() {
     if (!this.controlsContainer || !this.minimizeButton) return
 
     if (this.isMinimized) {
@@ -733,11 +733,11 @@ export class DebuggerControlPanel {
       this.minimizeButton.textContent = "-"
       if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
-      this._applySectionMinimizedStateVisuals()
+      this.applySectionMinimizedStateVisuals()
     }
   }
 
-  private _applySectionMinimizedStateVisuals() {
+  private applySectionMinimizedStateVisuals() {
     if (this.isMinimized) return
 
     const updateSectionDisplay = (
@@ -825,14 +825,14 @@ export class DebuggerControlPanel {
     elementsMap.forEach((data, element) => {
       const listItem = document.createElement("div")
       listItem.className = "jsforesight-element-list-item"
-      this._updateListItemContent(listItem, data)
+      this.updateListItemContent(listItem, data)
 
       this.elementListItemsContainer!.appendChild(listItem)
       this.elementListItems.set(element, listItem)
     })
   }
 
-  private _updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
+  private updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
     listItem.classList.toggle("hovering", data.isHovering)
     listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
 
