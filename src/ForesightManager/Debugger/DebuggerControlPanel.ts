@@ -17,6 +17,12 @@ interface SectionStates {
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
+type SettingSection = {
+  Header: HTMLDivElement | null
+  Content: HTMLDivElement | null
+  MinimizeButton: HTMLButtonElement | null
+}
+
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private shadowRoot: ShadowRoot | null = null
@@ -37,23 +43,10 @@ export class DebuggerControlPanel {
   private tabOffsetSlider: HTMLInputElement | null = null
   private tabOffsetValueSpan: HTMLSpanElement | null = null
 
-  private minimizeButton: HTMLButtonElement | null = null
+  private containerMinimizeButton: HTMLButtonElement | null = null
   private allSettingsSectionsContainer: HTMLElement | null = null
   private debuggerElementsSection: HTMLElement | null = null
-  private isMinimized: boolean = false
-
-  private mouseSettingsSectionHeader: HTMLDivElement | null = null
-  private mouseSettingsSectionContent: HTMLElement | null = null
-  private mouseSettingsMinimizeButton: HTMLButtonElement | null = null
-  private keyboardSettingsSectionHeader: HTMLDivElement | null = null
-  private keyboardSettingsSectionContent: HTMLElement | null = null
-  private keyboardSettingsMinimizeButton: HTMLButtonElement | null = null
-  private generalSettingsSectionHeader: HTMLDivElement | null = null
-  private generalSettingsSectionContent: HTMLElement | null = null
-  private generalSettingsMinimizeButton: HTMLButtonElement | null = null
-  private elementsListSettingsSectionHeader: HTMLDivElement | null = null
-  private elementsListSectionContent: HTMLElement | null = null
-  private elementsListMinimizeButton: HTMLButtonElement | null = null
+  private isContainerMinimized: boolean = false
 
   private isMouseSettingsMinimized: boolean = true
   private isKeyboardSettingsMinimized: boolean = true
@@ -77,10 +70,8 @@ export class DebuggerControlPanel {
     this.createDOM()
 
     if (debuggerSettings.isControlPanelDefaultMinimized) {
-      this.isMinimized = true
+      this.isContainerMinimized = true
     }
-
-    this.loadSectionStatesFromSessionStorage()
 
     if (this.controlsContainer && this.shadowRoot) {
       this.controlPanelStyleElement = document.createElement("style")
@@ -90,18 +81,18 @@ export class DebuggerControlPanel {
 
       this.shadowRoot.appendChild(this.controlsContainer)
       this.queryDOMElements()
+      this.originalSectionStates()
       this.setupEventListeners()
       // this.updateControlsState(initialSettings)
       // this.refreshElementList()
-      // this.applyMinimizedStateVisuals()
-      // this.applySectionMinimizedStateVisuals()
+      this.applyMinimizedStateVisuals()
     }
   }
 
   /**
    * All sections are closed by default. If the user opens a section in their session and refreshes the page it will remain open.
    */
-  private loadSectionStatesFromSessionStorage() {
+  private loadSectionStatesFromSessionStorage(): Partial<SectionStates> {
     const storedStatesRaw = sessionStorage.getItem(this.SESSION_STORAGE_KEY)
     let loadedStates: Partial<SectionStates> = {}
 
@@ -113,6 +104,7 @@ export class DebuggerControlPanel {
     this.isKeyboardSettingsMinimized = loadedStates.keyboard ?? true
     this.isGeneralSettingsMinimized = loadedStates.general ?? true
     this.isElementsListMinimized = loadedStates.elements ?? false
+    return loadedStates
   }
 
   private saveSectionStatesToSessionStorage() {
@@ -147,48 +139,14 @@ export class DebuggerControlPanel {
       "#element-list-items-container"
     )
     this.elementCountSpan = this.controlsContainer.querySelector("#element-count")
-    this.minimizeButton = this.controlsContainer.querySelector(".minimize-button")
+    this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
     this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
       ".all-settings-sections-container"
     )
+
     this.debuggerElementsSection = this.controlsContainer.querySelector(".debugger-elements")
+
     this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
-
-    const mouseSection = this.controlsContainer.querySelector(".mouse-settings-section")
-    console.log(mouseSection)
-    if (mouseSection) {
-      this.mouseSettingsSectionHeader = mouseSection.querySelector(".debugger-section-header")
-      this.mouseSettingsSectionContent = mouseSection.querySelector(".mouse-settings-content")
-      this.mouseSettingsMinimizeButton = mouseSection.querySelector(".section-minimize-button")
-    }
-
-    const keyboardSection = this.controlsContainer.querySelector(".keyboard-settings-section")
-    if (keyboardSection) {
-      this.keyboardSettingsSectionHeader = keyboardSection.querySelector(".debugger-section-header")
-      this.keyboardSettingsSectionContent = keyboardSection.querySelector(
-        ".keyboard-settings-content"
-      )
-      this.keyboardSettingsMinimizeButton = keyboardSection.querySelector(
-        ".section-minimize-button"
-      )
-    }
-
-    const generalSection = this.controlsContainer.querySelector(".general-settings-section")
-    if (generalSection) {
-      this.generalSettingsSectionHeader = generalSection.querySelector(".debugger-section-header")
-      this.generalSettingsSectionContent = generalSection.querySelector(".general-settings-content")
-      this.generalSettingsMinimizeButton = generalSection.querySelector(".section-minimize-button")
-    }
-
-    if (this.debuggerElementsSection) {
-      this.elementsListSettingsSectionHeader = this.debuggerElementsSection.querySelector(
-        ".debugger-section-header"
-      )
-      this.elementsListSectionContent = this.debuggerElementsSection.querySelector(".element-list")
-      this.elementsListMinimizeButton = this.debuggerElementsSection.querySelector(
-        ".section-minimize-button"
-      )
-    }
   }
 
   private handleCopySettings() {
@@ -204,7 +162,7 @@ export class DebuggerControlPanel {
     const settingsToCopy = {
       debug: true,
       debuggerSettings: {
-        isControlPanelDefaultMinimized: this.isMinimized,
+        isControlPanelDefaultMinimized: this.isContainerMinimized,
       },
       enableMousePrediction,
       enableTabPrediction,
@@ -284,94 +242,108 @@ export class DebuggerControlPanel {
       this.foresightManagerInstance.alterGlobalSettings({ tabOffset: value })
     })
 
-    this.minimizeButton?.addEventListener("click", () => {
-      this.isMinimized = !this.isMinimized
+    this.containerMinimizeButton?.addEventListener("click", () => {
+      this.isContainerMinimized = !this.isContainerMinimized
       this.applyMinimizedStateVisuals()
     })
 
     this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
 
-    const setupSectionToggle = (
-      sectionHeader: HTMLElement | null,
+    // We toggle the minimize on the entire section header div instead of solely on the minimize button
+    const sectionToggleEvent = (
+      section: HTMLDivElement | null,
       isMinimizedFlagName:
         | "isMouseSettingsMinimized"
         | "isKeyboardSettingsMinimized"
         | "isGeneralSettingsMinimized"
         | "isElementsListMinimized"
     ) => {
+      const sectionHeader = section?.querySelector(".debugger-section-header")
       sectionHeader?.addEventListener("click", (e) => {
         e.stopPropagation()
-        this[isMinimizedFlagName] = !this[isMinimizedFlagName]
-        this.applySectionMinimizedStateVisuals()
-        this.saveSectionStatesToSessionStorage()
+        this.toggleMinimizeSection(
+          section,
+          (this[isMinimizedFlagName] = !this[isMinimizedFlagName])
+        )
       })
     }
+    if (this.controlsContainer) {
+      sectionToggleEvent(
+        this.controlsContainer.querySelector(".mouse-settings-section"),
+        "isMouseSettingsMinimized"
+      )
+      sectionToggleEvent(
+        this.controlsContainer.querySelector(".keyboard-settings-section"),
+        "isKeyboardSettingsMinimized"
+      )
+      sectionToggleEvent(
+        this.controlsContainer.querySelector(".general-settings-section"),
+        "isGeneralSettingsMinimized"
+      )
+      sectionToggleEvent(
+        this.controlsContainer.querySelector(".debugger-elements"),
+        "isElementsListMinimized"
+      )
+    }
+  }
 
-    setupSectionToggle(this.mouseSettingsSectionHeader, "isMouseSettingsMinimized")
-    setupSectionToggle(this.keyboardSettingsSectionHeader, "isKeyboardSettingsMinimized")
-    setupSectionToggle(this.generalSettingsSectionHeader, "isGeneralSettingsMinimized")
-    setupSectionToggle(this.elementsListSettingsSectionHeader, "isElementsListMinimized")
+  private toggleMinimizeSection(section: HTMLDivElement | null, shouldMinimize: boolean) {
+    if (!section) {
+      return
+    }
+    const sectionContent: HTMLDivElement | null = section.querySelector(".debugger-section-content")
+    const minimizeButton: HTMLButtonElement | null = section.querySelector(
+      ".section-minimize-button"
+    )
+    if (sectionContent && minimizeButton) {
+      if (shouldMinimize) {
+        sectionContent.style.display = "none"
+        minimizeButton.textContent = "+"
+      } else {
+        sectionContent.style.display = "flex"
+        minimizeButton.textContent = "-"
+      }
+    }
+    this.saveSectionStatesToSessionStorage()
+  }
+
+  private originalSectionStates() {
+    const states = this.loadSectionStatesFromSessionStorage()
+    if (!this.controlsContainer) {
+      return
+    }
+    this.toggleMinimizeSection(
+      this.controlsContainer.querySelector(".mouse-settings-section"),
+      states.mouse ?? true
+    )
+    this.toggleMinimizeSection(
+      this.controlsContainer.querySelector(".keyboard-settings-section"),
+      states.keyboard ?? true
+    )
+    this.toggleMinimizeSection(
+      this.controlsContainer.querySelector(".general-settings-section"),
+      states.general ?? true
+    )
+    this.toggleMinimizeSection(
+      this.controlsContainer.querySelector(".debugger-elements"),
+      states.elements ?? false
+    )
   }
 
   private applyMinimizedStateVisuals() {
-    if (!this.controlsContainer || !this.minimizeButton) return
-
-    if (this.isMinimized) {
+    if (!this.controlsContainer || !this.containerMinimizeButton) return
+    if (this.isContainerMinimized) {
       this.controlsContainer.classList.add("minimized")
-      this.minimizeButton.textContent = "+"
+      this.containerMinimizeButton.textContent = "+"
       if (this.allSettingsSectionsContainer)
         this.allSettingsSectionsContainer.style.display = "none"
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = "none"
     } else {
       this.controlsContainer.classList.remove("minimized")
-      this.minimizeButton.textContent = "-"
+      this.containerMinimizeButton.textContent = "-"
       if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
-      this.applySectionMinimizedStateVisuals()
     }
-  }
-
-  private applySectionMinimizedStateVisuals() {
-    if (this.isMinimized) return
-
-    const updateSectionDisplay = (
-      contentElement: HTMLElement | null,
-      buttonElement: HTMLButtonElement | null,
-      isMinimized: boolean,
-      displayType: string = "flex"
-    ) => {
-      if (contentElement && buttonElement) {
-        if (isMinimized) {
-          contentElement.style.display = "none"
-          buttonElement.textContent = "+"
-        } else {
-          contentElement.style.display = displayType
-          buttonElement.textContent = "-"
-        }
-      }
-    }
-
-    updateSectionDisplay(
-      this.mouseSettingsSectionContent,
-      this.mouseSettingsMinimizeButton,
-      this.isMouseSettingsMinimized
-    )
-    updateSectionDisplay(
-      this.keyboardSettingsSectionContent,
-      this.keyboardSettingsMinimizeButton,
-      this.isKeyboardSettingsMinimized
-    )
-    updateSectionDisplay(
-      this.generalSettingsSectionContent,
-      this.generalSettingsMinimizeButton,
-      this.isGeneralSettingsMinimized
-    )
-    updateSectionDisplay(
-      this.elementsListSectionContent,
-      this.elementsListMinimizeButton,
-      this.isElementsListMinimized,
-      ""
-    )
   }
 
   public updateControlsState(settings: ForesightManagerProps) {
@@ -459,17 +431,9 @@ export class DebuggerControlPanel {
     this.controlPanelStyleElement = null
     this.elementCountSpan = null
     this.elementListItems.clear()
-    this.minimizeButton = null
+    this.containerMinimizeButton = null
     this.allSettingsSectionsContainer = null
     this.debuggerElementsSection = null
-    this.mouseSettingsSectionContent = null
-    this.mouseSettingsMinimizeButton = null
-    this.keyboardSettingsSectionContent = null
-    this.keyboardSettingsMinimizeButton = null
-    this.generalSettingsSectionContent = null
-    this.generalSettingsMinimizeButton = null
-    this.elementsListSectionContent = null
-    this.elementsListMinimizeButton = null
     this.trajectoryEnabledCheckbox = null
     this.tabEnabledCheckbox = null
     this.historySizeSlider = null
@@ -759,7 +723,7 @@ export class DebuggerControlPanel {
         display: flex; flex-direction: column; gap: 6px;
       }
       .debugger-section-content {
-        display: flex; flex-direction: column; gap: 8px;
+        display: none; flex-direction: column; gap: 8px;
       }
 
       /* Element List Styles */
@@ -770,6 +734,7 @@ export class DebuggerControlPanel {
         background-color: rgba(20, 20, 20, 0.5);
         border-radius: 3px;
         padding: 0;
+        display: flex;
       }
       #element-list-items-container { /* Flex container for items */
         display: flex;
