@@ -1,4 +1,3 @@
-import DemoWrapper from "./DemoWrapper"
 import { FeatureCard } from "./FeatureCard"
 import styles from "../styles.module.css"
 export const Overview = () => {

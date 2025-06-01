@@ -1,11 +1,20 @@
 import { ForesightManager } from "js.foresight"
 import React, { useEffect, useRef, useState } from "react"
-import styles from "../../styles.module.css"
-import BaseCard from "./BaseCard"
-export const ForesightCard = () => {
+import styles from "./styles.module.css"
+function SmallButton({ index }: { index: number }) {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const cardRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLButtonElement | null>(null)
+
+  const state = () => {
+    if (!isLoading && !isLoaded) {
+      return ""
+    }
+    if (!isLoaded) {
+      return "Loading"
+    }
+    return "Prefetched"
+  }
 
   const callback = () => {
     if (!isLoading && !isLoaded) {
@@ -21,8 +30,7 @@ export const ForesightCard = () => {
       const { unregister } = ForesightManager.instance.register({
         element: cardRef.current,
         callback,
-        hitSlop: { left: 80, top: 100, right: 60, bottom: 100 },
-        name: "foresight-card",
+        hitSlop: 0,
         unregisterOnCallback: true,
       })
 
@@ -31,19 +39,10 @@ export const ForesightCard = () => {
   }, [cardRef])
 
   return (
-    <button ref={cardRef} className={styles.loadingCard}>
-      <div className={styles.cardHeader} style={{ backgroundColor: "#3498db" }}>
-        <h3>ForesightJS</h3>
-        <p>Loads on predicted intent</p>
-      </div>
-
-      <div className={styles.cardContent}>
-        <BaseCard
-          isLoaded={isLoaded}
-          isLoading={isLoading}
-          text="Move your cursor toward this card"
-        />
-      </div>
+    <button ref={cardRef} className={styles.smallButton}>
+      {state()}
     </button>
   )
 }
+
+export default SmallButton

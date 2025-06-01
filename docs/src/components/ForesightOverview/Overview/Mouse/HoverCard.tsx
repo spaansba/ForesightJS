@@ -5,17 +5,12 @@ import BaseCard from "./BaseCard"
 export const HoverCard = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [loadTime, setLoadTime] = useState(null)
   const cardRef = useRef(null)
 
   const handleHover = () => {
     if (!isLoading && !isLoaded) {
       setIsLoading(true)
-      const startTime = performance.now()
-
       setTimeout(() => {
-        const endTime = performance.now()
-        setLoadTime(Math.round(endTime - startTime))
         setIsLoaded(true)
         setIsLoading(false)
       }, 300)
@@ -23,7 +18,7 @@ export const HoverCard = () => {
   }
 
   return (
-    <div
+    <button
       ref={cardRef}
       className={styles.loadingCard}
       onMouseEnter={!isLoading && !isLoaded ? handleHover : null}
@@ -36,6 +31,6 @@ export const HoverCard = () => {
       <div className={styles.cardContent}>
         <BaseCard isLoaded={isLoaded} isLoading={isLoading} text="Hover to load data" />
       </div>
-    </div>
+    </button>
   )
 }

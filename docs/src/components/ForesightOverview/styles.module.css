@@ -108,9 +108,10 @@ p {
 }
 
 .descriptionText h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
 }
 
 .descriptionText p,
@@ -191,11 +192,6 @@ p {
   color: #0366d6;
 }
 
-.debugButtonContainer {
-  display: flex;
-  align-items: center;
-}
-
 .debugButton {
   background-color: #6c757d;
   color: white;
@@ -243,7 +239,6 @@ p {
 }
 
 .resetAllButton {
-  margin-top: 4rem;
   background-color: #e74c3c;
   color: white;
   border: none;
@@ -274,6 +269,7 @@ p {
   flex-direction: column;
   background-color: #fff;
   border-radius: 8px;
+  /* border-color: transparent; */
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   height: 100%;
@@ -349,6 +345,14 @@ p {
   background-color: #e9ecef;
 }
 
+.controlsContainer {
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  gap: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -369,23 +373,6 @@ p {
     gap: 0.5rem;
   }
 
-  .controlsContainer {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .debugButtonContainer {
-    width: 100%;
-  }
-
-  .debugButton {
-    width: 100%;
-  }
-
-  .resetAllButton {
-    width: 100%;
-  }
-
   .cardGrid {
     margin: 0;
     gap: 1rem;
@@ -400,8 +387,7 @@ p {
   .comparisonInfo,
   .loadingComparisonSection,
   .demoDescription,
-  .tryItYourselfText,
-  .debugButtonContainer {
+  .tryItYourselfText {
     display: none;
   }
 }
