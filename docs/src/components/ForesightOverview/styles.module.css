@@ -125,12 +125,6 @@ p {
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.featureCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .featureIcon {
@@ -260,19 +254,14 @@ p {
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5rem;
+  gap: 3rem;
   margin: 1rem 0;
 }
 
-.loadingCard {
+.demoCardGrid {
   display: flex;
-  flex-direction: column;
-  background-color: #fff;
-  border-radius: 8px;
-  /* border-color: transparent; */
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  height: 100%;
+  justify-content: space-around;
+  justify-items: center;
 }
 
 .cardHeader {
@@ -298,11 +287,14 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1 0.75rem;
   text-align: center;
-  flex-grow: 1;
   cursor: pointer;
-  min-height: 120px;
+  min-height: 100px;
+  width: 300px;
+  border-radius: 8px;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .cardState {
@@ -322,7 +314,7 @@ p {
 }
 
 .statusText {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
@@ -346,7 +338,7 @@ p {
 }
 
 .controlsContainer {
-  margin-top: 50px;
+  margin-block: 10px;
   display: flex;
   justify-content: center;
   align-content: center;

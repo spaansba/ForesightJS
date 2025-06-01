@@ -27,11 +27,15 @@ function DemoWrapper() {
 
       <div className={styles.comparisonContainer}>
         <MouseCardsWrapper key={`foresight-mouse-${resetTrigger}`} />
+        <div className={styles.controlsContainer}>
+          <ResetCardsButton onReset={handleResetAll} />
+          <DebugButton />
+        </div>
+        <div className={styles.keyboardTip}>
+          <strong>TIP:</strong> Try using <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd> to navigate
+          through the buttons below
+        </div>
         <KeyboardCardsWrapper key={`foresight-keyboard-${resetTrigger}`} />
-      </div>
-      <div className={styles.controlsContainer}>
-        <ResetCardsButton onReset={handleResetAll} />
-        <DebugButton />
       </div>
     </div>
   )

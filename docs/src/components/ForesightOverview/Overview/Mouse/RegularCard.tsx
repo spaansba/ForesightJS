@@ -16,10 +16,16 @@ export const RegularCard = () => {
   }
 
   return (
-    <div className={styles.loadingCard}>
-      <button className={styles.cardContent} onClick={handleClick}>
-        <BaseCard isLoaded={isLoaded} isLoading={isLoading} text="Click to load data" />
-      </button>
-    </div>
+    <button className={styles.cardContent} onClick={handleClick}>
+      <BaseCard
+        isLoaded={isLoaded}
+        isLoading={isLoading}
+        text={
+          <span>
+            <b>Click</b> to prefetch
+          </span>
+        }
+      />
+    </button>
   )
 }

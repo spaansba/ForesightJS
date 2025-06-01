@@ -3,11 +3,12 @@ import styles from "./styles.module.css"
 import SmallButton from "./SmallButton"
 
 function KeyboardCardsWrapper() {
+  const buttonIds = Array.from({ length: 25 }, (_, i) => `btn-${i + 1}`)
   return (
     <div className={styles.container}>
       <div className={styles.buttonGrid}>
-        {Array.from({ length: 25 }, (_, index) => (
-          <SmallButton index={index + 1} />
+        {buttonIds.map((id, index) => (
+          <SmallButton key={id} index={index + 1} />
         ))}
       </div>
     </div>

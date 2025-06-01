@@ -6,7 +6,7 @@ import { RegularCard } from "./RegularCard"
 function MouseCardsWrapper() {
   return (
     <div className={styles.loadingComparisonSection}>
-      <div className={styles.cardGrid}>
+      <div className={styles.demoCardGrid}>
         <HoverCard />
         <RegularCard />
         <ForesightCard />

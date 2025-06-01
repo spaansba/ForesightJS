@@ -31,19 +31,16 @@ export const ForesightCard = () => {
   }, [cardRef])
 
   return (
-    <button ref={cardRef} className={styles.loadingCard}>
-      <div className={styles.cardHeader} style={{ backgroundColor: "#3498db" }}>
-        <h3>ForesightJS</h3>
-        <p>Loads on predicted intent</p>
-      </div>
-
-      <div className={styles.cardContent}>
-        <BaseCard
-          isLoaded={isLoaded}
-          isLoading={isLoading}
-          text="Move your cursor toward this card"
-        />
-      </div>
+    <button ref={cardRef} className={styles.cardContent}>
+      <BaseCard
+        isLoaded={isLoaded}
+        isLoading={isLoading}
+        text={
+          <span>
+            <b>ForesightJS</b> to prefetch
+          </span>
+        }
+      />
     </button>
   )
 }
