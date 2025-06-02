@@ -8,19 +8,161 @@
 .buttonGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 12px;
+  justify-content: center;
 }
 
 .smallButton {
-  width: 100px;
-  height: 100px;
-  background-color: #e0dec5;
-  color: #2c3e50;
-  font-size: 0.875rem;
-  padding: 4px 12px;
-  margin: 4px;
-  border: none;
-  border-radius: 4px;
+  width: 120px;
+  height: 80px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.smallButton:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2), 0 4px 12px rgba(33, 150, 243, 0.15);
+}
+
+.smallButton:focus-visible {
+  outline: 3px solid #2196f3;
+  outline-offset: 2px;
+}
+
+.smallButton.default {
+  color: #495057;
+  border-color: #dee2e6;
+}
+
+.smallButton.default:hover {
+  border-color: #3498db;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+  transform: translateY(-2px);
+}
+
+.smallButton.default:focus {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3), 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.smallButton.loading {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ff9800;
+  color: #e65100;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+.smallButton.loading:focus {
+  border-color: #f57c00;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.3), 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+.smallButton.loaded {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-color: #4caf50;
+  color: #2e7d32;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+}
+
+.smallButton.loaded:focus {
+  border-color: #388e3c;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3), 0 4px 16px rgba(76, 175, 80, 0.25);
+}
+
+.buttonContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+.buttonText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.loadingIndicator {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.5rem;
+}
+
+.loadingIndicator span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #ff9800;
+  animation: loadingDot 1.4s ease-in-out infinite both;
+}
+
+.loadingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.loadingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+.loadingIndicator span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+.checkmark {
+  font-size: 1.2rem;
+  margin-top: 0.25rem;
+  font-weight: bold;
+  animation: checkmarkBounce 0.6s ease-out;
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
+  }
+}
+
+@keyframes loadingDot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmarkBounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    transform: translate3d(0, -4px, 0);
+  }
+  70% {
+    transform: translate3d(0, -2px, 0);
+  }
+  90% {
+    transform: translate3d(0, -1px, 0);
+  }
 }

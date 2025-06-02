@@ -7,13 +7,13 @@ function SmallButton({ index }: { index: number }) {
   const cardRef = useRef<HTMLButtonElement | null>(null)
 
   const state = () => {
-    if (!isLoading && !isLoaded) {
-      return ""
+    if (isLoading) {
+      return "Fetching..."
     }
-    if (!isLoaded) {
-      return "Loading"
+    if (isLoaded) {
+      return "Fetched"
     }
-    return "Prefetched"
+    return "Element"
   }
 
   const callback = () => {
@@ -39,8 +39,23 @@ function SmallButton({ index }: { index: number }) {
   }, [cardRef])
 
   return (
-    <button ref={cardRef} className={styles.smallButton}>
-      {state()}
+    <button
+      ref={cardRef}
+      className={`${styles.smallButton} ${
+        isLoading ? styles.loading : isLoaded ? styles.loaded : styles.default
+      }`}
+    >
+      <div className={styles.buttonContent}>
+        <div className={styles.buttonText}>{state()}</div>
+        {isLoading && (
+          <div className={styles.loadingIndicator}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        )}
+        {isLoaded && <div className={styles.checkmark}>✓</div>}
+      </div>
     </button>
   )
 }

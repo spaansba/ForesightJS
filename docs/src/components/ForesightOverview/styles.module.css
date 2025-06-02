@@ -50,7 +50,6 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
 }
 
 /* Header with tabs and debug button */
@@ -146,7 +145,7 @@ p {
 /* Demo section */
 .demoSection {
   background-color: #f8f9fa;
-  padding: 2rem;
+  padding: 2rem 3rem;
   border-radius: 8px;
   margin-top: 2rem;
 }
@@ -185,7 +184,10 @@ p {
 
 .demoCards {
   display: flex;
-  gap: 20px;
+  gap: 1rem;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: nowrap;
 }
 
 .demoTraditional {
@@ -223,32 +225,31 @@ p {
 }
 
 .debugButton {
-  background-color: #6c757d;
-  color: white;
-  border: none;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
   padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .debugButton:hover {
-  background-color: #5a6268;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: #e9ecef;
+  border-color: #adb5bd;
 }
 
 .debugButton.active {
-  background-color: #28a745;
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
 }
 
 .debugButton.active:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: #c3e6cb;
+  border-color: #b7ddc7;
 }
 
 .codeBlock {
@@ -261,30 +262,104 @@ p {
   white-space: pre-wrap;
 }
 
-/* Comparison section */
-.comparisonContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
 .resetAllButton {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
   padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .resetAllButton:hover {
-  background-color: #c0392b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: #ffeaa7;
+  border-color: #ffd93d;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+  min-width: 200px;
+  max-width: 320px;
+  white-space: normal;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+.tooltipTop {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltipBottom {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltipLeft {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltipRight {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltipArrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #2c3e50;
+}
+
+.tooltipTop .tooltipArrow {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltipBottom .tooltipArrow {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltipLeft .tooltipArrow {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.tooltipRight .tooltipArrow {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .cardGrid {
@@ -298,6 +373,9 @@ p {
   display: flex;
   justify-content: space-around;
   justify-items: center;
+  gap: 3rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
 }
 
 .cardContent {
@@ -307,15 +385,128 @@ p {
   justify-content: center;
   text-align: center;
   cursor: pointer;
-  min-height: 100px;
-  width: 300px;
-  border-radius: 8px;
-  border-color: transparent;
-  box-shadow: 0 2px px rgba(0, 0, 0, 0.1);
+  min-height: 140px;
+  width: 250px;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .demoTraditionalWrapper .cardContent {
-  width: 150px;
+  width: 180px;
+  min-height: 120px;
+  flex: none;
+}
+
+.demoTraditionalWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.demoTraditionalWrapper h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  text-align: center;
+  position: relative;
+}
+
+.demoTraditionalWrapper h3::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #e74c3c, #f39c12);
+  border-radius: 2px;
+}
+
+.comparisonDescription {
+  font-size: 1.1rem;
+  color: #6c757d;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.keyboardSection {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.sectionDivider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem 0;
+  padding: 0;
+}
+
+.sectionDivider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e9ecef;
+  z-index: 1;
+}
+
+.sectionDivider > * {
+  position: relative;
+  z-index: 2;
+  padding: 0 1rem;
+}
+
+.demoForesightWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.demoForesightWrapper h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  text-align: center;
+  position: relative;
+}
+
+.demoForesightWrapper h3::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #9b59b6);
+  border-radius: 2px;
+}
+
+.demoForesightWrapper .cardContent {
+  border: 2px solid #e3f2fd;
+  background: linear-gradient(135deg, #f8fffe 0%, #e3f2fd 100%);
 }
 
 .cardState {
@@ -323,15 +514,140 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 1rem 0.5rem;
+  width: 100%;
 }
 
 .statusText {
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #2c3e50;
+  line-height: 1.4;
+}
+
+.statusText b {
+  color: #3498db;
+  font-weight: 700;
+}
+
+/* Loading state animation */
+.cardContent:has(.statusText:contains("Fetching...")) {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ff9800;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+.cardContent:has(.statusText:contains("Fetching...")) .statusText {
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* Prefetched state */
+.cardContent:has(.statusText:contains("PREFETCHED!")) {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-color: #4caf50;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
+}
+
+.cardContent:has(.statusText:contains("PREFETCHED!")) .statusText {
+  color: #2e7d32;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #2c3e50;
+  animation: successGlow 0.6s ease-out;
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+  }
+}
+
+@keyframes successGlow {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+/* Enhanced card elements */
+.actionHint {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.cardContent:hover .actionHint {
+  color: #3498db;
+}
+
+.successIndicator {
+  font-size: 0.85rem;
+  color: #2e7d32;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.loadingDots {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.loadingDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ff9800;
+  animation: loadingDot 1.4s ease-in-out infinite both;
+}
+
+.loadingDots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.loadingDots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+.loadingDots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes loadingDot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .resetButton {
@@ -389,9 +705,73 @@ p {
   }
 
   .comparisonInfo,
-  .loadingComparisonSection,
   .demoDescription,
   .tryItYourselfText {
     display: none;
+  }
+}
+
+/* Tablet and medium screen responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .demoCardGrid {
+    gap: 2rem;
+  }
+
+  .cardContent {
+    width: 220px;
+  }
+
+  .demoTraditionalWrapper .cardContent {
+    width: 160px;
+  }
+}
+
+/* Small screens but not mobile */
+@media (max-width: 900px) and (min-width: 769px) {
+  .demoCardGrid {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .cardContent {
+    width: 230px;
+  }
+
+  .demoTraditionalWrapper .cardContent {
+    width: 150px;
+  }
+
+  .sectionDivider {
+    margin: 2rem 0;
+    padding: 1.2rem 0;
+  }
+}
+
+/* Extra responsive for very small screens */
+@media (max-width: 480px) {
+  .comparisonDescription {
+    font-size: 0.95rem;
+  }
+
+  .cardContent {
+    width: 200px;
+    min-height: 110px;
+    padding: 0.75rem;
+  }
+
+  .demoTraditionalWrapper .cardContent {
+    width: 140px;
+    padding: 0.5rem;
+  }
+
+  .demoCards {
+    gap: 0.75rem;
+  }
+
+  .sectionDivider {
+    margin: 1.5rem 0;
+    padding: 0.75rem 0;
+    gap: 0.5rem;
   }
 }

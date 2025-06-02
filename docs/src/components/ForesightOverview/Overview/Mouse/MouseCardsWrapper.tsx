@@ -6,16 +6,26 @@ import { RegularCard } from "./RegularCard"
 function MouseCardsWrapper() {
   return (
     <div className={styles.loadingComparisonSection}>
+      <div className={styles.comparisonHeader}>
+        <h2>Playground</h2>
+        <p className={styles.comparisonDescription}>
+          Experience the difference between traditional prefetching methods and ForesightJS's intelligent mouse tracking.
+        </p>
+      </div>
       <div className={styles.demoCardGrid}>
         <div className={styles.demoTraditionalWrapper}>
-          <h3>Traditional Prefetching</h3>
+          <div className={styles.sectionHeader}>
+            <h3>Traditional Prefetching</h3>
+          </div>
           <div className={styles.demoCards}>
             <HoverCard />
             <RegularCard />
           </div>
         </div>
         <div className={styles.demoForesightWrapper}>
-          <h3>ForesightJS Prefetching</h3>
+          <div className={styles.sectionHeader}>
+            <h3>ForesightJS Prefetching</h3>
+          </div>
           <div className={styles.demoCards}>
             <ForesightCard />
           </div>

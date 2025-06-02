@@ -9,21 +9,28 @@ type BaseCardProps = {
 
 function BaseCard({ isLoading, isLoaded, text }: BaseCardProps) {
   return (
-    <>
+    <div className={styles.cardState}>
       {isLoading ? (
-        <div className={styles.cardState}>
-          <p className={styles.statusText}>Loading...</p>
-        </div>
+        <>
+          <p className={styles.statusText}>Fetching...</p>
+          <div className={styles.loadingDots}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </>
       ) : isLoaded ? (
-        <div className={styles.cardState}>
+        <>
           <p className={styles.statusText}>PREFETCHED!</p>
-        </div>
+          <div className={styles.successIndicator}>Ready to go!</div>
+        </>
       ) : (
-        <div className={styles.cardState}>
+        <>
           <p className={styles.statusText}>{text}</p>
-        </div>
+          <div className={styles.actionHint}>Try it!</div>
+        </>
       )}
-    </>
+    </div>
   )
 }
 

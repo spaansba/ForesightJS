@@ -21,7 +21,7 @@ export const ForesightCard = () => {
       const { unregister } = ForesightManager.instance.register({
         element: cardRef.current,
         callback,
-        hitSlop: { left: 80, top: 100, right: 60, bottom: 100 },
+        hitSlop: { left: 40, top: 50, right: 30, bottom: 50 },
         name: "foresight-card",
         unregisterOnCallback: true,
       })

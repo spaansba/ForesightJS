@@ -1,15 +1,18 @@
 import { useEffect, useRef } from "react"
 import styles from "../../styles.module.css"
 import { ForesightManager } from "js.foresight"
+import Tooltip from "../../Tooltip"
 
 type ResetCardsButtonProps = {
   onReset: () => void
 }
 function ResetCardsButton({ onReset }: ResetCardsButtonProps) {
   return (
-    <button className={styles.resetAllButton} onClick={onReset}>
-      Reset All Cards
-    </button>
+    <Tooltip content="Reset all cards and buttons to their initial state" position="top">
+      <button className={styles.resetAllButton} onClick={onReset}>
+        Reset All Cards
+      </button>
+    </Tooltip>
   )
 }
 

@@ -1,15 +1,8 @@
-import DebugButton from "../DebugButton"
 import MobileMessage from "../MobileMessage"
 import styles from "../styles.module.css"
-import KeyboardCardsWrapper from "./Keyboard/KeyboardCardsWrapper"
-import { useState } from "react"
-import MouseCardsWrapper from "./Mouse/MouseCardsWrapper"
-import ResetCardsButton from "./Mouse/ResetCardsButton"
+
+import Playground from "./Playground/Playground"
 function DemoWrapper() {
-  const [resetTrigger, setResetTrigger] = useState(0)
-  const handleResetAll = () => {
-    setResetTrigger((prev) => prev + 1)
-  }
   return (
     <div className={styles.demoSection}>
       <div className={styles.demoHeader}>
@@ -19,24 +12,13 @@ function DemoWrapper() {
         <MobileMessage />
       </div>
       <p className={styles.demoDescription}>
-        This demo shows how ForesightJS improves on traditional loading strategies. All cards have a
-        300ms fetch delay to simulate loading data from a server. Below are 25 buttons to show how
-        ForesightJS handles keyboard users. Try (reverse) tabbing through the buttons and see what
-        happends.
+        This interactive demo compares ForesightJS's mouse and tab tracking with traditional
+        prefetching approaches. Each button simulates a 300ms server response delay to demonstrate
+        real-world fetching scenarios. ForesightJS is fully configurable. To explore all settings
+        you can open the debugger in the bottom right corner while debug mode is on. To experience
+        the app as an end user would, turn off debug mode.
       </p>
-
-      <div className={styles.comparisonContainer}>
-        <MouseCardsWrapper key={`foresight-mouse-${resetTrigger}`} />
-        <div className={styles.controlsContainer}>
-          <ResetCardsButton onReset={handleResetAll} />
-          <DebugButton />
-        </div>
-        <div className={styles.keyboardTip}>
-          <strong>TIP:</strong> Try using <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd> to navigate
-          through the buttons below
-        </div>
-        <KeyboardCardsWrapper key={`foresight-keyboard-${resetTrigger}`} />
-      </div>
+      <Playground />
     </div>
   )
 }
