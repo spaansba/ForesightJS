@@ -6,27 +6,35 @@ export const Overview = () => {
       <div className={styles.descriptionText}>
         <h2>What is ForesightJs?</h2>
         <p>
-          ForesightJS is a free and open-source JavaScript library that predicts user intent by
-          analyzing mouse movements and trajectories. It allows developers to prefetch data based on
-          user intent instead of the classic on-click or on-hover.
+          ForesightJS is a free and open-source JavaScript library that helps predict what users are
+          likely to do next by analyzing their mouse movements and keyboard navigation. It lets
+          developers prefetch data ahead of time based on these predictions, instead of waiting for
+          actions like clicks or hovers. This makes websites feel faster and more responsive for
+          both mouse and keyboard users, and is less wasteful than prefetching content as soon as it
+          enters the viewport.
         </p>
       </div>
 
       <div className={styles.cardGrid}>
         <FeatureCard
-          title="Trajectory Prediction"
-          description="Predict based on movement and volicity where the user's cursor is heading, allowing for early prefetching."
-          icon="📈"
+          title="Cursor Prediction"
+          description="Prefetch data based on where the users cursor is heading, not where it is currently hovering"
+          icon="🖱"
         />
         <FeatureCard
-          title="Element Hit Slop"
-          description="Add custom hit areas around elements to trigger actions before the user actually hovers over the element itself."
-          icon="🎯"
+          title="Keyboard Prediction"
+          description="Prefetch data when the user is N tab stops away from your element. Also works for shift-tabbing."
+          icon="⌨"
         />
         <FeatureCard
-          title="Efficient Prefetching"
-          description="Save bandwidth by only prefetching what users will actually need, instead of prefetching everything in the viewport like traditional approaches."
-          icon="🔋"
+          title="Fully Customizable"
+          description="Configure prediction timing, hit areas, trajectory settings, and debug options to perfectly match your application's needs."
+          icon="⚙️"
+        />
+        <FeatureCard
+          title="Debug Mode"
+          description="Built-in visual debugging with trajectory visualization, hit area overlays, and interactive control panel for tuning performance."
+          icon="🐛"
         />
       </div>
     </div>

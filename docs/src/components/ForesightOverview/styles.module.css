@@ -106,17 +106,9 @@ p {
   color: #333;
 }
 
-.descriptionText h2 {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 16px;
-  color: #333;
-}
-
-.descriptionText p,
-.demoDescription p {
+p {
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .featureCard {
@@ -150,7 +142,7 @@ p {
   margin-top: 2rem;
 }
 
-.demoSection h2 {
+h2 {
   font-size: 1.8rem;
   margin-bottom: 1rem;
   color: #2c3e50;
@@ -364,8 +356,8 @@ p {
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
   margin: 1rem 0;
 }
 
@@ -704,10 +696,16 @@ p {
     display: block;
   }
 
-  .comparisonInfo,
-  .demoDescription,
-  .tryItYourselfText {
+  .demoSection {
     display: none;
+  }
+}
+
+/* Large tablet screens - 2 cards per row */
+@media (max-width: 1200px) and (min-width: 901px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
   }
 }
 
@@ -726,8 +724,13 @@ p {
   }
 }
 
-/* Small screens but not mobile */
+/* Small tablet screens - 2 cards per row */
 @media (max-width: 900px) and (min-width: 769px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
   .demoCardGrid {
     flex-direction: column;
     gap: 2rem;
