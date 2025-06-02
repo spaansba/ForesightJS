@@ -5,7 +5,7 @@
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
+ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs.
 
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
@@ -81,6 +81,15 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/config).
 
-## Debugging visualization
+## Debugger
 
-ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+ForesightJS includes a [Debugger](https://foresightjs.com/docs/debugging) that helps you understand and tune how ForesightJS is working in your application. This is particularly helpful when setting up ForesightJS for the first time and understand what each configurable parameter does exactly.
+
+## Dependencies
+
+ForesightJS follows a minimal dependencies approach and currently includes only relies on [tabbable](https://github.com/focus-trap/tabbable).
+
+## Media
+
+The team over at [Better Stack](https://www.youtube.com/@betterstack) created an [video](https://www.youtube.com/watch?v=5n9JjFRdeh4) of ForesightJS in action with honest thoughts. 
+
