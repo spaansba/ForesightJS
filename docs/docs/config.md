@@ -11,12 +11,14 @@ ForesightJS provides two levels of configuration:
 
 ## Global Configuration
 
-Global settings are specified when initializing the ForesightManager. This should be done once at your application's entry point. If you want the default global options you dont need to initialize the ForesightManager.
+Global settings are specified when initializing the ForesightManager. This should be done once at your application's entry point.
+
+_If you want the default global options you dont need to initialize the ForesightManager._
 
 ```javascript
 import { ForesightManager } from "foresightjs"
 
-// Initialize the manager if you want custom global settings (do this once at app startup)
+// Initialize the manager once at the top of your app if you want custom global settings
 ForesightManager.initialize({
   enableMousePrediction: true,
   positionHistorySize: 8,
@@ -27,6 +29,8 @@ ForesightManager.initialize({
   debuggerSettings: {
     isControlPanelDefaultMinimized: false,
   },
+  enableTabPrediction: true,
+  tabOffset: 3,
 })
 ```
 
@@ -40,6 +44,8 @@ ForesightManager.initialize({
 | `trajectoryPredictionTime`  | number         | `80`                                     | How far ahead (in milliseconds) to predict the mouse trajectory                                                  |
 | `defaultHitSlop`            | number \| Rect | `{top: 0, left: 0, right: 0, bottom: 0}` | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox |
 | `resizeScrollThrottleDelay` | number         | `50`                                     | Throttle delay (in ms) for recalculating element bounds during resize/scroll events                              |
+| `enableTabPrediction`       | boolean        | `true`                                   | Toggles whether keyboard prediction is on                                                                        |
+| `tabOffset`                 | number         | `3`                                      | Tab stops away from an element to trigger callback                                                               |
 
 #### Global debugger settings
 
