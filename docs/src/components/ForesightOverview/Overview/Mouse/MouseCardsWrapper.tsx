@@ -7,9 +7,19 @@ function MouseCardsWrapper() {
   return (
     <div className={styles.loadingComparisonSection}>
       <div className={styles.demoCardGrid}>
-        <HoverCard />
-        <RegularCard />
-        <ForesightCard />
+        <div className={styles.demoTraditionalWrapper}>
+          <h3>Traditional Prefetching</h3>
+          <div className={styles.demoCards}>
+            <HoverCard />
+            <RegularCard />
+          </div>
+        </div>
+        <div className={styles.demoForesightWrapper}>
+          <h3>ForesightJS Prefetching</h3>
+          <div className={styles.demoCards}>
+            <ForesightCard />
+          </div>
+        </div>
       </div>
     </div>
   )
