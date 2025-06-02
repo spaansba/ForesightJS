@@ -17,12 +17,6 @@ interface SectionStates {
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
-type SettingSection = {
-  Header: HTMLDivElement | null
-  Content: HTMLDivElement | null
-  MinimizeButton: HTMLButtonElement | null
-}
-
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private shadowRoot: ShadowRoot | null = null
@@ -388,7 +382,6 @@ export class DebuggerControlPanel {
       const listItem = document.createElement("div")
       listItem.className = "element-list-item"
       this.updateListItemContent(listItem, data)
-
       this.elementListItemsContainer!.appendChild(listItem)
       this.elementListItems.set(element, listItem)
     })
@@ -404,12 +397,23 @@ export class DebuggerControlPanel {
       ? "Callback triggers once, then element unregisters."
       : "Callback can trigger multiple times."
 
+    let hitSlopText = "N/A"
+    let hitSlopTitle = "Hit Slop: Not defined"
+
+    if (data.elementBounds.hitSlop) {
+      const { top, right, bottom, left } = data.elementBounds.hitSlop
+      hitSlopText = `T:${top} R:${right} B:${bottom} L:${left}`
+      hitSlopTitle = `Hit Slop (px): Top: ${top}, Right: ${right}, Bottom: ${bottom}, Left: ${left}`
+    }
+
     listItem.innerHTML = `
       ${statusIndicatorHTML}
       <span class="element-name" title="${data.name || "Unnamed Element"}">${
       data.name || "Unnamed Element"
     }</span>
+          <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
+
     `
   }
 
@@ -549,10 +553,10 @@ export class DebuggerControlPanel {
 
   private getStyles(): string {
     const elementItemHeight = 35 // px
-    const elementListGap = 6 // px
+    const elementListGap = 3 // px
     const elementListItemsContainerPadding = 6 // px
-    const numRowsToShow = 3
-    const numItemsPerRow = 2
+    const numRowsToShow = 4
+    const numItemsPerRow = 1
 
     const rowsContentHeight =
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
@@ -570,13 +574,13 @@ export class DebuggerControlPanel {
       #debug-controls.minimized {
         width: 220px;
         overflow: hidden;
-        padding: 12px 0; /* Adjusted padding for minimized state */
+        padding: 12px 0; 
       }
       #debug-controls.minimized .debugger-title-container {
-        justify-content: flex-start; /* Keep this for minimized */
-        padding-left: 10px; /* Keep padding for minimized */
-        padding-right: 10px; /* Keep padding for minimized */
-        gap: 10px; /* Keep gap for minimized */
+        justify-content: flex-start; 
+        padding-left: 10px; 
+        padding-right: 10px;
+        gap: 10px; 
       }
       #debug-controls.minimized .debugger-title-container h2 {
         display: inline;
@@ -591,13 +595,13 @@ export class DebuggerControlPanel {
       .debugger-title-container {
         display: flex;
         align-items: center;
-        justify-content: space-between; /* Key change for layout */
-        padding: 0 0px; /* Provides spacing from edges for buttons */
+        justify-content: space-between; 
+        padding: 0 0px; 
       }
-      .title-group { /* New style for grouping title and info icon */
+      .title-group { 
         display: flex;
         align-items: center;
-        gap: 8px; /* Spacing between title and info icon */
+        gap: 8px; 
 
       }
       .minimize-button {
@@ -725,14 +729,38 @@ export class DebuggerControlPanel {
       /* Element List Styles */
       .element-list { /* Scroll container */
         min-height: ${elementListContainerHeight}px;
-        max-height: ${elementListContainerHeight}px; /* Fixed height for 3 rows */
+        max-height: ${elementListContainerHeight}px; 
         overflow-y: auto;
         background-color: rgba(20, 20, 20, 0.5);
         border-radius: 3px;
         padding: 0;
         display: flex;
       }
-      #element-list-items-container { /* Flex container for items */
+
+      /* Modern Scrollbar Styling */
+      .element-list::-webkit-scrollbar {
+        width: 8px; 
+      }
+      .element-list::-webkit-scrollbar-track {
+        background: rgba(30, 30, 30, 0.5); 
+        border-radius: 4px;
+      }
+      .element-list::-webkit-scrollbar-thumb {
+        background-color: rgba(176, 196, 222, 0.5); 
+        border-radius: 4px; 
+        border: 2px solid rgba(0, 0, 0, 0.2); 
+      }
+      .element-list::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(176, 196, 222, 0.7);
+      }
+      /* Firefox scrollbar styling */
+      .element-list {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5);
+      }
+
+
+      #element-list-items-container { 
         display: flex;
         flex-wrap: wrap;
         gap: ${elementListGap}px;
@@ -764,7 +792,7 @@ export class DebuggerControlPanel {
         gap: 5px;
         background-color: rgba(50,50,50,0.7);
         transition: background-color 0.2s ease;
-        font-size: 11px;
+        font-size: 11px; 
         overflow: hidden;
       }
       .element-list-item .status-indicator {
@@ -792,15 +820,17 @@ export class DebuggerControlPanel {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-size: 12px; 
+        font-weight: bold;
       }
-      .element-list-item .hit-behavior {
-        font-size: 9px;
+      .element-list-item .hit-behavior,
+      .element-list-item .hit-slop {
+        font-size: 10px; 
         color: #b0b0b0;
-        padding: 1px 3px;
-        border-radius: 2px;
+        padding: 2px 5px; 
+        border-radius: 3px; 
         background-color: rgba(0,0,0,0.2);
         flex-shrink: 0;
-        margin-left: auto;
       }
     `
   }
