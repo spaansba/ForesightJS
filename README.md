@@ -91,5 +91,5 @@ ForesightJS follows a minimal dependencies approach and currently includes only 
 
 ## Media
 
-The team over at [Better Stack](https://www.youtube.com/@betterstack) created an [video](https://www.youtube.com/watch?v=5n9JjFRdeh4) of ForesightJS in action with honest thoughts. 
+The team over at [Better Stack](https://www.youtube.com/@betterstack) created an [video](https://www.youtube.com/watch?v=5n9JjFRdeh4) of ForesightJS in action with honest thoughts. (Note: this was the 1.0 version of ForesightJS)
 
