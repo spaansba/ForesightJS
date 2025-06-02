@@ -11,12 +11,12 @@ import type {
 import { isTouchDevice } from "../helpers/isTouchDevice"
 
 export class ForesightDebugger {
-  private static debuggerInstance: ForesightDebugger // Static instance
+  private static debuggerInstance: ForesightDebugger
 
-  private foresightManagerInstance: ForesightManager // Still need a reference to the manager
+  private foresightManagerInstance: ForesightManager
   private shadowHost: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
-  private debugContainer: HTMLElement | null = null // For overlays, trajectory, etc.
+  private debugContainer: HTMLElement | null = null
   private debugLinkOverlays: Map<
     ForesightElement,
     {
@@ -73,16 +73,13 @@ export class ForesightDebugger {
     // Avoid re-initialization if already setup and not a touch device
     if (this.shadowHost) {
       console.warn("ForesightDebugger already initialized.")
-      // If it was initialized on a non-touch device and now we call initialize again,
-      // we might just want to update settings and visuals, not rebuild the DOM.
-      // This depends on desired behavior, but for a singleton, avoid recreating everything.
       this.updateControlsState(currentSettings)
       this.updateTrajectoryVisuals(
         currentPoint,
         predictedPoint,
         currentSettings.enableMousePrediction
       )
-      this.refreshDisplayedElements() // Ensure all elements are visualized
+      this.refreshDisplayedElements()
       return
     }
 
@@ -95,7 +92,7 @@ export class ForesightDebugger {
     this.debuggerStyleElement = document.createElement("style")
     this.debuggerStyleElement.id = "debug-container"
     this.debuggerStyleElement.textContent = `
-      #jsforesight-debug-container { /* For on-page overlays */
+      #jsforesight-debug-container { 
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 9999;
       }
@@ -138,7 +135,7 @@ export class ForesightDebugger {
       }
       .jsforesight-callback-indicator {
         position: absolute;
-        border: 4px solid oklch(60% 0.1 270); /* Example color */
+        border: 4px solid oklch(60% 0.1 270); 
         border-radius: 5px;
         box-sizing: border-box;
         pointer-events: none;
@@ -147,7 +144,7 @@ export class ForesightDebugger {
         z-index: 10002;
       }
       .jsforesight-callback-indicator.animate {
-        animation: jsforesight-callback-pulse 0.6s ease-out forwards;
+        animation: jsforesight-callback-pulse 0.4s ease-out forwards;
       }
 
       @keyframes jsforesight-callback-pulse {
