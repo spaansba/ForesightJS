@@ -28,12 +28,13 @@ export const Overview = () => {
         />
         <FeatureCard
           title="Fully Customizable"
-          description="Configure prediction timing, hit areas, trajectory settings, and debug options to perfectly match your application's needs."
+          description="Configure how aggressively predictions are made, adjust hit areas around elements and much more."
           icon="⚙️"
         />
         <FeatureCard
           title="Debug Mode"
-          description="Built-in visual debugging with trajectory visualization, hit area overlays, and interactive control panel for tuning performance."
+          description="Built-in visual debugging with trajectory visualization, hit area overlays, and interactive control panel for tuning 
+          configurations in real-time."
           icon="🐛"
         />
       </div>

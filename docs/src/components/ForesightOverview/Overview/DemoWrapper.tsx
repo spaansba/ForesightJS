@@ -14,7 +14,7 @@ function DemoWrapper() {
         </div>
         <p>
           Each button simulates a 300ms server response delay to demonstrate real-world fetching
-          scenarios. To explore all settings you can open the debugger in the bottom right corner
+          scenarios. To explore all settings you can open the debugger in the bottom-right corner
           while debug mode is on. To experience the app as an end user would, turn off debug mode.
         </p>
         <Playground />
