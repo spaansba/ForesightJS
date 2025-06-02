@@ -5,7 +5,7 @@
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-ForesightJS is an free and open-source JavaScript library that predicts user intent by analyzing mouse movements and trajectories. It allows developers to prefetch data based on user intent instead of the classic on-click or on-hover.
+ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
@@ -22,37 +22,23 @@ yarn add js.foresight
 pnpm add js.foresight
 ```
 
-## Why Use ForesightJS?
+## Which problems does ForesightJS solve??
 
 ### Problem 1: On-Hover Prefetching is Too Late
 
-Traditional hover-based interactions have built-in delays:
-
-- Prefetching only starts after the user hovers over an element
-- The 200-300ms between intent (moving toward a button) and hover is wasted
+Traditional hover-based prefetching only starts after the user hovers over an element. This wastes the 100-200ms between user intent (moving toward a button) and the actual hover event.
 
 ### Problem 2: Viewport-Based Prefetching is Wasteful
 
-Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport:
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. This means every visible link is getting prefetched even though the user is most likely not going to interact with it. Simply scrolling up and down the Next.js homepage can trigger 1.59MB of unnecessary prefetch requests.
 
-- Simply scrolling up and down the Next.js homepage can trigger **1.59MB** of unnecessary prefetch requests
-- Every visible link initiates prefetching, regardless of user intent
+### Problem 3: Routers don't take keyboard users into consideration
+
+Many routers prefetch either based on viewport or hover and leave keyboard users prefetching on click. This means keyboard users get slower page loads since prefetching only happens after they click.
 
 ### The ForesightJS Solution
 
-ForesightJS solves both problems by:
-
-- **Predicting interactions before they happen** based on mouse trajectory analysis
-- **Triggering actions only for elements the user is likely to interact with**
-- **Starting prefetching 80-150ms earlier** than hover-based solutions
-- **Reducing unnecessary requests** compared to viewport-based solutions
-
-## Core Features
-
-- **Mouse Trajectory Prediction**: Calculates where a user's cursor is heading
-- **Expandable Hit Areas**: Custom "hit slop" areas around elements to detect intent earlier
-- **Framework Agnostic**: Works with any front-end framework
-- **Debug Visualization**: Built-in visual debugger for development
+ForesightJS sits between viewport and hover prefetching. By predicting which element the user will interact with next, it can prefetch before hover without wasting resources like viewport prefetching. To make these predictions, it analyzes mouse movement to predict where the cursor is headed and tracks keyboard navigation by monitoring how many tab stops away the user is from registered elements.
 
 ## Basic Usage Example
 
