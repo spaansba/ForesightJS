@@ -1,7 +1,7 @@
-import { ForesightManager } from "js.foresight"
 import React, { useEffect, useRef, useState } from "react"
 import styles from "../../styles.module.css"
 import BaseCard from "./BaseCard"
+import { ForesightManager } from "js.foresight"
 export const ForesightCard = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
