@@ -10,6 +10,7 @@
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
 .smallButton {

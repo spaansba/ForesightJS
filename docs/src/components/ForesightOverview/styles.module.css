@@ -112,26 +112,51 @@ p {
 }
 
 .featureCard {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+}
+
+.featureCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #3498db;
 }
 
 .featureIcon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 3rem;
+  margin-bottom: 1.2rem;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+
+.featureCard:hover .featureIcon {
+  transform: scale(1.1);
+  opacity: 1;
 }
 
 .featureCard h3 {
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
   color: #2c3e50;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .featureCard p {
-  color: #555;
-  line-height: 1.5;
+  color: #6c757d;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin: 0;
+  flex-grow: 1;
 }
 
 /* Demo section */
@@ -357,8 +382,7 @@ h2 {
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
-  margin: 1rem 0;
+  gap: 1.5rem;
 }
 
 .demoCardGrid {
@@ -366,7 +390,7 @@ h2 {
   justify-content: space-around;
   justify-items: center;
   gap: 3rem;
-  margin: 2rem 0;
+  margin: 3rem 0 4rem 0;
   flex-wrap: wrap;
 }
 
@@ -381,7 +405,7 @@ h2 {
   width: 250px;
   border-radius: 12px;
   border: 2px solid #e9ecef;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  background: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -396,7 +420,7 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
 .demoTraditionalWrapper h3 {
@@ -472,7 +496,7 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
 .demoForesightWrapper h3 {
@@ -497,8 +521,10 @@ h2 {
 }
 
 .demoForesightWrapper .cardContent {
-  border: 2px solid #e3f2fd;
-  background: linear-gradient(135deg, #f8fffe 0%, #e3f2fd 100%);
+  min-height: 120px;
+  flex: none;
+  border: 2px solid #e9ecef;
+  background: #ffffff;
 }
 
 .cardState {
@@ -686,9 +712,25 @@ h2 {
   }
 
   .cardGrid {
-    margin: 0;
     gap: 1rem;
     grid-template-columns: 1fr;
+  }
+
+  .featureCard {
+    padding: 1.5rem 1rem;
+  }
+
+  .featureIcon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .featureCard h3 {
+    font-size: 1.2rem;
+  }
+
+  .featureCard p {
+    font-size: 0.9rem;
   }
 
   /* Show mobile message and hide interactive elements on mobile */
