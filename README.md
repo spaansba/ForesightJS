@@ -22,7 +22,7 @@ yarn add js.foresight
 pnpm add js.foresight
 ```
 
-## Which problems does ForesightJS solve??
+## Which problems does ForesightJS solve?
 
 ### Problem 1: On-Hover Prefetching is Too Late
 
