@@ -1,9 +1,8 @@
-import React from "react"
 import BaseForesightButton from "./BaseForesightButton"
 
 function ForesightButtonNoName() {
   return (
-    <div className="size-20 bg-gradient-to-br from-purple-200 to-purple-300 rounded-lg shadow-md border border-purple-300">
+    <div className="bg-gradient-to-br from-purple-200 to-purple-300 size-20 rounded-lg shadow-md border border-purple-300">
       <BaseForesightButton
         registerOptions={{
           callback: () => {
