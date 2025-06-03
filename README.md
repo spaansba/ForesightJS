@@ -87,4 +87,4 @@ ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging
 
 # Contributing
 
-Please see the [contributing guideline](/CONTRIBUTING.md)
+Please see the [contributing guidelines](/CONTRIBUTING.md)
