@@ -49,7 +49,7 @@ export const Main = () => {
         <ForesightButtonResizeable isResized={isResized} />
         <ForesightButtonRemoveable shouldBeRemoved={shouldBeRemoved} />
         <ForesightButtonNoName />
-        <ForesightButtonRegular />
+        {/* <ForesightButtonRegular /> */}
       </div>
     </div>
   )

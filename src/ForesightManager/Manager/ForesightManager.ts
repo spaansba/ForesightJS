@@ -75,6 +75,9 @@ export class ForesightManager {
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
 
+  // AbortController for managing global event listeners
+  private globalListenersController: AbortController | null = null
+
   private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
@@ -180,8 +183,12 @@ export class ForesightManager {
 
     if (this.elements.size === 0 && this.isSetup) {
       if (!this.debugger) {
-        // Normally we want to remove all event listeners but not in debug mode to preserve the mouse event
         this.removeGlobalListeners()
+      } else {
+        console.log(
+          "%cForesightJS: All elements have successfully triggered their callbacks. ForesightJS would typically perform cleanup actions now, but these are currently skipped while in debug mode.",
+          "color: #28a745; font-weight: bold;"
+        )
       }
     }
   }
@@ -660,11 +667,13 @@ export class ForesightManager {
 
   private setupGlobalListeners() {
     if (this.isSetup) return
-    document.addEventListener("mousemove", this.handleMouseMove)
-    window.addEventListener("resize", this.handleResizeOrScroll)
-    window.addEventListener("scroll", this.handleResizeOrScroll)
-    document.addEventListener("keydown", this.handleKeyDown)
-    document.addEventListener("focusin", this.handleFocusIn)
+    this.globalListenersController = new AbortController()
+    const { signal } = this.globalListenersController
+    document.addEventListener("mousemove", this.handleMouseMove, { signal })
+    window.addEventListener("resize", this.handleResizeOrScroll, { signal })
+    window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
+    document.addEventListener("keydown", this.handleKeyDown, { signal })
+    document.addEventListener("focusin", this.handleFocusIn, { signal })
 
     if (!this.domObserver) {
       this.domObserver = new MutationObserver(this.handleDomMutations)
@@ -684,27 +693,21 @@ export class ForesightManager {
   }
 
   private removeGlobalListeners() {
-    document.removeEventListener("mousemove", this.handleMouseMove)
-    window.removeEventListener("resize", this.handleResizeOrScroll)
-    window.removeEventListener("scroll", this.handleResizeOrScroll)
-    document.removeEventListener("keydown", this.handleKeyDown)
-    document.removeEventListener("focusin", this.handleFocusIn)
+    this.globalListenersController?.abort() // Remove all event listeners
+    this.globalListenersController = null
+    this.domObserver?.disconnect()
+    this.elementResizeObserver?.disconnect()
 
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
       this.resizeScrollThrottleTimeoutId = null
     }
+
     if (this.domMutationRectsUpdateTimeoutId) {
       clearTimeout(this.domMutationRectsUpdateTimeoutId)
       this.domMutationRectsUpdateTimeoutId = null
     }
 
-    if (this.domObserver) {
-      this.domObserver.disconnect()
-    }
-    if (this.elementResizeObserver) {
-      this.elementResizeObserver.disconnect()
-    }
     this.isSetup = false
   }
 }

@@ -14,14 +14,10 @@ function ForesightButton({ registerOptions }: ForesightButtonProps) {
       return
     }
 
-    const { unregister } = ForesightManager.instance.register({
+    ForesightManager.instance.register({
       element: buttonRef.current,
       ...registerOptions,
     })
-
-    return () => {
-      unregister()
-    }
   }, [buttonRef, registerOptions])
 
   return (
