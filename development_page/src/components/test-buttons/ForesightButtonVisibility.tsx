@@ -6,7 +6,7 @@ type ForesightButtonVisibilityProps = {
 
 function ForesightButtonVisibility({ isVisible }: ForesightButtonVisibilityProps) {
   return (
-    <div className={`${isVisible ? "block" : "hidden"} bg-amber-200 size-40`}>
+    <div className="bg-gradient-to-br from-amber-200 to-amber-300 size-40 rounded-lg shadow-md border border-amber-300">
       <BaseForesightButton
         registerOptions={{
           callback: () => {

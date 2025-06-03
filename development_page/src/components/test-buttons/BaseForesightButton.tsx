@@ -8,7 +8,6 @@ type ForesightButtonProps = {
 
 function ForesightButton({ registerOptions }: ForesightButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
-
   useEffect(() => {
     if (!buttonRef.current) {
       return
@@ -24,9 +23,9 @@ function ForesightButton({ registerOptions }: ForesightButtonProps) {
     <button
       ref={buttonRef}
       id={registerOptions.name}
-      className="flex justify-center items-center h-full w-full"
+      className="flex justify-center items-center h-full w-full rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
     >
-      <span>{registerOptions.name}</span>
+      <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
     </button>
   )
 }

@@ -6,7 +6,11 @@ type ForesightButtonResizeableProps = {
 
 function ForesightButtonResizeable({ isResized }: ForesightButtonResizeableProps) {
   return (
-    <div className={`${isResized ? "size-40" : "size-20"} bg-blue-200`}>
+    <div 
+      className={`${
+        isResized ? "size-40" : "size-20"
+      } bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg shadow-md border border-blue-300 transition-all duration-500`}
+    >
       <BaseForesightButton
         registerOptions={{
           callback: () => {
@@ -16,7 +20,7 @@ function ForesightButtonResizeable({ isResized }: ForesightButtonResizeableProps
           name: "resizeable",
           unregisterOnCallback: true,
         }}
-      ></BaseForesightButton>
+      />
     </div>
   )
 }

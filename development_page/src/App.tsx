@@ -1,6 +1,6 @@
 import { ForesightManager } from "../../src/ForesightManager/Manager/ForesightManager"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-import { Main } from "./_components/MainWrapper"
+import { Main } from "./components/MainWrapper"
 import Other from "./pages/other"
 
 ForesightManager.initialize({
