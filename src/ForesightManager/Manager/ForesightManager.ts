@@ -141,7 +141,7 @@ export class ForesightManager {
     this.elements.set(element, elementData)
 
     if (!this.isSetup) {
-      this.setupGlobalListeners()
+      this.initializeGlobalListeners()
     }
 
     if (this.elementResizeObserver) {
@@ -665,8 +665,9 @@ export class ForesightManager {
     }
   }
 
-  private setupGlobalListeners() {
+  private initializeGlobalListeners() {
     if (this.isSetup) return
+
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
@@ -675,20 +676,16 @@ export class ForesightManager {
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 
-    if (!this.domObserver) {
-      this.domObserver = new MutationObserver(this.handleDomMutations)
-    }
-
+    this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
     })
 
-    if (!this.elementResizeObserver) {
-      this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
-      this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
-    }
+    this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
+    this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
+
     this.isSetup = true
   }
 
@@ -698,6 +695,7 @@ export class ForesightManager {
     this.domObserver?.disconnect()
     this.elementResizeObserver?.disconnect()
 
+    // Even though we aborted the signals there might still be an event being throttled, clear it
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
       this.resizeScrollThrottleTimeoutId = null
