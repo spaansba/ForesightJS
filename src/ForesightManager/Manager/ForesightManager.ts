@@ -274,11 +274,7 @@ export class ForesightManager {
       if (!areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this.globalSettings.defaultHitSlop = normalizedNewHitSlop
         settingsActuallyChanged = true
-        // This recomputes expandedRects using each element's own stored hitSlop.
-        // If an element's hitSlop itself needs to change because it was using the
-        // old default, that logic would need to be more explicit here.
-        // For now, this just updates the global default for future use and forces re-calc.
-        this.elements.forEach((data, element) => {
+        this.elements.forEach((_, element) => {
           this.updateExpandedRect(element)
         })
       }
@@ -296,18 +292,11 @@ export class ForesightManager {
       this.globalSettings.debug = props.debug
       settingsActuallyChanged = true
       if (this.globalSettings.debug) {
-        this.turnOnDebugMode() // This will now get or create the singleton
+        this.turnOnDebugMode()
       } else {
         if (this.debugger) {
-          this.debugger.cleanup() // Cleanup the DOM elements
-          // We don't necessarily set `this.debugger = null` here
-          // unless you want to completely dispose of the singleton
-          // instance so it can be recreated later. If you want
-          // to reuse the same singleton instance after turning
-          // debug off and on, you might keep the reference.
-          // However, clearing the instance on cleanup makes sense
-          // if cleanup means fully removing the debugger from memory.
-          this.debugger = null // Let's keep this for clarity in this case.
+          this.debugger.cleanup()
+          this.debugger = null
         }
       }
     }
