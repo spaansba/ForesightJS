@@ -85,3 +85,6 @@ ForesightJS can be used bare-bones but also can be configured. For all configura
 
 ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
+# Contributing
+
+Please see the [contributing guideline](/CONTRIBUTING.md)

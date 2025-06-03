@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build --clean && tsc",
-    "test": "cd ./test_project && pnpm dev",
+    "devpage": "cd ./development_page && pnpm dev",
+    "installDevPage": "cd ./development_page && pnpm install",
     "rollup": "rollup -c --bundleConfigAsCjs"
   },
   "exports": {
