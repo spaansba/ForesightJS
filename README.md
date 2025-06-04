@@ -15,11 +15,11 @@ _In the GIF above, [debug mode](https://foresightjs.com/docs/debug) is on. Norma
 ## Download
 
 ```bash
+pnpm add js.foresight
+# or
 npm install js.foresight
 # or
 yarn add js.foresight
-# or
-pnpm add js.foresight
 ```
 
 ## Which problems does ForesightJS solve??
