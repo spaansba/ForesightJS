@@ -1,5 +1,17 @@
 ---
 sidebar_position: 1
+keywords:
+  - ForesightJS
+  - JS.Foresight
+  - Prefetching
+  - Next.JS
+  - NextJS
+  - Routing
+  - Router
+description: Integration details to add ForesightJS to your NextJS projects
+last_updated:
+  date: 2025-06-04
+  author: spaansba
 ---
 
 # Next.js

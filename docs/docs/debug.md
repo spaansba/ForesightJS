@@ -1,5 +1,16 @@
 ---
 sidebar_position: 4
+keywords:
+  - ForesightJS
+  - JS.Foresight
+  - ForesightDebugger
+  - Debug Controller
+  - mouse prediction
+  - tab prediction
+description: Documentation on how to use the ForesightJS debugger
+last_updated:
+  date: 2025-06-04
+  author: spaansba
 ---
 
 # Debugging

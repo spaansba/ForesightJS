@@ -1,5 +1,16 @@
 ---
 sidebar_position: 2
+keywords:
+  - ForesightJS
+  - JS.Foresight
+  - ForesightManager
+  - configuration
+  - mouse prediction
+  - tab prediction
+description: Configuration documenation for the ForesightJS library
+last_updated:
+  date: 2025-06-04
+  author: spaansba
 ---
 
 # Configuration
