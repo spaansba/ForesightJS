@@ -95,6 +95,8 @@ type BaseForesightManagerProps = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.
    * A higher number might lead to smoother but slightly delayed predictions.
+   *
+   * **This value is clamped between 2 and 50.**
    * @default 8
    */
   positionHistorySize: number
@@ -102,6 +104,8 @@ type BaseForesightManagerProps = {
   /**
    * How far ahead (in milliseconds) to predict the mouse trajectory.
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
+   *
+   * **This value is clamped between 10 and 200.**
    * @default 80
    */
   trajectoryPredictionTime: number
@@ -113,20 +117,31 @@ type BaseForesightManagerProps = {
    */
   enableMousePrediction: boolean
 
+  /**
+   * Toggles whether keyboard prediction is on
+   * @default true
+   */
   enableTabPrediction: boolean
 
-  // set it to 0 to act as onhover
+  /**
+   * Tab stops away from an element to trigger callback. Only works when @argument enableTabPrediction is true
+   *
+   * **This value is clamped between 0 and 20.**
+   * @default 3
+   */
   tabOffset: number
 
   /**
    * Whether to show visual debugging information on the screen.
-   * This includes overlays for elements, hit slop areas, and the predicted mouse path.
+   * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
    * @default false
    */
   debug: boolean
 
   /**
    * Amount of time in ms the element bounds get recalculated on scroll/resize of the page.
+   *
+   * **This value is clamped between 0 and 500.**
    * @default 50
    */
   resizeScrollThrottleDelay: number

@@ -15,6 +15,7 @@ ForesightManager.initialize({
   enableMousePrediction: true,
   trajectoryPredictionTime: 80,
   resizeScrollThrottleDelay: 0,
+  positionHistorySize: 20,
   defaultHitSlop: 0,
   debuggerSettings: {
     isControlPanelDefaultMinimized: true,

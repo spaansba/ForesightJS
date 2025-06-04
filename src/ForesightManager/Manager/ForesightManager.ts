@@ -19,6 +19,17 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
+import { clampNumber } from "../helpers/clampNumber"
+import {
+  MAX_POSITION_HISTORY_SIZE,
+  MAX_RESIZE_SCROLL_THROTTLE_DELAY,
+  MAX_TAB_OFFSET,
+  MAX_TRAJECTORY_PREDICTION_TIME,
+  MIN_POSITION_HISTORY_SIZE,
+  MIN_RESIZE_SCROLL_THROTTLE_DELAY,
+  MIN_TAB_OFFSET,
+  MIN_TRAJECTORY_PREDICTION_TIME,
+} from "../constants"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -200,7 +211,11 @@ export class ForesightManager {
       props?.positionHistorySize !== undefined &&
       this.globalSettings.positionHistorySize !== props.positionHistorySize
     ) {
-      this.globalSettings.positionHistorySize = props.positionHistorySize
+      this.globalSettings.positionHistorySize = clampNumber(
+        props.positionHistorySize,
+        MIN_POSITION_HISTORY_SIZE,
+        MAX_POSITION_HISTORY_SIZE
+      )
       settingsActuallyChanged = true
     }
 
@@ -208,7 +223,11 @@ export class ForesightManager {
       props?.trajectoryPredictionTime !== undefined &&
       this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
     ) {
-      this.globalSettings.trajectoryPredictionTime = props.trajectoryPredictionTime
+      this.globalSettings.trajectoryPredictionTime = clampNumber(
+        props.trajectoryPredictionTime,
+        MIN_TRAJECTORY_PREDICTION_TIME,
+        MAX_TRAJECTORY_PREDICTION_TIME
+      )
       settingsActuallyChanged = true
     }
 
@@ -221,7 +240,7 @@ export class ForesightManager {
     }
 
     if (props?.tabOffset !== undefined && this.globalSettings.tabOffset !== props.tabOffset) {
-      this.globalSettings.tabOffset = props.tabOffset
+      this.globalSettings.tabOffset = clampNumber(props.tabOffset, MIN_TAB_OFFSET, MAX_TAB_OFFSET)
       settingsActuallyChanged = true
     }
 
@@ -284,7 +303,11 @@ export class ForesightManager {
       props?.resizeScrollThrottleDelay !== undefined &&
       this.globalSettings.resizeScrollThrottleDelay !== props.resizeScrollThrottleDelay
     ) {
-      this.globalSettings.resizeScrollThrottleDelay = props.resizeScrollThrottleDelay
+      this.globalSettings.resizeScrollThrottleDelay = clampNumber(
+        props.resizeScrollThrottleDelay,
+        MIN_RESIZE_SCROLL_THROTTLE_DELAY,
+        MAX_RESIZE_SCROLL_THROTTLE_DELAY
+      )
       settingsActuallyChanged = true
     }
 
@@ -320,6 +343,7 @@ export class ForesightManager {
     if (!this.debugger) {
       this.debugger = ForesightDebugger.getInstance(this)
       // Then initialize it as before, passing the necessary data
+      console.log(this.globalSettings)
       this.debugger.initialize(
         this.elements,
         this.globalSettings,

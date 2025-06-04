@@ -6,6 +6,16 @@ import type {
   ForesightManagerProps,
   DebuggerSettings,
 } from "../../types/types"
+import {
+  MAX_POSITION_HISTORY_SIZE,
+  MAX_RESIZE_SCROLL_THROTTLE_DELAY,
+  MAX_TAB_OFFSET,
+  MAX_TRAJECTORY_PREDICTION_TIME,
+  MIN_POSITION_HISTORY_SIZE,
+  MIN_RESIZE_SCROLL_THROTTLE_DELAY,
+  MIN_TAB_OFFSET,
+  MIN_TRAJECTORY_PREDICTION_TIME,
+} from "../constants"
 
 interface SectionStates {
   mouse: boolean
@@ -481,7 +491,7 @@ export class DebuggerControlPanel {
                 History Size
                 <span class="info-icon" title="Number of past mouse positions to use for velocity calculation. Higher values smooth predictions but add latency.">i</span>
               </label>
-              <input type="range" id="history-size" min="2" max="20">
+              <input type="range" id="history-size" min="${MIN_POSITION_HISTORY_SIZE}" max="${MAX_POSITION_HISTORY_SIZE}">
               <span id="history-value"></span>
             </div>
             <div class="control-row">
@@ -489,7 +499,7 @@ export class DebuggerControlPanel {
                 Prediction Time
                 <span class="info-icon" title="How many ms in the future to calculate the mouse trajectory. Larger values detect intent sooner.">i</span>
               </label>
-              <input type="range" id="prediction-time" min="10" max="200" step="10">
+              <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
               <span id="prediction-value"></span>
             </div>
           </div>
@@ -513,7 +523,7 @@ export class DebuggerControlPanel {
                 Tab Prediction Offset
                 <span class="info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key.">i</span>
               </label>
-              <input type="range" id="tab-offset" min="0" max="10">
+              <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
               <span id="tab-offset-value"></span>
             </div>
           </div>
@@ -530,7 +540,7 @@ export class DebuggerControlPanel {
                 Scroll/Resize Throttle
                 <span class="info-icon" title="Delay (ms) for recalculating element positions on resize/scroll. Higher values improve performance during rapid events.">i</span>
               </label>
-              <input type="range" id="throttle-delay" min="0" max="500" step="10">
+              <input type="range" id="throttle-delay" min="${MIN_RESIZE_SCROLL_THROTTLE_DELAY}" max="${MAX_RESIZE_SCROLL_THROTTLE_DELAY}" step="10">
               <span id="throttle-value"></span>
             </div>
           </div>

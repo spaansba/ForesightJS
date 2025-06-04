@@ -1,4 +1,6 @@
 import type { HitSlop, Point, Rect } from "../../types/types"
+import { MAX_HITSLOP, MIN_HITSLOP } from "../constants"
+import { clampNumber } from "./clampNumber"
 
 /**
  * Normalizes a `hitSlop` value into a {@link Rect} object.
@@ -10,14 +12,21 @@ import type { HitSlop, Point, Rect } from "../../types/types"
  */
 export function normalizeHitSlop(hitSlop: HitSlop): Rect {
   if (typeof hitSlop === "number") {
+    const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP)
     return {
-      top: hitSlop,
-      left: hitSlop,
-      right: hitSlop,
-      bottom: hitSlop,
+      top: clampedValue,
+      left: clampedValue,
+      right: clampedValue,
+      bottom: clampedValue,
     }
   }
-  return hitSlop
+
+  return {
+    top: clampNumber(hitSlop.top, MIN_HITSLOP, MAX_HITSLOP),
+    left: clampNumber(hitSlop.left, MIN_HITSLOP, MAX_HITSLOP),
+    right: clampNumber(hitSlop.right, MIN_HITSLOP, MAX_HITSLOP),
+    bottom: clampNumber(hitSlop.bottom, MIN_HITSLOP, MAX_HITSLOP),
+  }
 }
 
 /**
