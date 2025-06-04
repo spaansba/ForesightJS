@@ -10,9 +10,9 @@ ForesightManager.initialize({
   },
   enableMousePrediction: true,
   enableTabPrediction: true,
-  positionHistorySize: 20,
+  positionHistorySize: 500,
   resizeScrollThrottleDelay: 50,
-  trajectoryPredictionTime: 0,
+  trajectoryPredictionTime: 50,
   tabOffset: 3,
 })
 

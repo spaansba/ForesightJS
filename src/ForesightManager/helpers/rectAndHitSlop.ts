@@ -10,9 +10,9 @@ import { clampNumber } from "./clampNumber"
  * @param hitSlop - A number for uniform slop, or a {@link Rect} object for specific slop per side.
  * @returns A {@link Rect} object with `top`, `left`, `right`, and `bottom` properties.
  */
-export function normalizeHitSlop(hitSlop: HitSlop): Rect {
+export function normalizeHitSlop(hitSlop: HitSlop, isDebug: boolean): Rect {
   if (typeof hitSlop === "number") {
-    const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP)
+    const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP, isDebug, "hitslop")
     return {
       top: clampedValue,
       left: clampedValue,
@@ -22,10 +22,10 @@ export function normalizeHitSlop(hitSlop: HitSlop): Rect {
   }
 
   return {
-    top: clampNumber(hitSlop.top, MIN_HITSLOP, MAX_HITSLOP),
-    left: clampNumber(hitSlop.left, MIN_HITSLOP, MAX_HITSLOP),
-    right: clampNumber(hitSlop.right, MIN_HITSLOP, MAX_HITSLOP),
-    bottom: clampNumber(hitSlop.bottom, MIN_HITSLOP, MAX_HITSLOP),
+    top: clampNumber(hitSlop.top, MIN_HITSLOP, MAX_HITSLOP, isDebug, "hitslop - top"),
+    left: clampNumber(hitSlop.left, MIN_HITSLOP, MAX_HITSLOP, isDebug, "hitslop - left"),
+    right: clampNumber(hitSlop.right, MIN_HITSLOP, MAX_HITSLOP, isDebug, "hitslop - right"),
+    bottom: clampNumber(hitSlop.bottom, MIN_HITSLOP, MAX_HITSLOP, isDebug, "hitslop - bottom"),
   }
 }
 

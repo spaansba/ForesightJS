@@ -126,7 +126,7 @@ export class ForesightManager {
     }
 
     const normalizedHitSlop = hitSlop
-      ? normalizeHitSlop(hitSlop)
+      ? normalizeHitSlop(hitSlop, this.globalSettings.debug)
       : this.globalSettings.defaultHitSlop
 
     const originalRect = element.getBoundingClientRect()
@@ -214,7 +214,9 @@ export class ForesightManager {
       this.globalSettings.positionHistorySize = clampNumber(
         props.positionHistorySize,
         MIN_POSITION_HISTORY_SIZE,
-        MAX_POSITION_HISTORY_SIZE
+        MAX_POSITION_HISTORY_SIZE,
+        this.globalSettings.debug,
+        "positionHistorySize"
       )
       settingsActuallyChanged = true
     }
@@ -226,7 +228,9 @@ export class ForesightManager {
       this.globalSettings.trajectoryPredictionTime = clampNumber(
         props.trajectoryPredictionTime,
         MIN_TRAJECTORY_PREDICTION_TIME,
-        MAX_TRAJECTORY_PREDICTION_TIME
+        MAX_TRAJECTORY_PREDICTION_TIME,
+        this.globalSettings.debug,
+        "trajectoryPredictionTime"
       )
       settingsActuallyChanged = true
     }
@@ -240,7 +244,13 @@ export class ForesightManager {
     }
 
     if (props?.tabOffset !== undefined && this.globalSettings.tabOffset !== props.tabOffset) {
-      this.globalSettings.tabOffset = clampNumber(props.tabOffset, MIN_TAB_OFFSET, MAX_TAB_OFFSET)
+      this.globalSettings.tabOffset = clampNumber(
+        props.tabOffset,
+        MIN_TAB_OFFSET,
+        MAX_TAB_OFFSET,
+        this.globalSettings.debug,
+        "tabOffset"
+      )
       settingsActuallyChanged = true
     }
 
@@ -289,7 +299,7 @@ export class ForesightManager {
     }
 
     if (props?.defaultHitSlop !== undefined) {
-      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
+      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop, this.globalSettings.debug)
       if (!areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this.globalSettings.defaultHitSlop = normalizedNewHitSlop
         settingsActuallyChanged = true
@@ -306,7 +316,9 @@ export class ForesightManager {
       this.globalSettings.resizeScrollThrottleDelay = clampNumber(
         props.resizeScrollThrottleDelay,
         MIN_RESIZE_SCROLL_THROTTLE_DELAY,
-        MAX_RESIZE_SCROLL_THROTTLE_DELAY
+        MAX_RESIZE_SCROLL_THROTTLE_DELAY,
+        this.globalSettings.debug,
+        "resizeScrollThrottleDelay"
       )
       settingsActuallyChanged = true
     }
@@ -343,7 +355,6 @@ export class ForesightManager {
     if (!this.debugger) {
       this.debugger = ForesightDebugger.getInstance(this)
       // Then initialize it as before, passing the necessary data
-      console.log(this.globalSettings)
       this.debugger.initialize(
         this.elements,
         this.globalSettings,
