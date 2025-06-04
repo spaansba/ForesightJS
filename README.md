@@ -87,7 +87,7 @@ ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging
 
 ## How does ForesightJS work?
 
-ForesightJS analyzes mouse movements and keyboard navigation to predict user intent. For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/behind-the-scenes)**.
+For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
 
 # Contributing
 
