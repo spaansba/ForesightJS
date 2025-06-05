@@ -16,12 +16,12 @@ ForesightJS is a lightweight JavaScript library with full TypeScript support tha
 ### Understanding ForesightJS's Role:
 When you over simplify prefetching it exists of three parts.
 
-+ **What** - Defines the resource or data to load 
-+ **How** - Defines the method and cache strategy 
-+ **When** - Defines the moment to start fetching
++ **What** resource or data to load
++ **How** the loading method and caching strategy is
++ **When** the optimal moment to start fetching is
 
 ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
-You supply the **What** and **How** inside your callback when you register an element.
+You supply the **What** and **How** inside your `callback` when you register an element.
 
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
@@ -40,23 +40,25 @@ yarn add js.foresight
 
 ## Which problems does ForesightJS solve?
 
-### Problem 1: On-Hover Prefetching is Too Late
+### Problem 1: On-Hover Prefetching Still Has Latency
 
-Traditional hover-based prefetching only starts after the user hovers over an element. This wastes the 100-200ms between user intent (moving toward a button) and the actual hover event.
+Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires—time that could be used for prefetching.
 
 ### Problem 2: Viewport-Based Prefetching is Wasteful
 
-Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. This means every visible link is getting prefetched even though the user is most likely not going to interact with it. Simply scrolling up and down the Next.js homepage can trigger 1.59MB of unnecessary prefetch requests.
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger ***1.59MB*** of unnecessary prefetch requests.
 
-### Problem 3: Routers don't take keyboard users into consideration
+### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
 
-Many routers prefetch either based on viewport or hover and leave keyboard users prefetching on click. This means keyboard users get slower page loads since prefetching only happens after they click.
+Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
 
 ### The ForesightJS Solution
 
-ForesightJS sits between viewport and hover prefetching. By predicting which element the user will interact with next, it can prefetch before hover without wasting resources like viewport prefetching. To make these predictions, it analyzes mouse movement to predict where the cursor is headed and tracks keyboard navigation by monitoring how many tab stops away the user is from registered elements.
+ForesightJS bridges the gap between wasteful viewport prefetching and basic hover prefetching. The `ForesightManager` predicts user interactions by analyzing mouse trajectory patterns and keyboard navigation sequences. This allows you to prefetch resources at the optimal time to improve performance, but targeted enough to avoid waste.
 
 ## Basic Usage Example
+
+Both global and element speicif configuration details can be found [here](https://foresightjs.com/docs/config).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -65,7 +67,7 @@ import { ForesightManager } from "foresightjs"
 // If you dont want global settings, you dont have to initialize the manager
 ForesightManager.initialize({
   debug: false, // Set to true to see visualization
-  defaultHitSlop: { top: 30, left: 30, bottom: 80, right: 30 }, // Adds invisible margin around an element to increase its hitbox
+  trajectoryPredictionTime: 80, // How far ahead (in milliseconds) to predict the mouse trajectory
 })
 
 // Register an element to be tracked
@@ -74,8 +76,8 @@ const myButton = document.getElementById("my-button")
 const { isTouchDevice, unregister } = ForesightManager.instance.register({
   element: myButton,
   callback: () => {
-    console.log("prefetching")
-  }, // Callback when user is predicted to interact with the element,
+    // This is where your prefetching logic goes
+  },
   hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
 })
 
