@@ -7,6 +7,16 @@
 
 ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
+### Understanding ForesightJS's Role:
+When you over simplify prefetching it exists of three parts.
+
++ **What** - Defines the resource or data to load 
++ **How** - Defines the method and cache strategy 
++ **When** - Defines the moment to start fetching
+
+ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
+You supply the **What** and **How** inside your callback when you register an element.
+
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
 ![](https://github.com/spaansba/ForesightJS/blob/main/static/ForesightJSDemo.gif)
@@ -22,7 +32,7 @@ npm install js.foresight
 yarn add js.foresight
 ```
 
-## Which problems does ForesightJS solve??
+## Which problems does ForesightJS solve?
 
 ### Problem 1: On-Hover Prefetching is Too Late
 
@@ -87,7 +97,7 @@ ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debugging
 
 ## How does ForesightJS work?
 
-ForesightJS analyzes mouse movements and keyboard navigation to predict user intent. For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/behind-the-scenes)**.
+For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
 
 # Contributing
 
