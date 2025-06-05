@@ -1,5 +1,16 @@
 ---
 sidebar_position: 2
+keywords:
+  - ForesightJS
+  - JS.Foresight
+  - Prefetching
+  - React Router
+  - Routing
+  - React
+description: Integration details to add ForesightJS to your React Router projects
+last_updated:
+  date: 2025-06-04
+  author: spaansba
 ---
 
 # React Router

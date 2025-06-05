@@ -34,9 +34,7 @@ function HomepageHeader() {
         <Heading as="h1" className="hero__title">
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle">
-          What if we could only prefetch data the user <i>actually</i> needs?
-        </p>
+        <p className="hero__subtitle">The most modern way to prefetch your data</p>
 
         <div className={styles.buttons}>
           <Link
@@ -60,8 +58,8 @@ export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext()
   return (
     <Layout
-      title={`${siteConfig.title} - Predictive Mouse Intent Library`}
-      description="ForesightJs is a library for predictive mouse intent detection, enabling optimized prefetching and improved user experience."
+      title={``}
+      description="ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements and keyboard navigation, enabling optimal prefetching timing and improved performance."
     >
       <HomepageHeader />
 

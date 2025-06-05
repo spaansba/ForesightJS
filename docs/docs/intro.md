@@ -13,48 +13,62 @@ last_updated:
   author: spaansba
 ---
 
-# Introduction
+# ForesightJS
+
+[![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
+[![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/js.foresight)](https://bundlephobia.com/package/js.foresight)
+[![GitHub stars](https://img.shields.io/github/stars/spaansba/ForesightJS.svg?style=social&label=Star)](https://github.com/spaansba/ForesightJS)
+[![GitHub last commit](https://img.shields.io/github/last-commit/spaansba/ForesightJS)](https://github.com/spaansba/ForesightJS/commits)
+
+[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com/)
 
 ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
-[![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
-[![npm downloads](https://img.shields.io/npm/dm/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
-[![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+### Understanding ForesightJS's Role:
+
+When you over simplify prefetching it exists of three parts.
+
+- **What** resource or data to load
+- **How** the loading method and caching strategy is
+- **When** the optimal moment to start fetching is
+
+ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
+You supply the **What** and **How** inside your `callback` when you register an element.
 
 ## Download
 
 ```bash
-npm install js.foresight
-```
-
-```bash
-yarn add js.foresight
-```
-
-```bash
 pnpm add js.foresight
+# or
+npm install js.foresight
+# or
+yarn add js.foresight
 ```
 
 ## Which problems does ForesightJS solve?
 
-### Problem 1: On-Hover Prefetching is Too Late
+### Problem 1: On-Hover Prefetching Still Has Latency
 
-Traditional hover-based prefetching only starts after the user hovers over an element. This wastes the 100-200ms between user intent (moving toward a button) and the actual hover event.
+Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires—time that could be used for prefetching.
 
 ### Problem 2: Viewport-Based Prefetching is Wasteful
 
-Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. This means every visible link is getting prefetched even though the user is most likely not going to interact with it. Simply scrolling up and down the Next.js homepage can trigger **1.59MB** of unnecessary prefetch requests.
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger **_1.59MB_** of unnecessary prefetch requests.
 
-### Problem 3: Routers don't take keyboard users into consideration
+### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
 
-Many routers prefetch either based on viewport or hover and leave keyboard users prefetching on click. This means keyboard users get slower page loads since prefetching only happens after they click.
+Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
 
 ### The ForesightJS Solution
 
-ForesightJS sits between viewport and hover prefetching. By predicting which element the user will interact with next, it can prefetch before hover without wasting resources like viewport prefetching. To make these predictions, it analyzes mouse movement to predict where the cursor is headed and tracks keyboard navigation by monitoring how many tab stops away the user is from registered elements.
+ForesightJS bridges the gap between wasteful viewport prefetching and basic hover prefetching. The `ForesightManager` predicts user interactions by analyzing mouse trajectory patterns and keyboard navigation sequences. This allows you to prefetch resources at the optimal time to improve performance, but targeted enough to avoid waste.
 
 ## Basic Usage Example
+
+Both global and element speicif configuration details can be found [here](https://foresightjs.com/docs/config).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -63,7 +77,7 @@ import { ForesightManager } from "foresightjs"
 // If you dont want global settings, you dont have to initialize the manager
 ForesightManager.initialize({
   debug: false, // Set to true to see visualization
-  defaultHitSlop: { top: 30, left: 30, bottom: 80, right: 30 }, // Adds invisible margin around an element to increase its hitbox
+  trajectoryPredictionTime: 80, // How far ahead (in milliseconds) to predict the mouse trajectory
 })
 
 // Register an element to be tracked
@@ -72,8 +86,8 @@ const myButton = document.getElementById("my-button")
 const { isTouchDevice, unregister } = ForesightManager.instance.register({
   element: myButton,
   callback: () => {
-    console.log("prefetching")
-  }, // Callback when user is predicted to interact with the element,
+    // This is where your prefetching logic goes
+  },
   hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
 })
 
@@ -85,5 +99,24 @@ unregister()
 
 ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
 
-An example of what to do with touch devices can be found in the [Next.JS ForesightLink component](/docs/integrations/nextjs#foresightlink-component) integrations
-An example of what to do with touch devices can be found in the [Next.JS](/docs/integrations/nextjs#foresightlink-component) or [React Router](/docs/integrations/react#foresightlink-component) ForesightLink components.
+An example of what to do with touch devices can be found in the [Next.js](https://foresightjs.com/docs/integrations/nextjs) or [React Router](https://foresightjs.com/docs/integrations/react) ForesightLink components.
+
+## Integrations
+
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](https://foresightjs.com/docs/integrations/nextjs) and [React Router](https://foresightjs.com/docs/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+
+## Configuration
+
+ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/config).
+
+## Debugging visualization
+
+ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+
+## How does ForesightJS work?
+
+For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
+
+# Contributing
+
+Please see the [contributing guidelines](/CONTRIBUTING.md)

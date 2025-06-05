@@ -1,5 +1,14 @@
 ---
 sidebar_position: 3
+keywords:
+  - ForesightJS
+  - Tanstack Router
+  - Prefetching
+  - Routing
+description: Integration details to add ForesightJS to your Tanstack Router projects
+last_updated:
+  date: 2025-06-04
+  author: spaansba
 ---
 
 # TanStack Router
