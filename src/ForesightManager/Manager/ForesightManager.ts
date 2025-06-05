@@ -349,7 +349,6 @@ export class ForesightManager {
   }
 
   private turnOnDebugMode() {
-    // Get the debugger instance, passing 'this' (the manager instance)
     if (!this.debugger) {
       this.debugger = ForesightDebugger.getInstance(this)
       // Then initialize it as before, passing the necessary data
