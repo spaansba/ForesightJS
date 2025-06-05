@@ -171,3 +171,17 @@ export type ForesightRegisterOptions = {
 export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">
 
 export type HitSlop = Rect | number
+
+/**
+ * Get all keys in UpdateForsightManagerProps that are numeric
+ */
+export type NumericSettingKeys = {
+  [K in keyof UpdateForsightManagerProps]: UpdateForsightManagerProps[K] extends number ? K : never
+}[keyof UpdateForsightManagerProps]
+
+/**
+ * Get all keys in UpdateForsightManagerProps that are boolean
+ */
+export type BooleanSettingKeys = {
+  [K in keyof UpdateForsightManagerProps]: UpdateForsightManagerProps[K] extends boolean ? K : never
+}[keyof UpdateForsightManagerProps]

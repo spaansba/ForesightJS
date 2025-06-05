@@ -312,45 +312,47 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public updateAllLinkVisuals() {
-    if (!this.shadowRoot || !this.debugContainer) return
-    this.refreshDisplayedElements()
-  }
-
   public updateTrajectoryVisuals(
     currentPoint: Point,
     predictedPoint: Point,
     enableMousePrediction: boolean
   ) {
-    if (!this.shadowRoot || !this.debugContainer) return
-
-    if (this.debugPredictedMouseIndicator) {
-      this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
-      this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
-      this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none" // Hide if prediction is off
+    if (!this.shadowRoot || !this.debugContainer) {
+      return
+    }
+    if (!this.debugPredictedMouseIndicator || !this.debugTrajectoryLine) {
+      return
     }
 
-    if (this.debugTrajectoryLine) {
-      if (enableMousePrediction && currentPoint && predictedPoint) {
-        const dx = predictedPoint.x - currentPoint.x
-        const dy = predictedPoint.y - currentPoint.y
+    this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
+    this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
+    this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
 
-        // Only show trajectory if there's significant movement or prediction is active
-        if (enableMousePrediction && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
-          const length = Math.sqrt(dx * dx + dy * dy)
-          const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+    // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
+    if (predictedPoint.x === 0 && predictedPoint.y === 0) {
+      this.debugPredictedMouseIndicator.style.display = "none"
+      return
+    }
 
-          this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
-          this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
-          this.debugTrajectoryLine.style.width = `${length}px`
-          this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
-          this.debugTrajectoryLine.style.display = "block"
-        } else {
-          this.debugTrajectoryLine.style.display = "none"
-        }
-      } else {
-        this.debugTrajectoryLine.style.display = "none"
-      }
+    if (!enableMousePrediction) {
+      return
+    }
+
+    const dx = predictedPoint.x - currentPoint.x
+    const dy = predictedPoint.y - currentPoint.y
+
+    // Only show trajectory if there's significant movement
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+      this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
+      this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
+      this.debugTrajectoryLine.style.width = `${length}px`
+      this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
+      this.debugTrajectoryLine.style.display = "block"
+    } else {
+      this.debugTrajectoryLine.style.display = "none"
     }
   }
 

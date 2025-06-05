@@ -1,11 +1,13 @@
 import { tabbable } from "tabbable"
 import type {
+  BooleanSettingKeys,
   ForesightElement,
   ForesightElementData,
   ForesightManagerProps,
   ForesightRegisterOptions,
   ForesightRegisterResult,
   MousePosition,
+  NumericSettingKeys,
   Point,
   UpdateForsightManagerProps,
 } from "../../types/types"
@@ -30,6 +32,8 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
+
+import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -199,94 +203,74 @@ export class ForesightManager {
     }
   }
 
+  private updateNumericSettings<K extends NumericSettingKeys>(
+    newValue: number | undefined,
+    name: K,
+    min: number,
+    max: number
+  ) {
+    if (!shouldUpdateSetting(newValue, this.globalSettings[name])) {
+      return false
+    }
+
+    this.globalSettings[name] = clampNumber(newValue, min, max, this.globalSettings.debug, name)
+
+    return true
+  }
+
+  private updateBooleanSetting<K extends BooleanSettingKeys>(
+    newValue: boolean | undefined,
+    name: K
+  ): boolean {
+    if (!shouldUpdateSetting(newValue, this.globalSettings[name])) {
+      return false
+    }
+    this.globalSettings[name] = newValue
+    return true
+  }
+
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
     let settingsActuallyChanged = false
 
-    if (
-      props?.positionHistorySize !== undefined &&
-      this.globalSettings.positionHistorySize !== props.positionHistorySize
-    ) {
-      this.globalSettings.positionHistorySize = clampNumber(
-        props.positionHistorySize,
-        MIN_POSITION_HISTORY_SIZE,
-        MAX_POSITION_HISTORY_SIZE,
-        this.globalSettings.debug,
-        "positionHistorySize"
-      )
-      settingsActuallyChanged = true
-    }
+    settingsActuallyChanged ||= this.updateNumericSettings(
+      props?.positionHistorySize,
+      "positionHistorySize",
+      MIN_POSITION_HISTORY_SIZE,
+      MAX_POSITION_HISTORY_SIZE
+    )
 
-    if (
-      props?.trajectoryPredictionTime !== undefined &&
-      this.globalSettings.trajectoryPredictionTime !== props.trajectoryPredictionTime
-    ) {
-      this.globalSettings.trajectoryPredictionTime = clampNumber(
-        props.trajectoryPredictionTime,
-        MIN_TRAJECTORY_PREDICTION_TIME,
-        MAX_TRAJECTORY_PREDICTION_TIME,
-        this.globalSettings.debug,
-        "trajectoryPredictionTime"
-      )
-      settingsActuallyChanged = true
-    }
+    settingsActuallyChanged ||= this.updateNumericSettings(
+      props?.trajectoryPredictionTime,
+      "trajectoryPredictionTime",
+      MIN_TRAJECTORY_PREDICTION_TIME,
+      MAX_TRAJECTORY_PREDICTION_TIME
+    )
 
-    if (
-      props?.enableTabPrediction !== undefined &&
-      this.globalSettings.enableTabPrediction !== props.enableTabPrediction
-    ) {
-      this.globalSettings.enableTabPrediction = props.enableTabPrediction
-      settingsActuallyChanged = true
-    }
+    settingsActuallyChanged ||= this.updateNumericSettings(
+      props?.tabOffset,
+      "tabOffset",
+      MIN_TAB_OFFSET,
+      MAX_TAB_OFFSET
+    )
 
-    if (props?.tabOffset !== undefined && this.globalSettings.tabOffset !== props.tabOffset) {
-      this.globalSettings.tabOffset = clampNumber(
-        props.tabOffset,
-        MIN_TAB_OFFSET,
-        MAX_TAB_OFFSET,
-        this.globalSettings.debug,
-        "tabOffset"
-      )
-      settingsActuallyChanged = true
-    }
+    settingsActuallyChanged ||= this.updateNumericSettings(
+      props?.resizeScrollThrottleDelay,
+      "resizeScrollThrottleDelay",
+      MIN_RESIZE_SCROLL_THROTTLE_DELAY,
+      MAX_RESIZE_SCROLL_THROTTLE_DELAY
+    )
 
-    if (
-      props?.enableMousePrediction !== undefined &&
-      this.globalSettings.enableMousePrediction !== props.enableMousePrediction
-    ) {
-      this.globalSettings.enableMousePrediction = props.enableMousePrediction
-      settingsActuallyChanged = true
-      if (this.globalSettings.enableMousePrediction) {
-        this.predictedPoint = predictNextMousePosition(
-          this.currentPoint,
-          this.positions, // History before the currentPoint was added
-          this.globalSettings.positionHistorySize,
-          this.globalSettings.trajectoryPredictionTime
-        )
-      } else {
-        this.predictedPoint = this.currentPoint
-        // When disabling prediction, clear active trajectory hits and their timeouts
-        this.elements.forEach((data, el) => {
-          if (data.trajectoryHitData.isTrajectoryHit) {
-            if (data.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-              clearTimeout(data.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-            }
-            const updatedElementData: ForesightElementData = {
-              ...data,
-              trajectoryHitData: {
-                isTrajectoryHit: false,
-                trajectoryHitTime: 0,
-                trajectoryHitExpirationTimeoutId: undefined,
-              },
-            }
-            this.elements.set(el, updatedElementData)
-            if (this.debugger) {
-              this.debugger.createOrUpdateLinkOverlay(el, updatedElementData)
-            }
-          }
-        })
-      }
-    }
+    settingsActuallyChanged ||= this.updateBooleanSetting(
+      props?.enableMousePrediction,
+      "enableMousePrediction"
+    )
 
+    settingsActuallyChanged ||= this.updateBooleanSetting(
+      props?.enableTabPrediction,
+      "enableTabPrediction"
+    )
+
+    // Nested boolean doesnt work with updateBooleanSetting
     if (props?.debuggerSettings?.isControlPanelDefaultMinimized !== undefined) {
       this.globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
         props.debuggerSettings.isControlPanelDefaultMinimized
@@ -302,20 +286,6 @@ export class ForesightManager {
           this.updateExpandedRect(element)
         })
       }
-    }
-
-    if (
-      props?.resizeScrollThrottleDelay !== undefined &&
-      this.globalSettings.resizeScrollThrottleDelay !== props.resizeScrollThrottleDelay
-    ) {
-      this.globalSettings.resizeScrollThrottleDelay = clampNumber(
-        props.resizeScrollThrottleDelay,
-        MIN_RESIZE_SCROLL_THROTTLE_DELAY,
-        MAX_RESIZE_SCROLL_THROTTLE_DELAY,
-        this.globalSettings.debug,
-        "resizeScrollThrottleDelay"
-      )
-      settingsActuallyChanged = true
     }
 
     if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
@@ -334,18 +304,25 @@ export class ForesightManager {
       }
     }
 
-    if (settingsActuallyChanged && this.globalSettings.debug && this.debugger) {
-      this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateTrajectoryVisuals(
-        this.currentPoint,
-        this.predictedPoint,
-        this.globalSettings.enableMousePrediction
-      )
-      this.elements.forEach((data, el) => {
-        this.debugger!.createOrUpdateLinkOverlay(el, data)
-      })
-      this.debugger.refreshDisplayedElements()
+    if (settingsActuallyChanged) {
+      this.updateDebuggerWithNewSettings()
     }
+  }
+
+  private updateDebuggerWithNewSettings(): void {
+    if (!this.globalSettings.debug || !this.debugger) {
+      return
+    }
+    this.debugger.updateControlsState(this.globalSettings)
+    this.debugger.updateTrajectoryVisuals(
+      this.currentPoint,
+      this.predictedPoint,
+      this.globalSettings.enableMousePrediction
+    )
+    this.elements.forEach((data, el) => {
+      this.debugger!.createOrUpdateLinkOverlay(el, data)
+    })
+    this.debugger.refreshDisplayedElements()
   }
 
   private turnOnDebugMode() {
@@ -359,14 +336,7 @@ export class ForesightManager {
         this.predictedPoint
       )
     } else {
-      // If already exists, just update visuals/state
-      this.debugger.updateControlsState(this.globalSettings)
-      this.debugger.updateAllLinkVisuals()
-      this.debugger.updateTrajectoryVisuals(
-        this.currentPoint,
-        this.predictedPoint,
-        this.globalSettings.enableMousePrediction
-      )
+      this.updateDebuggerWithNewSettings()
     }
   }
 
