@@ -89,6 +89,8 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
+  private constructor() {}
+
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
       ForesightManager.manager = new ForesightManager()
