@@ -36,7 +36,6 @@ export type Point = {
 /**
  * Internal type representing the calculated boundaries of a foresight element,
  * including its original dimensions and the expanded hit area.
- * (This type is not exported, but commenting it is good practice for maintainability)
  */
 type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */

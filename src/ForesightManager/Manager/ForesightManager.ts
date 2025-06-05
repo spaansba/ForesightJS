@@ -89,19 +89,11 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
-  private constructor() {}
-
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
     if (!ForesightManager.manager) {
       ForesightManager.manager = new ForesightManager()
-      if (props) {
-        ForesightManager.manager.alterGlobalSettings(props)
-      } else {
-        if (ForesightManager.manager.globalSettings.debug) {
-          ForesightManager.manager.turnOnDebugMode()
-        }
-      }
-    } else if (props) {
+    }
+    if (props) {
       ForesightManager.manager.alterGlobalSettings(props)
     }
     return ForesightManager.manager
@@ -151,6 +143,7 @@ export class ForesightManager {
     }
     this.elements.set(element, elementData)
 
+    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
     if (!this.isSetup) {
       this.initializeGlobalListeners()
     }
@@ -197,7 +190,7 @@ export class ForesightManager {
         this.removeGlobalListeners()
       } else {
         console.log(
-          "%cForesightJS: All elements have successfully triggered their callbacks. ForesightJS would typically perform cleanup actions now, but these are currently skipped while in debug mode.",
+          "%cForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup actions now, but these are currently skipped while in debug mode.",
           "color: #28a745; font-weight: bold;"
         )
       }
@@ -324,14 +317,17 @@ export class ForesightManager {
     }
 
     if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
-      this.globalSettings.debug = props.debug
-      settingsActuallyChanged = true
-      if (this.globalSettings.debug) {
-        this.turnOnDebugMode()
-      } else {
-        if (this.debugger) {
-          this.debugger.cleanup()
-          this.debugger = null
+      // For ssr we cant turn debugger on.
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
+        this.globalSettings.debug = props.debug
+        settingsActuallyChanged = true
+        if (this.globalSettings.debug) {
+          this.turnOnDebugMode()
+        } else {
+          if (this.debugger) {
+            this.debugger.cleanup()
+            this.debugger = null
+          }
         }
       }
     }
@@ -690,8 +686,13 @@ export class ForesightManager {
   }
 
   private initializeGlobalListeners() {
-    if (this.isSetup) return
-
+    if (this.isSetup) {
+      return
+    }
+    // To avoid setting up listeners while ssr
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return
+    }
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
@@ -706,6 +707,7 @@ export class ForesightManager {
       subtree: true,
       attributes: true,
     })
+    console.log("rerunning")
 
     this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
     this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
