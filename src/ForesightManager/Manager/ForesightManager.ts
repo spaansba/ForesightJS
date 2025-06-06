@@ -276,7 +276,6 @@ export class ForesightManager {
         )
       }
     }
-    console.log(this.positions)
 
     const trajectoryTimeChanged = this.updateNumericSettings(
       props?.trajectoryPredictionTime,
@@ -650,7 +649,6 @@ export class ForesightManager {
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Tab") {
       this.lastKeyDown = e
-      console.log(this._globalSettings.tabOffset)
     } else {
       this.lastKeyDown = null
     }

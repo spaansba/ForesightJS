@@ -13,7 +13,6 @@ import styles from "./index.module.css"
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
-  console.log(ForesightManager.instance)
   ForesightManager.initialize({
     enableMousePrediction: true,
     trajectoryPredictionTime: 110,
@@ -47,9 +46,7 @@ function HomepageHeader() {
           </Link>
         </div>
 
-        <div className={styles.installSection}>
-          <PackageManagerTabs />
-        </div>
+        <div className={styles.installSection}>{/* <PackageManagerTabs /> */}</div>
       </div>
     </header>
   )
