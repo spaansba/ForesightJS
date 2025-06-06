@@ -110,7 +110,6 @@ export class ForesightManager {
   private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
-    debugger
     if (!this.isInitiated) {
       ForesightManager.manager = new ForesightManager()
     }
@@ -262,6 +261,8 @@ export class ForesightManager {
       MIN_POSITION_HISTORY_SIZE,
       MAX_POSITION_HISTORY_SIZE
     )
+
+    console.log(this.positions)
 
     const trajectoryTimeChanged = this.updateNumericSettings(
       props?.trajectoryPredictionTime,
@@ -578,8 +579,6 @@ export class ForesightManager {
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
     }
-
-    console.log(this._globalSettings)
 
     const now = performance.now()
     const timeSinceLastCall = now - this.lastResizeScrollCallTimestamp
