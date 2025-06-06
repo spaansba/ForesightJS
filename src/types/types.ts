@@ -105,7 +105,7 @@ type BaseForesightManagerProps = {
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
    *
    * **This value is clamped between 10 and 200.**
-   * @default 80
+   * @default 120
    */
   trajectoryPredictionTime: number
 
@@ -126,7 +126,7 @@ type BaseForesightManagerProps = {
    * Tab stops away from an element to trigger callback. Only works when @argument enableTabPrediction is true
    *
    * **This value is clamped between 0 and 20.**
-   * @default 3
+   * @default 2
    */
   tabOffset: number
 

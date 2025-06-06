@@ -65,7 +65,7 @@ export class ForesightManager {
     debug: false,
     enableMousePrediction: true,
     positionHistorySize: 8,
-    trajectoryPredictionTime: 80,
+    trajectoryPredictionTime: 120,
     defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     resizeScrollThrottleDelay: 50,
     debuggerSettings: {
