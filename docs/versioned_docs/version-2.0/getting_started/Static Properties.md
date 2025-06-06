@@ -15,7 +15,7 @@ slug: Static_Properties
 
 # Static Properties
 
-the ForsightManager exposes a few static properties that might help you.
+The ForesightManager exposes several static properties for accessing and checking the manager state.
 
 ## `ForesightManager.instance`
 
