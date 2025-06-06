@@ -1,5 +1,6 @@
 import { useIsVisible } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
+import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
 function ForesightButtonVisibility() {
   const isVisible = useIsVisible()
@@ -18,9 +19,10 @@ function ForesightButtonVisibility() {
           }}
         />
       </div>
-      <p className="text-sm text-slate-600 text-center max-w-32">
-        Tests DOM removal causing layout shifts
-      </p>
+      <ForesightButtonParagraph
+        paragraph="Tests DOM removal causing layout shifts. The MutationObserver should NOT remove this element
+      since we are just toggling visibility"
+      />
     </div>
   )
 }

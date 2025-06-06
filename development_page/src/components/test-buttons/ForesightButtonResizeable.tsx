@@ -1,5 +1,6 @@
 import { useIsResized } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
+import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
 function ForesightButtonResizeable() {
   const isResized = useIsResized()
@@ -22,9 +23,7 @@ function ForesightButtonResizeable() {
           }}
         />
       </div>
-      <p className="text-sm text-slate-600 text-center max-w-32">
-        Tests element boundary updates
-      </p>
+      <ForesightButtonParagraph paragraph="Tests element boundary updates, check if the ResizeObserver is doing its work correctly by recalculating all element bounds on resize" />
     </div>
   )
 }

@@ -2,15 +2,17 @@ import ForesightButtonVisibility from "./test-buttons/ForesightButtonVisibility"
 import ForesightButtonResizeable from "./test-buttons/ForesightButtonResizeable"
 import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
-import TestExplanationOverview from "./ui/TestExplanationOverview"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
 
 export const Main = () => {
   const resetKey = useResetKey()
-  
+
   return (
-    <div key={resetKey} className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans">
+    <div
+      key={resetKey}
+      className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans"
+    >
       <ControlSection
         title="Foresight Manager Development Controls"
         subtitle="Control the behavior of the test buttons below using these controls"
@@ -24,18 +26,9 @@ export const Main = () => {
             <ForesightButtonVisibility />
             <ForesightButtonResizeable />
             <ForesightButtonRemoveable />
-            <div className="flex flex-col items-center space-y-4">
-              <h3 className="text-lg font-semibold text-slate-700">No Name Test</h3>
-              <div className="flex items-center justify-center">
-                <ForesightButtonNoName />
-              </div>
-              <p className="text-sm text-slate-600 text-center max-w-32">
-                Tests unnamed element handling
-              </p>
-            </div>
+
+            <ForesightButtonNoName />
           </div>
-          
-          <TestExplanationOverview />
         </div>
       </div>
     </div>

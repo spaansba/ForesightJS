@@ -581,6 +581,7 @@ export class ForesightManager {
         for (const element of currentElements) {
           if (!element.isConnected) {
             if (this.elements.has(element)) {
+              console.log("here")
               this.unregister(element) // unregister will clear its own timeout
             }
           }

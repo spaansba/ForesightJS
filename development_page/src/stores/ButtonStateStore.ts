@@ -19,7 +19,7 @@ const useButtonStateStore = create<ButtonStateStore>((set) => ({
   name: "button-state-store",
   isVisible: true,
   isRemoved: false,
-  isResized: false,
+  isResized: true,
   resetKey: 0,
   actions: {
     toggleVisibility: () => set((state) => ({ isVisible: !state.isVisible })),
@@ -29,7 +29,7 @@ const useButtonStateStore = create<ButtonStateStore>((set) => ({
       set((state) => ({
         isVisible: true,
         isRemoved: false,
-        isResized: false,
+        isResized: true,
         resetKey: state.resetKey + 1,
       })),
   },

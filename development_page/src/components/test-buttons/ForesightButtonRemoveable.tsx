@@ -1,5 +1,6 @@
 import { useIsRemoved } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
+import ForesightButtonParagraph from "./ForesightButtonParagraph"
 function ForesightButtonRemoveable() {
   const shouldBeRemoved = useIsRemoved()
 
@@ -8,7 +9,7 @@ function ForesightButtonRemoveable() {
       {!shouldBeRemoved && (
         <>
           <h3 className="text-lg font-semibold text-slate-700">Remove Test</h3>
-          <div className="bg-gradient-to-br from-red-200 to-red-300 size-20 rounded-lg shadow-md border border-red-300">
+          <div className="bg-gradient-to-br from-red-200 to-red-300 size-40 rounded-lg shadow-md border border-red-300">
             <BaseForesightButton
               registerOptions={{
                 callback: () => {
@@ -20,9 +21,10 @@ function ForesightButtonRemoveable() {
               }}
             />
           </div>
-          <p className="text-sm text-slate-600 text-center max-w-32">
-            Tests complete element removal
-          </p>
+          <ForesightButtonParagraph
+            paragraph="  Tests complete element removal for layout shifts but also check if our MutationObserver
+            is auto unregistering this element"
+          />
         </>
       )}
     </div>
