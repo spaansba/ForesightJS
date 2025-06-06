@@ -13,6 +13,7 @@ import styles from "./index.module.css"
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
+  console.log(ForesightManager.instance)
   ForesightManager.initialize({
     enableMousePrediction: true,
     trajectoryPredictionTime: 130,
@@ -27,6 +28,7 @@ function HomepageHeader() {
   const turnOffDebugMode = () => {
     ForesightManager.instance.alterGlobalSettings({ debug: false })
   }
+  console.log(ForesightManager.instance.globalSettings, "from home")
   return (
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
@@ -54,7 +56,6 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const { siteConfig } = useDocusaurusContext()
   return (
     <Layout
       title={``}

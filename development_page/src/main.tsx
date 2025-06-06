@@ -1,10 +1,24 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import "./index.css"
+import App from "./App.tsx"
+import { ForesightManager } from "../../src/ForesightManager/Manager/ForesightManager.ts"
 
-createRoot(document.getElementById('root')!).render(
+ForesightManager.initialize({
+  debug: true,
+  debuggerSettings: {
+    isControlPanelDefaultMinimized: false,
+  },
+  enableMousePrediction: true,
+  enableTabPrediction: true,
+  positionHistorySize: 10,
+  resizeScrollThrottleDelay: 50,
+  trajectoryPredictionTime: 100,
+  tabOffset: 4,
+})
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 )

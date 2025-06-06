@@ -8,6 +8,7 @@ import { ReactNode } from "react"
 import ResetCardsButton from "../Mouse/ResetCardsButton"
 import DebugButton from "../../DebugButton"
 import { useState } from "react"
+import { ForesightManager } from "js.foresight"
 
 function Playground() {
   const [resetTrigger, setResetTrigger] = useState(0)
@@ -15,7 +16,7 @@ function Playground() {
     setResetTrigger((prev) => prev + 1)
   }
   const buttonIds = Array.from({ length: 25 }, (_, i) => `btn-${i + 1}`)
-
+  console.log(ForesightManager.instance.globalSettings, "from playground")
   return (
     <>
       {/* Mouse Cards Comparison */}

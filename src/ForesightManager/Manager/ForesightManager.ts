@@ -70,7 +70,7 @@ export class ForesightManager {
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
 
-  private globalSettings: ForesightManagerProps = {
+  private _globalSettings: ForesightManagerProps = {
     debug: DEFAULT_IS_DEBUG,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
@@ -110,20 +110,30 @@ export class ForesightManager {
   private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
-    if (!ForesightManager.manager) {
+    debugger
+    if (!this.isInitiated) {
       ForesightManager.manager = new ForesightManager()
     }
-    if (props) {
+    if (props !== undefined) {
       ForesightManager.manager.alterGlobalSettings(props)
     }
     return ForesightManager.manager
   }
 
-  public static get instance() {
+  public static get isInitiated() {
     if (!ForesightManager.manager) {
-      return this.initialize()
+      return false
     }
-    return ForesightManager.manager
+    return true
+  }
+
+  public static get instance() {
+    console.log("2")
+    return this.initialize()
+  }
+
+  public get globalSettings() {
+    return this._globalSettings
   }
 
   public register({
@@ -138,8 +148,8 @@ export class ForesightManager {
     }
 
     const normalizedHitSlop = hitSlop
-      ? normalizeHitSlop(hitSlop, this.globalSettings.debug)
-      : this.globalSettings.defaultHitSlop
+      ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
+      : this._globalSettings.defaultHitSlop
 
     const originalRect = element.getBoundingClientRect()
 
@@ -223,11 +233,11 @@ export class ForesightManager {
     min: number,
     max: number
   ) {
-    if (!shouldUpdateSetting(newValue, this.globalSettings[name])) {
+    if (!shouldUpdateSetting(newValue, this._globalSettings[name])) {
       return false
     }
 
-    this.globalSettings[name] = clampNumber(newValue, min, max, this.globalSettings.debug, name)
+    this._globalSettings[name] = clampNumber(newValue, min, max, this._globalSettings.debug, name)
 
     return true
   }
@@ -236,78 +246,82 @@ export class ForesightManager {
     newValue: boolean | undefined,
     name: K
   ): boolean {
-    if (!shouldUpdateSetting(newValue, this.globalSettings[name])) {
+    if (!shouldUpdateSetting(newValue, this._globalSettings[name])) {
       return false
     }
-    this.globalSettings[name] = newValue
+    this._globalSettings[name] = newValue
     return true
   }
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
-    let settingsActuallyChanged = false
-
-    settingsActuallyChanged ||= this.updateNumericSettings(
+    // Call each update function and store whether it made a change.
+    // This ensures every update function is executed.
+    const positionHistoryChanged = this.updateNumericSettings(
       props?.positionHistorySize,
       "positionHistorySize",
       MIN_POSITION_HISTORY_SIZE,
       MAX_POSITION_HISTORY_SIZE
     )
 
-    settingsActuallyChanged ||= this.updateNumericSettings(
+    const trajectoryTimeChanged = this.updateNumericSettings(
       props?.trajectoryPredictionTime,
       "trajectoryPredictionTime",
       MIN_TRAJECTORY_PREDICTION_TIME,
       MAX_TRAJECTORY_PREDICTION_TIME
     )
 
-    settingsActuallyChanged ||= this.updateNumericSettings(
+    const tabOffsetChanged = this.updateNumericSettings(
       props?.tabOffset,
       "tabOffset",
       MIN_TAB_OFFSET,
       MAX_TAB_OFFSET
     )
 
-    settingsActuallyChanged ||= this.updateNumericSettings(
+    const throttleDelayChanged = this.updateNumericSettings(
       props?.resizeScrollThrottleDelay,
       "resizeScrollThrottleDelay",
       MIN_RESIZE_SCROLL_THROTTLE_DELAY,
       MAX_RESIZE_SCROLL_THROTTLE_DELAY
     )
 
-    settingsActuallyChanged ||= this.updateBooleanSetting(
+    const mousePredictionChanged = this.updateBooleanSetting(
       props?.enableMousePrediction,
       "enableMousePrediction"
     )
 
-    settingsActuallyChanged ||= this.updateBooleanSetting(
+    const tabPredictionChanged = this.updateBooleanSetting(
       props?.enableTabPrediction,
       "enableTabPrediction"
     )
 
-    // Nested boolean doesnt work with updateBooleanSetting
+    let debuggerSettingsChanged = false
     if (props?.debuggerSettings?.isControlPanelDefaultMinimized !== undefined) {
-      this.globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
+      this._globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
         props.debuggerSettings.isControlPanelDefaultMinimized
-      settingsActuallyChanged = true
+      debuggerSettingsChanged = true
     }
 
+    let hitSlopChanged = false
     if (props?.defaultHitSlop !== undefined) {
-      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop, this.globalSettings.debug)
-      if (!areRectsEqual(this.globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
-        this.globalSettings.defaultHitSlop = normalizedNewHitSlop
-        settingsActuallyChanged = true
+      const normalizedNewHitSlop = normalizeHitSlop(
+        props.defaultHitSlop,
+        this._globalSettings.debug
+      )
+      if (!areRectsEqual(this._globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
+        this._globalSettings.defaultHitSlop = normalizedNewHitSlop
+        hitSlopChanged = true
         this.elements.forEach((_, element) => {
           this.updateExpandedRect(element)
         })
       }
     }
 
-    if (props?.debug !== undefined && this.globalSettings.debug !== props.debug) {
-      // For ssr we cant turn debugger on.
+    let debugModeChanged = false
+    if (props?.debug !== undefined && this._globalSettings.debug !== props.debug) {
       if (typeof window !== "undefined" && typeof document !== "undefined") {
-        this.globalSettings.debug = props.debug
-        settingsActuallyChanged = true
-        if (this.globalSettings.debug) {
+        this._globalSettings.debug = props.debug
+        debugModeChanged = true
+        if (this._globalSettings.debug) {
           this.turnOnDebugMode()
         } else {
           if (this.debugger) {
@@ -318,20 +332,32 @@ export class ForesightManager {
       }
     }
 
+    // Now, check if ANY of the settings actually changed.
+    const settingsActuallyChanged =
+      positionHistoryChanged ||
+      trajectoryTimeChanged ||
+      tabOffsetChanged ||
+      throttleDelayChanged ||
+      mousePredictionChanged ||
+      tabPredictionChanged ||
+      debuggerSettingsChanged ||
+      hitSlopChanged ||
+      debugModeChanged
+
     if (settingsActuallyChanged) {
       this.updateDebuggerWithNewSettings()
     }
   }
 
   private updateDebuggerWithNewSettings(): void {
-    if (!this.globalSettings.debug || !this.debugger) {
+    if (!this._globalSettings.debug || !this.debugger) {
       return
     }
-    this.debugger.updateControlsState(this.globalSettings)
+    this.debugger.updateControlsState(this._globalSettings)
     this.debugger.updateTrajectoryVisuals(
       this.currentPoint,
       this.predictedPoint,
-      this.globalSettings.enableMousePrediction
+      this._globalSettings.enableMousePrediction
     )
     this.elements.forEach((data, el) => {
       this.debugger!.createOrUpdateLinkOverlay(el, data)
@@ -345,7 +371,7 @@ export class ForesightManager {
       // Then initialize it as before, passing the necessary data
       this.debugger.initialize(
         this.elements,
-        this.globalSettings,
+        this._globalSettings,
         this.currentPoint,
         this.predictedPoint
       )
@@ -389,19 +415,18 @@ export class ForesightManager {
 
   private updatePointerState(e: MouseEvent): void {
     this.currentPoint = { x: e.clientX, y: e.clientY }
-    this.predictedPoint = this.globalSettings.enableMousePrediction
+    this.predictedPoint = this._globalSettings.enableMousePrediction
       ? predictNextMousePosition(
           this.currentPoint,
           this.positions, // History before the currentPoint was added
-          this.globalSettings.positionHistorySize,
-          this.globalSettings.trajectoryPredictionTime
+          this._globalSettings.positionHistorySize,
+          this._globalSettings.trajectoryPredictionTime
         )
       : { ...this.currentPoint }
   }
 
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
-
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
     if (this.debugger) {
       elementsToUpdateInDebugger = []
@@ -428,7 +453,7 @@ export class ForesightManager {
 
       let isNewTrajectoryActivation = false
       if (
-        this.globalSettings.enableMousePrediction &&
+        this._globalSettings.enableMousePrediction &&
         !isCurrentlyPhysicallyHovering &&
         !currentData.trajectoryHitData.isTrajectoryHit // Only activate if not already hit
       ) {
@@ -450,7 +475,7 @@ export class ForesightManager {
         const hoverCanTriggerCallback =
           !currentData.trajectoryHitData.isTrajectoryHit || // If not trajectory hit, hover can trigger
           (currentData.trajectoryHitData.isTrajectoryHit &&
-            !this.globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
+            !this._globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
 
         if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
           callbackFiredThisCycle = true
@@ -544,7 +569,7 @@ export class ForesightManager {
       this.debugger.updateTrajectoryVisuals(
         this.currentPoint,
         this.predictedPoint,
-        this.globalSettings.enableMousePrediction
+        this._globalSettings.enableMousePrediction
       )
     }
   }
@@ -554,9 +579,11 @@ export class ForesightManager {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
     }
 
+    console.log(this._globalSettings)
+
     const now = performance.now()
     const timeSinceLastCall = now - this.lastResizeScrollCallTimestamp
-    const currentDelay = this.globalSettings.resizeScrollThrottleDelay
+    const currentDelay = this._globalSettings.resizeScrollThrottleDelay
 
     if (timeSinceLastCall >= currentDelay) {
       this.updateAllRects()
@@ -595,7 +622,6 @@ export class ForesightManager {
         for (const element of currentElements) {
           if (!element.isConnected) {
             if (this.elements.has(element)) {
-              console.log("here")
               this.unregister(element) // unregister will clear its own timeout
             }
           }
@@ -611,13 +637,14 @@ export class ForesightManager {
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Tab") {
       this.lastKeyDown = e
+      console.log(this._globalSettings.tabOffset)
     } else {
       this.lastKeyDown = null
     }
   }
 
   private handleFocusIn = (e: FocusEvent) => {
-    if (!this.lastKeyDown || !this.globalSettings.enableTabPrediction) {
+    if (!this.lastKeyDown || !this._globalSettings.enableTabPrediction) {
       return
     }
     const targetElement = e.target
@@ -630,8 +657,8 @@ export class ForesightManager {
 
     // Determine the range of elements to check based on the tab direction and offset
     const tabOffset = this.lastKeyDown.shiftKey
-      ? -this.globalSettings.tabOffset
-      : this.globalSettings.tabOffset
+      ? -this._globalSettings.tabOffset
+      : this._globalSettings.tabOffset
 
     // Clear the lastKeyDown as we've processed this focus event
     this.lastKeyDown = null

@@ -24,8 +24,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3(@docusaurus/core@3.8.0(@mdx-js/react@3.1.0(@types/react@19.1.4)(react@19.1.0))(acorn@8.14.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.6.3))(react@19.1.0)
       js.foresight:
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: file:./js.foresight-2.0.3.tgz
+        version: file:js.foresight-2.0.3.tgz
       lucide-react:
         specifier: ^0.510.0
         version: 0.510.0(react@19.1.0)
@@ -2950,8 +2950,9 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  js.foresight@2.0.1:
-    resolution: {integrity: sha512-pqg580wynH5Bit8AeX6c0uF/5dWWKRBne44v4fxVGWPu2mP9hPU92xzhtEyCnZfXXpH1ArohvWFM/O+b82mnWA==}
+  js.foresight@file:js.foresight-2.0.3.tgz:
+    resolution: {integrity: sha512-BC97eh1StFo5qF1uN7YSDo7oVjkNy98c6MEa4g8YDrT/GRvwPFV9w9Nv68ROjCr9ulZagLwNbAEtC2a8rLp++A==, tarball: file:js.foresight-2.0.3.tgz}
+    version: 2.0.3
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
@@ -8754,7 +8755,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js.foresight@2.0.1:
+  js.foresight@file:js.foresight-2.0.3.tgz:
     dependencies:
       tabbable: 6.2.0
 
