@@ -49,4 +49,6 @@ Checks whether the ForesightManager has been initialized. Useful for conditional
 
 ## ForesightManager.globalSettings
 
-Gets the current [global settings](/docs/getting_started/config#global-configuration) set by the default setting or by `ForesightManager.Initialize` as object with type `ForesightManagerProps`.
+Gets the current [global settings](/docs/getting_started/config#global-configuration) set by the default setting or by `ForesightManager.Initialize`
+
+**Returns:** `ForesightManagerProps`
