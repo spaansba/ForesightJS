@@ -95,7 +95,7 @@ const { isTouchDevice, unregister } = ForesightManager.instance.register({
 unregister()
 ```
 
-## What about touch devices?
+## What About Touch Devices?
 
 ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
 
@@ -109,14 +109,20 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](/docs/getting_started/config).
 
-## Debugging visualization
+## Debugging Visualization
 
 ForesightJS includes a [Visual Debugging](/docs/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
-## How does ForesightJS work?
+## How Does ForesightJS Work?
 
 For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
 
-# Contributing
+## Providing Context to AI Tools
+
+Since ForesightJS is a relatively new and unknown library, most AI assistants and large language models (LLMs) may not have comprehensive knowledge about it in their training data. To help AI assistants better understand and work with ForesightJS, you can provide them with context from our [llms.txt](https://foresightjs.com/llms.txt) page, which contains structured information about the library's API and usage patterns.
+
+In the future, each documentation page will also receive its own markdown variant following the [llms.txt](https://llmstxt.org/) proposal to make ForesightJS more accessible to AI development workflows.
+
+## Contributing
 
 Please see the [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md)

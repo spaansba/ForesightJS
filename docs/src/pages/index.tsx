@@ -16,7 +16,7 @@ function HomepageHeader() {
   console.log(ForesightManager.instance)
   ForesightManager.initialize({
     enableMousePrediction: true,
-    trajectoryPredictionTime: 130,
+    trajectoryPredictionTime: 110,
     resizeScrollThrottleDelay: 0,
     positionHistorySize: 14,
     defaultHitSlop: 0,
@@ -28,6 +28,7 @@ function HomepageHeader() {
   const turnOffDebugMode = () => {
     ForesightManager.instance.alterGlobalSettings({ debug: false })
   }
+
   return (
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">

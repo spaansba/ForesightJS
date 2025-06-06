@@ -65,7 +65,7 @@ import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 
 export class ForesightManager {
   private static manager: ForesightManager
-  public elements: Map<ForesightElement, ForesightElementData> = new Map()
+  private elements: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
@@ -119,7 +119,7 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
-  public static get isInitiated() {
+  public static get isInitiated(): Readonly<boolean> {
     if (!ForesightManager.manager) {
       return false
     }
@@ -130,8 +130,12 @@ export class ForesightManager {
     return this.initialize()
   }
 
-  public get globalSettings(): ForesightManagerProps {
+  public get globalSettings(): Readonly<ForesightManagerProps> {
     return this._globalSettings
+  }
+
+  public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementData> {
+    return this.elements
   }
 
   public register({

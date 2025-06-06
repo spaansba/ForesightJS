@@ -291,9 +291,9 @@ export class ForesightDebugger {
       return
     }
 
-    const currentManagerElements = new Set(this.foresightManagerInstance.elements.keys())
+    const currentManagerElements = new Set(this.foresightManagerInstance.registeredElements.keys())
 
-    this.foresightManagerInstance.elements.forEach((data, element) => {
+    this.foresightManagerInstance.registeredElements.forEach((data, element) => {
       this.createOrUpdateLinkOverlay(element, data)
     })
 
@@ -358,11 +358,6 @@ export class ForesightDebugger {
 
   public updateControlsState(settings: ForesightManagerProps) {
     this.controlPanel?.updateControlsState(settings)
-  }
-
-  // Provide a way for the Control Panel to get element data for its list
-  public getAllElementData(): Map<ForesightElement, ForesightElementData> {
-    return this.foresightManagerInstance.elements
   }
 
   public showCallbackPopup(whereToShow: Rect) {

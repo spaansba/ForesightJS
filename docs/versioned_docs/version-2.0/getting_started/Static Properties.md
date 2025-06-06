@@ -17,6 +17,8 @@ slug: Static_Properties
 
 The ForesightManager exposes several static properties for accessing and checking the manager state.
 
+**_All properties are read-only_**
+
 ## `ForesightManager.instance`
 
 Gets the singleton instance of ForesightManager, initializing it if necessary. This is the primary way to access the manager throughout your application.
@@ -41,14 +43,20 @@ ForesightManager.instance.register({
 })
 ```
 
-## ForesightManager.isInitiated
+## ForesightManager.instance.registeredElements
+
+Gets a Map of all currently registered elements and their associated data. This is useful for debugging or inspecting the current state of registered elements.
+
+**Returns:** `ReadonlyMap<ForesightElement, ForesightElementData>`
+
+## ForesightManager.instance.isInitiated
 
 Checks whether the ForesightManager has been initialized. Useful for conditional logic or debugging.
 
-**Returns:** `boolean`
+**Returns:** `Readonly<boolean>`
 
-## ForesightManager.globalSettings
+## ForesightManager.instance.globalSettings
 
 Gets the current [global settings](/docs/getting_started/config#global-configuration) set by the default setting or by `ForesightManager.Initialize`
 
-**Returns:** `ForesightManagerProps`
+**Returns:** `Readonly<ForesightManagerProps>`

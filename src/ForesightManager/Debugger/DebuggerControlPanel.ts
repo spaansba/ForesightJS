@@ -393,7 +393,7 @@ export class DebuggerControlPanel {
     this.elementListItemsContainer.innerHTML = ""
     this.elementListItems.clear()
 
-    const elementsMap = this.foresightManagerInstance.elements
+    const elementsMap = this.foresightManagerInstance.registeredElements
 
     if (this.elementCountSpan) {
       this.elementCountSpan.textContent = elementsMap.size.toString()
