@@ -57,6 +57,10 @@ function Playground() {
           <strong>TIP:</strong> Try using <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd> to navigate
           through the buttons above
         </div>
+        <div className={styles.keyboardTip}>
+          <strong>TIP:</strong> Open the debugger in the bottom-right corner to change how
+          ForesightJS behaves in real time
+        </div>
       </div>
     </>
   )
