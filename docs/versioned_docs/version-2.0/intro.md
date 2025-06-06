@@ -119,4 +119,4 @@ For a detailed technical explanation of its prediction algorithms and internal a
 
 # Contributing
 
-Please see the [contributing guidelines](/CONTRIBUTING.md)
+Please see the [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md)

@@ -47,6 +47,21 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
+  plugins: [
+    [
+      "docusaurus-plugin-llms-txt",
+      {
+        siteTitle: "ForesightJS",
+        siteDescription: "Comprehensive guide to ForesightJS",
+        depth: 2,
+        content: {
+          includeBlog: false,
+          includePages: true,
+          enableMarkdownFiles: true,
+        },
+      },
+    ],
+  ],
 
   themeConfig: {
     // image: "img/docusaurus-social-card.jpg",
