@@ -498,14 +498,14 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="trajectory-enabled">
                 Enable Mouse Prediction
-                <span class="info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions (or tab if enabled).">i</span>
+                <span class="info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions (or tab if enabled). - enableMousePrediction">i</span>
               </label>
               <input type="checkbox" id="trajectory-enabled">
             </div>
             <div class="control-row">
               <label for="history-size">
                 History Size
-                <span class="info-icon" title="Number of past mouse positions to use for velocity calculation. Higher values smooth predictions but add latency.">i</span>
+                <span class="info-icon" title="Number of past mouse positions to use for velocity calculation. Higher values smooth predictions but add latency. - positionHistorySize">i</span>
               </label>
               <input type="range" id="history-size" min="${MIN_POSITION_HISTORY_SIZE}" max="${MAX_POSITION_HISTORY_SIZE}">
               <span id="history-value"></span>
@@ -513,7 +513,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="prediction-time">
                 Prediction Time
-                <span class="info-icon" title="How many ms in the future to calculate the mouse trajectory. Larger values detect intent sooner.">i</span>
+                <span class="info-icon" title="How many ms in the future to calculate the mouse trajectory. Larger value detects elements sooner. - trajectoryPredictionTime">i</span>
               </label>
               <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
               <span id="prediction-value"></span>
@@ -530,14 +530,14 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="tab-enabled">
                 Enable Tab Prediction
-                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of tabs away from an registered element (works with reversed shift-tabs).">i</span>
+                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of tabs away from an registered element (works with reversed shift-tabs) - enableTabPrediction.">i</span>
               </label>
               <input type="checkbox" id="tab-enabled">
             </div>
             <div class="control-row">
               <label for="tab-offset">
                 Tab Prediction Offset
-                <span class="info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key.">i</span>
+                <span class="info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key - tabOffset.">i</span>
               </label>
               <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
               <span id="tab-offset-value"></span>
@@ -554,7 +554,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="throttle-delay">
                 Scroll/Resize Throttle
-                <span class="info-icon" title="Delay (ms) for recalculating element positions on resize/scroll. Higher values improve performance during rapid events.">i</span>
+                <span class="info-icon" title="Delay in ms for recalculating element positions on resize/scroll. Higher values improve performance during rapid events. - resizeScrollThrottleDelay">i</span>
               </label>
               <input type="range" id="throttle-delay" min="${MIN_RESIZE_SCROLL_THROTTLE_DELAY}" max="${MAX_RESIZE_SCROLL_THROTTLE_DELAY}" step="10">
               <span id="throttle-value"></span>
