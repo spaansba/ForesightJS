@@ -594,7 +594,7 @@ export class DebuggerControlPanel {
         background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
-        width: 380px;
+        width: 400px;
         transition: width 0.3s ease, height 0.3s ease;
       }
       #debug-controls.minimized {
