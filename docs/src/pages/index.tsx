@@ -18,7 +18,7 @@ function HomepageHeader() {
     enableMousePrediction: true,
     trajectoryPredictionTime: 130,
     resizeScrollThrottleDelay: 0,
-    positionHistorySize: 8,
+    positionHistorySize: 14,
     defaultHitSlop: 0,
     tabOffset: 3,
     debuggerSettings: {
