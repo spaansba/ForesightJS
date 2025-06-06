@@ -11,20 +11,19 @@ import ForesightStats from "../components/ForesightStats/ForesightStats"
 import { PackageManagerTabs } from "../components/PackageManagerTabs"
 import styles from "./index.module.css"
 
-ForesightManager.initialize({
-  enableMousePrediction: true,
-  trajectoryPredictionTime: 80,
-  resizeScrollThrottleDelay: 0,
-  positionHistorySize: 20,
-  defaultHitSlop: 0,
-  debuggerSettings: {
-    isControlPanelDefaultMinimized: true,
-  },
-})
-
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
-
+  ForesightManager.initialize({
+    enableMousePrediction: true,
+    trajectoryPredictionTime: 130,
+    resizeScrollThrottleDelay: 0,
+    positionHistorySize: 20,
+    defaultHitSlop: 0,
+    tabOffset: 3,
+    debuggerSettings: {
+      isControlPanelDefaultMinimized: true,
+    },
+  })
   const turnOffDebugMode = () => {
     ForesightManager.instance.alterGlobalSettings({ debug: false })
   }
