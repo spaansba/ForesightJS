@@ -23,6 +23,11 @@ import {
 } from "../helpers/rectAndHitSlop"
 import { clampNumber } from "../helpers/clampNumber"
 import {
+  DEFAULT_HITSLOP,
+  DEFAULT_POSITION_HISTORY_SIZE,
+  DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
+  DEFAULT_TAB_OFFSET,
+  DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
   MAX_RESIZE_SCROLL_THROTTLE_DELAY,
   MAX_TAB_OFFSET,
@@ -64,15 +69,20 @@ export class ForesightManager {
   private globalSettings: ForesightManagerProps = {
     debug: false,
     enableMousePrediction: true,
-    positionHistorySize: 8,
-    trajectoryPredictionTime: 120,
-    defaultHitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
-    resizeScrollThrottleDelay: 50,
+    positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
+    trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
+    defaultHitSlop: {
+      top: DEFAULT_HITSLOP,
+      left: DEFAULT_HITSLOP,
+      right: DEFAULT_HITSLOP,
+      bottom: DEFAULT_HITSLOP,
+    },
+    resizeScrollThrottleDelay: DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
     debuggerSettings: {
       isControlPanelDefaultMinimized: false,
     },
     enableTabPrediction: true,
-    tabOffset: 2,
+    tabOffset: DEFAULT_TAB_OFFSET,
   }
 
   private positions: MousePosition[] = []
@@ -679,7 +689,6 @@ export class ForesightManager {
       subtree: true,
       attributes: true,
     })
-    console.log("rerunning")
 
     this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
     this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))

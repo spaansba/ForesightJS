@@ -7,6 +7,10 @@ import type {
   DebuggerSettings,
 } from "../../types/types"
 import {
+  DEFAULT_POSITION_HISTORY_SIZE,
+  DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
+  DEFAULT_TAB_OFFSET,
+  DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
   MAX_RESIZE_SCROLL_THROTTLE_DELAY,
   MAX_TAB_OFFSET,
@@ -152,10 +156,19 @@ export class DebuggerControlPanel {
 
     const enableMousePrediction = this.trajectoryEnabledCheckbox?.checked ?? false
     const enableTabPrediction = this.tabEnabledCheckbox?.checked ?? false
-    const positionHistorySize = parseInt(this.historySizeSlider?.value ?? "8", 10)
-    const trajectoryPredictionTime = parseInt(this.predictionTimeSlider?.value ?? "80", 10)
-    const resizeScrollThrottleDelay = parseInt(this.throttleDelaySlider?.value ?? "50", 10)
-    const tabOffset = parseInt(this.tabOffsetSlider?.value ?? "2", 10)
+    const positionHistorySize = parseInt(
+      this.historySizeSlider?.value ?? DEFAULT_POSITION_HISTORY_SIZE.toString(),
+      10
+    )
+    const trajectoryPredictionTime = parseInt(
+      this.predictionTimeSlider?.value ?? DEFAULT_TRAJECTORY_PREDICTION_TIME.toString(),
+      10
+    )
+    const resizeScrollThrottleDelay = parseInt(
+      this.throttleDelaySlider?.value ?? DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY.toString(),
+      10
+    )
+    const tabOffset = parseInt(this.tabOffsetSlider?.value ?? DEFAULT_TAB_OFFSET.toString(), 10)
 
     const settingsToCopy = {
       debug: true,

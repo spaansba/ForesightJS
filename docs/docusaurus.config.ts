@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic"
 
 const config: Config = {
   title: "ForesightJS",
-  tagline: "What if we could only prefetch data the user actually needs?",
+  tagline: "The most modern way to prefetch your data",
   favicon: "img/favicon.ico",
   url: "https://foresightjs.com",
   baseUrl: "/",
