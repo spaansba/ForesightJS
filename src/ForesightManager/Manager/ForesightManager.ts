@@ -127,11 +127,10 @@ export class ForesightManager {
   }
 
   public static get instance() {
-    console.log("2")
     return this.initialize()
   }
 
-  public get globalSettings() {
+  public get globalSettings(): ForesightManagerProps {
     return this._globalSettings
   }
 

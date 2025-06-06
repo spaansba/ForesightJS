@@ -6,7 +6,6 @@
 [![GitHub stars](https://img.shields.io/github/stars/spaansba/ForesightJS.svg?style=social&label=Star)](https://github.com/spaansba/ForesightJS)
 [![GitHub last commit](https://img.shields.io/github/last-commit/spaansba/ForesightJS)](https://github.com/spaansba/ForesightJS/commits)
 
-
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com/)
@@ -14,11 +13,12 @@
 ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
 ### Understanding ForesightJS's Role:
+
 When you over simplify prefetching it exists of three parts.
 
-+ **What** resource or data to load
-+ **How** the loading method and caching strategy is
-+ **When** the optimal moment to start fetching is
+- **What** resource or data to load
+- **How** the loading method and caching strategy is
+- **When** the optimal moment to start fetching is
 
 ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
 You supply the **What** and **How** inside your `callback` when you register an element.
@@ -26,7 +26,7 @@ You supply the **What** and **How** inside your `callback` when you register an 
 ### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
 
 ![](https://github.com/spaansba/ForesightJS/blob/main/static/ForesightJSDemo.gif)
-_In the GIF above, [debug mode](https://foresightjs.com/docs/debug) is on. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
+_In the GIF above, [debug mode](https://foresightjs.com/docs/getting_started/debug) is on. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
 
 ## Download
 
@@ -46,7 +46,7 @@ Traditional hover-based prefetching only triggers after the user's cursor reache
 
 ### Problem 2: Viewport-Based Prefetching is Wasteful
 
-Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger ***1.59MB*** of unnecessary prefetch requests.
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger **_1.59MB_** of unnecessary prefetch requests.
 
 ### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
 
@@ -58,7 +58,7 @@ ForesightJS bridges the gap between wasteful viewport prefetching and basic hove
 
 ## Basic Usage Example
 
-Both global and element speicif configuration details can be found [here](https://foresightjs.com/docs/config).
+Both global and element speicif configuration details can be found [here](https://foresightjs.com/docs/getting_started/config).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -97,11 +97,11 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 ## Configuration
 
-ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/config).
+ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/getting_started/config).
 
 ## Debugging visualization
 
-ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
 ## How does ForesightJS work?
 

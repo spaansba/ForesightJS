@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 3
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -19,7 +19,7 @@ ForesightJS includes a debugger that helps you understand and tune how Foresight
 
 ## Enabling Debug Mode
 
-The debugger is turned on in the initialization of ForesightManager (see [configuration](/docs/next/config))
+The debugger is turned on in the initialization of ForesightManager (see [configuration](/docs/getting_started/config))
 
 ```javascript
 import { ForesightManager } from "foresightjs"

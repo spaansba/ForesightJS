@@ -4,6 +4,7 @@ export type {
   ForesightElement,
   ForesightRegisterResult,
   UpdateForsightManagerProps,
+  ForesightManagerProps,
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
 } from "./types/types"
