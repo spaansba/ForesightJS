@@ -97,50 +97,67 @@ export class ForesightDebugger {
         pointer-events: none; z-index: 9999;
       }
       .jsforesight-link-overlay {
-        position: absolute; border: 2px solid transparent;
-        background-color: rgba(0, 0, 255, 0.1); box-sizing: border-box;
-        transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        position: absolute;
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        background-color: rgba(100, 116, 139, 0.08);
+        box-sizing: border-box;
+        border-radius: 6px;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .jsforesight-link-overlay.active {
-        border-color: oklch(83.7% 0.128 66.29); background-color: rgba(255, 0, 0, 0.1);
+        border-color: rgba(100, 116, 139, 0.5);
+        background-color: rgba(100, 116, 139, 0.15);
       }
       .jsforesight-link-overlay.trajectory-hit {
-        border-color: oklch(89.7% 0.196 126.665); background-color: rgba(0, 255, 0, 0.3);
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+        border-color: oklch(65% 0.2 250); /* A nice, modern blue */
+        background-color: rgba(79, 70, 229, 0.15);
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
       }
       .jsforesight-expanded-overlay {
-        position: absolute; border: 1px dashed rgba(0, 0, 255, 0.3);
-        background-color: rgba(0, 0, 255, 0.05); box-sizing: border-box;
+        position: absolute;
+        border: 1px dashed rgba(100, 116, 139, 0.4);
+        background-color: rgba(100, 116, 139, 0.05);
+        box-sizing: border-box;
+        border-radius: 8px;
       }
       .jsforesight-mouse-predicted {
-        position: absolute; width: 20px; height: 20px; border-radius: 50%;
-        border: 2px solid oklch(83.7% 0.128 66.29); background-color: rgba(255, 165, 0, 0.3);
-        transform: translate(-50%, -50%); z-index: 10000;
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #6b98e1;
+        background-color: rgba(176, 196, 222, 0.3);
+        transform: translate(-50%, -50%);
+        z-index: 10000;
       }
       .jsforesight-trajectory-line {
-        position: absolute; height: 2px; background-color: rgba(255, 100, 0, 0.5);
-        transform-origin: left center; z-index: 9999;
+        position: absolute;
+        height: 2px;
+        background-color: #6b98e1;
+        transform-origin: left center;
+        z-index: 9999;
+        border-radius: 1px;
       }
       .jsforesight-name-label {
         position: absolute;
-        background-color: rgba(0, 0, 0, 0.75);
+        background-color: rgba(27, 31, 35, 0.85);
+        backdrop-filter: blur(4px);
         color: white;
-        padding: 3px 6px;
+        padding: 4px 8px;
         font-size: 11px;
-        font-family: Arial, sans-serif;
-        border-radius: 3px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        border-radius: 4px;
         z-index: 10001;
         white-space: nowrap;
         pointer-events: none;
       }
       .jsforesight-callback-indicator {
         position: absolute;
-        border: 4px solid oklch(60% 0.1 270); 
-        border-radius: 5px;
+        border: 4px solid oklch(65% 0.22 280); /* Vibrant Violet */
+        border-radius: 8px;
         box-sizing: border-box;
         pointer-events: none;
         opacity: 0;
-        transition: opacity 0.3s ease-out;
         z-index: 10002;
       }
       .jsforesight-callback-indicator.animate {
@@ -151,10 +168,12 @@ export class ForesightDebugger {
         0% {
           transform: scale(1);
           opacity: 1;
+          box-shadow: 0 0 15px oklch(65% 0.22 280 / 0.7);
         }
         100% {
           transform: scale(1.1);
           opacity: 0;
+          box-shadow: 0 0 25px oklch(65% 0.22 280 / 0);
         }
       }
     `
@@ -264,7 +283,7 @@ export class ForesightDebugger {
       nameLabel.textContent = newData.name
       nameLabel.style.display = "block"
       nameLabel.style.left = `${rect.left}px`
-      nameLabel.style.top = `${rect.top - 22}px` // Position above the element
+      nameLabel.style.top = `${rect.top - 28}px` // Position above the element (adjusted for new padding)
     } else {
       nameLabel.style.display = "none"
     }
@@ -335,6 +354,7 @@ export class ForesightDebugger {
     }
 
     if (!enableMousePrediction) {
+      this.debugTrajectoryLine.style.display = "none"
       return
     }
 
