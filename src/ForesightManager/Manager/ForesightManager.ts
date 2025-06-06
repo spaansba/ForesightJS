@@ -255,6 +255,7 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
     // Call each update function and store whether it made a change.
     // This ensures every update function is executed.
+    const oldPositionHistorySize = this._globalSettings.positionHistorySize
     const positionHistoryChanged = this.updateNumericSettings(
       props?.positionHistorySize,
       "positionHistorySize",
@@ -262,6 +263,16 @@ export class ForesightManager {
       MAX_POSITION_HISTORY_SIZE
     )
 
+    if (
+      positionHistoryChanged &&
+      this._globalSettings.positionHistorySize < oldPositionHistorySize
+    ) {
+      if (this.positions.length > this._globalSettings.positionHistorySize) {
+        this.positions = this.positions.slice(
+          this.positions.length - this._globalSettings.positionHistorySize
+        )
+      }
+    }
     console.log(this.positions)
 
     const trajectoryTimeChanged = this.updateNumericSettings(

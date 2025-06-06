@@ -95,7 +95,7 @@ type BaseForesightManagerProps = {
    * Number of mouse positions to keep in history for trajectory calculation.
    * A higher number might lead to smoother but slightly delayed predictions.
    *
-   * **This value is clamped between 2 and 50.**
+   * **This value is clamped between 2 and 30.**
    * @default 8
    */
   positionHistorySize: number

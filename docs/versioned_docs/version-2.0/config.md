@@ -51,7 +51,7 @@ ForesightManager.initialize({
 | --------------------------- | -------------- | ---------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
 | `debug`                     | boolean        | `false`                                  | -       | When true, enables visual debugging overlays showing hit areas, trajectories, and a control panel                |
 | `enableMousePrediction`     | boolean        | `true`                                   | -       | Toggles whether trajectory prediction is active                                                                  |
-| `positionHistorySize`       | number         | `8`                                      | 0/50    | Number of mouse positions to keep in history for velocity calculations                                           |
+| `positionHistorySize`       | number         | `8`                                      | 0/30    | Number of mouse positions to keep in history for velocity calculations                                           |
 | `trajectoryPredictionTime`  | number         | `120`                                    | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                  |
 | `defaultHitSlop`            | number \| Rect | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox |
 | `resizeScrollThrottleDelay` | number         | `50`                                     | 0/500   | Throttle delay (in ms) for recalculating element bounds during resize/scroll events                              |
