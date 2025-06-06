@@ -46,7 +46,7 @@ When debug mode is enabled, ForesightJS adds several visual elements to your app
 
 ### Control Panel
 
-A control panel appears in the bottom-right corner of the screen, allowing you to change all available [Global Configurations](/docs/next/config#global-configuration). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior. They are however only applicable to your current session, to save these values change them in your initialization.
+A control panel appears in the bottom-right corner of the screen, allowing you to change all available [Global Configurations](/docs/getting_started/config#global-configuration). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior. They are however only applicable to your current session, to save these values change them in your initialization.
 
 #### View currently registered elements
 

@@ -8,7 +8,7 @@ ForesightJS includes a visual debugging system that helps you understand and tun
 
 ## Enabling Debug Mode
 
-Debugmode is turned on in the initialization of ForesightManager (see [configuration](/docs/next/config))
+Debugmode is turned on in the initialization of ForesightManager (see configuration)
 
 ```javascript
 import { ForesightManager } from "foresightjs"

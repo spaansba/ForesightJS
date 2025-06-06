@@ -28,7 +28,6 @@ function HomepageHeader() {
   const turnOffDebugMode = () => {
     ForesightManager.instance.alterGlobalSettings({ debug: false })
   }
-  console.log(ForesightManager.instance.globalSettings, "from home")
   return (
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className="container">
@@ -40,7 +39,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro"
+            to="/docs/getting_started/intro"
             onClick={turnOffDebugMode}
           >
             Documentation
