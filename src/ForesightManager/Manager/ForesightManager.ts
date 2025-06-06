@@ -23,7 +23,11 @@ import {
 } from "../helpers/rectAndHitSlop"
 import { clampNumber } from "../helpers/clampNumber"
 import {
+  DEFAULT_ENABLE_MOUSE_PREDICTION,
+  DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
+  DEFAULT_IS_DEBUG,
+  DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
   DEFAULT_TAB_OFFSET,
@@ -67,8 +71,8 @@ export class ForesightManager {
   private debugger: ForesightDebugger | null = null
 
   private globalSettings: ForesightManagerProps = {
-    debug: false,
-    enableMousePrediction: true,
+    debug: DEFAULT_IS_DEBUG,
+    enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
     trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
     defaultHitSlop: {
@@ -79,9 +83,9 @@ export class ForesightManager {
     },
     resizeScrollThrottleDelay: DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
     debuggerSettings: {
-      isControlPanelDefaultMinimized: false,
+      isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
     },
-    enableTabPrediction: true,
+    enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
   }
 

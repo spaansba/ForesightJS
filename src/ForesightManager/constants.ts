@@ -18,3 +18,8 @@ export const DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY = 50
 export const MIN_HITSLOP = 0
 export const MAX_HITSLOP = 2000
 export const DEFAULT_HITSLOP = 0
+
+export const DEFAULT_ENABLE_TAB_PREDICTION = true
+export const DEFAULT_ENABLE_MOUSE_PREDICTION = true
+export const DEFAULT_IS_DEBUGGER_MINIMIZED = false
+export const DEFAULT_IS_DEBUG = false

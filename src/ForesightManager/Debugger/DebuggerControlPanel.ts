@@ -7,6 +7,8 @@ import type {
   DebuggerSettings,
 } from "../../types/types"
 import {
+  DEFAULT_ENABLE_MOUSE_PREDICTION,
+  DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
   DEFAULT_TAB_OFFSET,
@@ -154,8 +156,9 @@ export class DebuggerControlPanel {
   private handleCopySettings() {
     if (!this.copySettingsButton) return
 
-    const enableMousePrediction = this.trajectoryEnabledCheckbox?.checked ?? false
-    const enableTabPrediction = this.tabEnabledCheckbox?.checked ?? false
+    const enableMousePrediction =
+      this.trajectoryEnabledCheckbox?.checked ?? DEFAULT_ENABLE_MOUSE_PREDICTION
+    const enableTabPrediction = this.tabEnabledCheckbox?.checked ?? DEFAULT_ENABLE_TAB_PREDICTION
     const positionHistorySize = parseInt(
       this.historySizeSlider?.value ?? DEFAULT_POSITION_HISTORY_SIZE.toString(),
       10
