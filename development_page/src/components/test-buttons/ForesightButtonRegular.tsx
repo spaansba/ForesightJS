@@ -6,7 +6,7 @@ type ForesightButtonRegularProps = {
 
 function ForesightButtonRegular({ name }: ForesightButtonRegularProps) {
   return (
-    <div className="size-20 bg-green-200">
+    <div className="size-40 bg-green-200">
       <BaseForesightButton
         registerOptions={{
           callback: () => {

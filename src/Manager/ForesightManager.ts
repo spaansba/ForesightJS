@@ -179,8 +179,9 @@ export class ForesightManager {
 
     if (this.debugger) {
       const data = this.elements.get(element)
-      if (data) this.debugger.createOrUpdateElementOverlay(element, data)
-      this.debugger.refreshDisplayedElements()
+      if (data) {
+        this.debugger.createOrUpdateElementOverlay(element, data)
+      }
     }
 
     return { isTouchDevice: false, unregister: () => this.unregister(element) }
@@ -210,8 +211,7 @@ export class ForesightManager {
     this.elements.delete(element)
 
     if (this.debugger) {
-      this.debugger.removeLinkOverlay(element)
-      this.debugger.refreshDisplayedElements()
+      this.debugger.removeElement(element)
     }
 
     if (this.elements.size === 0 && this.isSetup) {
@@ -352,39 +352,20 @@ export class ForesightManager {
       hitSlopChanged ||
       debugModeChanged
 
-    if (settingsActuallyChanged) {
-      this.updateDebuggerWithNewSettings()
+    if (settingsActuallyChanged && this.debugger) {
+      this.debugger.updateControlsState(this._globalSettings)
     }
-  }
-
-  private updateDebuggerWithNewSettings(): void {
-    if (!this._globalSettings.debug || !this.debugger) {
-      return
-    }
-    this.debugger.updateControlsState(this._globalSettings)
-    this.debugger.updateTrajectoryVisuals(
-      this.currentPoint,
-      this.predictedPoint,
-      this._globalSettings.enableMousePrediction
-    )
-    this.elements.forEach((data, el) => {
-      this.debugger!.createOrUpdateElementOverlay(el, data)
-    })
-    this.debugger.refreshDisplayedElements()
   }
 
   private turnOnDebugMode() {
     if (!this.debugger) {
-      this.debugger = ForesightDebugger.getInstance(this)
-      // Then initialize it as before, passing the necessary data
-      this.debugger.initialize(
-        this.elements,
-        this._globalSettings,
+      this.debugger = ForesightDebugger.initialize(
+        ForesightManager.instance,
         this.currentPoint,
         this.predictedPoint
       )
     } else {
-      this.updateDebuggerWithNewSettings()
+      this.debugger.updateControlsState(this._globalSettings)
     }
   }
 
@@ -415,16 +396,13 @@ export class ForesightManager {
   }
 
   private forceUpdateAllElementBounds() {
-    let count = 0
     this.elements.forEach((_, element) => {
       const elementData = this.elements.get(element)
       // For performance only update rects that are currently intersecting with the viewport
       if (elementData && elementData.isIntersectingWithViewport) {
         this.updateElementBounds(element, elementData)
-        count++
       }
     })
-    console.log(count)
   }
 
   private updatePointerState(e: MouseEvent): void {
@@ -571,9 +549,9 @@ export class ForesightManager {
 
     if (this.debugger) {
       elementsToUpdateInDebugger?.forEach((element) => {
-        const data = this.elements.get(element) // Get potentially updated data
-        if (data) {
-          this.debugger!.createOrUpdateElementOverlay(element, data)
+        const data = this.elements.get(element)
+        if (data && this.debugger) {
+          this.debugger.createOrUpdateElementOverlay(element, data)
         }
       })
       this.debugger.updateTrajectoryVisuals(
@@ -692,7 +670,7 @@ export class ForesightManager {
     if (elementData) {
       elementData.callback()
       if (this.debugger) {
-        this.debugger.showCallbackPopup(elementData.elementBounds.expandedRect)
+        this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
@@ -703,25 +681,28 @@ export class ForesightManager {
 
   private handleIntersection = (entries: IntersectionObserverEntry[]) => {
     for (const entry of entries) {
-      const element = this.elements.get(entry.target)
-      if (!element) {
+      const elementData = this.elements.get(entry.target)
+      if (!elementData) {
         return
       }
-      element.isIntersectingWithViewport = entry.isIntersecting
+      elementData.isIntersectingWithViewport = entry.isIntersecting
       if (entry.isIntersecting) {
-        element.elementBounds.originalRect = entry.boundingClientRect
-        element.elementBounds.expandedRect = getExpandedRect(
-          element.elementBounds.originalRect,
-          element.elementBounds.hitSlop
+        elementData.elementBounds.originalRect = entry.boundingClientRect
+        elementData.elementBounds.expandedRect = getExpandedRect(
+          elementData.elementBounds.originalRect,
+          elementData.elementBounds.hitSlop
         )
         this.elementResizeObserver?.observe(entry.target)
         entry.isIntersecting
+        if (this.globalSettings.debug) {
+          this.debugger?.createOrUpdateElementOverlay(entry.target, elementData)
+        }
       } else {
         this.elementResizeObserver?.unobserve(entry.target)
+        if (this.globalSettings.debug) {
+          this.debugger?.removeElement(entry.target)
+        }
       }
-    }
-    if (this.globalSettings.debug) {
-      this.debugger?.refreshDisplayedElements()
     }
   }
 

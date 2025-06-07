@@ -4,6 +4,7 @@ import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
+import ForesightButtonRegular from "./test-buttons/ForesightButtonRegular"
 
 export const Main = () => {
   const resetKey = useResetKey()
@@ -20,6 +21,7 @@ export const Main = () => {
         <div className="max-w-6xl mx-auto">
           {/* Foresight Buttons Container */}
           <div className="flex flex-wrap gap-8 justify-center mb-12">
+            <ForesightButtonRegular name={"multi hit"} />
             <ForesightButtonVisibility name="visibility" />
             <ForesightButtonResizeable name="resizeable" />
             <ForesightButtonRemoveable name="removeable" />

@@ -11,6 +11,7 @@ import type {
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement } from "./helpers/createAndAppendElement"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
+import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 
 export type ElementOverlays = {
   linkOverlay: HTMLElement
@@ -22,78 +23,33 @@ export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
 
   private foresightManagerInstance: ForesightManager
-  private shadowHost: HTMLElement | null = null
-  private shadowRoot: ShadowRoot | null = null
-  private debugContainer: HTMLElement | null = null
+  private shadowHost: HTMLElement
+  private shadowRoot: ShadowRoot
+  private debugContainer: HTMLElement
   private debugLinkOverlays: Map<ForesightElement, ElementOverlays> = new Map()
+
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
   private debugCallbackIndicator: HTMLElement | null = null
 
-  private controlPanel: DebuggerControlPanel | null = null
+  private controlPanel: DebuggerControlPanel
   private lastElementData: Map<
     ForesightElement,
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
   private constructor(foresightManager: ForesightManager) {
-    const oldDebuggers = document.querySelectorAll("#jsforesight-debugger-shadow-host")
-    oldDebuggers.forEach((element) => element.remove())
     this.foresightManagerInstance = foresightManager
     this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
-  }
 
-  // Static method to get the singleton instance
-  public static getInstance(intentManager: ForesightManager): ForesightDebugger {
-    if (!ForesightDebugger.isInitiated) {
-      ForesightDebugger.debuggerInstance = new ForesightDebugger(intentManager)
-    }
-    return ForesightDebugger.debuggerInstance
-  }
-
-  private static get isInitiated(): boolean {
-    return !!ForesightDebugger.debuggerInstance
-  }
-
-  public initialize(
-    links: Map<ForesightElement, ForesightElementData>,
-    currentSettings: ForesightManagerProps,
-    currentPoint: Point,
-    predictedPoint: Point
-  ) {
-    if (typeof window === "undefined" || isTouchDevice() || !ForesightDebugger.isInitiated) {
-      return
-    }
-
-    this.createDebugElements()
-
-    if (this.shadowRoot) {
-      this.controlPanel?.initialize(this.shadowRoot, currentSettings.debuggerSettings)
-    }
-
-    links.forEach((data, element) => {
-      this.createOrUpdateElementOverlay(element, data)
-    })
-
-    this.updateTrajectoryVisuals(
-      currentPoint,
-      predictedPoint,
-      currentSettings.enableMousePrediction
+    // Add nececairy elements to shadowhost
+    this.shadowHost = createAndAppendElement(
+      "div",
+      document.body,
+      "",
+      "jsforesight-debugger-shadow-host"
     )
-  }
-
-  private createDebugElements() {
-    this.shadowHost = document.createElement("div")
-    this.shadowHost.id = "jsforesight-debugger-shadow-host"
-    this.shadowHost.style.pointerEvents = "none"
-    document.body.appendChild(this.shadowHost)
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
-
-    const debuggerStyleElement = document.createElement("style")
-    debuggerStyleElement.id = "debug-container"
-    debuggerStyleElement.textContent = debuggerCSS
-    this.shadowRoot.appendChild(debuggerStyleElement)
-
     this.debugContainer = createAndAppendElement(
       "div",
       this.shadowRoot,
@@ -115,6 +71,40 @@ export class ForesightDebugger {
       this.debugContainer,
       "jsforesight-callback-indicator"
     )
+    this.controlPanel?.initialize(this.shadowRoot, foresightManager.globalSettings.debuggerSettings)
+
+    // Add style sheet
+    const debuggerStyleElement = document.createElement("style")
+    debuggerStyleElement.id = "debug-container"
+    debuggerStyleElement.textContent = debuggerCSS
+    this.shadowRoot.appendChild(debuggerStyleElement)
+  }
+
+  private static get isInitiated(): boolean {
+    return !!ForesightDebugger.debuggerInstance
+  }
+
+  public static initialize(
+    foresightManager: ForesightManager,
+    currentPoint: Point,
+    predictedPoint: Point
+  ): ForesightDebugger | null {
+    removeOldDebuggers()
+    if (typeof window === "undefined" || isTouchDevice()) {
+      return null
+    }
+
+    if (!ForesightDebugger.isInitiated) {
+      ForesightDebugger.debuggerInstance = new ForesightDebugger(foresightManager)
+    }
+
+    ForesightDebugger.debuggerInstance.updateTrajectoryVisuals(
+      currentPoint,
+      predictedPoint,
+      foresightManager.globalSettings.enableMousePrediction
+    )
+
+    return ForesightDebugger.debuggerInstance
   }
 
   private createElementOverlays(element: ForesightElement) {
@@ -145,10 +135,18 @@ export class ForesightDebugger {
       overlays = this.createElementOverlays(element)
     }
     updateElementOverlays(overlays, newData)
-    this.controlPanel?.refreshElementList()
   }
 
-  public removeLinkOverlay(element: ForesightElement) {
+  /**
+   * Removes all debug overlays and data associated with an element.
+   *
+   * This method cleans up the link overlay, expanded overlay, and name label
+   * for the specified element, removes it from internal tracking maps, and
+   * refreshes the control panel's element list to reflect the removal.
+   *
+   * @param element - The ForesightElement to remove from debugging visualization
+   */
+  public removeElement(element: ForesightElement) {
     const overlays = this.debugLinkOverlays.get(element)
     if (overlays) {
       overlays.linkOverlay.remove()
@@ -157,34 +155,6 @@ export class ForesightDebugger {
       this.debugLinkOverlays.delete(element)
     }
     this.lastElementData.delete(element)
-
-    this.controlPanel?.refreshElementList()
-  }
-
-  public refreshDisplayedElements() {
-    if (!this.shadowRoot || !this.debugContainer) {
-      // If not initialized, do nothing
-      return
-    }
-
-    const currentManagerElements = new Set(this.foresightManagerInstance.registeredElements.keys())
-
-    this.foresightManagerInstance.registeredElements.forEach((data, element) => {
-      this.createOrUpdateElementOverlay(element, data)
-    })
-
-    const overlaysToRemove = Array.from(this.debugLinkOverlays.keys()).filter(
-      (el) => !currentManagerElements.has(el)
-    )
-    overlaysToRemove.forEach((el) => {
-      const specificOverlays = this.debugLinkOverlays.get(el)
-      specificOverlays?.linkOverlay.remove()
-      specificOverlays?.expandedOverlay.remove()
-      specificOverlays?.nameLabel.remove()
-      this.debugLinkOverlays.delete(el)
-      this.lastElementData.delete(el)
-    })
-
     this.controlPanel?.refreshElementList()
   }
 
@@ -218,51 +188,39 @@ export class ForesightDebugger {
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
 
-    // Only show trajectory if there's significant movement
-    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-      const length = Math.sqrt(dx * dx + dy * dy)
-      const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-      this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
-      this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
-      this.debugTrajectoryLine.style.width = `${length}px`
-      this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
-      this.debugTrajectoryLine.style.display = "block"
-    } else {
-      this.debugTrajectoryLine.style.display = "none"
-    }
+    this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
+    this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
+    this.debugTrajectoryLine.style.width = `${length}px`
+    this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
+    this.debugTrajectoryLine.style.display = "block"
   }
 
   public updateControlsState(settings: ForesightManagerProps) {
     this.controlPanel?.updateControlsState(settings)
   }
 
-  public showCallbackPopup(whereToShow: Rect) {
+  public showCallbackAnimation(whereToShow: Rect) {
     if (!this.debugContainer || !this.shadowRoot || !this.debugCallbackIndicator) {
-      // Debugger not fully initialized or callback indicator not created, cannot show callback popup.
       return
     }
 
-    // Position and size the callback indicator
     this.debugCallbackIndicator.style.left = `${whereToShow.left}px`
     this.debugCallbackIndicator.style.top = `${whereToShow.top}px`
     this.debugCallbackIndicator.style.width = `${whereToShow.right - whereToShow.left}px`
     this.debugCallbackIndicator.style.height = `${whereToShow.bottom - whereToShow.top}px`
 
-    // Trigger the animation by adding and removing the class
     this.debugCallbackIndicator.classList.remove("animate")
-    // Use a small timeout to ensure the class removal registers before adding it again
     requestAnimationFrame(() => {
       this.debugCallbackIndicator!.classList.add("animate")
     })
   }
+
   public cleanup() {
     this.controlPanel?.cleanup()
     this.shadowHost?.remove()
-    this.shadowHost = null
-    this.shadowRoot = null
-    this.debugContainer = null
-
     this.debugLinkOverlays.clear()
     this.lastElementData.clear()
     this.debugPredictedMouseIndicator = null

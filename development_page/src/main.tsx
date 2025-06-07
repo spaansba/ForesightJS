@@ -15,6 +15,7 @@ ForesightManager.initialize({
   resizeScrollThrottleDelay: 0,
   trajectoryPredictionTime: 100,
   tabOffset: 4,
+  defaultHitSlop: 10,
 })
 
 createRoot(document.getElementById("root")!).render(
