@@ -1,6 +1,7 @@
 import { themes as prismThemes } from "prism-react-renderer"
 import type { Config } from "@docusaurus/types"
 import type * as Preset from "@docusaurus/preset-classic"
+import { PluginOptions as LLMPluginOptions } from "@signalwire/docusaurus-plugin-llms-txt"
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -49,7 +50,7 @@ const config: Config = {
   ],
   plugins: [
     [
-      "docusaurus-plugin-llms-txt",
+      "@signalwire/docusaurus-plugin-llms-txt",
       {
         siteTitle: "ForesightJS",
         siteDescription: "Comprehensive guide to ForesightJS",
@@ -59,7 +60,7 @@ const config: Config = {
           includePages: true,
           enableMarkdownFiles: true,
         },
-      },
+      } satisfies LLMPluginOptions,
     ],
   ],
 
