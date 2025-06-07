@@ -41,7 +41,7 @@ export type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
   expandedRect: Rect
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
-  originalRect?: DOMRect
+  originalRect?: DOMRectReadOnly
   /** The hit slop values applied to this element. */
   hitSlop: Exclude<HitSlop, number>
 }

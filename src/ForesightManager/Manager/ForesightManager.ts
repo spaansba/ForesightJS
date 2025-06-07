@@ -344,7 +344,6 @@ export class ForesightManager {
       }
     }
 
-    // Now, check if ANY of the settings actually changed.
     const settingsActuallyChanged =
       positionHistoryChanged ||
       trajectoryTimeChanged ||
@@ -451,10 +450,6 @@ export class ForesightManager {
     }
 
     this.elements.forEach((currentData, element) => {
-      if (!this.elements.has(element)) {
-        return
-      }
-
       const previousDataState = {
         isHovering: currentData.isHovering,
         trajectoryHitData: currentData.trajectoryHitData,
