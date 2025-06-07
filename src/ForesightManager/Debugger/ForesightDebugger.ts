@@ -11,6 +11,12 @@ import type {
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement } from "../helpers/createAndAppendElement"
 
+type ElementOverlays = {
+  linkOverlay: HTMLElement
+  expandedOverlay: HTMLElement
+  nameLabel: HTMLElement
+}
+
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
 
@@ -18,14 +24,7 @@ export class ForesightDebugger {
   private shadowHost: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
   private debugContainer: HTMLElement | null = null
-  private debugLinkOverlays: Map<
-    ForesightElement,
-    {
-      linkOverlay: HTMLElement
-      expandedOverlay: HTMLElement
-      nameLabel: HTMLElement
-    }
-  > = new Map()
+  private debugLinkOverlays: Map<ForesightElement, ElementOverlays> = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
   private debugCallbackIndicator: HTMLElement | null = null
@@ -117,7 +116,7 @@ export class ForesightDebugger {
     )
   }
 
-  private createElementOverlays() {
+  private createElementOverlays(element: ForesightElement) {
     const linkOverlay = createAndAppendElement(
       "div",
       this.debugContainer!,
@@ -129,25 +128,17 @@ export class ForesightDebugger {
       "jsforesight-expanded-overlay"
     )
     const nameLabel = createAndAppendElement("div", this.debugContainer!, "jsforesight-name-label")
-
-    return { linkOverlay, expandedOverlay, nameLabel }
+    const overlays = { linkOverlay, expandedOverlay, nameLabel }
+    this.debugLinkOverlays.set(element, overlays)
+    return overlays
   }
 
-  public createOrUpdateElementOverlay(element: ForesightElement, newData: ForesightElementData) {
-    if (!this.debugContainer || !this.shadowRoot) return
-
-    this.lastElementData.set(element, {
-      isHovering: newData.isHovering,
-      isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
-    })
-
-    let overlays = this.debugLinkOverlays.get(element)
-    if (!overlays) {
-      overlays = this.createElementOverlays()
-      this.debugLinkOverlays.set(element, overlays)
-    }
-
-    const { linkOverlay, expandedOverlay, nameLabel } = overlays
+  private updateElementOverlays(
+    element: ForesightElement,
+    currentOverlays: ElementOverlays,
+    newData: ForesightElementData
+  ) {
+    const { linkOverlay, expandedOverlay, nameLabel } = currentOverlays
     const rect = newData.elementBounds.expandedRect
 
     linkOverlay.style.left = `${rect.left}px`
@@ -181,6 +172,20 @@ export class ForesightDebugger {
     }
 
     this.controlPanel?.refreshElementList()
+  }
+
+  public createOrUpdateElementOverlay(element: ForesightElement, newData: ForesightElementData) {
+    if (!this.debugContainer || !this.shadowRoot) return
+
+    this.lastElementData.set(element, {
+      isHovering: newData.isHovering,
+      isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
+    })
+    let overlays = this.debugLinkOverlays.get(element)
+    if (!overlays) {
+      overlays = this.createElementOverlays(element)
+    }
+    this.updateElementOverlays(element, overlays, newData)
   }
 
   public removeLinkOverlay(element: ForesightElement) {
