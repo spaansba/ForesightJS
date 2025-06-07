@@ -1,4 +1,4 @@
-import type { ForesightElementData } from "../../../types/types"
+import type { ForesightElementData } from "../../types/types"
 import type { ElementOverlays } from "../ForesightDebugger"
 
 export function updateElementOverlays(

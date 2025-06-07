@@ -1,4 +1,4 @@
-import type { Point, Rect } from "../../../types/types"
+import type { Point, Rect } from "../../types/types"
 
 /**
  * Determines if a line segment intersects with a given rectangle.

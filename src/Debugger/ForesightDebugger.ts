@@ -7,7 +7,7 @@ import type {
   ForesightManagerProps,
   Point,
   Rect,
-} from "../../types/types"
+} from "../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement } from "./helpers/createAndAppendElement"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"

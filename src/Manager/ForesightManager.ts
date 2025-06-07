@@ -10,7 +10,7 @@ import type {
   NumericSettingKeys,
   Point,
   UpdateForsightManagerProps,
-} from "../../types/types"
+} from "../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { lineSegmentIntersectsRect } from "./helpers/lineSigmentIntersectsRect"
@@ -40,7 +40,7 @@ import {
   MIN_RESIZE_SCROLL_THROTTLE_DELAY,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
-} from "../constants"
+} from "./constants"
 
 import PositionObserver, { type PositionObserverEntry } from "@thednp/position-observer"
 

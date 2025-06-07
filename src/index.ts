@@ -1,4 +1,4 @@
-export { ForesightManager } from "./ForesightManager/Manager/ForesightManager"
+export { ForesightManager } from "./Manager/ForesightManager"
 export type {
   Rect as ForesightRect,
   ForesightElement,

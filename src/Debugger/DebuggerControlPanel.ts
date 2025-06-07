@@ -5,7 +5,7 @@ import type {
   ForesightElement,
   ForesightManagerProps,
   DebuggerSettings,
-} from "../../types/types"
+} from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
@@ -22,7 +22,7 @@ import {
   MIN_RESIZE_SCROLL_THROTTLE_DELAY,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
-} from "../constants"
+} from "../Manager/constants"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 
 type SectionStates = {

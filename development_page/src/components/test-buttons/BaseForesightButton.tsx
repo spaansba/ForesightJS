@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { ForesightManager } from "../../../../src/ForesightManager/Manager/ForesightManager"
+import { ForesightManager } from "../../../../src/Manager/ForesightManager"
 import type { ForesightRegisterOptionsWithoutElement } from "../../../../src/types/types"
 
 type ForesightButtonProps = {

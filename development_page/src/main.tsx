@@ -2,7 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
-import { ForesightManager } from "../../src/ForesightManager/Manager/ForesightManager.ts"
+import { ForesightManager } from "../../src/Manager/ForesightManager.ts"
 
 ForesightManager.initialize({
   debug: true,
