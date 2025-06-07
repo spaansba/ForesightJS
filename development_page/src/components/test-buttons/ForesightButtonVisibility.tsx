@@ -2,7 +2,11 @@ import { useIsVisible } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
 import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
-function ForesightButtonVisibility() {
+type ForesightButtonVisibilityProps = {
+  name: string
+}
+
+function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
   const isVisible = useIsVisible()
   return (
     <div className={`flex flex-col items-center space-y-4 ${isVisible ? "" : "hidden"}`}>
@@ -11,10 +15,10 @@ function ForesightButtonVisibility() {
         <BaseForesightButton
           registerOptions={{
             callback: () => {
-              console.log("visibility")
+              console.log(name)
             },
             hitSlop: 0,
-            name: "visibility",
+            name: name,
             unregisterOnCallback: true,
           }}
         />

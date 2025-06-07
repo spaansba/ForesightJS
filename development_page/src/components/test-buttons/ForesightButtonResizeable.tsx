@@ -2,7 +2,11 @@ import { useIsResized } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
 import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
-function ForesightButtonResizeable() {
+type ForesightButtonResizeableProps = {
+  name: string
+}
+
+function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
   const isResized = useIsResized()
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -15,10 +19,10 @@ function ForesightButtonResizeable() {
         <BaseForesightButton
           registerOptions={{
             callback: () => {
-              console.log("resizeable")
+              console.log(name)
             },
             hitSlop: 30,
-            name: "resizeable",
+            name: name,
             unregisterOnCallback: true,
           }}
         />

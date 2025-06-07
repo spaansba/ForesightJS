@@ -1,7 +1,12 @@
 import { useIsRemoved } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
 import ForesightButtonParagraph from "./ForesightButtonParagraph"
-function ForesightButtonRemoveable() {
+
+type ForesightButtonRemoveableProps = {
+  name: string
+}
+
+function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
   const shouldBeRemoved = useIsRemoved()
 
   return (
@@ -13,10 +18,10 @@ function ForesightButtonRemoveable() {
             <BaseForesightButton
               registerOptions={{
                 callback: () => {
-                  console.log("removeable")
+                  console.log(name)
                 },
                 hitSlop: 0,
-                name: "removeable",
+                name: name,
                 unregisterOnCallback: true,
               }}
             />

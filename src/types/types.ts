@@ -41,7 +41,7 @@ type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
   expandedRect: Rect
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
-  originalRect: DOMRect
+  originalRect?: DOMRect
   /** The hit slop values applied to this element. */
   hitSlop: Exclude<HitSlop, number>
 }
@@ -84,6 +84,10 @@ export type ForesightElementData = Required<
    * Represents trajectory hit related data for a foresight element.
    */
   trajectoryHitData: TrajectoryHitData
+  /**
+   *
+   */
+  isIntersectingWithViewport: boolean
 }
 
 export type ForesightElementDataWithTabIndex = ForesightElementData & {

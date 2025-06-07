@@ -23,10 +23,20 @@ export const Main = () => {
         <div className="max-w-6xl mx-auto">
           {/* Foresight Buttons Container */}
           <div className="flex flex-wrap gap-8 justify-center mb-12">
-            <ForesightButtonVisibility />
-            <ForesightButtonResizeable />
-            <ForesightButtonRemoveable />
-
+            <ForesightButtonVisibility name="visibility" />
+            <ForesightButtonResizeable name="resizeable" />
+            <ForesightButtonRemoveable name="removeable" />
+            <ForesightButtonNoName />
+            <ForesightButtonVisibility name="visibility2" />
+            <ForesightButtonResizeable name="resizeable2" />
+            <ForesightButtonRemoveable name="removeable2" />
+            <ForesightButtonVisibility name="visibility3" />
+            <ForesightButtonResizeable name="resizeable3" />
+            <ForesightButtonRemoveable name="removeable3" />
+            <ForesightButtonNoName />
+            <ForesightButtonVisibility name="visibility4" />
+            <ForesightButtonResizeable name="resizeable4" />
+            <ForesightButtonRemoveable name="removeable4" />
             <ForesightButtonNoName />
           </div>
         </div>

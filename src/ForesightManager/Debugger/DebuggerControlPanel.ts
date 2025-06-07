@@ -379,6 +379,7 @@ export class DebuggerControlPanel {
   private updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
     listItem.classList.toggle("hovering", data.isHovering)
     listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
+    listItem.classList.toggle("not-in-viewport", !data.isIntersectingWithViewport)
 
     const statusIndicatorHTML = `<span class="status-indicator"></span>`
     const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
@@ -395,14 +396,20 @@ export class DebuggerControlPanel {
       hitSlopTitle = `Hit Slop (px): Top: ${top}, Right: ${right}, Bottom: ${bottom}, Left: ${left}`
     }
 
+    // Add viewport tracking indicator
+    const viewportIcon = data.isIntersectingWithViewport ? "👁️" : "🚫"
+    const viewportTitle = data.isIntersectingWithViewport
+      ? "Element is in viewport and being tracked"
+      : "Element is not in viewport and not being tracked"
+
     listItem.innerHTML = `
       ${statusIndicatorHTML}
       <span class="element-name" title="${data.name || "Unnamed Element"}">${
       data.name || "Unnamed Element"
     }</span>
-          <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
+      <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-
+      <span class="viewport-indicator" title="${viewportTitle}">${viewportIcon}</span>
     `
   }
 
@@ -781,10 +788,16 @@ export class DebuggerControlPanel {
         align-items: center;
         gap: 5px;
         background-color: rgba(50,50,50,0.7);
-        transition: background-color 0.2s ease;
+        transition: background-color 0.2s ease, opacity 0.2s ease;
         font-size: 11px; 
         overflow: hidden;
       }
+      
+      /* Viewport intersection styling */
+      .element-list-item.not-in-viewport {
+        opacity: 0.4;
+      }
+      
       .element-list-item .status-indicator {
         width: 10px;
         height: 10px;
@@ -812,6 +825,15 @@ export class DebuggerControlPanel {
         text-overflow: ellipsis;
         font-size: 12px; 
         font-weight: bold;
+      }
+      .element-list-item .viewport-indicator {
+        font-size: 12px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
       }
       .element-list-item .hit-behavior,
       .element-list-item .hit-slop {

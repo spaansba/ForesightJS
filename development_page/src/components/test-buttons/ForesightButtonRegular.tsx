@@ -1,15 +1,19 @@
 import BaseForesightButton from "./BaseForesightButton"
 
-function ForesightButtonRegular() {
+type ForesightButtonRegularProps = {
+  name: string
+}
+
+function ForesightButtonRegular({ name }: ForesightButtonRegularProps) {
   return (
     <div className="size-20 bg-green-200">
       <BaseForesightButton
         registerOptions={{
           callback: () => {
-            console.log("regular button")
+            console.log(name)
           },
           hitSlop: 20,
-          name: "regular",
+          name: name,
           unregisterOnCallback: false,
         }}
       />

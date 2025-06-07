@@ -98,7 +98,7 @@ export class ForesightManager {
 
   private domObserver: MutationObserver | null = null
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
-
+  private elementIntersectionObserver: IntersectionObserver | null = null
   private elementResizeObserver: ResizeObserver | null = null
 
   // Track the last keydown event to determine if focus change was due to Tab
@@ -153,15 +153,14 @@ export class ForesightManager {
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
 
-    const originalRect = element.getBoundingClientRect()
-
-    const finalUnregisterOnCallback = unregisterOnCallback ?? true
+    if (this.elementIntersectionObserver) {
+      this.elementIntersectionObserver.observe(element)
+    }
 
     const elementData: ForesightElementData = {
       callback,
       elementBounds: {
-        expandedRect: getExpandedRect(originalRect, normalizedHitSlop),
-        originalRect: originalRect,
+        expandedRect: { top: 0, bottom: 0, left: 0, right: 0 },
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -171,17 +170,14 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? "",
-      unregisterOnCallback: finalUnregisterOnCallback,
+      unregisterOnCallback: unregisterOnCallback ?? true,
+      isIntersectingWithViewport: false,
     }
     this.elements.set(element, elementData)
 
     // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
     if (!this.isSetup) {
       this.initializeGlobalListeners()
-    }
-
-    if (this.elementResizeObserver) {
-      this.elementResizeObserver.observe(element)
     }
 
     if (this.debugger) {
@@ -208,6 +204,10 @@ export class ForesightManager {
 
     if (this.elementResizeObserver) {
       this.elementResizeObserver.unobserve(element)
+    }
+
+    if (this.elementIntersectionObserver) {
+      this.elementIntersectionObserver.unobserve(element)
     }
 
     this.elements.delete(element)
@@ -399,7 +399,6 @@ export class ForesightManager {
     if (!foresightElementData) return
 
     const newOriginalRect = element.getBoundingClientRect()
-
     const expandedRect = getExpandedRect(
       newOriginalRect,
       foresightElementData.elementBounds.hitSlop
@@ -614,7 +613,6 @@ export class ForesightManager {
     for (const entry of entries) {
       const element = entry.target as ForesightElement
       const foresightElementData = this.elements.get(element)
-
       if (foresightElementData) {
         this.updateExpandedRect(element)
       }
@@ -709,6 +707,32 @@ export class ForesightManager {
     }
   }
 
+  private handleIntersection = (entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      const element = this.elements.get(entry.target)
+      if (!element) {
+        return
+      }
+      element.isIntersectingWithViewport = entry.isIntersecting
+      if (entry.isIntersecting) {
+        element.elementBounds.originalRect = entry.boundingClientRect
+        element.elementBounds.expandedRect = getExpandedRect(
+          element.elementBounds.originalRect,
+          element.elementBounds.hitSlop
+        )
+        this.elementResizeObserver?.observe(entry.target)
+        console.log("robserver", entry.target)
+        entry.isIntersecting
+      } else {
+        this.elementResizeObserver?.unobserve(entry.target)
+        console.log("nobserver", entry.target)
+      }
+    }
+    if (this.globalSettings.debug) {
+      this.debugger?.refreshElementList()
+    }
+  }
+
   private initializeGlobalListeners() {
     if (this.isSetup) {
       return
@@ -720,20 +744,31 @@ export class ForesightManager {
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
-    window.addEventListener("resize", this.handleResizeOrScroll, { signal })
-    window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
-    document.addEventListener("keydown", this.handleKeyDown, { signal })
-    document.addEventListener("focusin", this.handleFocusIn, { signal })
+    // window.addEventListener("resize", this.handleResizeOrScroll, { signal })
+    // window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
+    // document.addEventListener("keydown", this.handleKeyDown, { signal })
+    // document.addEventListener("focusin", this.handleFocusIn, { signal })
 
-    this.domObserver = new MutationObserver(this.handleDomMutations)
-    this.domObserver.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    })
+    // this.domObserver = new MutationObserver(this.handleDomMutations)
+    // this.domObserver.observe(document.documentElement, {
+    //   childList: true,
+    //   subtree: true,
+    //   attributes: true,
+    // })
 
-    this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
-    this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
+    // NEW: Setup IntersectionObserver
+    const observerOptions = {
+      root: null, // null means the viewport
+      threshold: 0.0, // Trigger as soon as a single pixel is visible
+    }
+
+    this.elementIntersectionObserver = new IntersectionObserver(
+      this.handleIntersection,
+      observerOptions
+    )
+
+    // this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
+    // this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
 
     this.isSetup = true
   }
