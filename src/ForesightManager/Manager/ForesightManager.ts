@@ -13,15 +13,15 @@ import type {
 } from "../../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
-import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
-import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
+import { lineSegmentIntersectsRect } from "./helpers/lineSigmentIntersectsRect"
+import { predictNextMousePosition } from "./helpers/predictNextMousePosition"
 import {
   areRectsEqual,
   getExpandedRect,
   isPointInRectangle,
   normalizeHitSlop,
-} from "../helpers/rectAndHitSlop"
-import { clampNumber } from "../helpers/clampNumber"
+} from "./helpers/rectAndHitSlop"
+import { clampNumber } from "./helpers/clampNumber"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
@@ -44,7 +44,7 @@ import {
 
 import PositionObserver, { type PositionObserverEntry } from "@thednp/position-observer"
 
-import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
+import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.

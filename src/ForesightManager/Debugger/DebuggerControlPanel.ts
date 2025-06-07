@@ -23,7 +23,7 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
-import { objectToMethodCall } from "../helpers/objectToMethodCall"
+import { objectToMethodCall } from "./helpers/objectToMethodCall"
 
 type SectionStates = {
   mouse: boolean
