@@ -10,8 +10,8 @@ function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
   const isVisible = useIsVisible()
   return (
     <div className={`flex flex-col items-center space-y-4 ${isVisible ? "" : "hidden"}`}>
-      <h3 className="text-lg font-semibold text-slate-700">Visibility Test</h3>
-      <div className="bg-gradient-to-br from-amber-200 to-amber-300 size-40 rounded-lg shadow-md border border-amber-300">
+      <h3 className="text-lg font-semibold">Visibility Test</h3>
+      <div className="size-40 rounded-lg shadow-md bg-blue-300 ">
         <BaseForesightButton
           registerOptions={{
             callback: () => {

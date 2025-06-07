@@ -25,7 +25,7 @@ import {
 } from "../constants"
 import { objectToMethodCall } from "../helpers/objectToMethodCall"
 
-interface SectionStates {
+type SectionStates = {
   mouse: boolean
   keyboard: boolean
   general: boolean

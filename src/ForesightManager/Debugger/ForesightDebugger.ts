@@ -72,7 +72,6 @@ export class ForesightDebugger {
 
     // Avoid re-initialization if already setup and not a touch device
     if (this.shadowHost) {
-      console.warn("ForesightDebugger already initialized.")
       this.updateControlsState(currentSettings)
       this.updateTrajectoryVisuals(
         currentPoint,
@@ -91,92 +90,7 @@ export class ForesightDebugger {
 
     this.debuggerStyleElement = document.createElement("style")
     this.debuggerStyleElement.id = "debug-container"
-    this.debuggerStyleElement.textContent = `
-      #jsforesight-debug-container { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; z-index: 9999;
-      }
-      .jsforesight-link-overlay {
-        position: absolute;
-        border: 2px solid rgba(100, 116, 139, 0.2);
-        background-color: rgba(100, 116, 139, 0.08);
-        box-sizing: border-box;
-        border-radius: 6px;
-        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-      }
-      .jsforesight-link-overlay.active {
-        border-color: rgba(100, 116, 139, 0.5);
-        background-color: rgba(100, 116, 139, 0.15);
-      }
-      .jsforesight-link-overlay.trajectory-hit {
-        border-color: oklch(65% 0.2 250); /* A nice, modern blue */
-        background-color: rgba(79, 70, 229, 0.15);
-        box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
-      }
-      .jsforesight-expanded-overlay {
-        position: absolute;
-        border: 1px dashed rgba(100, 116, 139, 0.4);
-        background-color: rgba(100, 116, 139, 0.05);
-        box-sizing: border-box;
-        border-radius: 8px;
-      }
-      .jsforesight-mouse-predicted {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 2px solid #6b98e1;
-        background-color: rgba(176, 196, 222, 0.3);
-        transform: translate(-50%, -50%);
-        z-index: 10000;
-      }
-      .jsforesight-trajectory-line {
-        position: absolute;
-        height: 2px;
-        background-color: #6b98e1;
-        transform-origin: left center;
-        z-index: 9999;
-        border-radius: 1px;
-      }
-      .jsforesight-name-label {
-        position: absolute;
-        background-color: rgba(27, 31, 35, 0.85);
-        backdrop-filter: blur(4px);
-        color: white;
-        padding: 4px 8px;
-        font-size: 11px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-        border-radius: 4px;
-        z-index: 10001;
-        white-space: nowrap;
-        pointer-events: none;
-      }
-      .jsforesight-callback-indicator {
-        position: absolute;
-        border: 4px solid oklch(65% 0.22 280); /* Vibrant Violet */
-        border-radius: 8px;
-        box-sizing: border-box;
-        pointer-events: none;
-        opacity: 0;
-        z-index: 10002;
-      }
-      .jsforesight-callback-indicator.animate {
-        animation: jsforesight-callback-pulse 0.4s ease-out forwards;
-      }
-
-      @keyframes jsforesight-callback-pulse {
-        0% {
-          transform: scale(1);
-          opacity: 1;
-          box-shadow: 0 0 15px oklch(65% 0.22 280 / 0.7);
-        }
-        100% {
-          transform: scale(1.1);
-          opacity: 0;
-          box-shadow: 0 0 25px oklch(65% 0.22 280 / 0);
-        }
-      }
-    `
+    this.debuggerStyleElement.textContent = debuggerCSS
     this.shadowRoot.appendChild(this.debuggerStyleElement)
 
     this.debugContainer = document.createElement("div")
@@ -195,7 +109,6 @@ export class ForesightDebugger {
     this.debugCallbackIndicator.className = "jsforesight-callback-indicator"
     this.debugContainer.appendChild(this.debugCallbackIndicator)
 
-    // Initialize the control panel AND PASS THE SHADOW ROOT
     if (this.shadowRoot && this.controlPanel) {
       this.controlPanel.initialize(this.shadowRoot, currentSettings.debuggerSettings)
     }
@@ -224,9 +137,6 @@ export class ForesightDebugger {
     this.debugTrajectoryLine = null
     this.debuggerStyleElement = null
     this.debugCallbackIndicator = null
-
-    // Clear the static instance reference on cleanup
-    ForesightDebugger.debuggerInstance = undefined as any // Use `any` to allow setting to undefined
   }
 
   public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData) {
@@ -400,3 +310,90 @@ export class ForesightDebugger {
     })
   }
 }
+
+const debuggerCSS = `
+      #jsforesight-debug-container { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 9999;
+      }
+      .jsforesight-link-overlay {
+        position: absolute;
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        background-color: rgba(100, 116, 139, 0.08);
+        box-sizing: border-box;
+        border-radius: 6px;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .jsforesight-link-overlay.active {
+        border-color: rgba(100, 116, 139, 0.5);
+        background-color: rgba(100, 116, 139, 0.15);
+      }
+      .jsforesight-link-overlay.trajectory-hit {
+        border-color: oklch(65% 0.2 250); /* A nice, modern blue */
+        background-color: rgba(79, 70, 229, 0.15);
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
+      }
+      .jsforesight-expanded-overlay {
+        position: absolute;
+        border: 1px dashed rgba(100, 116, 139, 0.4);
+        background-color: rgba(100, 116, 139, 0.05);
+        box-sizing: border-box;
+        border-radius: 8px;
+      }
+      .jsforesight-mouse-predicted {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #6b98e1;
+        background-color: rgba(176, 196, 222, 0.3);
+        transform: translate(-50%, -50%);
+        z-index: 10000;
+      }
+      .jsforesight-trajectory-line {
+        position: absolute;
+        height: 2px;
+        background-color: #6b98e1;
+        transform-origin: left center;
+        z-index: 9999;
+        border-radius: 1px;
+      }
+      .jsforesight-name-label {
+        position: absolute;
+        background-color: rgba(27, 31, 35, 0.85);
+        backdrop-filter: blur(4px);
+        color: white;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        border-radius: 4px;
+        z-index: 10001;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .jsforesight-callback-indicator {
+        position: absolute;
+        border: 4px solid oklch(65% 0.22 280); /* Vibrant Violet */
+        border-radius: 8px;
+        box-sizing: border-box;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 10002;
+      }
+      .jsforesight-callback-indicator.animate {
+        animation: jsforesight-callback-pulse 0.4s ease-out forwards;
+      }
+
+      @keyframes jsforesight-callback-pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+          box-shadow: 0 0 15px oklch(65% 0.22 280 / 0.7);
+        }
+        100% {
+          transform: scale(1.1);
+          opacity: 0;
+          box-shadow: 0 0 25px oklch(65% 0.22 280 / 0);
+        }
+      }
+    `

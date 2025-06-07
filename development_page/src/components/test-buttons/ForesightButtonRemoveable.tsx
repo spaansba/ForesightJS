@@ -13,8 +13,8 @@ function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
     <div className="flex flex-col items-center space-y-4">
       {!shouldBeRemoved && (
         <>
-          <h3 className="text-lg font-semibold text-slate-700">Remove Test</h3>
-          <div className="bg-gradient-to-br from-red-200 to-red-300 size-40 rounded-lg shadow-md border border-red-300">
+          <h3 className="text-lg font-semibold ">Remove Test</h3>
+          <div className="size-40 shadow-md bg-teal-600 rounded-lg ">
             <BaseForesightButton
               registerOptions={{
                 callback: () => {

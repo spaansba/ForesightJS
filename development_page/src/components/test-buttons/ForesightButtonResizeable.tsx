@@ -10,11 +10,11 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
   const isResized = useIsResized()
   return (
     <div className="flex flex-col items-center space-y-4">
-      <h3 className="text-lg font-semibold text-slate-700">Resize Test</h3>
+      <h3 className="text-lg font-semibold ">Resize Test</h3>
       <div
         className={`${
           isResized ? "size-40" : "size-20"
-        } bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg shadow-md border border-blue-300 transition-all duration-500`}
+        }  rounded-lg shadow-md transition-all duration-500 bg-green-600`}
       >
         <BaseForesightButton
           registerOptions={{
