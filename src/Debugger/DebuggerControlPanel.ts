@@ -5,6 +5,8 @@ import type {
   ForesightElement,
   ForesightManagerProps,
   DebuggerSettings,
+  NumericSettingKeys,
+  BooleanSettingKeys,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -203,43 +205,72 @@ export class DebuggerControlPanel {
       })
   }
 
+  /**
+   * Create event listener for the slider (numeric value)
+   */
+  private createInputEventListener(
+    element: HTMLInputElement | null,
+    spanElement: HTMLSpanElement | null,
+    spanSuffix: string,
+    setting: NumericSettingKeys
+  ) {
+    if (!element || !spanElement) {
+      return
+    }
+    element.addEventListener("input", (e) => {
+      const value = parseInt((e.target as HTMLInputElement).value, 10)
+      spanElement.textContent = `${value} ${spanSuffix}`
+      this.foresightManagerInstance.alterGlobalSettings({
+        [setting]: value,
+      })
+    })
+  }
+
+  /**
+   * Create event listener for toggle (boolean value)
+   */
+  private createChangeEventListener(element: HTMLElement | null, setting: BooleanSettingKeys) {
+    if (!element) {
+      return
+    }
+    element.addEventListener("change", (e) => {
+      this.foresightManagerInstance.alterGlobalSettings({
+        [setting]: (e.target as HTMLInputElement).checked,
+      })
+    })
+  }
+
   private setupEventListeners() {
-    this.trajectoryEnabledCheckbox?.addEventListener("change", (e) => {
-      this.foresightManagerInstance.alterGlobalSettings({
-        enableMousePrediction: (e.target as HTMLInputElement).checked,
-      })
-    })
-    this.tabEnabledCheckbox?.addEventListener("change", (e) => {
-      this.foresightManagerInstance.alterGlobalSettings({
-        enableTabPrediction: (e.target as HTMLInputElement).checked,
-      })
-    })
-    this.historySizeSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value, 10)
-      if (this.historyValueSpan) this.historyValueSpan.textContent = `${value} points`
-      this.foresightManagerInstance.alterGlobalSettings({
-        positionHistorySize: value,
-      })
-    })
-    this.predictionTimeSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value, 10)
-      if (this.predictionValueSpan) this.predictionValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({
-        trajectoryPredictionTime: value,
-      })
-    })
-    this.throttleDelaySlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value, 10)
-      if (this.throttleValueSpan) this.throttleValueSpan.textContent = `${value} ms`
-      this.foresightManagerInstance.alterGlobalSettings({
-        resizeScrollThrottleDelay: value,
-      })
-    })
-    this.tabOffsetSlider?.addEventListener("input", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value, 10)
-      if (this.tabOffsetValueSpan) this.tabOffsetValueSpan.textContent = `${value} tabs`
-      this.foresightManagerInstance.alterGlobalSettings({ tabOffset: value })
-    })
+    this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
+    this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableTabPrediction")
+
+    this.createInputEventListener(
+      this.historySizeSlider,
+      this.historyValueSpan,
+      "points",
+      "positionHistorySize"
+    )
+
+    this.createInputEventListener(
+      this.predictionTimeSlider,
+      this.predictionValueSpan,
+      "ms",
+      "trajectoryPredictionTime"
+    )
+
+    this.createInputEventListener(
+      this.throttleDelaySlider,
+      this.throttleValueSpan,
+      "ms",
+      "resizeScrollThrottleDelay"
+    )
+
+    this.createInputEventListener(
+      this.tabOffsetSlider,
+      this.tabOffsetValueSpan,
+      "tabs",
+      "tabOffset"
+    )
 
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized

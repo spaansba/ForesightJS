@@ -90,10 +90,6 @@ export type ForesightElementData = Required<
   isIntersectingWithViewport: boolean
 }
 
-export type ForesightElementDataWithTabIndex = ForesightElementData & {
-  tabIndex: number
-}
-
 type BaseForesightManagerProps = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.

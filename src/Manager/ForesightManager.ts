@@ -226,29 +226,35 @@ export class ForesightManager {
     }
   }
 
-  private updateNumericSettings<K extends NumericSettingKeys>(
+  private updateNumericSettings(
     newValue: number | undefined,
-    name: K,
+    setting: NumericSettingKeys,
     min: number,
     max: number
   ) {
-    if (!shouldUpdateSetting(newValue, this._globalSettings[name])) {
+    if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
       return false
     }
 
-    this._globalSettings[name] = clampNumber(newValue, min, max, this._globalSettings.debug, name)
+    this._globalSettings[setting] = clampNumber(
+      newValue,
+      min,
+      max,
+      this._globalSettings.debug,
+      setting
+    )
 
     return true
   }
 
-  private updateBooleanSetting<K extends BooleanSettingKeys>(
+  private updateBooleanSetting(
     newValue: boolean | undefined,
-    name: K
+    setting: BooleanSettingKeys
   ): boolean {
-    if (!shouldUpdateSetting(newValue, this._globalSettings[name])) {
+    if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
       return false
     }
-    this._globalSettings[name] = newValue
+    this._globalSettings[setting] = newValue
     return true
   }
 
