@@ -256,12 +256,12 @@ export class ForesightDebugger {
     }
 
     const { linkOverlay, expandedOverlay, nameLabel } = overlays
-    const rect = element.getBoundingClientRect()
+    const rect = newData.elementBounds.expandedRect
 
     linkOverlay.style.left = `${rect.left}px`
     linkOverlay.style.top = `${rect.top}px`
-    linkOverlay.style.width = `${rect.width}px`
-    linkOverlay.style.height = `${rect.height}px`
+    linkOverlay.style.width = `${rect.right - rect.left}px`
+    linkOverlay.style.height = `${rect.bottom - rect.top}px`
     linkOverlay.classList.toggle("trajectory-hit", newData.trajectoryHitData.isTrajectoryHit)
     linkOverlay.classList.toggle("active", newData.isHovering)
 
