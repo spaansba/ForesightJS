@@ -143,7 +143,8 @@ export class ForesightDebugger {
 
     let overlays = this.debugLinkOverlays.get(element)
     if (!overlays) {
-      this.debugLinkOverlays.set(element, this.createElementOverlays())
+      overlays = this.createElementOverlays()
+      this.debugLinkOverlays.set(element, overlays)
     }
 
     const { linkOverlay, expandedOverlay, nameLabel } = overlays
