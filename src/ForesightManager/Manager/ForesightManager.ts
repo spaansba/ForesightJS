@@ -42,6 +42,8 @@ import {
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
 
+import PositionObserver, { type PositionObserverEntry } from "@thednp/position-observer"
+
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 
 /**
@@ -100,7 +102,7 @@ export class ForesightManager {
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
   private elementResizeObserver: ResizeObserver | null = null
-
+  private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
 
@@ -153,10 +155,8 @@ export class ForesightManager {
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
 
-    if (this.elementIntersectionObserver) {
-      this.elementIntersectionObserver.observe(element)
-    }
-
+    this.elementIntersectionObserver?.observe(element)
+    this.positionObserver?.observe(element)
     const elementData: ForesightElementData = {
       callback,
       elementBounds: {
@@ -728,6 +728,46 @@ export class ForesightManager {
     }
   }
 
+  private updateElementBounds2(
+    newRect: DOMRect,
+    element: ForesightElement,
+    foresightElementData: ForesightElementData
+  ) {
+    const expandedRect = getExpandedRect(newRect, foresightElementData.elementBounds.hitSlop)
+    if (!areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect)) {
+      this.elements.set(element, {
+        ...foresightElementData,
+        elementBounds: {
+          ...foresightElementData.elementBounds,
+          originalRect: newRect,
+          expandedRect,
+        },
+      })
+
+      if (this.debugger) {
+        const updatedData = this.elements.get(element)
+        if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
+      }
+    }
+  }
+
+  private callbackx = (entries: PositionObserverEntry[], currentObserver: PositionObserver) => {
+    /* keep an eye on your entries */
+    // console.log(entries);
+    // console.log(entries)
+    entries.forEach((entry) => {
+      const elementData = this.elements.get(entry.target)
+      if (elementData) {
+        this.updateElementBounds2(entry.boundingClientRect, entry.target, elementData)
+      }
+    })
+    // access the observer inside your callback
+    // to find entry for myTarget
+    // const entry = currentObserver.getEntry(element)
+    // if (entry?.target === element) {
+    // }
+  }
+
   private initializeGlobalListeners() {
     if (this.isSetup) {
       return
@@ -750,6 +790,8 @@ export class ForesightManager {
       subtree: true,
       attributes: true,
     })
+
+    this.positionObserver = new PositionObserver(this.callbackx)
 
     this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
       root: null,
