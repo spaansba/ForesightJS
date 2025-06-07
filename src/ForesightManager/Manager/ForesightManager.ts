@@ -592,7 +592,7 @@ export class ForesightManager {
     }
   }
 
-  private handleResizeOrScroll = (): void => {
+  private handleWindowResizeOrScroll = (): void => {
     if (this.resizeScrollThrottleTimeoutId) {
       clearTimeout(this.resizeScrollThrottleTimeoutId)
     }
@@ -633,12 +633,9 @@ export class ForesightManager {
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        const currentElements = Array.from(this.elements.keys())
-        for (const element of currentElements) {
+        for (const element of Array.from(this.elements.keys())) {
           if (!element.isConnected) {
-            if (this.elements.has(element)) {
-              this.unregister(element) // unregister will clear its own timeout
-            }
+            this.unregister(element)
           }
         }
       }
@@ -747,32 +744,23 @@ export class ForesightManager {
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
-    window.addEventListener("resize", this.handleResizeOrScroll, { signal })
-    window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
-    // document.addEventListener("keydown", this.handleKeyDown, { signal })
-    // document.addEventListener("focusin", this.handleFocusIn, { signal })
+    window.addEventListener("resize", this.handleWindowResizeOrScroll, { signal })
+    window.addEventListener("scroll", this.handleWindowResizeOrScroll, { signal })
+    document.addEventListener("keydown", this.handleKeyDown, { signal })
+    document.addEventListener("focusin", this.handleFocusIn, { signal })
 
-    // this.domObserver = new MutationObserver(this.handleDomMutations)
-    // this.domObserver.observe(document.documentElement, {
-    //   childList: true,
-    //   subtree: true,
-    //   attributes: true,
-    // })
+    this.domObserver = new MutationObserver(this.handleDomMutations)
+    this.domObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    })
 
-    // NEW: Setup IntersectionObserver
-    const observerOptions = {
-      root: null, // null means the viewport
-      threshold: 0.0, // Trigger as soon as a single pixel is visible
-    }
-
-    this.elementIntersectionObserver = new IntersectionObserver(
-      this.handleIntersection,
-      observerOptions
-    )
-
-    // this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
-    // this.elements.forEach((_, element) => this.elementResizeObserver!.observe(element))
-
+    this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
+      root: null,
+      threshold: 0.0,
+    })
+    this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
     this.isSetup = true
   }
 
