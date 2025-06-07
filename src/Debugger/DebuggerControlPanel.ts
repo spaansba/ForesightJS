@@ -24,6 +24,7 @@ import {
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../Manager/constants"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
+import { createAndAppendStyle } from "./helpers/createAndAppend"
 
 type SectionStates = {
   mouse: boolean
@@ -37,6 +38,8 @@ const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
+  private static debuggerControlPanelInstance: DebuggerControlPanel
+
   private shadowRoot: ShadowRoot | null = null
   private controlsContainer: HTMLElement | null = null
   private elementListItemsContainer: HTMLElement | null = null
@@ -69,23 +72,20 @@ export class DebuggerControlPanel {
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
 
-  constructor(manager: ForesightManager) {
-    this.foresightManagerInstance = manager
-  }
-
-  public initialize(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
-    this.shadowRoot = shadowRoot
+  private constructor(
+    foresightManager: ForesightManager,
+    shadowRoot: ShadowRoot,
+    debuggerSettings: DebuggerSettings
+  ) {
+    this.foresightManagerInstance = foresightManager
     this.createDOM()
-
-    this.isContainerMinimized =
-      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
-
+    this.shadowRoot = shadowRoot
     if (this.controlsContainer && this.shadowRoot) {
-      this.controlPanelStyleElement = document.createElement("style")
-      this.controlPanelStyleElement.textContent = this.getStyles()
-      this.controlPanelStyleElement.id = "debug-control-panel"
-      this.shadowRoot.appendChild(this.controlPanelStyleElement)
-
+      this.controlPanelStyleElement = createAndAppendStyle(
+        this.getStyles(),
+        this.shadowRoot,
+        "debug-control-panel"
+      )
       this.shadowRoot.appendChild(this.controlsContainer)
       this.queryDOMElements()
       this.originalSectionStates()
@@ -93,6 +93,28 @@ export class DebuggerControlPanel {
       this.refreshElementList()
       this.applyMinimizedStateVisuals()
     }
+
+    this.isContainerMinimized =
+      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
+  }
+
+  public static initialize(
+    foresightManager: ForesightManager,
+    shadowRoot: ShadowRoot,
+    debuggerSettings: DebuggerSettings
+  ) {
+    if (!DebuggerControlPanel.isInitiated) {
+      DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(
+        foresightManager,
+        shadowRoot,
+        debuggerSettings
+      )
+    }
+    return DebuggerControlPanel.debuggerControlPanelInstance
+  }
+
+  private static get isInitiated(): boolean {
+    return !!DebuggerControlPanel.debuggerControlPanelInstance
   }
 
   /**

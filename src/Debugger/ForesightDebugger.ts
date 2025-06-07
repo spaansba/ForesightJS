@@ -9,7 +9,7 @@ import type {
   Rect,
 } from "../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
-import { createAndAppendElement } from "./helpers/createAndAppendElement"
+import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 
@@ -40,7 +40,6 @@ export class ForesightDebugger {
 
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
-    this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
 
     // Add nececairy elements to shadowhost
     this.shadowHost = createAndAppendElement(
@@ -71,13 +70,15 @@ export class ForesightDebugger {
       this.debugContainer,
       "jsforesight-callback-indicator"
     )
-    this.controlPanel?.initialize(this.shadowRoot, foresightManager.globalSettings.debuggerSettings)
+    this.controlPanel = DebuggerControlPanel.initialize(
+      this.foresightManagerInstance,
+      this.shadowRoot,
+      foresightManager.globalSettings.debuggerSettings
+    )
 
     // Add style sheet
-    const debuggerStyleElement = document.createElement("style")
-    debuggerStyleElement.id = "debug-container"
-    debuggerStyleElement.textContent = debuggerCSS
-    this.shadowRoot.appendChild(debuggerStyleElement)
+
+    createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
   }
 
   private static get isInitiated(): boolean {
@@ -118,7 +119,7 @@ export class ForesightDebugger {
       this.debugContainer!,
       "jsforesight-expanded-overlay"
     )
-    const nameLabel = createAndAppendElement("div", this.debugContainer!, "jsforesight-name-label")
+    const nameLabel = createAndAppendElement("div", this.debugContainer, "jsforesight-name-label")
     const overlays = { linkOverlay, expandedOverlay, nameLabel }
     this.debugLinkOverlays.set(element, overlays)
     return overlays
