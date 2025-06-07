@@ -9,6 +9,7 @@ import type {
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
+  DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
   DEFAULT_TAB_OFFSET,
@@ -22,6 +23,7 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
+import { objectToMethodCall } from "../helpers/objectToMethodCall"
 
 interface SectionStates {
   mouse: boolean
@@ -74,9 +76,9 @@ export class DebuggerControlPanel {
   public initialize(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
     this.shadowRoot = shadowRoot
     this.createDOM()
-    if (debuggerSettings.isControlPanelDefaultMinimized) {
-      this.isContainerMinimized = true
-    }
+
+    this.isContainerMinimized =
+      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
 
     if (this.controlsContainer && this.shadowRoot) {
       this.controlPanelStyleElement = document.createElement("style")
@@ -155,52 +157,13 @@ export class DebuggerControlPanel {
 
   private handleCopySettings() {
     if (!this.copySettingsButton) return
-
-    const enableMousePrediction =
-      this.trajectoryEnabledCheckbox?.checked ?? DEFAULT_ENABLE_MOUSE_PREDICTION
-    const enableTabPrediction = this.tabEnabledCheckbox?.checked ?? DEFAULT_ENABLE_TAB_PREDICTION
-    const positionHistorySize = parseInt(
-      this.historySizeSlider?.value ?? DEFAULT_POSITION_HISTORY_SIZE.toString(),
-      10
-    )
-    const trajectoryPredictionTime = parseInt(
-      this.predictionTimeSlider?.value ?? DEFAULT_TRAJECTORY_PREDICTION_TIME.toString(),
-      10
-    )
-    const resizeScrollThrottleDelay = parseInt(
-      this.throttleDelaySlider?.value ?? DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY.toString(),
-      10
-    )
-    const tabOffset = parseInt(this.tabOffsetSlider?.value ?? DEFAULT_TAB_OFFSET.toString(), 10)
-
-    const settingsToCopy = {
-      debug: true,
-      debuggerSettings: {
-        isControlPanelDefaultMinimized: this.isContainerMinimized,
-      },
-      enableMousePrediction,
-      enableTabPrediction,
-      positionHistorySize,
-      resizeScrollThrottleDelay,
-      tabOffset,
-      trajectoryPredictionTime,
-    }
-
-    let settingsString = "ForesightManager.initialize({\n"
-    settingsString += `  debug: ${settingsToCopy.debug},\n`
-    settingsString += `  debuggerSettings: {\n`
-    settingsString += `    isControlPanelDefaultMinimized: ${settingsToCopy.debuggerSettings.isControlPanelDefaultMinimized},\n`
-    settingsString += `  },\n`
-    settingsString += `  enableMousePrediction: ${settingsToCopy.enableMousePrediction},\n`
-    settingsString += `  enableTabPrediction: ${settingsToCopy.enableTabPrediction},\n`
-    settingsString += `  positionHistorySize: ${settingsToCopy.positionHistorySize},\n`
-    settingsString += `  resizeScrollThrottleDelay: ${settingsToCopy.resizeScrollThrottleDelay},\n`
-    settingsString += `  tabOffset: ${settingsToCopy.tabOffset},\n`
-    settingsString += `  trajectoryPredictionTime: ${settingsToCopy.trajectoryPredictionTime},\n`
-    settingsString += "})"
-
     navigator.clipboard
-      .writeText(settingsString)
+      .writeText(
+        objectToMethodCall(
+          this.foresightManagerInstance.globalSettings,
+          "ForesightManager.initialize"
+        )
+      )
       .then(() => {
         this.copySettingsButton!.innerHTML = TICK_SVG_ICON
         if (this.copyTimeoutId) {
@@ -472,6 +435,7 @@ export class DebuggerControlPanel {
     this.tabOffsetValueSpan = null
     this.copySettingsButton = null
   }
+
   private createDOM() {
     this.controlsContainer = document.createElement("div")
     this.controlsContainer.id = "debug-controls"
