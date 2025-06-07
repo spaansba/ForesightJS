@@ -9,6 +9,7 @@ import type {
   Rect,
 } from "../../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
+import { createAndAppendElement } from "../helpers/createAndAppendElement"
 
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
@@ -27,8 +28,7 @@ export class ForesightDebugger {
   > = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
-  private debuggerStyleElement: HTMLStyleElement | null = null // Renamed for clarity
-  private debugCallbackIndicator: HTMLElement | null = null // Added for callback animation
+  private debugCallbackIndicator: HTMLElement | null = null
 
   private controlPanel: DebuggerControlPanel | null = null
   private lastElementData: Map<
@@ -36,24 +36,23 @@ export class ForesightDebugger {
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
-  // Make the constructor private
-  private constructor(intentManager: ForesightManager) {
-    // Remove any stale debuggers
+  private constructor(foresightManager: ForesightManager) {
     const oldDebuggers = document.querySelectorAll("#jsforesight-debugger-shadow-host")
     oldDebuggers.forEach((element) => element.remove())
-
-    this.foresightManagerInstance = intentManager
-    // The control panel also depends on the debugger, so initialize it here
-    // It will need the shadow root later in the initialize method
+    this.foresightManagerInstance = foresightManager
     this.controlPanel = new DebuggerControlPanel(this.foresightManagerInstance)
   }
 
   // Static method to get the singleton instance
   public static getInstance(intentManager: ForesightManager): ForesightDebugger {
-    if (!ForesightDebugger.debuggerInstance) {
+    if (!ForesightDebugger.isInitiated) {
       ForesightDebugger.debuggerInstance = new ForesightDebugger(intentManager)
     }
     return ForesightDebugger.debuggerInstance
+  }
+
+  private static get isInitiated(): boolean {
+    return !!ForesightDebugger.debuggerInstance
   }
 
   public initialize(
@@ -62,59 +61,18 @@ export class ForesightDebugger {
     currentPoint: Point,
     predictedPoint: Point
   ) {
-    if (typeof window === "undefined" || isTouchDevice()) {
-      // If already initialized but touch device, cleanup
-      if (this.shadowHost) {
-        this.cleanup()
-      }
+    if (typeof window === "undefined" || isTouchDevice() || !ForesightDebugger.isInitiated) {
       return
     }
 
-    // Avoid re-initialization if already setup and not a touch device
-    if (this.shadowHost) {
-      this.updateControlsState(currentSettings)
-      this.updateTrajectoryVisuals(
-        currentPoint,
-        predictedPoint,
-        currentSettings.enableMousePrediction
-      )
-      this.refreshDisplayedElements()
-      return
-    }
+    this.createDebugElements()
 
-    this.shadowHost = document.createElement("div")
-    this.shadowHost.id = "jsforesight-debugger-shadow-host"
-    this.shadowHost.style.pointerEvents = "none"
-    document.body.appendChild(this.shadowHost)
-    this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
-
-    this.debuggerStyleElement = document.createElement("style")
-    this.debuggerStyleElement.id = "debug-container"
-    this.debuggerStyleElement.textContent = debuggerCSS
-    this.shadowRoot.appendChild(this.debuggerStyleElement)
-
-    this.debugContainer = document.createElement("div")
-    this.debugContainer.id = "jsforesight-debug-container"
-    this.shadowRoot.appendChild(this.debugContainer)
-
-    this.debugPredictedMouseIndicator = document.createElement("div")
-    this.debugPredictedMouseIndicator.className = "jsforesight-mouse-predicted"
-    this.debugContainer.appendChild(this.debugPredictedMouseIndicator)
-
-    this.debugTrajectoryLine = document.createElement("div")
-    this.debugTrajectoryLine.className = "jsforesight-trajectory-line"
-    this.debugContainer.appendChild(this.debugTrajectoryLine)
-
-    this.debugCallbackIndicator = document.createElement("div")
-    this.debugCallbackIndicator.className = "jsforesight-callback-indicator"
-    this.debugContainer.appendChild(this.debugCallbackIndicator)
-
-    if (this.shadowRoot && this.controlPanel) {
-      this.controlPanel.initialize(this.shadowRoot, currentSettings.debuggerSettings)
+    if (this.shadowRoot) {
+      this.controlPanel?.initialize(this.shadowRoot, currentSettings.debuggerSettings)
     }
 
     links.forEach((data, element) => {
-      this.createOrUpdateLinkOverlay(element, data)
+      this.createOrUpdateElementOverlay(element, data)
     })
 
     this.updateTrajectoryVisuals(
@@ -124,22 +82,58 @@ export class ForesightDebugger {
     )
   }
 
-  public cleanup() {
-    this.controlPanel?.cleanup()
-    this.shadowHost?.remove()
-    this.shadowHost = null
-    this.shadowRoot = null
-    this.debugContainer = null
+  private createDebugElements() {
+    this.shadowHost = document.createElement("div")
+    this.shadowHost.id = "jsforesight-debugger-shadow-host"
+    this.shadowHost.style.pointerEvents = "none"
+    document.body.appendChild(this.shadowHost)
+    this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
 
-    this.debugLinkOverlays.clear()
-    this.lastElementData.clear()
-    this.debugPredictedMouseIndicator = null
-    this.debugTrajectoryLine = null
-    this.debuggerStyleElement = null
-    this.debugCallbackIndicator = null
+    const debuggerStyleElement = document.createElement("style")
+    debuggerStyleElement.id = "debug-container"
+    debuggerStyleElement.textContent = debuggerCSS
+    this.shadowRoot.appendChild(debuggerStyleElement)
+
+    this.debugContainer = createAndAppendElement(
+      "div",
+      this.shadowRoot,
+      "",
+      "jsforesight-debug-container"
+    )
+    this.debugPredictedMouseIndicator = createAndAppendElement(
+      "div",
+      this.debugContainer,
+      "jsforesight-mouse-predicted"
+    )
+    this.debugTrajectoryLine = createAndAppendElement(
+      "div",
+      this.debugContainer,
+      "jsforesight-trajectory-line"
+    )
+    this.debugCallbackIndicator = createAndAppendElement(
+      "div",
+      this.debugContainer,
+      "jsforesight-callback-indicator"
+    )
   }
 
-  public createOrUpdateLinkOverlay(element: ForesightElement, newData: ForesightElementData) {
+  private createElementOverlays() {
+    const linkOverlay = createAndAppendElement(
+      "div",
+      this.debugContainer!,
+      "jsforesight-link-overlay"
+    )
+    const expandedOverlay = createAndAppendElement(
+      "div",
+      this.debugContainer!,
+      "jsforesight-expanded-overlay"
+    )
+    const nameLabel = createAndAppendElement("div", this.debugContainer!, "jsforesight-name-label")
+
+    return { linkOverlay, expandedOverlay, nameLabel }
+  }
+
+  public createOrUpdateElementOverlay(element: ForesightElement, newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
 
     this.lastElementData.set(element, {
@@ -149,20 +143,7 @@ export class ForesightDebugger {
 
     let overlays = this.debugLinkOverlays.get(element)
     if (!overlays) {
-      const linkOverlay = document.createElement("div")
-      linkOverlay.className = "jsforesight-link-overlay"
-      this.debugContainer.appendChild(linkOverlay)
-
-      const expandedOverlay = document.createElement("div")
-      expandedOverlay.className = "jsforesight-expanded-overlay"
-      this.debugContainer.appendChild(expandedOverlay)
-
-      const nameLabel = document.createElement("div")
-      nameLabel.className = "jsforesight-name-label"
-      this.debugContainer.appendChild(nameLabel)
-
-      overlays = { linkOverlay, expandedOverlay, nameLabel }
-      this.debugLinkOverlays.set(element, overlays)
+      this.debugLinkOverlays.set(element, this.createElementOverlays())
     }
 
     const { linkOverlay, expandedOverlay, nameLabel } = overlays
@@ -223,7 +204,7 @@ export class ForesightDebugger {
     const currentManagerElements = new Set(this.foresightManagerInstance.registeredElements.keys())
 
     this.foresightManagerInstance.registeredElements.forEach((data, element) => {
-      this.createOrUpdateLinkOverlay(element, data)
+      this.createOrUpdateElementOverlay(element, data)
     })
 
     const overlaysToRemove = Array.from(this.debugLinkOverlays.keys()).filter(
@@ -308,6 +289,19 @@ export class ForesightDebugger {
     requestAnimationFrame(() => {
       this.debugCallbackIndicator!.classList.add("animate")
     })
+  }
+  public cleanup() {
+    this.controlPanel?.cleanup()
+    this.shadowHost?.remove()
+    this.shadowHost = null
+    this.shadowRoot = null
+    this.debugContainer = null
+
+    this.debugLinkOverlays.clear()
+    this.lastElementData.clear()
+    this.debugPredictedMouseIndicator = null
+    this.debugTrajectoryLine = null
+    this.debugCallbackIndicator = null
   }
 }
 

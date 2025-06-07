@@ -122,10 +122,7 @@ export class ForesightManager {
   }
 
   public static get isInitiated(): Readonly<boolean> {
-    if (!ForesightManager.manager) {
-      return false
-    }
-    return true
+    return !!ForesightManager.manager
   }
 
   public static get instance() {
@@ -182,7 +179,7 @@ export class ForesightManager {
 
     if (this.debugger) {
       const data = this.elements.get(element)
-      if (data) this.debugger.createOrUpdateLinkOverlay(element, data)
+      if (data) this.debugger.createOrUpdateElementOverlay(element, data)
       this.debugger.refreshDisplayedElements()
     }
 
@@ -371,7 +368,7 @@ export class ForesightManager {
       this._globalSettings.enableMousePrediction
     )
     this.elements.forEach((data, el) => {
-      this.debugger!.createOrUpdateLinkOverlay(el, data)
+      this.debugger!.createOrUpdateElementOverlay(el, data)
     })
     this.debugger.refreshDisplayedElements()
   }
@@ -412,7 +409,7 @@ export class ForesightManager {
 
       if (this.debugger) {
         const updatedData = this.elements.get(element)
-        if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
+        if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
       }
     }
   }
@@ -547,7 +544,7 @@ export class ForesightManager {
               }
               this.elements.set(element, expiredData)
               if (this.debugger) {
-                this.debugger.createOrUpdateLinkOverlay(element, expiredData)
+                this.debugger.createOrUpdateElementOverlay(element, expiredData)
               }
             }
           }, 200)
@@ -576,7 +573,7 @@ export class ForesightManager {
       elementsToUpdateInDebugger?.forEach((element) => {
         const data = this.elements.get(element) // Get potentially updated data
         if (data) {
-          this.debugger!.createOrUpdateLinkOverlay(element, data)
+          this.debugger!.createOrUpdateElementOverlay(element, data)
         }
       })
       this.debugger.updateTrajectoryVisuals(
@@ -746,7 +743,7 @@ export class ForesightManager {
 
       if (this.debugger) {
         const updatedData = this.elements.get(element)
-        if (updatedData) this.debugger.createOrUpdateLinkOverlay(element, updatedData)
+        if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
       }
     }
   }
