@@ -291,10 +291,6 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public refreshElementList() {
-    this.controlPanel?.refreshElementList()
-  }
-
   public removeLinkOverlay(element: ForesightElement) {
     const overlays = this.debugLinkOverlays.get(element)
     if (overlays) {

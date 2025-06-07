@@ -324,9 +324,7 @@ export class ForesightManager {
       if (!areRectsEqual(this._globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this._globalSettings.defaultHitSlop = normalizedNewHitSlop
         hitSlopChanged = true
-        this.elements.forEach((_, element) => {
-          this.updateExpandedRect(element)
-        })
+        this.forceUpdateAllElementBounds()
       }
     }
 
@@ -394,10 +392,10 @@ export class ForesightManager {
     }
   }
 
-  private updateExpandedRect(element: ForesightElement) {
-    const foresightElementData = this.elements.get(element)
-    if (!foresightElementData) return
-
+  private updateElementBounds(
+    element: ForesightElement,
+    foresightElementData: ForesightElementData
+  ) {
     const newOriginalRect = element.getBoundingClientRect()
     const expandedRect = getExpandedRect(
       newOriginalRect,
@@ -420,10 +418,17 @@ export class ForesightManager {
     }
   }
 
-  private updateAllRects() {
+  private forceUpdateAllElementBounds() {
+    let count = 0
     this.elements.forEach((_, element) => {
-      this.updateExpandedRect(element)
+      const elementData = this.elements.get(element)
+      // For performance only update rects that are currently intersecting with the viewport
+      if (elementData && elementData.isIntersectingWithViewport) {
+        this.updateElementBounds(element, elementData)
+        count++
+      }
     })
+    console.log(count)
   }
 
   private updatePointerState(e: MouseEvent): void {
@@ -597,12 +602,12 @@ export class ForesightManager {
     const currentDelay = this._globalSettings.resizeScrollThrottleDelay
 
     if (timeSinceLastCall >= currentDelay) {
-      this.updateAllRects()
+      this.forceUpdateAllElementBounds()
       this.lastResizeScrollCallTimestamp = now
       this.resizeScrollThrottleTimeoutId = null
     } else {
       this.resizeScrollThrottleTimeoutId = setTimeout(() => {
-        this.updateAllRects()
+        this.forceUpdateAllElementBounds()
         this.lastResizeScrollCallTimestamp = performance.now()
         this.resizeScrollThrottleTimeoutId = null
       }, currentDelay - timeSinceLastCall)
@@ -614,7 +619,7 @@ export class ForesightManager {
       const element = entry.target as ForesightElement
       const foresightElementData = this.elements.get(element)
       if (foresightElementData) {
-        this.updateExpandedRect(element)
+        this.updateElementBounds(element, foresightElementData)
       }
     }
   }
@@ -721,15 +726,13 @@ export class ForesightManager {
           element.elementBounds.hitSlop
         )
         this.elementResizeObserver?.observe(entry.target)
-        console.log("robserver", entry.target)
         entry.isIntersecting
       } else {
         this.elementResizeObserver?.unobserve(entry.target)
-        console.log("nobserver", entry.target)
       }
     }
     if (this.globalSettings.debug) {
-      this.debugger?.refreshElementList()
+      this.debugger?.refreshDisplayedElements()
     }
   }
 
@@ -744,8 +747,8 @@ export class ForesightManager {
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
-    // window.addEventListener("resize", this.handleResizeOrScroll, { signal })
-    // window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
+    window.addEventListener("resize", this.handleResizeOrScroll, { signal })
+    window.addEventListener("scroll", this.handleResizeOrScroll, { signal })
     // document.addEventListener("keydown", this.handleKeyDown, { signal })
     // document.addEventListener("focusin", this.handleFocusIn, { signal })
 
