@@ -34,7 +34,6 @@ export function objectToMethodCall<T extends Record<string, any>>(
   const formattedEntries = entries
     .map(([key, value]) => `  ${String(key)}: ${formatValue(value)}`)
     .join(",\n")
-
   return `${methodName}({\n${formattedEntries}\n})`
 }
 
@@ -47,7 +46,11 @@ export function objectToMethodCall<T extends Record<string, any>>(
  */
 const formatValue = (value: unknown, indent: number = 2): string => {
   const spaces = " ".repeat(indent)
-
+  // Skip deprecated value
+  // TODO: remove in V3.0.0 +
+  if (value === "resizeScrollThrottleDelay") {
+    return ""
+  }
   if (typeof value === "object" && value !== null && !Array.isArray(value)) {
     const entries = Object.entries(value as Record<string, unknown>)
     if (entries.length === 0) return "{}"

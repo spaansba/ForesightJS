@@ -1,4 +1,6 @@
 import { tabbable } from "tabbable"
+import { ForesightDebugger } from "../Debugger/ForesightDebugger"
+import { isTouchDevice } from "../helpers/isTouchDevice"
 import type {
   BooleanSettingKeys,
   ForesightElement,
@@ -6,23 +8,10 @@ import type {
   ForesightManagerProps,
   ForesightRegisterOptions,
   ForesightRegisterResult,
-  MousePosition,
   NumericSettingKeys,
-  Point,
   TrajectoryPositions,
   UpdateForsightManagerProps,
 } from "../types/types"
-import { ForesightDebugger } from "../Debugger/ForesightDebugger"
-import { isTouchDevice } from "../helpers/isTouchDevice"
-import { lineSegmentIntersectsRect } from "./helpers/lineSigmentIntersectsRect"
-import { predictNextMousePosition } from "./helpers/predictNextMousePosition"
-import {
-  areRectsEqual,
-  getExpandedRect,
-  isPointInRectangle,
-  normalizeHitSlop,
-} from "./helpers/rectAndHitSlop"
-import { clampNumber } from "./helpers/clampNumber"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
@@ -40,6 +29,15 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "./constants"
+import { clampNumber } from "./helpers/clampNumber"
+import { lineSegmentIntersectsRect } from "./helpers/lineSigmentIntersectsRect"
+import { predictNextMousePosition } from "./helpers/predictNextMousePosition"
+import {
+  areRectsEqual,
+  getExpandedRect,
+  isPointInRectangle,
+  normalizeHitSlop,
+} from "./helpers/rectAndHitSlop"
 
 import PositionObserver, { type PositionObserverEntry } from "@thednp/position-observer"
 
@@ -89,6 +87,7 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
+    onAnyCallbackFired: () => {},
   }
   private trajectoryPositions: TrajectoryPositions = {
     positions: [],
@@ -302,6 +301,11 @@ export class ForesightManager {
       props?.enableTabPrediction,
       "enableTabPrediction"
     )
+
+    let onAnyCallbackChanges = false
+    if (props?.onAnyCallbackFired !== undefined) {
+      this._globalSettings.onAnyCallbackFired = props.onAnyCallbackFired
+    }
 
     let debuggerSettingsChanged = false
     if (props?.debuggerSettings?.isControlPanelDefaultMinimized !== undefined) {
@@ -597,6 +601,7 @@ export class ForesightManager {
   private callCallback(elementData: ForesightElementData | undefined, element: ForesightElement) {
     if (elementData) {
       elementData.callback()
+      this.globalSettings.onAnyCallbackFired()
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }

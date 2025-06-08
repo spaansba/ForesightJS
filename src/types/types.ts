@@ -152,6 +152,9 @@ type BaseForesightManagerProps = {
 
   /** Options for the debugger */
   debuggerSettings: DebuggerSettings
+
+  /** Runs when any callback on any registered element is fired */
+  onAnyCallbackFired: ForesightCallback
 }
 
 /**
