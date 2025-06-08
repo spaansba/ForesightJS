@@ -42,12 +42,12 @@ export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private static debuggerControlPanelInstance: DebuggerControlPanel
 
-  private shadowRoot: ShadowRoot | null = null
-  private controlsContainer: HTMLElement | null = null
+  private shadowRoot: ShadowRoot
+  private controlsContainer: HTMLElement
   private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
-  private controlPanelStyleElement: HTMLStyleElement | null = null
+  private controlPanelStyleElement: HTMLStyleElement
 
   private trajectoryEnabledCheckbox: HTMLInputElement | null = null
   private tabEnabledCheckbox: HTMLInputElement | null = null
@@ -80,21 +80,20 @@ export class DebuggerControlPanel {
     debuggerSettings: DebuggerSettings
   ) {
     this.foresightManagerInstance = foresightManager
-    this.createDOM()
     this.shadowRoot = shadowRoot
-    if (this.controlsContainer && this.shadowRoot) {
-      this.controlPanelStyleElement = createAndAppendStyle(
-        this.getStyles(),
-        this.shadowRoot,
-        "debug-control-panel"
-      )
-      this.shadowRoot.appendChild(this.controlsContainer)
-      this.queryDOMElements()
-      this.originalSectionStates()
-      this.setupEventListeners()
-      this.refreshElementList()
-      this.applyMinimizedStateVisuals()
-    }
+    this.controlsContainer = this.createControlContainer()
+    this.shadowRoot.appendChild(this.controlsContainer)
+
+    this.controlPanelStyleElement = createAndAppendStyle(
+      this.getStyles(),
+      this.shadowRoot,
+      "debug-control-panel"
+    )
+    this.queryDOMElements()
+    this.originalSectionStates()
+    this.setupEventListeners()
+    this.refreshElementList()
+    this.applyMinimizedStateVisuals()
 
     this.isContainerMinimized =
       debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
@@ -242,6 +241,21 @@ export class DebuggerControlPanel {
     })
   }
 
+  private createSectionToggleEventListener(
+    section: HTMLDivElement | null,
+    isMinimizedFlagName:
+      | "isMouseSettingsMinimized"
+      | "isKeyboardSettingsMinimized"
+      | "isGeneralSettingsMinimized"
+      | "isElementsListMinimized"
+  ) {
+    const sectionHeader = section?.querySelector(".debugger-section-header")
+    sectionHeader?.addEventListener("click", (e) => {
+      e.stopPropagation()
+      this.toggleMinimizeSection(section, (this[isMinimizedFlagName] = !this[isMinimizedFlagName]))
+    })
+  }
+
   private setupEventListeners() {
     this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
     this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableTabPrediction")
@@ -278,41 +292,22 @@ export class DebuggerControlPanel {
       this.isContainerMinimized = !this.isContainerMinimized
       this.applyMinimizedStateVisuals()
     })
-
     this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
 
-    // We toggle the minimize on the entire section header div instead of solely on the minimize button
-    const sectionToggleEvent = (
-      section: HTMLDivElement | null,
-      isMinimizedFlagName:
-        | "isMouseSettingsMinimized"
-        | "isKeyboardSettingsMinimized"
-        | "isGeneralSettingsMinimized"
-        | "isElementsListMinimized"
-    ) => {
-      const sectionHeader = section?.querySelector(".debugger-section-header")
-      sectionHeader?.addEventListener("click", (e) => {
-        e.stopPropagation()
-        this.toggleMinimizeSection(
-          section,
-          (this[isMinimizedFlagName] = !this[isMinimizedFlagName])
-        )
-      })
-    }
     if (this.controlsContainer) {
-      sectionToggleEvent(
+      this.createSectionToggleEventListener(
         this.controlsContainer.querySelector(".mouse-settings-section"),
         "isMouseSettingsMinimized"
       )
-      sectionToggleEvent(
+      this.createSectionToggleEventListener(
         this.controlsContainer.querySelector(".keyboard-settings-section"),
         "isKeyboardSettingsMinimized"
       )
-      sectionToggleEvent(
+      this.createSectionToggleEventListener(
         this.controlsContainer.querySelector(".general-settings-section"),
         "isGeneralSettingsMinimized"
       )
-      sectionToggleEvent(
+      this.createSectionToggleEventListener(
         this.controlsContainer.querySelector(".debugger-elements"),
         "isElementsListMinimized"
       )
@@ -477,9 +472,7 @@ export class DebuggerControlPanel {
       this.copyTimeoutId = null
     }
 
-    this.controlsContainer = null
     this.elementListItemsContainer = null
-    this.controlPanelStyleElement = null
     this.elementCountSpan = null
     this.elementListItems.clear()
     this.containerMinimizeButton = null
@@ -498,11 +491,10 @@ export class DebuggerControlPanel {
     this.copySettingsButton = null
   }
 
-  private createDOM() {
-    this.controlsContainer = document.createElement("div")
-    this.controlsContainer.id = "debug-controls"
-
-    this.controlsContainer.innerHTML = `
+  private createControlContainer(): HTMLElement {
+    const container = document.createElement("div")
+    container.id = "debug-controls"
+    container.innerHTML = `
       <div class="debugger-title-container">
         <button class="minimize-button">-</button>
         <div class="title-group">
@@ -601,6 +593,7 @@ export class DebuggerControlPanel {
         </div>
       </div>
     `
+    return container
   }
 
   private getStyles(): string {
