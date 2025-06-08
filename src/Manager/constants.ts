@@ -14,11 +14,6 @@ export const MAX_TAB_OFFSET = 20
 export const DEFAULT_TAB_OFFSET = 2
 export const TAB_OFFSET_UNIT = "tabs"
 
-export const MIN_RESIZE_SCROLL_THROTTLE_DELAY = 0
-export const MAX_RESIZE_SCROLL_THROTTLE_DELAY = 500
-export const DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY = 50
-export const RESIZE_SCROLL_THROTTLE_UNIT = "ms"
-
 export const MIN_HITSLOP = 0
 export const MAX_HITSLOP = 2000
 export const DEFAULT_HITSLOP = 0

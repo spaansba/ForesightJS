@@ -11,15 +11,12 @@ import type {
 import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
   MAX_POSITION_HISTORY_SIZE,
-  MAX_RESIZE_SCROLL_THROTTLE_DELAY,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
   MIN_POSITION_HISTORY_SIZE,
-  MIN_RESIZE_SCROLL_THROTTLE_DELAY,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
   POSITION_HISTORY_SIZE_UNIT,
-  RESIZE_SCROLL_THROTTLE_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../Manager/constants"
@@ -53,8 +50,6 @@ export class DebuggerControlPanel {
   private historyValueSpan: HTMLSpanElement | null = null
   private predictionTimeSlider: HTMLInputElement | null = null
   private predictionValueSpan: HTMLSpanElement | null = null
-  private throttleDelaySlider: HTMLInputElement | null = null
-  private throttleValueSpan: HTMLSpanElement | null = null
   private tabOffsetSlider: HTMLInputElement | null = null
   private tabOffsetValueSpan: HTMLSpanElement | null = null
 
@@ -156,8 +151,6 @@ export class DebuggerControlPanel {
     this.historyValueSpan = this.controlsContainer.querySelector("#history-value")
     this.predictionTimeSlider = this.controlsContainer.querySelector("#prediction-time")
     this.predictionValueSpan = this.controlsContainer.querySelector("#prediction-value")
-    this.throttleDelaySlider = this.controlsContainer.querySelector("#throttle-delay")
-    this.throttleValueSpan = this.controlsContainer.querySelector("#throttle-value")
     this.tabOffsetSlider = this.controlsContainer.querySelector("#tab-offset")
     this.tabOffsetValueSpan = this.controlsContainer.querySelector("#tab-offset-value")
     this.elementListItemsContainer = this.controlsContainer.querySelector(
@@ -272,13 +265,6 @@ export class DebuggerControlPanel {
     )
 
     this.createInputEventListener(
-      this.throttleDelaySlider,
-      this.throttleValueSpan,
-      RESIZE_SCROLL_THROTTLE_UNIT,
-      "resizeScrollThrottleDelay"
-    )
-
-    this.createInputEventListener(
       this.tabOffsetSlider,
       this.tabOffsetValueSpan,
       TAB_OFFSET_UNIT,
@@ -382,10 +368,6 @@ export class DebuggerControlPanel {
       this.predictionTimeSlider.value = settings.trajectoryPredictionTime.toString()
       this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
     }
-    if (this.throttleDelaySlider && this.throttleValueSpan) {
-      this.throttleDelaySlider.value = settings.resizeScrollThrottleDelay.toString()
-      this.throttleValueSpan.textContent = `${settings.resizeScrollThrottleDelay} ${RESIZE_SCROLL_THROTTLE_UNIT}`
-    }
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
       this.tabOffsetSlider.value = settings.tabOffset.toString()
       this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
@@ -476,8 +458,6 @@ export class DebuggerControlPanel {
     this.historyValueSpan = null
     this.predictionTimeSlider = null
     this.predictionValueSpan = null
-    this.throttleDelaySlider = null
-    this.throttleValueSpan = null
     this.tabOffsetSlider = null
     this.tabOffsetValueSpan = null
     this.copySettingsButton = null
@@ -561,14 +541,7 @@ export class DebuggerControlPanel {
             <button class="section-minimize-button">-</button>
           </div>
           <div class="debugger-section-content general-settings-content">
-            <div class="control-row">
-              <label for="throttle-delay">
-                Scroll/Resize Throttle
-                <span class="info-icon" title="Delay in ${TRAJECTORY_PREDICTION_TIME_UNIT} for recalculating element positions on resize/scroll. Higher values improve performance during rapid events. - resizeScrollThrottleDelay">i</span>
-              </label>
-              <input type="range" id="throttle-delay" min="${MIN_RESIZE_SCROLL_THROTTLE_DELAY}" max="${MAX_RESIZE_SCROLL_THROTTLE_DELAY}" step="10">
-              <span id="throttle-value"></span>
-            </div>
+           
           </div>
         </div>
       </div>

@@ -144,10 +144,7 @@ type BaseForesightManagerProps = {
   debug: boolean
 
   /**
-   * Amount of time in ms the element bounds get recalculated on scroll/resize of the page.
-   *
-   * **This value is clamped between 0 and 500.**
-   * @default 50
+   * @deprecated This property will be removed in v3.0.0. Use automatic optimization instead.
    */
   resizeScrollThrottleDelay: number
 

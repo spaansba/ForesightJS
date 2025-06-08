@@ -30,15 +30,12 @@ import {
   DEFAULT_IS_DEBUG,
   DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
-  DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
-  MAX_RESIZE_SCROLL_THROTTLE_DELAY,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
   MIN_POSITION_HISTORY_SIZE,
-  MIN_RESIZE_SCROLL_THROTTLE_DELAY,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "./constants"
@@ -84,7 +81,7 @@ export class ForesightManager {
       right: DEFAULT_HITSLOP,
       bottom: DEFAULT_HITSLOP,
     },
-    resizeScrollThrottleDelay: DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
+    resizeScrollThrottleDelay: 0,
     debuggerSettings: {
       isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
     },
@@ -288,12 +285,11 @@ export class ForesightManager {
       MAX_TAB_OFFSET
     )
 
-    const throttleDelayChanged = this.updateNumericSettings(
-      props?.resizeScrollThrottleDelay,
-      "resizeScrollThrottleDelay",
-      MIN_RESIZE_SCROLL_THROTTLE_DELAY,
-      MAX_RESIZE_SCROLL_THROTTLE_DELAY
-    )
+    if (props?.resizeScrollThrottleDelay !== undefined) {
+      console.warn(
+        "resizeScrollThrottleDelay is deprecated and will be removed in V3.0.0 of ForesightJS"
+      )
+    }
 
     const mousePredictionChanged = this.updateBooleanSetting(
       props?.enableMousePrediction,
@@ -345,7 +341,6 @@ export class ForesightManager {
       positionHistoryChanged ||
       trajectoryTimeChanged ||
       tabOffsetChanged ||
-      throttleDelayChanged ||
       mousePredictionChanged ||
       tabPredictionChanged ||
       debuggerSettingsChanged ||
