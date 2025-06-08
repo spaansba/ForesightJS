@@ -3,14 +3,17 @@ import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import type {
   BooleanSettingKeys,
+  CallbackHits,
   ForesightElement,
   ForesightElementData,
+  ForesightManagerData,
   ForesightManagerSettings,
   ForesightRegisterOptions,
   ForesightRegisterResult,
   NumericSettingKeys,
   TrajectoryPositions,
   UpdateForsightManagerSettings,
+  hitType,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -62,18 +65,15 @@ import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
  * accessed via the static getter {@link ForesightManager.instance}.
  */
 
-type ForesightManagerData = {
-  instance: ForesightManager
-  globalSettings: ForesightManagerSettings
-}
-
 export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
-
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
-  private globalCallbackHitCount = 0
+  private globalCallbackHits: CallbackHits = {
+    mouse: 0,
+    tab: 0,
+  }
   private _globalSettings: ForesightManagerSettings = {
     debug: DEFAULT_IS_DEBUG,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -92,7 +92,10 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
-    onAnyCallbackFired: (elementData: ForesightElementData) => {},
+    onAnyCallbackFired: (
+      elementData: ForesightElementData,
+      managerData: ForesightManagerData
+    ) => {},
   }
   private trajectoryPositions: TrajectoryPositions = {
     positions: [],
@@ -158,7 +161,10 @@ export class ForesightManager {
     const elementData: ForesightElementData = {
       element: element,
       callback,
-      callbackHitCount: 0,
+      callbackHits: {
+        mouse: 0,
+        tab: 0,
+      },
       elementBounds: {
         expandedRect: { top: 0, bottom: 0, left: 0, right: 0 },
         hitSlop: normalizedHitSlop,
@@ -434,7 +440,7 @@ export class ForesightManager {
 
     // If either condition is met, fire the callback.
     if (isHovering || isTrajectoryHit) {
-      this.callCallback(elementData)
+      this.callCallback(elementData, "mouse")
     }
   }
 
@@ -467,7 +473,7 @@ export class ForesightManager {
       )
 
     if (isNewPhysicalHover || isNewTrajectoryHit) {
-      this.callCallback(elementData)
+      this.callCallback(elementData, "mouse")
     }
 
     const hasStateChanged = isHovering !== elementData.isHovering || isNewTrajectoryHit
@@ -595,19 +601,32 @@ export class ForesightManager {
     }
 
     elementsToPredict.forEach((element) => {
-      this.callCallback(this.elements.get(element))
+      this.callCallback(this.elements.get(element), "tab")
     })
   }
 
-  private callCallback(elementData: ForesightElementData | undefined) {
+  private updateHitCounters(elementData: ForesightElementData, hitType: hitType) {
+    if (hitType === "mouse") {
+      elementData.callbackHits.mouse++
+      this.globalCallbackHits.mouse++
+    } else if (hitType === "tab") {
+      elementData.callbackHits.tab++
+      this.globalCallbackHits.tab++
+    }
+  }
+
+  private callCallback(elementData: ForesightElementData | undefined, hitType: hitType) {
     if (elementData) {
-      elementData.callbackHitCount++
+      this.updateHitCounters(elementData, hitType)
+
       elementData.callback()
-      this.globalSettings.onAnyCallbackFired(elementData)
+      this.globalSettings.onAnyCallbackFired(elementData, {
+        globalCallbackHits: this.globalCallbackHits,
+        globalSettings: this._globalSettings,
+      })
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }
-      this.globalCallbackHitCount++
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
         this.unregister(elementData.element)

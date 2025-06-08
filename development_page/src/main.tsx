@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
 import { ForesightManager } from "../../src/Manager/ForesightManager.ts"
-import type { ForesightElementData } from "../../src/types/types.ts"
+import type { ForesightElementData, ForesightManagerData } from "../../src/types/types.ts"
 
 ForesightManager.initialize({
   debug: true,
@@ -22,8 +22,9 @@ ForesightManager.initialize({
   },
   enableTabPrediction: true,
   tabOffset: 4,
-  onAnyCallbackFired: (elementData: ForesightElementData) => {
+  onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => {
     console.log(elementData)
+    console.log(managerData)
   },
 })
 

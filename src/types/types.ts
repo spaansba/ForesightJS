@@ -99,11 +99,23 @@ export type ForesightElementData = Required<
   /**
    * Amount of times this callback has been hit, will be 0/1 if unregisterOnCallback is true
    */
-  callbackHitCount: number
+  callbackHits: CallbackHits
   /**
    * The element you registered
    */
   element: ForesightElement
+}
+
+export type CallbackHits = {
+  mouse: number
+  tab: number
+}
+
+export type hitType = "mouse" | "tab"
+
+export type ForesightManagerData = {
+  globalSettings: Readonly<ForesightManagerSettings>
+  globalCallbackHits: Readonly<CallbackHits>
 }
 
 type BaseForesightManagerSettings = {
@@ -165,9 +177,10 @@ type BaseForesightManagerSettings = {
    * A global callback that runs whenever a callback is fired for any
    * registered element, just after the element's specific callback is fired.
    *
-   * @param target - The ForesightTarget object for the element that triggered the event.
+   * @param elementData - The ForesightTarget object for the element that triggered the event.
+   * @param managerData - Data about the ForesightManager
    */
-  onAnyCallbackFired: (elementData: ForesightElementData) => void
+  onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => void
 }
 
 /**
