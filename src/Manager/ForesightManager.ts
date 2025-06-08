@@ -395,6 +395,110 @@ export class ForesightManager {
       : { ...this.trajectoryPositions.currentPoint }
   }
 
+  /**
+   * Processes elements that unregister after a single callback.
+   *
+   * This is a "fire-and-forget" handler. Its only goal is to trigger the
+   * callback once. It does so if the mouse trajectory is predicted to hit the
+   * element (if prediction is on) OR if the mouse physically hovers over it.
+   * It does not track state, as the element is immediately unregistered.
+   *
+   * @param elementData - The data object for the foresight element.
+   * @param element - The HTML element being interacted with.
+   */
+  private handleSingleCallbackInteraction(
+    elementData: ForesightElementData,
+    element: ForesightElement
+  ) {
+    const { expandedRect } = elementData.elementBounds
+
+    // A physical hover is always a valid trigger.
+    const isHovering = isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)
+
+    // A predicted trajectory intersection is also a valid trigger.
+    const isTrajectoryHit =
+      this._globalSettings.enableMousePrediction &&
+      lineSegmentIntersectsRect(
+        this.trajectoryPositions.currentPoint,
+        this.trajectoryPositions.predictedPoint,
+        expandedRect
+      )
+
+    // If either condition is met, fire the callback.
+    if (isHovering || isTrajectoryHit) {
+      this.callCallback(elementData, element)
+    }
+  }
+
+  /**
+   * Processes persistent elements that can have multiple callbacks and require state tracking.
+   *
+   * This handler is responsible for elements where `unregisterOnCallback` is false.
+   * It triggers callbacks only on the "leading edge" of an interaction—that is,
+   * the first moment the mouse enters an element or the first moment a trajectory
+   * is predicted to hit it. This prevents the callback from firing on every
+   * mouse move. It also manages the element's state (`isHovering`, `isTrajectoryHit`)
+   * for visual feedback in the {@link ForesightDebugger}.
+   *
+   * @param elementData - The current data object for the foresight element.
+   * @param element - The HTML element being interacted with.
+   */
+  private handleMultiCallbackInteraction(
+    elementData: ForesightElementData,
+    element: ForesightElement
+  ) {
+    const { expandedRect } = elementData.elementBounds
+    const isHovering = isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)
+
+    const isNewPhysicalHover = isHovering && !elementData.isHovering
+    const isNewTrajectoryHit =
+      this._globalSettings.enableMousePrediction &&
+      !isHovering &&
+      !elementData.trajectoryHitData.isTrajectoryHit &&
+      lineSegmentIntersectsRect(
+        this.trajectoryPositions.currentPoint,
+        this.trajectoryPositions.predictedPoint,
+        expandedRect
+      )
+
+    if (isNewPhysicalHover || isNewTrajectoryHit) {
+      this.callCallback(elementData, element)
+    }
+
+    const hasStateChanged = isHovering !== elementData.isHovering || isNewTrajectoryHit
+
+    if (hasStateChanged) {
+      const newElementData: ForesightElementData = {
+        ...elementData,
+        isHovering: isHovering,
+        trajectoryHitData: {
+          ...elementData.trajectoryHitData,
+          isTrajectoryHit: isNewTrajectoryHit,
+          trajectoryHitTime: isNewTrajectoryHit
+            ? performance.now()
+            : elementData.trajectoryHitData.trajectoryHitTime,
+        },
+      }
+      if (isNewTrajectoryHit) {
+        if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+          clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+        }
+        newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
+          const currentData = this.elements.get(element)
+          if (
+            currentData &&
+            currentData.trajectoryHitData.trajectoryHitTime ===
+              newElementData.trajectoryHitData.trajectoryHitTime
+          ) {
+            currentData.trajectoryHitData.isTrajectoryHit = false
+            this.debugger?.createOrUpdateElementOverlay(element, currentData)
+          }
+        }, 200)
+      }
+      this.elements.set(element, newElementData)
+    }
+  }
+
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
     let elementsToUpdateInDebugger: ForesightElement[] | null = null
@@ -403,134 +507,10 @@ export class ForesightManager {
     }
 
     this.elements.forEach((currentData, element) => {
-      const previousDataState = {
-        isHovering: currentData.isHovering,
-        trajectoryHitData: currentData.trajectoryHitData,
-      }
-
-      let callbackFiredThisCycle = false
-      let finalIsHovering = currentData.isHovering
-      let finalIsTrajectoryHit = currentData.trajectoryHitData.isTrajectoryHit
-      let finalTrajectoryHitTime = currentData.trajectoryHitData.trajectoryHitTime
-
-      const { expandedRect } = currentData.elementBounds
-
-      const isCurrentlyPhysicallyHovering = isPointInRectangle(
-        this.trajectoryPositions.currentPoint,
-        expandedRect
-      )
-
-      let isNewTrajectoryActivation = false
-      if (
-        this._globalSettings.enableMousePrediction &&
-        !isCurrentlyPhysicallyHovering &&
-        !currentData.trajectoryHitData.isTrajectoryHit // Only activate if not already hit
-      ) {
-        if (
-          lineSegmentIntersectsRect(
-            this.trajectoryPositions.currentPoint,
-            this.trajectoryPositions.predictedPoint,
-            expandedRect
-          )
-        ) {
-          isNewTrajectoryActivation = true
-        }
-      }
-
-      if (isNewTrajectoryActivation) {
-        finalIsTrajectoryHit = true
-        finalTrajectoryHitTime = performance.now()
-        callbackFiredThisCycle = true
-        this.callCallback(currentData, element)
-      }
-
-      const isNewPhysicalHoverEvent = isCurrentlyPhysicallyHovering && !currentData.isHovering
-
-      if (isNewPhysicalHoverEvent) {
-        const hoverCanTriggerCallback =
-          !currentData.trajectoryHitData.isTrajectoryHit || // If not trajectory hit, hover can trigger
-          (currentData.trajectoryHitData.isTrajectoryHit &&
-            !this._globalSettings.enableMousePrediction) // Or if trajectory was hit but prediction is now off
-
-        if (!callbackFiredThisCycle && hoverCanTriggerCallback) {
-          callbackFiredThisCycle = true
-          this.callCallback(currentData, element)
-        }
-      }
-
-      finalIsHovering = isCurrentlyPhysicallyHovering
-
-      // If physically hovering, it overrides any "trajectory hit" state for expiration purposes
-      // but the visual/logical state of isTrajectoryHit might persist if it happened first.
-      // The main change is how the expiration timeout is handled.
-
-      const coreStateActuallyChanged =
-        finalIsHovering !== previousDataState.isHovering ||
-        finalIsTrajectoryHit !== previousDataState.trajectoryHitData.isTrajectoryHit ||
-        (finalIsTrajectoryHit &&
-          finalTrajectoryHitTime !== previousDataState.trajectoryHitData.trajectoryHitTime)
-
-      if (coreStateActuallyChanged && this.elements.has(element)) {
-        let newElementData: ForesightElementData = {
-          ...currentData,
-          isHovering: finalIsHovering,
-          trajectoryHitData: {
-            isTrajectoryHit: finalIsTrajectoryHit,
-            trajectoryHitTime: finalTrajectoryHitTime,
-            trajectoryHitExpirationTimeoutId:
-              previousDataState.trajectoryHitData.trajectoryHitExpirationTimeoutId, // Preserve existing initially
-          },
-        }
-
-        // Manage trajectory hit expiration timeout
-        if (
-          newElementData.trajectoryHitData.isTrajectoryHit &&
-          !previousDataState.trajectoryHitData.isTrajectoryHit
-        ) {
-          // Just became a trajectory hit (or re-hit after expiration)
-          if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-            clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-          }
-          newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
-            const currentElementData = this.elements.get(element)
-            if (
-              currentElementData &&
-              currentElementData.trajectoryHitData.isTrajectoryHit &&
-              currentElementData.trajectoryHitData.trajectoryHitTime ===
-                newElementData.trajectoryHitData.trajectoryHitTime // Ensure it's the same hit instance
-            ) {
-              const expiredData: ForesightElementData = {
-                ...currentElementData,
-                trajectoryHitData: {
-                  isTrajectoryHit: false,
-                  trajectoryHitExpirationTimeoutId: undefined,
-                  trajectoryHitTime: currentElementData.trajectoryHitData.trajectoryHitTime,
-                },
-              }
-              this.elements.set(element, expiredData)
-              if (this.debugger) {
-                this.debugger.createOrUpdateElementOverlay(element, expiredData)
-              }
-            }
-          }, 200)
-        } else if (
-          !newElementData.trajectoryHitData.isTrajectoryHit &&
-          previousDataState.trajectoryHitData.isTrajectoryHit
-        ) {
-          // No longer a trajectory hit (e.g. mouse moved away, physical hover, or prediction disabled)
-          if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-            clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-            newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = undefined
-          }
-        }
-        // If it was already a trajectory hit and remains one (e.g. mouse still on trajectory path
-        // without physical hover, and timeout hasn't fired), the existing timeout continues.
-
-        this.elements.set(element, newElementData)
-
-        if (elementsToUpdateInDebugger) {
-          elementsToUpdateInDebugger.push(element)
-        }
+      if (!currentData.unregisterOnCallback) {
+        this.handleMultiCallbackInteraction(currentData, element)
+      } else {
+        this.handleSingleCallbackInteraction(currentData, element)
       }
     })
 
