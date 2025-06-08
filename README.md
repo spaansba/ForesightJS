@@ -111,7 +111,7 @@ For a detailed technical explanation of its prediction algorithms and internal a
 
 Since ForesightJS is a relatively new and unknown library, most AI assistants and large language models (LLMs) may not have comprehensive knowledge about it in their training data. To help AI assistants better understand and work with ForesightJS, you can provide them with context from our [llms.txt](https://foresightjs.com/llms.txt) page, which contains structured information about the library's API and usage patterns.
 
-In the future, each documentation page will also receive its own markdown variant following the [llms.txt](https://llmstxt.org/) proposal to make ForesightJS more accessible to AI development workflows.
+Additionally, every page in our documentation is available in markdown format (try adding .md to any documentation URL). You can share these markdown files as context with AI assistants, though all this information is also consolidated in the llms.txt file for convenience.
 
 # Contributing
 
