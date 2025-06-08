@@ -9,13 +9,7 @@ import type {
   BooleanSettingKeys,
 } from "../types/types"
 import {
-  DEFAULT_ENABLE_MOUSE_PREDICTION,
-  DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_IS_DEBUGGER_MINIMIZED,
-  DEFAULT_POSITION_HISTORY_SIZE,
-  DEFAULT_RESIZE_SCROLL_THROTTLE_DELAY,
-  DEFAULT_TAB_OFFSET,
-  DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
   MAX_RESIZE_SCROLL_THROTTLE_DELAY,
   MAX_TAB_OFFSET,
@@ -24,6 +18,10 @@ import {
   MIN_RESIZE_SCROLL_THROTTLE_DELAY,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
+  POSITION_HISTORY_SIZE_UNIT,
+  RESIZE_SCROLL_THROTTLE_UNIT,
+  TAB_OFFSET_UNIT,
+  TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../Manager/constants"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import { createAndAppendStyle } from "./helpers/createAndAppend"
@@ -93,7 +91,7 @@ export class DebuggerControlPanel {
     this.originalSectionStates()
     this.setupEventListeners()
     this.refreshElementList()
-    this.applyMinimizedStateVisuals()
+    this.updateContainerVisibilityState()
 
     this.isContainerMinimized =
       debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
@@ -152,8 +150,6 @@ export class DebuggerControlPanel {
   }
 
   private queryDOMElements() {
-    if (!this.controlsContainer) return
-
     this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector("#trajectory-enabled")
     this.tabEnabledCheckbox = this.controlsContainer.querySelector("#tab-enabled")
     this.historySizeSlider = this.controlsContainer.querySelector("#history-size")
@@ -172,9 +168,7 @@ export class DebuggerControlPanel {
     this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
       ".all-settings-sections-container"
     )
-
     this.debuggerElementsSection = this.controlsContainer.querySelector(".debugger-elements")
-
     this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
   }
 
@@ -211,7 +205,7 @@ export class DebuggerControlPanel {
   private createInputEventListener(
     element: HTMLInputElement | null,
     spanElement: HTMLSpanElement | null,
-    spanSuffix: string,
+    unit: string,
     setting: NumericSettingKeys
   ) {
     if (!element || !spanElement) {
@@ -219,7 +213,7 @@ export class DebuggerControlPanel {
     }
     element.addEventListener("input", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value, 10)
-      spanElement.textContent = `${value} ${spanSuffix}`
+      spanElement.textContent = `${value} ${unit}`
       this.foresightManagerInstance.alterGlobalSettings({
         [setting]: value,
       })
@@ -241,7 +235,10 @@ export class DebuggerControlPanel {
     })
   }
 
-  private createSectionToggleEventListener(
+  /**
+   * Create event listener for toggle of the minimized and expanded state of sections like "Mouse Settings / Keyboard Settings" in the debugger UI
+   */
+  private createSectionVisibilityToggleEventListener(
     section: HTMLDivElement | null,
     isMinimizedFlagName:
       | "isMouseSettingsMinimized"
@@ -263,55 +260,53 @@ export class DebuggerControlPanel {
     this.createInputEventListener(
       this.historySizeSlider,
       this.historyValueSpan,
-      "points",
+      POSITION_HISTORY_SIZE_UNIT,
       "positionHistorySize"
     )
 
     this.createInputEventListener(
       this.predictionTimeSlider,
       this.predictionValueSpan,
-      "ms",
+      TRAJECTORY_PREDICTION_TIME_UNIT,
       "trajectoryPredictionTime"
     )
 
     this.createInputEventListener(
       this.throttleDelaySlider,
       this.throttleValueSpan,
-      "ms",
+      RESIZE_SCROLL_THROTTLE_UNIT,
       "resizeScrollThrottleDelay"
     )
 
     this.createInputEventListener(
       this.tabOffsetSlider,
       this.tabOffsetValueSpan,
-      "tabs",
+      TAB_OFFSET_UNIT,
       "tabOffset"
     )
 
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized
-      this.applyMinimizedStateVisuals()
+      this.updateContainerVisibilityState()
     })
     this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
 
-    if (this.controlsContainer) {
-      this.createSectionToggleEventListener(
-        this.controlsContainer.querySelector(".mouse-settings-section"),
-        "isMouseSettingsMinimized"
-      )
-      this.createSectionToggleEventListener(
-        this.controlsContainer.querySelector(".keyboard-settings-section"),
-        "isKeyboardSettingsMinimized"
-      )
-      this.createSectionToggleEventListener(
-        this.controlsContainer.querySelector(".general-settings-section"),
-        "isGeneralSettingsMinimized"
-      )
-      this.createSectionToggleEventListener(
-        this.controlsContainer.querySelector(".debugger-elements"),
-        "isElementsListMinimized"
-      )
-    }
+    this.createSectionVisibilityToggleEventListener(
+      this.controlsContainer.querySelector(".mouse-settings-section"),
+      "isMouseSettingsMinimized"
+    )
+    this.createSectionVisibilityToggleEventListener(
+      this.controlsContainer.querySelector(".keyboard-settings-section"),
+      "isKeyboardSettingsMinimized"
+    )
+    this.createSectionVisibilityToggleEventListener(
+      this.controlsContainer.querySelector(".general-settings-section"),
+      "isGeneralSettingsMinimized"
+    )
+    this.createSectionVisibilityToggleEventListener(
+      this.controlsContainer.querySelector(".debugger-elements"),
+      "isElementsListMinimized"
+    )
   }
 
   private toggleMinimizeSection(section: HTMLDivElement | null, shouldMinimize: boolean) {
@@ -336,9 +331,6 @@ export class DebuggerControlPanel {
 
   private originalSectionStates() {
     const states = this.loadSectionStatesFromSessionStorage()
-    if (!this.controlsContainer) {
-      return
-    }
     this.toggleMinimizeSection(
       this.controlsContainer.querySelector(".mouse-settings-section"),
       states.mouse ?? true
@@ -357,8 +349,8 @@ export class DebuggerControlPanel {
     )
   }
 
-  private applyMinimizedStateVisuals() {
-    if (!this.controlsContainer || !this.containerMinimizeButton) return
+  private updateContainerVisibilityState() {
+    if (!this.containerMinimizeButton) return
     if (this.isContainerMinimized) {
       this.controlsContainer.classList.add("minimized")
       this.containerMinimizeButton.textContent = "+"
@@ -384,19 +376,19 @@ export class DebuggerControlPanel {
     }
     if (this.historySizeSlider && this.historyValueSpan) {
       this.historySizeSlider.value = settings.positionHistorySize.toString()
-      this.historyValueSpan.textContent = `${settings.positionHistorySize} points`
+      this.historyValueSpan.textContent = `${settings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
     }
     if (this.predictionTimeSlider && this.predictionValueSpan) {
       this.predictionTimeSlider.value = settings.trajectoryPredictionTime.toString()
-      this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ms`
+      this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
     }
     if (this.throttleDelaySlider && this.throttleValueSpan) {
       this.throttleDelaySlider.value = settings.resizeScrollThrottleDelay.toString()
-      this.throttleValueSpan.textContent = `${settings.resizeScrollThrottleDelay} ms`
+      this.throttleValueSpan.textContent = `${settings.resizeScrollThrottleDelay} ${RESIZE_SCROLL_THROTTLE_UNIT}`
     }
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
       this.tabOffsetSlider.value = settings.tabOffset.toString()
-      this.tabOffsetValueSpan.textContent = `${settings.tabOffset} tabs`
+      this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
     }
   }
 
