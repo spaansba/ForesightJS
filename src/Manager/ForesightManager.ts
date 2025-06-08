@@ -9,6 +9,7 @@ import type {
   MousePosition,
   NumericSettingKeys,
   Point,
+  TrajectoryPositions,
   UpdateForsightManagerProps,
 } from "../types/types"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
@@ -90,13 +91,11 @@ export class ForesightManager {
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
   }
-
-  private positions: MousePosition[] = []
-  private currentPoint: Point = { x: 0, y: 0 }
-  private predictedPoint: Point = { x: 0, y: 0 }
-
-  private lastResizeScrollCallTimestamp: number = 0
-  private resizeScrollThrottleTimeoutId: ReturnType<typeof setTimeout> | null = null
+  private trajectoryPositions: TrajectoryPositions = {
+    positions: [],
+    currentPoint: { x: 0, y: 0 },
+    predictedPoint: { x: 0, y: 0 },
+  }
 
   private domObserver: MutationObserver | null = null
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
@@ -273,9 +272,9 @@ export class ForesightManager {
       positionHistoryChanged &&
       this._globalSettings.positionHistorySize < oldPositionHistorySize
     ) {
-      if (this.positions.length > this._globalSettings.positionHistorySize) {
-        this.positions = this.positions.slice(
-          this.positions.length - this._globalSettings.positionHistorySize
+      if (this.trajectoryPositions.positions.length > this._globalSettings.positionHistorySize) {
+        this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(
+          this.trajectoryPositions.positions.length - this._globalSettings.positionHistorySize
         )
       }
     }
@@ -367,8 +366,7 @@ export class ForesightManager {
     if (!this.debugger) {
       this.debugger = ForesightDebugger.initialize(
         ForesightManager.instance,
-        this.currentPoint,
-        this.predictedPoint
+        this.trajectoryPositions
       )
     } else {
       this.debugger.updateControlsState(this._globalSettings)
@@ -412,15 +410,15 @@ export class ForesightManager {
   }
 
   private updatePointerState(e: MouseEvent): void {
-    this.currentPoint = { x: e.clientX, y: e.clientY }
-    this.predictedPoint = this._globalSettings.enableMousePrediction
+    this.trajectoryPositions.currentPoint = { x: e.clientX, y: e.clientY }
+    this.trajectoryPositions.predictedPoint = this._globalSettings.enableMousePrediction
       ? predictNextMousePosition(
-          this.currentPoint,
-          this.positions, // History before the currentPoint was added
+          this.trajectoryPositions.currentPoint,
+          this.trajectoryPositions.positions, // History before the currentPoint was added
           this._globalSettings.positionHistorySize,
           this._globalSettings.trajectoryPredictionTime
         )
-      : { ...this.currentPoint }
+      : { ...this.trajectoryPositions.currentPoint }
   }
 
   private handleMouseMove = (e: MouseEvent) => {
@@ -443,7 +441,10 @@ export class ForesightManager {
 
       const { expandedRect } = currentData.elementBounds
 
-      const isCurrentlyPhysicallyHovering = isPointInRectangle(this.currentPoint, expandedRect)
+      const isCurrentlyPhysicallyHovering = isPointInRectangle(
+        this.trajectoryPositions.currentPoint,
+        expandedRect
+      )
 
       let isNewTrajectoryActivation = false
       if (
@@ -451,7 +452,13 @@ export class ForesightManager {
         !isCurrentlyPhysicallyHovering &&
         !currentData.trajectoryHitData.isTrajectoryHit // Only activate if not already hit
       ) {
-        if (lineSegmentIntersectsRect(this.currentPoint, this.predictedPoint, expandedRect)) {
+        if (
+          lineSegmentIntersectsRect(
+            this.trajectoryPositions.currentPoint,
+            this.trajectoryPositions.predictedPoint,
+            expandedRect
+          )
+        ) {
           isNewTrajectoryActivation = true
         }
       }
@@ -561,32 +568,9 @@ export class ForesightManager {
         }
       })
       this.debugger.updateTrajectoryVisuals(
-        this.currentPoint,
-        this.predictedPoint,
+        this.trajectoryPositions,
         this._globalSettings.enableMousePrediction
       )
-    }
-  }
-
-  private handleWindowResizeOrScroll = (): void => {
-    if (this.resizeScrollThrottleTimeoutId) {
-      clearTimeout(this.resizeScrollThrottleTimeoutId)
-    }
-
-    const now = performance.now()
-    const timeSinceLastCall = now - this.lastResizeScrollCallTimestamp
-    const currentDelay = this._globalSettings.resizeScrollThrottleDelay
-
-    if (timeSinceLastCall >= currentDelay) {
-      this.forceUpdateAllElementBounds()
-      this.lastResizeScrollCallTimestamp = now
-      this.resizeScrollThrottleTimeoutId = null
-    } else {
-      this.resizeScrollThrottleTimeoutId = setTimeout(() => {
-        this.forceUpdateAllElementBounds()
-        this.lastResizeScrollCallTimestamp = performance.now()
-        this.resizeScrollThrottleTimeoutId = null
-      }, currentDelay - timeSinceLastCall)
     }
   }
 
@@ -763,8 +747,6 @@ export class ForesightManager {
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
-    window.addEventListener("resize", this.handleWindowResizeOrScroll, { signal })
-    window.addEventListener("scroll", this.handleWindowResizeOrScroll, { signal })
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 
@@ -790,12 +772,6 @@ export class ForesightManager {
     this.globalListenersController = null
     this.domObserver?.disconnect()
     this.elementResizeObserver?.disconnect()
-
-    // Even though we aborted the signals there might still be an event being throttled, clear it
-    if (this.resizeScrollThrottleTimeoutId) {
-      clearTimeout(this.resizeScrollThrottleTimeoutId)
-      this.resizeScrollThrottleTimeoutId = null
-    }
 
     if (this.domMutationRectsUpdateTimeoutId) {
       clearTimeout(this.domMutationRectsUpdateTimeoutId)

@@ -7,6 +7,7 @@ import type {
   ForesightManagerProps,
   Point,
   Rect,
+  TrajectoryPositions,
 } from "../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
@@ -87,8 +88,7 @@ export class ForesightDebugger {
 
   public static initialize(
     foresightManager: ForesightManager,
-    currentPoint: Point,
-    predictedPoint: Point
+    trajectoryPositions: TrajectoryPositions
   ): ForesightDebugger | null {
     removeOldDebuggers()
     if (typeof window === "undefined" || isTouchDevice()) {
@@ -100,8 +100,7 @@ export class ForesightDebugger {
     }
 
     ForesightDebugger.debuggerInstance.updateTrajectoryVisuals(
-      currentPoint,
-      predictedPoint,
+      trajectoryPositions,
       foresightManager.globalSettings.enableMousePrediction
     )
 
@@ -160,8 +159,7 @@ export class ForesightDebugger {
   }
 
   public updateTrajectoryVisuals(
-    currentPoint: Point,
-    predictedPoint: Point,
+    trajectoryPositions: TrajectoryPositions,
     enableMousePrediction: boolean
   ) {
     if (!this.shadowRoot || !this.debugContainer) {
@@ -170,7 +168,7 @@ export class ForesightDebugger {
     if (!this.debugPredictedMouseIndicator || !this.debugTrajectoryLine) {
       return
     }
-
+    const { predictedPoint, currentPoint } = trajectoryPositions
     this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
     this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
     this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"

@@ -33,6 +33,12 @@ export type Point = {
   y: number
 }
 
+export type TrajectoryPositions = {
+  positions: MousePosition[]
+  currentPoint: Point
+  predictedPoint: Point
+}
+
 /**
  * Internal type representing the calculated boundaries of a foresight element,
  * including its original dimensions and the expanded hit area.
