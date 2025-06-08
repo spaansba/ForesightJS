@@ -42,24 +42,27 @@ ForesightManager.initialize({
   },
   enableTabPrediction: true,
   tabOffset: 3,
-  onAnyCallbackFired: () => {
-    console.log("callback from any unknown")
+  // WARNING: This is not the place for individual callbacks
+  // this is a global callback that runs after ANY other callback is hit
+  // Used for global events like telemetry
+  onAnyCallbackFired: (elementData: ForesightElementData) => {
+    console.log(`Intent predicted for: ${elementData.name}`)
   },
 })
 ```
 
 ### Available Global Settings
 
-| Setting                    | Type               | Default                                  | Min/Max | Description                                                                                                      |
-| -------------------------- | ------------------ | ---------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `debug`                    | `boolean`          | `false`                                  | -       | When true, enables visual debugging overlays showing hit areas, trajectories, and a control panel                |
-| `enableMousePrediction`    | `boolean`          | `true`                                   | -       | Toggles whether trajectory prediction is active                                                                  |
-| `positionHistorySize`      | `number`           | `8`                                      | 0/30    | Number of mouse positions to keep in history for velocity calculations                                           |
-| `trajectoryPredictionTime` | `number`           | `120`                                    | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                  |
-| `defaultHitSlop`           | `number` \| `Rect` | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox |
-| `enableTabPrediction`      | `boolean`          | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                        |
-| `tabOffset`                | `number`           | `2`                                      | 0/20    | Tab stops away from an element to trigger callback                                                               |
-| `onAnyCallbackFired`       | `() => void`       | `2`                                      | -       | Runs on every callback from any registered element. Used for global events like telemetry                        |
+| Setting                    | Type                                          | Default                                  | Min/Max | Description                                                                                                                                                   |
+| -------------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `debug`                    | `boolean`                                     | `false`                                  | -       | When true, enables visual debugging overlays showing hit areas, trajectories, and a control panel                                                             |
+| `enableMousePrediction`    | `boolean`                                     | `true`                                   | -       | Toggles whether trajectory prediction is active                                                                                                               |
+| `positionHistorySize`      | `number`                                      | 8                                        | 0/30    | Number of mouse positions to keep in history for velocity calculations                                                                                        |
+| `trajectoryPredictionTime` | `number`                                      | 120                                      | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                                                               |
+| `defaultHitSlop`           | `number` \| `Rect`                            | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox                                              |
+| `enableTabPrediction`      | `boolean`                                     | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                                                                     |
+| `tabOffset`                | `number`                                      | 2                                        | 0/20    | Tab stops away from an element to trigger callback                                                                                                            |
+| `onAnyCallbackFired`       | `(elementData: ForesightElementData) => void` | `()=>{}`                                 | -       | A global callback that runs whenever any element's specific callback is fired. It receives the `ForesightElementData` object associated with the interaction. |
 
 :::note
 All numeric settings are clamped to their specified Min/Max values to prevent invalid configurations.

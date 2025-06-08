@@ -87,7 +87,7 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
-    onAnyCallbackFired: () => {},
+    onAnyCallbackFired: (elementData: ForesightElementData) => {},
   }
   private trajectoryPositions: TrajectoryPositions = {
     positions: [],
@@ -596,7 +596,7 @@ export class ForesightManager {
   private callCallback(elementData: ForesightElementData | undefined) {
     if (elementData) {
       elementData.callback()
-      this.globalSettings.onAnyCallbackFired()
+      this.globalSettings.onAnyCallbackFired(elementData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }

@@ -74,7 +74,7 @@ export type TrajectoryHitData = {
 export type ForesightRegisterResult = {
   /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
   isTouchDevice: boolean
-  /** Function to unregister the element */
+  /** Function to unregister the element, optional to add the elementdata */
   unregister: () => void
 }
 
@@ -89,7 +89,7 @@ export type ForesightElementData = Required<
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
   isHovering: boolean
   /**
-   * Represents trajectory hit related data for a foresight element.
+   * Represents trajectory hit related data for a foresight element. Only used for the manager
    */
   trajectoryHitData: TrajectoryHitData
   /**
@@ -97,7 +97,7 @@ export type ForesightElementData = Required<
    */
   isIntersectingWithViewport: boolean
   /**
-   * the element you registered
+   * The element you registered
    */
   element: ForesightElement
 }
@@ -157,8 +157,13 @@ type BaseForesightManagerProps = {
   /** Options for the debugger */
   debuggerSettings: DebuggerSettings
 
-  /** Runs when any callback on any registered element is fired */
-  onAnyCallbackFired: ForesightCallback
+  /**
+   * A global callback that runs whenever a callback is fired for any
+   * registered element, just after the element's specific callback is fired.
+   *
+   * @param target - The ForesightTarget object for the element that triggered the event.
+   */
+  onAnyCallbackFired: (elementData: ForesightElementData) => void
 }
 
 /**
