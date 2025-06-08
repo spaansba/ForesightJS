@@ -427,6 +427,10 @@ export class DebuggerControlPanel {
     listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
     listItem.classList.toggle("not-in-viewport", !data.isIntersectingWithViewport)
 
+    listItem.title = data.isIntersectingWithViewport
+      ? `${data.name || "Element"} - is in viewport and being tracked by observers`
+      : `${data.name || "Element"} - is not in viewport and not being tracked by observers`
+
     const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
     const hitBehaviorTitle = data.unregisterOnCallback
       ? "Callback triggers once, then element unregisters."
@@ -441,20 +445,13 @@ export class DebuggerControlPanel {
       hitSlopTitle = `Hit Slop (px): Top: ${top}, Right: ${right}, Bottom: ${bottom}, Left: ${left}`
     }
 
-    // Add viewport tracking indicator
     const viewportIcon = data.isIntersectingWithViewport ? "👁️" : "🚫"
-    const viewportTitle = data.isIntersectingWithViewport
-      ? "Element is in viewport and being tracked"
-      : "Element is not in viewport and not being tracked"
 
     listItem.innerHTML = `
-          <span class="viewport-indicator" title="${viewportTitle}">${viewportIcon}</span>
-      <span class="element-name" title="${data.name || "Unnamed Element"}">${
-      data.name || "Unnamed Element"
-    }</span>
+      <span class="viewport-indicator"">${viewportIcon}</span>
+      <span class="element-name">${data.name || "Unnamed Element"}</span>
       <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-
     `
   }
 
@@ -592,7 +589,7 @@ export class DebuggerControlPanel {
     const elementItemHeight = 35 // px
     const elementListGap = 3 // px
     const elementListItemsContainerPadding = 6 // px
-    const numRowsToShow = 4
+    const numRowsToShow = 6
     const numItemsPerRow = 1
 
     const rowsContentHeight =
