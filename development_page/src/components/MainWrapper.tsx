@@ -19,7 +19,6 @@ export const Main = () => {
       <h2 className="text-3xl font-bold text-center  mb-8">Foresight Test Buttons</h2>
       <div className="px-8 py-12">
         <div className="max-w-6xl mx-auto">
-          {/* Foresight Buttons Container */}
           <div className="flex flex-wrap gap-8 justify-center mb-12">
             <ForesightButtonRegular name={"multi hit"} />
             <ForesightButtonVisibility name="visibility" />
