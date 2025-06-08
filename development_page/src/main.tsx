@@ -8,6 +8,7 @@ ForesightManager.initialize({
   debug: true,
   debuggerSettings: {
     isControlPanelDefaultMinimized: false,
+    showNameTags: true,
   },
   enableMousePrediction: true,
   enableTabPrediction: true,

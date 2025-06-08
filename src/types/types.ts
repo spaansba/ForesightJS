@@ -55,6 +55,8 @@ export type ElementBounds = {
 export type DebuggerSettings = {
   /** If the control panel should be minimized on default @default false */
   isControlPanelDefaultMinimized?: boolean
+  /** If we should show the name tags above elements @default false */
+  showNameTags?: boolean
 }
 
 /**

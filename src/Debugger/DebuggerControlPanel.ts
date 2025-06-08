@@ -10,6 +10,7 @@ import type {
 } from "../types/types"
 import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
+  DEFAULT_SHOW_NAME_TAGS,
   MAX_POSITION_HISTORY_SIZE,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
@@ -52,6 +53,7 @@ export class DebuggerControlPanel {
   private predictionValueSpan: HTMLSpanElement | null = null
   private tabOffsetSlider: HTMLInputElement | null = null
   private tabOffsetValueSpan: HTMLSpanElement | null = null
+  private showNameTagsCheckbox: HTMLInputElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
   private allSettingsSectionsContainer: HTMLElement | null = null
@@ -156,6 +158,7 @@ export class DebuggerControlPanel {
     this.elementListItemsContainer = this.controlsContainer.querySelector(
       "#element-list-items-container"
     )
+    this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
     this.elementCountSpan = this.controlsContainer.querySelector("#element-count")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
     this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
@@ -217,14 +220,25 @@ export class DebuggerControlPanel {
    * Create event listener for toggle (boolean value)
    * These get automatically removed when the element is removed from the page
    */
-  private createChangeEventListener(element: HTMLElement | null, setting: BooleanSettingKeys) {
+  private createChangeEventListener(
+    element: HTMLElement | null,
+    setting: BooleanSettingKeys | "name-tag"
+  ) {
     if (!element) {
       return
     }
     element.addEventListener("change", (e) => {
-      this.foresightManagerInstance.alterGlobalSettings({
-        [setting]: (e.target as HTMLInputElement).checked,
-      })
+      if (setting === "name-tag") {
+        this.foresightManagerInstance.alterGlobalSettings({
+          debuggerSettings: {
+            showNameTags: (e.target as HTMLInputElement).checked,
+          },
+        })
+      } else {
+        this.foresightManagerInstance.alterGlobalSettings({
+          [setting]: (e.target as HTMLInputElement).checked,
+        })
+      }
     })
   }
 
@@ -248,8 +262,8 @@ export class DebuggerControlPanel {
 
   private setupEventListeners() {
     this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
-    this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableTabPrediction")
-
+    this.createChangeEventListener(this.tabEnabledCheckbox, "enableTabPrediction")
+    this.createChangeEventListener(this.showNameTagsCheckbox, "name-tag")
     this.createInputEventListener(
       this.historySizeSlider,
       this.historyValueSpan,
@@ -360,6 +374,10 @@ export class DebuggerControlPanel {
     if (this.tabEnabledCheckbox) {
       this.tabEnabledCheckbox.checked = settings.enableTabPrediction
     }
+    if (this.showNameTagsCheckbox) {
+      this.showNameTagsCheckbox.checked =
+        settings.debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
+    }
     if (this.historySizeSlider && this.historyValueSpan) {
       this.historySizeSlider.value = settings.positionHistorySize.toString()
       this.historyValueSpan.textContent = `${settings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
@@ -367,6 +385,10 @@ export class DebuggerControlPanel {
     if (this.predictionTimeSlider && this.predictionValueSpan) {
       this.predictionTimeSlider.value = settings.trajectoryPredictionTime.toString()
       this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
+    }
+    if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
+      this.tabOffsetSlider.value = settings.tabOffset.toString()
+      this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
     }
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
       this.tabOffsetSlider.value = settings.tabOffset.toString()
@@ -541,7 +563,13 @@ export class DebuggerControlPanel {
             <button class="section-minimize-button">-</button>
           </div>
           <div class="debugger-section-content general-settings-content">
-           
+           <div class="control-row">
+              <label for="toggle-name-tags">
+                Show Name Tags
+                <span class="info-icon" title="Toggles name tags, purely for debugging. - showNameTags">i</span>
+              </label>
+              <input type="checkbox" id="toggle-name-tags">
+            </div>
           </div>
         </div>
       </div>

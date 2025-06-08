@@ -28,6 +28,7 @@ ForesightManager.initialize({
   debug: true, // Enable debug mode
   debuggerSettings: {
     isControlPanelDefaultMinimized: false, // optional debug setting which allows you to minimize the control panel on default
+    showNameTags: true, // optional debug setting which shows the name of the element
   },
 })
 ```

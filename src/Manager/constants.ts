@@ -21,4 +21,5 @@ export const DEFAULT_HITSLOP = 0
 export const DEFAULT_ENABLE_TAB_PREDICTION = true
 export const DEFAULT_ENABLE_MOUSE_PREDICTION = true
 export const DEFAULT_IS_DEBUGGER_MINIMIZED = false
+export const DEFAULT_SHOW_NAME_TAGS = true
 export const DEFAULT_IS_DEBUG = false

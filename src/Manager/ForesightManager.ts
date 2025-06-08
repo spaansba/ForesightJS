@@ -30,6 +30,7 @@ import {
   DEFAULT_IS_DEBUG,
   DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
+  DEFAULT_SHOW_NAME_TAGS,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
@@ -84,6 +85,7 @@ export class ForesightManager {
     resizeScrollThrottleDelay: 0,
     debuggerSettings: {
       isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
+      showNameTags: DEFAULT_SHOW_NAME_TAGS,
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
@@ -161,7 +163,7 @@ export class ForesightManager {
         trajectoryHitTime: 0,
         trajectoryHitExpirationTimeoutId: undefined,
       },
-      name: name ?? "",
+      name: name ?? element.id ?? "",
       unregisterOnCallback: unregisterOnCallback ?? true,
       isIntersectingWithViewport: false,
     }
@@ -306,6 +308,14 @@ export class ForesightManager {
       this._globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
         props.debuggerSettings.isControlPanelDefaultMinimized
       debuggerSettingsChanged = true
+    }
+
+    if (props?.debuggerSettings?.showNameTags !== undefined) {
+      this._globalSettings.debuggerSettings.showNameTags = props.debuggerSettings.showNameTags
+      debuggerSettingsChanged = true
+      if (this.debugger) {
+        this.debugger.toggleNameTagVisibility(this._globalSettings.debuggerSettings.showNameTags)
+      }
     }
 
     let hitSlopChanged = false
@@ -525,12 +535,6 @@ export class ForesightManager {
     })
 
     if (this.debugger) {
-      elementsToUpdateInDebugger?.forEach((element) => {
-        const data = this.elements.get(element)
-        if (data && this.debugger) {
-          this.debugger.createOrUpdateElementOverlay(element, data)
-        }
-      })
       this.debugger.updateTrajectoryVisuals(
         this.trajectoryPositions,
         this._globalSettings.enableMousePrediction

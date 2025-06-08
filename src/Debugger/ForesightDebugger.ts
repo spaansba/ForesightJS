@@ -13,6 +13,7 @@ import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
+import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
 
 export type ElementOverlays = {
   linkOverlay: HTMLElement
@@ -134,7 +135,21 @@ export class ForesightDebugger {
     if (!overlays) {
       overlays = this.createElementOverlays(element)
     }
-    updateElementOverlays(overlays, newData)
+    updateElementOverlays(
+      overlays,
+      newData,
+      this.foresightManagerInstance.globalSettings.debuggerSettings.showNameTags ??
+        DEFAULT_SHOW_NAME_TAGS
+    )
+  }
+
+  public toggleNameTagVisibility(showNameTags: boolean) {
+    const nameTags = this.shadowRoot.querySelectorAll(".jsforesight-name-label")
+    nameTags.forEach((tag) => {
+      if (tag instanceof HTMLElement) {
+        tag.style.display = showNameTags ? "block" : "none"
+      }
+    })
   }
 
   /**

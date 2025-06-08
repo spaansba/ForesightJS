@@ -3,11 +3,13 @@ import type { ElementOverlays } from "../ForesightDebugger"
 
 export function updateElementOverlays(
   currentOverlays: ElementOverlays,
-  newData: ForesightElementData
+  newData: ForesightElementData,
+  showNameTags: boolean
 ) {
   const { linkOverlay, expandedOverlay, nameLabel } = currentOverlays
   const rect = newData.elementBounds.expandedRect
   //TODO REFACTOR
+
   linkOverlay.style.left = `${rect.left}px`
   linkOverlay.style.top = `${rect.top}px`
   linkOverlay.style.width = `${rect.right - rect.left}px`
@@ -29,12 +31,12 @@ export function updateElementOverlays(
     expandedOverlay.style.display = "none"
   }
 
-  if (newData.name && newData.name !== "Unnamed") {
-    nameLabel.textContent = newData.name
-    nameLabel.style.display = "block"
-    nameLabel.style.left = `${rect.left}px`
-    nameLabel.style.top = `${rect.top - 28}px` // Position above the element (adjusted for new padding)
-  } else {
+  nameLabel.textContent = newData.name
+  nameLabel.style.left = `${rect.left}px`
+  nameLabel.style.top = `${rect.top - nameLabel.offsetHeight}px` // Position above the element (adjusted for new padding)
+  if (newData.name === "" || !showNameTags) {
     nameLabel.style.display = "none"
+  } else {
+    nameLabel.style.display = "block"
   }
 }
