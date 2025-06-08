@@ -17,6 +17,10 @@ function ForesightButton({ registerOptions }: ForesightButtonProps) {
       element: buttonRef.current,
       ...registerOptions,
     })
+    return () => {
+      // Test without unregister
+      // unregister()
+    }
   }, [buttonRef, registerOptions])
 
   return (

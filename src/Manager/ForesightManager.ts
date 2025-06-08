@@ -100,7 +100,6 @@ export class ForesightManager {
   private domObserver: MutationObserver | null = null
   private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
-  private elementResizeObserver: ResizeObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
@@ -152,7 +151,7 @@ export class ForesightManager {
       : this._globalSettings.defaultHitSlop
 
     this.elementIntersectionObserver?.observe(element)
-    this.positionObserver?.observe(element)
+
     const elementData: ForesightElementData = {
       callback,
       elementBounds: {
@@ -197,10 +196,6 @@ export class ForesightManager {
     // Clear any pending trajectory expiration timeout
     if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-    }
-
-    if (this.elementResizeObserver) {
-      this.elementResizeObserver.unobserve(element)
     }
 
     if (this.elementIntersectionObserver) {
@@ -373,38 +368,12 @@ export class ForesightManager {
     }
   }
 
-  private updateElementBounds(
-    element: ForesightElement,
-    foresightElementData: ForesightElementData
-  ) {
-    const newOriginalRect = element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(
-      newOriginalRect,
-      foresightElementData.elementBounds.hitSlop
-    )
-    if (!areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect)) {
-      this.elements.set(element, {
-        ...foresightElementData,
-        elementBounds: {
-          ...foresightElementData.elementBounds,
-          originalRect: newOriginalRect,
-          expandedRect,
-        },
-      })
-
-      if (this.debugger) {
-        const updatedData = this.elements.get(element)
-        if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
-      }
-    }
-  }
-
   private forceUpdateAllElementBounds() {
     this.elements.forEach((_, element) => {
       const elementData = this.elements.get(element)
       // For performance only update rects that are currently intersecting with the viewport
       if (elementData && elementData.isIntersectingWithViewport) {
-        this.updateElementBounds(element, elementData)
+        this.forceUpdateElementBounds(element, elementData)
       }
     })
   }
@@ -574,16 +543,6 @@ export class ForesightManager {
     }
   }
 
-  private handleElementResize = (entries: ResizeObserverEntry[]) => {
-    for (const entry of entries) {
-      const element = entry.target as ForesightElement
-      const foresightElementData = this.elements.get(element)
-      if (foresightElementData) {
-        this.updateElementBounds(element, foresightElementData)
-      }
-    }
-  }
-
   /**
    * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
    *
@@ -682,13 +641,12 @@ export class ForesightManager {
           elementData.elementBounds.originalRect,
           elementData.elementBounds.hitSlop
         )
-        this.elementResizeObserver?.observe(entry.target)
-        entry.isIntersecting
+        this.positionObserver?.observe(entry.target)
         if (this.globalSettings.debug) {
           this.debugger?.createOrUpdateElementOverlay(entry.target, elementData)
         }
       } else {
-        this.elementResizeObserver?.unobserve(entry.target)
+        this.positionObserver?.unobserve(entry.target)
         if (this.globalSettings.debug) {
           this.debugger?.removeElement(entry.target)
         }
@@ -696,18 +654,26 @@ export class ForesightManager {
     }
   }
 
-  private updateElementBounds2(
-    newRect: DOMRect,
+  /**
+   * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
+   * We need an observer for that
+   */
+  private forceUpdateElementBounds(
     element: ForesightElement,
     foresightElementData: ForesightElementData
   ) {
-    const expandedRect = getExpandedRect(newRect, foresightElementData.elementBounds.hitSlop)
+    const newOriginalRect = element.getBoundingClientRect()
+    const expandedRect = getExpandedRect(
+      newOriginalRect,
+      foresightElementData.elementBounds.hitSlop
+    )
+
     if (!areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect)) {
       this.elements.set(element, {
         ...foresightElementData,
         elementBounds: {
           ...foresightElementData.elementBounds,
-          originalRect: newRect,
+          originalRect: newOriginalRect,
           expandedRect,
         },
       })
@@ -716,24 +682,42 @@ export class ForesightManager {
         const updatedData = this.elements.get(element)
         if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
       }
+    } else {
+      console.log("are rects equal")
     }
   }
 
-  private callbackx = (entries: PositionObserverEntry[], currentObserver: PositionObserver) => {
-    /* keep an eye on your entries */
-    // console.log(entries);
-    // console.log(entries)
+  private updateElementBounds(
+    newRect: DOMRect,
+    element: ForesightElement,
+    foresightElementData: ForesightElementData
+  ) {
+    const expandedRect = getExpandedRect(newRect, foresightElementData.elementBounds.hitSlop)
+
+    // We dont check if rects are equal like we do in forceUpdateElementBounds, since rects can never be equal here
+
+    this.elements.set(element, {
+      ...foresightElementData,
+      elementBounds: {
+        ...foresightElementData.elementBounds,
+        originalRect: newRect,
+        expandedRect,
+      },
+    })
+
+    if (this.debugger) {
+      const updatedData = this.elements.get(element)
+      if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
+    }
+  }
+
+  private handlePositionChange = (entries: PositionObserverEntry[], _: PositionObserver) => {
     entries.forEach((entry) => {
       const elementData = this.elements.get(entry.target)
       if (elementData) {
-        this.updateElementBounds2(entry.boundingClientRect, entry.target, elementData)
+        this.updateElementBounds(entry.boundingClientRect, entry.target, elementData)
       }
     })
-    // access the observer inside your callback
-    // to find entry for myTarget
-    // const entry = currentObserver.getEntry(element)
-    // if (entry?.target === element) {
-    // }
   }
 
   private initializeGlobalListeners() {
@@ -750,6 +734,7 @@ export class ForesightManager {
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 
+    // Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
       childList: true,
@@ -757,13 +742,19 @@ export class ForesightManager {
       attributes: true,
     })
 
-    this.positionObserver = new PositionObserver(this.callbackx)
+    // Handles all position based changes and update the rects of the elements. completely async to avoid dirtying the main thread.
+    // Handles resize of elements
+    // Handles resize of viewport
+    // Handles scrolling
+    this.positionObserver = new PositionObserver(this.handlePositionChange)
 
+    // Avoid doing calculations on elements that arent in the viewport.
+    // Mostly used to observe/unobserve the positionObserver for elements not visible
     this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
       root: null,
       threshold: 0.0,
     })
-    this.elementResizeObserver = new ResizeObserver(this.handleElementResize)
+
     this.isSetup = true
   }
 
@@ -771,7 +762,6 @@ export class ForesightManager {
     this.globalListenersController?.abort() // Remove all event listeners
     this.globalListenersController = null
     this.domObserver?.disconnect()
-    this.elementResizeObserver?.disconnect()
 
     if (this.domMutationRectsUpdateTimeoutId) {
       clearTimeout(this.domMutationRectsUpdateTimeoutId)
