@@ -35,7 +35,6 @@ ForesightManager.initialize({
   positionHistorySize: 8,
   trajectoryPredictionTime: 80,
   defaultHitSlop: 10,
-  resizeScrollThrottleDelay: 50,
   debug: false,
   debuggerSettings: {
     isControlPanelDefaultMinimized: false,
