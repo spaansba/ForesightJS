@@ -70,7 +70,7 @@ export class ForesightManager {
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
-  private globalCallbackHits: CallbackHits = {
+  private _globalCallbackHits: CallbackHits = {
     mouse: 0,
     tab: 0,
   }
@@ -129,12 +129,16 @@ export class ForesightManager {
     return !!ForesightManager.manager
   }
 
-  public static get instance() {
+  public static get instance(): ForesightManager {
     return this.initialize()
   }
 
   public get globalSettings(): Readonly<ForesightManagerSettings> {
     return this._globalSettings
+  }
+
+  public get globalCallbackHits(): Readonly<CallbackHits> {
+    return this._globalCallbackHits
   }
 
   public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementData> {
@@ -608,10 +612,10 @@ export class ForesightManager {
   private updateHitCounters(elementData: ForesightElementData, hitType: hitType) {
     if (hitType === "mouse") {
       elementData.callbackHits.mouse++
-      this.globalCallbackHits.mouse++
+      this._globalCallbackHits.mouse++
     } else if (hitType === "tab") {
       elementData.callbackHits.tab++
-      this.globalCallbackHits.tab++
+      this._globalCallbackHits.tab++
     }
   }
 
@@ -621,7 +625,7 @@ export class ForesightManager {
 
       elementData.callback()
       this.globalSettings.onAnyCallbackFired(elementData, {
-        globalCallbackHits: this.globalCallbackHits,
+        globalCallbackHits: this._globalCallbackHits,
         globalSettings: this._globalSettings,
       })
       if (this.debugger) {

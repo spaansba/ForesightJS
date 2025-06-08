@@ -60,3 +60,9 @@ Checks whether the ForesightManager has been initialized. Useful for conditional
 Gets the current [global settings](/docs/getting_started/config#global-configuration) set by the default setting or by `ForesightManager.Initialize`
 
 **Returns:** `Readonly<ForesightManagerProps>`
+
+## ForesightManager.instance.globalCallbackHits
+
+Gets the total count of callback executions across all registered elements, broken down by interaction type (mouse / tab).
+
+**Returns:** `Readonly<CallbackHits>`
