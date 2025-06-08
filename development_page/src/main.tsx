@@ -23,8 +23,9 @@ ForesightManager.initialize({
   enableTabPrediction: true,
   tabOffset: 4,
   onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => {
-    console.log(elementData)
-    console.log(managerData)
+    console.log(`Intent predicted for: ${elementData.name}`)
+    console.log(`Total tab hits: ${managerData.globalCallbackHits.tab}`)
+    console.log(`total mouse hits ${managerData.globalCallbackHits.mouse}`)
   },
 })
 
