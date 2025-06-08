@@ -523,7 +523,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="prediction-time">
                 Prediction Time
-                <span class="info-icon" title="How many ms in the future to calculate the mouse trajectory. Larger value detects elements sooner. - trajectoryPredictionTime">i</span>
+                <span class="info-icon" title="How many ${TRAJECTORY_PREDICTION_TIME_UNIT} in the future to calculate the mouse trajectory. Larger value detects elements sooner. - trajectoryPredictionTime">i</span>
               </label>
               <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
               <span id="prediction-value"></span>
@@ -540,7 +540,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="tab-enabled">
                 Enable Tab Prediction
-                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of tabs away from an registered element (works with reversed shift-tabs) - enableTabPrediction.">i</span>
+                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of ${TAB_OFFSET_UNIT} away from an registered element (works with reversed shift-tabs) - enableTabPrediction.">i</span>
               </label>
               <input type="checkbox" id="tab-enabled">
             </div>
@@ -564,7 +564,7 @@ export class DebuggerControlPanel {
             <div class="control-row">
               <label for="throttle-delay">
                 Scroll/Resize Throttle
-                <span class="info-icon" title="Delay in ms for recalculating element positions on resize/scroll. Higher values improve performance during rapid events. - resizeScrollThrottleDelay">i</span>
+                <span class="info-icon" title="Delay in ${TRAJECTORY_PREDICTION_TIME_UNIT} for recalculating element positions on resize/scroll. Higher values improve performance during rapid events. - resizeScrollThrottleDelay">i</span>
               </label>
               <input type="range" id="throttle-delay" min="${MIN_RESIZE_SCROLL_THROTTLE_DELAY}" max="${MAX_RESIZE_SCROLL_THROTTLE_DELAY}" step="10">
               <span id="throttle-value"></span>
