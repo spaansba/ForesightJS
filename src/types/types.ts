@@ -93,7 +93,7 @@ export type ForesightElementData = Required<
    */
   trajectoryHitData: TrajectoryHitData
   /**
-   *
+   * Is the element intersecting with the viewport, usefull to track which element we should observe or not
    */
   isIntersectingWithViewport: boolean
 }

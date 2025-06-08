@@ -248,12 +248,26 @@ const debuggerCSS = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 9999;
       }
-      .jsforesight-link-overlay {
+
+      /* --- Performance Optimization: Prepare for transform animations --- */
+      .jsforesight-link-overlay, 
+      .jsforesight-expanded-overlay, 
+      .jsforesight-name-label, 
+      .jsforesight-callback-indicator {
         position: absolute;
+        top: 0;
+        left: 0;
+        will-change: transform; /* Hint for hardware acceleration */
+      }
+      /* --- End Performance Optimization --- */
+
+      .jsforesight-link-overlay {
+        /* position, top, left, will-change are now defined above */
         border: 2px solid rgba(100, 116, 139, 0.2);
         background-color: rgba(100, 116, 139, 0.08);
         box-sizing: border-box;
         border-radius: 6px;
+        /* CORRECTED: The 'transform' property is no longer part of the transition. */
         transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .jsforesight-link-overlay.active {
@@ -266,7 +280,7 @@ const debuggerCSS = `
         box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
       }
       .jsforesight-expanded-overlay {
-        position: absolute;
+        /* position, top, left, will-change are now defined above */
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
         box-sizing: border-box;
@@ -291,7 +305,7 @@ const debuggerCSS = `
         border-radius: 1px;
       }
       .jsforesight-name-label {
-        position: absolute;
+        /* position, top, left, will-change are now defined above */
         background-color: rgba(27, 31, 35, 0.85);
         backdrop-filter: blur(4px);
         color: white;
@@ -304,7 +318,7 @@ const debuggerCSS = `
         pointer-events: none;
       }
       .jsforesight-callback-indicator {
-        position: absolute;
+        /* position, top, left, will-change are now defined above */
         border: 4px solid oklch(65% 0.22 280); /* Vibrant Violet */
         border-radius: 8px;
         box-sizing: border-box;
