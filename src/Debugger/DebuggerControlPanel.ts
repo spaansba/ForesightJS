@@ -427,7 +427,6 @@ export class DebuggerControlPanel {
     listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
     listItem.classList.toggle("not-in-viewport", !data.isIntersectingWithViewport)
 
-    const statusIndicatorHTML = `<span class="status-indicator"></span>`
     const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
     const hitBehaviorTitle = data.unregisterOnCallback
       ? "Callback triggers once, then element unregisters."
@@ -449,13 +448,13 @@ export class DebuggerControlPanel {
       : "Element is not in viewport and not being tracked"
 
     listItem.innerHTML = `
-      ${statusIndicatorHTML}
+          <span class="viewport-indicator" title="${viewportTitle}">${viewportIcon}</span>
       <span class="element-name" title="${data.name || "Unnamed Element"}">${
       data.name || "Unnamed Element"
     }</span>
       <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
       <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-      <span class="viewport-indicator" title="${viewportTitle}">${viewportIcon}</span>
+
     `
   }
 
@@ -839,26 +838,6 @@ export class DebuggerControlPanel {
         opacity: 0.4;
       }
       
-      .element-list-item .status-indicator {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background-color: #777;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8px;
-      }
-      .element-list-item.hovering .status-indicator {
-        background-color: oklch(83.7% 0.128 66.29 / 0.7);
-      }
-      .element-list-item.trajectory-hit .status-indicator {
-        background-color: oklch(89.7% 0.196 126.665 / 0.7);
-      }
-      .element-list-item.hovering.trajectory-hit .status-indicator {
-        background: linear-gradient(45deg, oklch(89.7% 0.196 126.665 / 0.7) 50%, oklch(83.7% 0.128 66.29 / 0.7) 50%);
-      }
       .element-list-item .element-name {
         flex-grow: 1;
         white-space: nowrap;
