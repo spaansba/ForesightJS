@@ -207,6 +207,7 @@ export class DebuggerControlPanel {
 
   /**
    * Create event listener for the slider (numeric value)
+   * These get automatically removed when the element is removed from the page
    */
   private createInputEventListener(
     element: HTMLInputElement | null,
@@ -228,6 +229,7 @@ export class DebuggerControlPanel {
 
   /**
    * Create event listener for toggle (boolean value)
+   * These get automatically removed when the element is removed from the page
    */
   private createChangeEventListener(element: HTMLElement | null, setting: BooleanSettingKeys) {
     if (!element) {
