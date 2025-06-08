@@ -22,8 +22,8 @@ ForesightManager.initialize({
   },
   enableTabPrediction: true,
   tabOffset: 4,
-  onAnyCallbackFired: (element: ForesightElementData) => {
-    console.log(element.name)
+  onAnyCallbackFired: (elementData: ForesightElementData) => {
+    console.log(elementData)
   },
 })
 

@@ -97,12 +97,16 @@ export type ForesightElementData = Required<
    */
   isIntersectingWithViewport: boolean
   /**
+   * Amount of times this callback has been hit, will be 0/1 if unregisterOnCallback is true
+   */
+  callbackHitCount: number
+  /**
    * The element you registered
    */
   element: ForesightElement
 }
 
-type BaseForesightManagerProps = {
+type BaseForesightManagerSettings = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.
    * A higher number might lead to smoother but slightly delayed predictions.
@@ -169,11 +173,11 @@ type BaseForesightManagerProps = {
 /**
  * Configuration options for the ForesightManager
  */
-export type ForesightManagerProps = BaseForesightManagerProps & {
+export type ForesightManagerSettings = BaseForesightManagerSettings & {
   defaultHitSlop: Exclude<HitSlop, number>
 }
 
-export type UpdateForsightManagerProps = BaseForesightManagerProps & {
+export type UpdateForsightManagerSettings = BaseForesightManagerSettings & {
   defaultHitSlop: HitSlop
 }
 
@@ -190,15 +194,19 @@ export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptio
 export type HitSlop = Rect | number
 
 /**
- * Get all keys in UpdateForsightManagerProps that are numeric
+ * Get all keys in UpdateForsightManagerSettings that are numeric
  */
 export type NumericSettingKeys = {
-  [K in keyof UpdateForsightManagerProps]: UpdateForsightManagerProps[K] extends number ? K : never
-}[keyof UpdateForsightManagerProps]
+  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends number
+    ? K
+    : never
+}[keyof UpdateForsightManagerSettings]
 
 /**
- * Get all keys in UpdateForsightManagerProps that are boolean
+ * Get all keys in UpdateForsightManagerSettings that are boolean
  */
 export type BooleanSettingKeys = {
-  [K in keyof UpdateForsightManagerProps]: UpdateForsightManagerProps[K] extends boolean ? K : never
-}[keyof UpdateForsightManagerProps]
+  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
+    ? K
+    : never
+}[keyof UpdateForsightManagerSettings]

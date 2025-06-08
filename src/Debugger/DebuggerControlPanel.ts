@@ -3,10 +3,10 @@ import type { ForesightManager } from "../Manager/ForesightManager"
 import type {
   ForesightElementData,
   ForesightElement,
-  ForesightManagerProps,
   DebuggerSettings,
   NumericSettingKeys,
   BooleanSettingKeys,
+  ForesightManagerSettings,
 } from "../types/types"
 import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
@@ -367,7 +367,7 @@ export class DebuggerControlPanel {
     }
   }
 
-  public updateControlsState(settings: ForesightManagerProps) {
+  public updateControlsState(settings: ForesightManagerSettings) {
     if (this.trajectoryEnabledCheckbox) {
       this.trajectoryEnabledCheckbox.checked = settings.enableMousePrediction
     }

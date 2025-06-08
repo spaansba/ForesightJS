@@ -5,12 +5,12 @@ import type {
   BooleanSettingKeys,
   ForesightElement,
   ForesightElementData,
-  ForesightManagerProps,
+  ForesightManagerSettings,
   ForesightRegisterOptions,
   ForesightRegisterResult,
   NumericSettingKeys,
   TrajectoryPositions,
-  UpdateForsightManagerProps,
+  UpdateForsightManagerSettings,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -62,14 +62,19 @@ import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
  * accessed via the static getter {@link ForesightManager.instance}.
  */
 
+type ForesightManagerData = {
+  instance: ForesightManager
+  globalSettings: ForesightManagerSettings
+}
+
 export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
 
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
-
-  private _globalSettings: ForesightManagerProps = {
+  private globalCallbackHitCount = 0
+  private _globalSettings: ForesightManagerSettings = {
     debug: DEFAULT_IS_DEBUG,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
@@ -107,7 +112,7 @@ export class ForesightManager {
 
   private constructor() {}
 
-  public static initialize(props?: Partial<UpdateForsightManagerProps>): ForesightManager {
+  public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
       ForesightManager.manager = new ForesightManager()
     }
@@ -125,7 +130,7 @@ export class ForesightManager {
     return this.initialize()
   }
 
-  public get globalSettings(): Readonly<ForesightManagerProps> {
+  public get globalSettings(): Readonly<ForesightManagerSettings> {
     return this._globalSettings
   }
 
@@ -153,6 +158,7 @@ export class ForesightManager {
     const elementData: ForesightElementData = {
       element: element,
       callback,
+      callbackHitCount: 0,
       elementBounds: {
         expandedRect: { top: 0, bottom: 0, left: 0, right: 0 },
         hitSlop: normalizedHitSlop,
@@ -251,7 +257,7 @@ export class ForesightManager {
     return true
   }
 
-  public alterGlobalSettings(props?: Partial<UpdateForsightManagerProps>): void {
+  public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     // Call each update function and store whether it made a change.
     // This ensures every update function is executed.
     const oldPositionHistorySize = this._globalSettings.positionHistorySize
@@ -595,11 +601,13 @@ export class ForesightManager {
 
   private callCallback(elementData: ForesightElementData | undefined) {
     if (elementData) {
+      elementData.callbackHitCount++
       elementData.callback()
       this.globalSettings.onAnyCallbackFired(elementData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }
+      this.globalCallbackHitCount++
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
         this.unregister(elementData.element)

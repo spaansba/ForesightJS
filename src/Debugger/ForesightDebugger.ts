@@ -4,10 +4,9 @@ import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new 
 import type {
   ForesightElementData,
   ForesightElement,
-  ForesightManagerProps,
-  Point,
   Rect,
   TrajectoryPositions,
+  ForesightManagerSettings,
 } from "../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
@@ -212,7 +211,7 @@ export class ForesightDebugger {
     this.debugTrajectoryLine.style.display = "block"
   }
 
-  public updateControlsState(settings: ForesightManagerProps) {
+  public updateControlsState(settings: ForesightManagerSettings) {
     this.controlPanel?.updateControlsState(settings)
   }
 
