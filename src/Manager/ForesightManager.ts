@@ -151,6 +151,7 @@ export class ForesightManager {
     this.elementIntersectionObserver?.observe(element)
 
     const elementData: ForesightElementData = {
+      element: element,
       callback,
       elementBounds: {
         expandedRect: { top: 0, bottom: 0, left: 0, right: 0 },
@@ -176,7 +177,7 @@ export class ForesightManager {
     if (this.debugger) {
       const data = this.elements.get(element)
       if (data) {
-        this.debugger.createOrUpdateElementOverlay(element, data)
+        this.debugger.createOrUpdateElementOverlay(data)
       }
     }
 
@@ -382,7 +383,7 @@ export class ForesightManager {
       const elementData = this.elements.get(element)
       // For performance only update rects that are currently intersecting with the viewport
       if (elementData && elementData.isIntersectingWithViewport) {
-        this.forceUpdateElementBounds(element, elementData)
+        this.forceUpdateElementBounds(elementData)
       }
     })
   }
@@ -410,10 +411,7 @@ export class ForesightManager {
    * @param elementData - The data object for the foresight element.
    * @param element - The HTML element being interacted with.
    */
-  private handleSingleCallbackInteraction(
-    elementData: ForesightElementData,
-    element: ForesightElement
-  ) {
+  private handleSingleCallbackInteraction(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
 
     // A physical hover is always a valid trigger.
@@ -430,7 +428,7 @@ export class ForesightManager {
 
     // If either condition is met, fire the callback.
     if (isHovering || isTrajectoryHit) {
-      this.callCallback(elementData, element)
+      this.callCallback(elementData)
     }
   }
 
@@ -447,10 +445,7 @@ export class ForesightManager {
    * @param elementData - The current data object for the foresight element.
    * @param element - The HTML element being interacted with.
    */
-  private handleMultiCallbackInteraction(
-    elementData: ForesightElementData,
-    element: ForesightElement
-  ) {
+  private handleMultiCallbackInteraction(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
     const isHovering = isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)
 
@@ -466,7 +461,7 @@ export class ForesightManager {
       )
 
     if (isNewPhysicalHover || isNewTrajectoryHit) {
-      this.callCallback(elementData, element)
+      this.callCallback(elementData)
     }
 
     const hasStateChanged = isHovering !== elementData.isHovering || isNewTrajectoryHit
@@ -488,18 +483,18 @@ export class ForesightManager {
           clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
         }
         newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
-          const currentData = this.elements.get(element)
+          const currentData = this.elements.get(elementData.element)
           if (
             currentData &&
             currentData.trajectoryHitData.trajectoryHitTime ===
               newElementData.trajectoryHitData.trajectoryHitTime
           ) {
             currentData.trajectoryHitData.isTrajectoryHit = false
-            this.debugger?.createOrUpdateElementOverlay(element, currentData)
+            this.debugger?.createOrUpdateElementOverlay(currentData)
           }
         }, 200)
       }
-      this.elements.set(element, newElementData)
+      this.elements.set(elementData.element, newElementData)
     }
   }
 
@@ -512,9 +507,9 @@ export class ForesightManager {
 
     this.elements.forEach((currentData, element) => {
       if (!currentData.unregisterOnCallback) {
-        this.handleMultiCallbackInteraction(currentData, element)
+        this.handleMultiCallbackInteraction(currentData)
       } else {
-        this.handleSingleCallbackInteraction(currentData, element)
+        this.handleSingleCallbackInteraction(currentData)
       }
     })
 
@@ -594,11 +589,11 @@ export class ForesightManager {
     }
 
     elementsToPredict.forEach((element) => {
-      this.callCallback(this.elements.get(element), element)
+      this.callCallback(this.elements.get(element))
     })
   }
 
-  private callCallback(elementData: ForesightElementData | undefined, element: ForesightElement) {
+  private callCallback(elementData: ForesightElementData | undefined) {
     if (elementData) {
       elementData.callback()
       this.globalSettings.onAnyCallbackFired()
@@ -607,7 +602,7 @@ export class ForesightManager {
       }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
-        this.unregister(element)
+        this.unregister(elementData.element)
       }
     }
   }
@@ -627,7 +622,7 @@ export class ForesightManager {
         )
         this.positionObserver?.observe(entry.target)
         if (this.globalSettings.debug) {
-          this.debugger?.createOrUpdateElementOverlay(entry.target, elementData)
+          this.debugger?.createOrUpdateElementOverlay(elementData)
         }
       } else {
         this.positionObserver?.unobserve(entry.target)
@@ -642,56 +637,46 @@ export class ForesightManager {
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
    */
-  private forceUpdateElementBounds(
-    element: ForesightElement,
-    foresightElementData: ForesightElementData
-  ) {
-    const newOriginalRect = element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(
-      newOriginalRect,
-      foresightElementData.elementBounds.hitSlop
-    )
+  private forceUpdateElementBounds(elementData: ForesightElementData) {
+    const newOriginalRect = elementData.element.getBoundingClientRect()
+    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
 
-    if (!areRectsEqual(expandedRect, foresightElementData.elementBounds.expandedRect)) {
-      this.elements.set(element, {
-        ...foresightElementData,
+    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
+      this.elements.set(elementData.element, {
+        ...elementData,
         elementBounds: {
-          ...foresightElementData.elementBounds,
+          ...elementData.elementBounds,
           originalRect: newOriginalRect,
           expandedRect,
         },
       })
 
       if (this.debugger) {
-        const updatedData = this.elements.get(element)
-        if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
+        const updatedData = this.elements.get(elementData.element)
+        if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
       }
     } else {
       console.log("are rects equal")
     }
   }
 
-  private updateElementBounds(
-    newRect: DOMRect,
-    element: ForesightElement,
-    foresightElementData: ForesightElementData
-  ) {
-    const expandedRect = getExpandedRect(newRect, foresightElementData.elementBounds.hitSlop)
+  private updateElementBounds(newRect: DOMRect, elementData: ForesightElementData) {
+    const expandedRect = getExpandedRect(newRect, elementData.elementBounds.hitSlop)
 
     // We dont check if rects are equal like we do in forceUpdateElementBounds, since rects can never be equal here
 
-    this.elements.set(element, {
-      ...foresightElementData,
+    this.elements.set(elementData.element, {
+      ...elementData,
       elementBounds: {
-        ...foresightElementData.elementBounds,
+        ...elementData.elementBounds,
         originalRect: newRect,
         expandedRect,
       },
     })
 
     if (this.debugger) {
-      const updatedData = this.elements.get(element)
-      if (updatedData) this.debugger.createOrUpdateElementOverlay(element, updatedData)
+      const updatedData = this.elements.get(elementData.element)
+      if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
     }
   }
 
@@ -699,7 +684,7 @@ export class ForesightManager {
     entries.forEach((entry) => {
       const elementData = this.elements.get(entry.target)
       if (elementData) {
-        this.updateElementBounds(entry.boundingClientRect, entry.target, elementData)
+        this.updateElementBounds(entry.boundingClientRect, elementData)
       }
     })
   }

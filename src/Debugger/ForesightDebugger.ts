@@ -125,15 +125,15 @@ export class ForesightDebugger {
     return overlays
   }
 
-  public createOrUpdateElementOverlay(element: ForesightElement, newData: ForesightElementData) {
+  public createOrUpdateElementOverlay(newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
-    this.lastElementData.set(element, {
+    this.lastElementData.set(newData.element, {
       isHovering: newData.isHovering,
       isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
     })
-    let overlays = this.debugLinkOverlays.get(element)
+    let overlays = this.debugLinkOverlays.get(newData.element)
     if (!overlays) {
-      overlays = this.createElementOverlays(element)
+      overlays = this.createElementOverlays(newData.element)
     }
     updateElementOverlays(
       overlays,

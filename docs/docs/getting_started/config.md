@@ -43,7 +43,7 @@ ForesightManager.initialize({
   enableTabPrediction: true,
   tabOffset: 3,
   onAnyCallbackFired: () => {
-    console.log("any callback fired")
+    console.log("callback from any unknown")
   },
 })
 ```

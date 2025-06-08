@@ -96,6 +96,10 @@ export type ForesightElementData = Required<
    * Is the element intersecting with the viewport, usefull to track which element we should observe or not
    */
   isIntersectingWithViewport: boolean
+  /**
+   * the element you registered
+   */
+  element: ForesightElement
 }
 
 type BaseForesightManagerProps = {
