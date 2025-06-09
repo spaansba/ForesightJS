@@ -77,6 +77,8 @@ export class DebuggerControlPanel {
   ) {
     this.foresightManagerInstance = foresightManager
     this.shadowRoot = shadowRoot
+    this.isContainerMinimized =
+      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
     this.controlsContainer = this.createControlContainer()
     this.shadowRoot.appendChild(this.controlsContainer)
 
@@ -89,10 +91,8 @@ export class DebuggerControlPanel {
     this.originalSectionStates()
     this.setupEventListeners()
     this.refreshElementList()
-    this.updateContainerVisibilityState()
 
-    this.isContainerMinimized =
-      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
+    this.updateContainerVisibilityState()
   }
 
   public static initialize(
@@ -354,6 +354,7 @@ export class DebuggerControlPanel {
   private updateContainerVisibilityState() {
     if (!this.containerMinimizeButton) return
     if (this.isContainerMinimized) {
+      console.log("here")
       this.controlsContainer.classList.add("minimized")
       this.containerMinimizeButton.textContent = "+"
       if (this.allSettingsSectionsContainer)

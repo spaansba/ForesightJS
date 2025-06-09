@@ -16,7 +16,6 @@ function HomepageHeader() {
   ForesightManager.initialize({
     enableMousePrediction: true,
     trajectoryPredictionTime: 110,
-    resizeScrollThrottleDelay: 0,
     positionHistorySize: 14,
     defaultHitSlop: 0,
     tabOffset: 3,
