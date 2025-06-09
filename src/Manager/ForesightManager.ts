@@ -725,6 +725,7 @@ export class ForesightManager {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return
     }
+
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
@@ -759,12 +760,12 @@ export class ForesightManager {
     this.globalListenersController?.abort() // Remove all event listeners
     this.globalListenersController = null
     this.domObserver?.disconnect()
-
+    this.positionObserver?.disconnect()
+    this.elementIntersectionObserver?.disconnect()
     if (this.domMutationRectsUpdateTimeoutId) {
       clearTimeout(this.domMutationRectsUpdateTimeoutId)
       this.domMutationRectsUpdateTimeoutId = null
     }
-
     this.isSetup = false
   }
 }
