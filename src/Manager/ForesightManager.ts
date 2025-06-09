@@ -41,9 +41,9 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
-
-import PositionObserver, { type PositionObserverEntry } from "./helpers/pos"
+import PositionObserver from "@thednp/position-observer"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
+import type { PositionObserverEntry } from "@thednp/position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -115,7 +115,6 @@ export class ForesightManager {
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
-      console.log("ForesightManager is not initiated, creating a new instance.")
       ForesightManager.manager = new ForesightManager()
     }
     if (props !== undefined) {
@@ -746,7 +745,6 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    console.log("creating", this.positionObserver)
     this.positionObserver = new PositionObserver(this.handlePositionChange)
 
     // Avoid doing calculations on elements that arent in the viewport.
