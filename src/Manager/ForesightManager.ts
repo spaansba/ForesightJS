@@ -103,9 +103,6 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
 
-  private idleCallbackId: number | null = null
-  private elementsToProcess: ForesightElementData[] = []
-
   private domObserver: MutationObserver | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
   private positionObserver: PositionObserver | null = null
@@ -115,6 +112,7 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
+  // Never put something in the constructor, use initialize instead
   private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
@@ -386,6 +384,9 @@ export class ForesightManager {
         ForesightManager.instance,
         this.trajectoryPositions
       )
+      this.elements.forEach((elementData) => {
+        this.debugger?.createOrUpdateElementOverlay(elementData)
+      })
     } else {
       this.debugger.updateControlsState(this._globalSettings)
     }

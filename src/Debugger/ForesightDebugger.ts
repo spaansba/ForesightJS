@@ -1,4 +1,4 @@
-import type { ForesightManager } from "../Manager/ForesightManager"
+import { ForesightManager } from "../Manager/ForesightManager"
 import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new class
 import type {
   ForesightElementData,
@@ -24,28 +24,37 @@ export type ElementOverlays = {
     timeoutId: ReturnType<typeof setTimeout>
   }
 }
-
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
 
+  // Keep these properties, but they will be assigned in _setupDOM
   private foresightManagerInstance: ForesightManager
-  private shadowHost: HTMLElement
-  private shadowRoot: ShadowRoot
-  private debugContainer: HTMLElement
-  private debugLinkOverlays: Map<ForesightElement, ElementOverlays> = new Map()
+  private shadowHost!: HTMLElement // Use '!' to indicate it will be definitely assigned
+  private shadowRoot!: ShadowRoot
+  private debugContainer!: HTMLElement
+  private controlPanel!: DebuggerControlPanel
 
+  private debugLinkOverlays: Map<ForesightElement, ElementOverlays> = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
-  private controlPanel: DebuggerControlPanel
   private lastElementData: Map<
     ForesightElement,
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
+  // 1. The constructor is now simpler. It just stores the manager instance.
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
+    // The DOM setup is no longer here.
+  }
 
-    // Add nececairy elements to shadowhost
+  // 2. All the DOM creation logic is moved into this private method.
+  private _setupDOM() {
+    // If for some reason we call this on an already-setup instance, do nothing.
+    if (this.shadowHost) {
+      return
+    }
+
     this.shadowHost = createAndAppendElement(
       "div",
       document.body,
@@ -72,9 +81,8 @@ export class ForesightDebugger {
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
       this.shadowRoot,
-      foresightManager.getManagerData.globalSettings.debuggerSettings
+      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings
     )
-
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
   }
 
@@ -91,16 +99,25 @@ export class ForesightDebugger {
       return null
     }
 
+    // 3. The initialization logic is updated.
     if (!ForesightDebugger.isInitiated) {
       ForesightDebugger.debuggerInstance = new ForesightDebugger(foresightManager)
     }
 
-    ForesightDebugger.debuggerInstance.updateTrajectoryVisuals(
+    const instance = ForesightDebugger.debuggerInstance
+
+    // Key Change: If the instance exists but has been cleaned up (shadowHost is gone),
+    // run the setup logic again to "revive" it.
+    if (!instance.shadowHost) {
+      instance._setupDOM()
+    }
+
+    instance.updateTrajectoryVisuals(
       trajectoryPositions,
       foresightManager.getManagerData.globalSettings.enableMousePrediction
     )
 
-    return ForesightDebugger.debuggerInstance
+    return instance
   }
 
   private createElementOverlays(element: ForesightElement) {
@@ -277,8 +294,12 @@ export class ForesightDebugger {
     this.shadowHost?.remove()
     this.debugLinkOverlays.clear()
     this.lastElementData.clear()
+    this.shadowHost = null!
+    this.shadowRoot = null!
+    this.debugContainer = null!
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
+    this.controlPanel = null!
   }
 }
 

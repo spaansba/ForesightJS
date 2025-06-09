@@ -38,13 +38,14 @@ export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private static debuggerControlPanelInstance: DebuggerControlPanel
 
-  private shadowRoot: ShadowRoot
-  private controlsContainer: HTMLElement
+  // These properties will be assigned in _setupDOMAndListeners
+  private shadowRoot!: ShadowRoot
+  private controlsContainer!: HTMLElement
+  private controlPanelStyleElement!: HTMLStyleElement
   private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
   private callbackCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
-  private controlPanelStyleElement: HTMLStyleElement
 
   private trajectoryEnabledCheckbox: HTMLInputElement | null = null
   private tabEnabledCheckbox: HTMLInputElement | null = null
@@ -70,12 +71,24 @@ export class DebuggerControlPanel {
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
 
-  private constructor(
-    foresightManager: ForesightManager,
-    shadowRoot: ShadowRoot,
-    debuggerSettings: DebuggerSettings
-  ) {
+  /**
+   * The constructor is now minimal, only storing the manager instance.
+   * The actual setup is deferred to _setupDOMAndListeners.
+   */
+  private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
+  }
+
+  /**
+   * All DOM creation and event listener setup logic is moved here.
+   * This method can be called to "revive" a cleaned-up instance.
+   */
+  private _setupDOMAndListeners(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
+    // Guard clause to prevent re-running if the UI is already active.
+    if (this.controlsContainer) {
+      return
+    }
+
     this.shadowRoot = shadowRoot
     this.isContainerMinimized =
       debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
@@ -94,28 +107,31 @@ export class DebuggerControlPanel {
     this.updateContainerVisibilityState()
   }
 
+  /**
+   * The initialize method now creates the instance if needed,
+   * then calls the setup method to ensure the UI is ready.
+   */
   public static initialize(
     foresightManager: ForesightManager,
     shadowRoot: ShadowRoot,
     debuggerSettings: DebuggerSettings
-  ) {
+  ): DebuggerControlPanel {
     if (!DebuggerControlPanel.isInitiated) {
-      DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(
-        foresightManager,
-        shadowRoot,
-        debuggerSettings
-      )
+      DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(foresightManager)
     }
-    return DebuggerControlPanel.debuggerControlPanelInstance
+
+    const instance = DebuggerControlPanel.debuggerControlPanelInstance
+
+    // This will build the DOM on first run or rebuild it on subsequent runs after cleanup.
+    instance._setupDOMAndListeners(shadowRoot, debuggerSettings)
+
+    return instance
   }
 
   private static get isInitiated(): boolean {
     return !!DebuggerControlPanel.debuggerControlPanelInstance
   }
 
-  /**
-   * All sections are closed by default. If the user opens a section in their session and refreshes the page it will remain open.
-   */
   private loadSectionStatesFromSessionStorage(): Partial<SectionStates> {
     const storedStatesRaw = sessionStorage.getItem(this.SESSION_STORAGE_KEY)
     let loadedStates: Partial<SectionStates> = {}
@@ -139,7 +155,6 @@ export class DebuggerControlPanel {
       elements: this.isElementsListMinimized,
     }
     try {
-      // can throw QuotaExceededError for several reasons
       sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(states))
     } catch (e) {
       console.error("Foresight Debugger: Could not save section states to session storage.", e)
@@ -195,10 +210,6 @@ export class DebuggerControlPanel {
       })
   }
 
-  /**
-   * Create event listener for the slider (numeric value)
-   * These get automatically removed when the element is removed from the page
-   */
   private createInputEventListener(
     element: HTMLInputElement | null,
     spanElement: HTMLSpanElement | null,
@@ -217,10 +228,6 @@ export class DebuggerControlPanel {
     })
   }
 
-  /**
-   * Create event listener for toggle (boolean value)
-   * These get automatically removed when the element is removed from the page
-   */
   private createChangeEventListener(
     element: HTMLElement | null,
     setting: BooleanSettingKeys | "name-tag"
@@ -243,9 +250,6 @@ export class DebuggerControlPanel {
     })
   }
 
-  /**
-   * Create event listener for toggle of the minimized and expanded state of sections like "Mouse Settings / Keyboard Settings" in the debugger UI
-   */
   private createSectionVisibilityToggleEventListener(
     section: HTMLDivElement | null,
     isMinimizedFlagName:
@@ -353,7 +357,6 @@ export class DebuggerControlPanel {
   private updateContainerVisibilityState() {
     if (!this.containerMinimizeButton) return
     if (this.isContainerMinimized) {
-      console.log("here")
       this.controlsContainer.classList.add("minimized")
       this.containerMinimizeButton.textContent = "+"
       if (this.allSettingsSectionsContainer)
@@ -387,10 +390,6 @@ export class DebuggerControlPanel {
     if (this.predictionTimeSlider && this.predictionValueSpan) {
       this.predictionTimeSlider.value = settings.trajectoryPredictionTime.toString()
       this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
-    }
-    if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
-      this.tabOffsetSlider.value = settings.tabOffset.toString()
-      this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
     }
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
       this.tabOffsetSlider.value = settings.tabOffset.toString()
@@ -479,8 +478,12 @@ export class DebuggerControlPanel {
     `
   }
 
+  /**
+   * The cleanup method is updated to be more thorough, nullifying all
+   * DOM-related properties to put the instance in a dormant state.
+   */
   public cleanup() {
-    this.controlsContainer?.remove() // This indirectly removes all event listeners
+    this.controlsContainer?.remove()
     this.controlPanelStyleElement?.remove()
 
     if (this.copyTimeoutId) {
@@ -488,8 +491,12 @@ export class DebuggerControlPanel {
       this.copyTimeoutId = null
     }
 
+    // Nullify all DOM-related properties to signal it's "cleaned up"
+    this.controlsContainer = null!
+    this.controlPanelStyleElement = null!
     this.elementListItemsContainer = null
     this.elementCountSpan = null
+    this.callbackCountSpan = null
     this.elementListItems.clear()
     this.containerMinimizeButton = null
     this.allSettingsSectionsContainer = null
@@ -502,6 +509,7 @@ export class DebuggerControlPanel {
     this.predictionValueSpan = null
     this.tabOffsetSlider = null
     this.tabOffsetValueSpan = null
+    this.showNameTagsCheckbox = null
     this.copySettingsButton = null
   }
 
