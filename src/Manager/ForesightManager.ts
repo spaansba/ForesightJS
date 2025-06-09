@@ -213,9 +213,8 @@ export class ForesightManager {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
-    if (this.elementIntersectionObserver) {
-      this.elementIntersectionObserver.unobserve(element)
-    }
+    this.elementIntersectionObserver?.unobserve(element)
+    this.positionObserver?.unobserve(element)
 
     this.elements.delete(element)
 
@@ -672,6 +671,7 @@ export class ForesightManager {
     const newOriginalRect = elementData.element.getBoundingClientRect()
     const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
 
+    // Since its a force update, rects can be equal.
     if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
       this.elements.set(elementData.element, {
         ...elementData,
@@ -686,14 +686,11 @@ export class ForesightManager {
         const updatedData = this.elements.get(elementData.element)
         if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
       }
-    } else {
-      console.log("are rects equal")
     }
   }
 
   private updateElementBounds(newRect: DOMRect, elementData: ForesightElementData) {
     const expandedRect = getExpandedRect(newRect, elementData.elementBounds.hitSlop)
-
     // We dont check if rects are equal like we do in forceUpdateElementBounds, since rects can never be equal here
 
     this.elements.set(elementData.element, {

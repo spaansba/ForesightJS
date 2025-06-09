@@ -36,6 +36,8 @@ ForesightJS utilizes browser-native Observers to monitor element positions and t
 
 - **`MutationObserver`:** This observer detects when registered HTML elements are removed from the DOM, leading to their automatic unregistration. Not needed but helpful for if the user forgets to unregister their element on removal.
 
+- **`IntersectionObserver`:** Used to determine which elements we want to observe in the `PositionObserver`. We only observe and update elements that are currently in the viewport
+
 * **[`PositionObserver`](https://github.com/thednp/position-observer):** This observer, Created by [thednp](https://github.com/thednp), is used to asynchronously observe changes in the position of a registered element. By implementing the `PositionObserver`, we avoid the need for:
 
         - The window resize event
