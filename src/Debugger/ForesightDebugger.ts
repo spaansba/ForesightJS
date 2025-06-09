@@ -140,11 +140,15 @@ export class ForesightDebugger {
   }
 
   public toggleNameTagVisibility(showNameTags: boolean) {
-    const nameTags = this.shadowRoot.querySelectorAll(".jsforesight-name-label")
-    nameTags.forEach((tag) => {
-      if (tag instanceof HTMLElement) {
-        tag.style.display = showNameTags ? "block" : "none"
-      }
+    this.foresightManagerInstance.registeredElements.forEach((elementData) => {
+      const overlays = this.debugLinkOverlays.get(elementData.element)
+      if (!overlays) return
+      updateElementOverlays(
+        overlays,
+        elementData,
+        this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
+          DEFAULT_SHOW_NAME_TAGS
+      )
     })
   }
 

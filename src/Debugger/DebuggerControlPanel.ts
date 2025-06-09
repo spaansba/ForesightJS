@@ -91,7 +91,6 @@ export class DebuggerControlPanel {
     this.originalSectionStates()
     this.setupEventListeners()
     this.refreshElementList()
-
     this.updateContainerVisibilityState()
   }
 
