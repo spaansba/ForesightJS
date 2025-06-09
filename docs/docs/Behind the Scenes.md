@@ -28,23 +28,38 @@ This document delves into the internal workings of ForesightJS, offering a look 
 
 ForesightJS employs a singleton pattern, ensuring only one instance of `ForesightManager` exists. This central instance manages all prediction logic, registered elements, and global settings. Elements are stored in a `Map`, where the key is the registered element itself. Calling `ForesightManager.instance.register()` multiple times with the same element overwrites the existing entry rather than creating a duplicate.
 
-To keep the dom clean and optimize for performance, ForesightJS captures an element's `getBoundingClientRect()`, applies any configured `hitSlop` and stores this expanded bounding box. This stored bounding box requires continuous updates to reflect document layout changes, a task handled by various event listeners and observers.
+To keep the DOM clean and optimize for performance,
 
 ### General Observers
 
 ForesightJS utilizes browser-native Observers to monitor element positions and their presence in the DOM:
 
-- **`MutationObserver`:** This observer detects when registered HTML elements are removed from the DOM, leading to their automatic unregistration. It also monitors broader DOM structural changes. Since such changes can alter element positions, they prompt ForesightJS to re-evaluate the bounds of all registered elements.
-- **`ResizeObserver`:** A `ResizeObserver` is attached to each registered element. This ensures its stored bounding box remains accurate even if the element's own dimensions change.
+- **`MutationObserver`:** This observer detects when registered HTML elements are removed from the DOM, leading to their automatic unregistration. Not needed but helpful for if the user forgets to unregister their element on removal.
+
+* **[`PositionObserver`](https://github.com/thednp/position-observer):** This observer, Created by [thednp](https://github.com/thednp), is used to asynchronously observe changes in the position of a registered element. By implementing the `PositionObserver`, we avoid the need for:
+
+        - The window resize event
+        - The window scroll event
+        - The ResizeObserver
+
+#### How does the PositionObserver work?
+
+The `PositionObserver` works by actively polling for changes using a `requestAnimationFrame` loop, not by listening for a specific browser event. This approach is optimized for performance by leveraging the browser's native `IntersectionObserver` to asynchronously gather an element's `boundingClientRect`. This avoids manual, synchronous calls (like `getBoundingClientRect()`) that can force performance-hurting layout [reflows](https://gist.github.com/paulirish/5d52fb081b3570c81e3a).
+
+On every animation frame (roughly 60 times per second), it performs these steps:
+
+- It iterates through each registered element.
+- It compares the element's previous `boundingClientRect` (gathered asynchronously from `IntersectionObserver`) and the viewport's dimensions against the current ones.
+- If there's a difference in the element's top or left position, or if the viewport has been resized, it flags the element as having moved.
+- Finally, it triggers the callback function it was constructed with, passing it a list of all elements whose positions have changed during that frame. In this case, the callback is provided by and handled by the `ForesightManager`
 
 ## Mouse Prediction
 
 ### Event Handlers
 
-For accurate mouse interaction detection, ForesightJS captures mouse movements and monitors layout changes:
+For accurate mouse predictions, ForesightJS captures mouse movements next to the previously mentioned layout changes:
 
 - **`mousemove`:** The library records the mouse's `clientX` and `clientY` coordinates on each `mousemove` event. ForesightJS maintains a history of these positions, the size of which is limited by the `positionHistorySize` setting.
-- **`resize` / `scroll`:** Global `resize` and `scroll` events trigger updates to the stored positions and dimensions of registered elements. To maintain performance, these event handlers are throttled.
 
 ### Mouse Position Prediction Mechanism
 
