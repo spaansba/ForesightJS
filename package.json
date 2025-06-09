@@ -54,7 +54,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@thednp/position-observer": "^1.0.10",
+    "@thednp/position-observer": "github:thednp/position-observer",
     "tabbable": "^6.2.0"
   }
 }

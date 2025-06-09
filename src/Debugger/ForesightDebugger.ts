@@ -180,8 +180,10 @@ export class ForesightDebugger {
       return
     }
     const { predictedPoint, currentPoint } = trajectoryPositions
-    this.debugPredictedMouseIndicator.style.left = `${predictedPoint.x}px`
-    this.debugPredictedMouseIndicator.style.top = `${predictedPoint.y}px`
+
+    // Use transform for positioning to avoid layout reflow.
+    // The CSS handles centering the element with `translate(-50%, -50%)`.
+    this.debugPredictedMouseIndicator.style.transform = `translate(${predictedPoint.x}px, ${predictedPoint.y}px) translate(-50%, -50%)`
     this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
 
     // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
@@ -201,10 +203,10 @@ export class ForesightDebugger {
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-    this.debugTrajectoryLine.style.left = `${currentPoint.x}px`
-    this.debugTrajectoryLine.style.top = `${currentPoint.y}px`
+    // Use a single transform to position, rotate, and scale the line,
+    // avoiding reflow from top/left/width changes.
+    this.debugTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
     this.debugTrajectoryLine.style.width = `${length}px`
-    this.debugTrajectoryLine.style.transform = `translateY(-50%) rotate(${angle}deg)`
     this.debugTrajectoryLine.style.display = "block"
   }
 
@@ -285,7 +287,9 @@ const debuggerCSS = `
       .jsforesight-link-overlay, 
       .jsforesight-expanded-overlay, 
       .jsforesight-name-label, 
-      .jsforesight-callback-indicator {
+      .jsforesight-callback-indicator,
+      .jsforesight-mouse-predicted,
+      .jsforesight-trajectory-line {
         position: absolute;
         top: 0;
         left: 0;
@@ -293,7 +297,6 @@ const debuggerCSS = `
       }
 
       .jsforesight-link-overlay {
-        /* position, top, left, will-change are now defined above */
         border: 2px solid rgba(100, 116, 139, 0.2);
         background-color: rgba(100, 116, 139, 0.08);
         box-sizing: border-box;
@@ -310,32 +313,29 @@ const debuggerCSS = `
         box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
       }
       .jsforesight-expanded-overlay {
-        /* position, top, left, will-change are now defined above */
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
         box-sizing: border-box;
         border-radius: 8px;
       }
       .jsforesight-mouse-predicted {
-        position: absolute;
         width: 20px;
         height: 20px;
         border-radius: 50%;
         border: 2px solid #6b98e1;
         background-color: rgba(176, 196, 222, 0.3);
-        transform: translate(-50%, -50%);
         z-index: 10000;
+        /* transform is now set dynamically via JS for performance */
       }
       .jsforesight-trajectory-line {
-        position: absolute;
         height: 2px;
         background-color: #6b98e1;
         transform-origin: left center;
         z-index: 9999;
         border-radius: 1px;
+        /* width and transform are set dynamically via JS for performance */
       }
       .jsforesight-name-label {
-        /* position, top, left, will-change are now defined above */
         background-color: rgba(27, 31, 35, 0.85);
         backdrop-filter: blur(4px);
         color: white;
@@ -348,7 +348,6 @@ const debuggerCSS = `
         pointer-events: none;
       }
       .jsforesight-callback-indicator {
-        /* position, top, left, will-change are now defined above */
         border: 4px solid oklch(65% 0.22 280); 
         border-radius: 8px;
         box-sizing: border-box;

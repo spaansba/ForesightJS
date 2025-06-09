@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@thednp/position-observer':
-        specifier: ^1.0.10
-        version: 1.0.10
+        specifier: github:thednp/position-observer
+        version: https://codeload.github.com/thednp/position-observer/tar.gz/14d884462e2e20f14ce536ea16501af14813c42b
       tabbable:
         specifier: ^6.2.0
         version: 6.2.0
@@ -229,8 +229,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@thednp/position-observer@1.0.10':
-    resolution: {integrity: sha512-kZCpB110751TI8Qv9sufEvxDmrjrFLEnfzwQ6Qy9bI5ORjgGwYFasp4sHp8MGvi0DM+oiQno2bps2863bUwrQA==}
+  '@thednp/position-observer@https://codeload.github.com/thednp/position-observer/tar.gz/14d884462e2e20f14ce536ea16501af14813c42b':
+    resolution: {tarball: https://codeload.github.com/thednp/position-observer/tar.gz/14d884462e2e20f14ce536ea16501af14813c42b}
+    version: 1.0.11
     engines: {node: '>=16', pnpm: '>=8.6.0'}
 
   '@thednp/shorty@2.0.11':
@@ -991,7 +992,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.42.0':
     optional: true
 
-  '@thednp/position-observer@1.0.10':
+  '@thednp/position-observer@https://codeload.github.com/thednp/position-observer/tar.gz/14d884462e2e20f14ce536ea16501af14813c42b':
     dependencies:
       '@thednp/shorty': 2.0.11
 
