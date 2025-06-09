@@ -418,7 +418,9 @@ export class DebuggerControlPanel {
       totalElements - visibleElementCount
     }`
     this.callbackCountSpan.textContent = `Mouse: ${mouse} Tab: ${tab}`
-    this.callbackCountSpan.title = `Total callbacks executed: Mouse: ${mouse}, Tab: ${tab}`
+    this.callbackCountSpan.title = `Total callbacks executed: Mouse: ${mouse}, Tab: ${tab}, total: ${
+      mouse + tab
+    }`
   }
 
   public refreshElementList() {

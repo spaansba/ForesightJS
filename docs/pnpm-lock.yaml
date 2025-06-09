@@ -24,8 +24,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       js.foresight:
-        specifier: ^2.0.4
-        version: 2.0.4
+        specifier: file:./js.foresight-2.1.0.tgz
+        version: file:js.foresight-2.1.0.tgz
       lucide-react:
         specifier: ^0.510.0
         version: 0.510.0(react@19.1.0)
@@ -1336,6 +1336,14 @@ packages:
   '@szmarczak/http-timer@5.0.1':
     resolution: {integrity: sha512-+PmQX0PiAYPMeVYe237LJAYvOMYW1j2rH5YROyS3b4CTVJum34HfRvKvAzozHAQG0TnHNdUfY9nCeUyRAs//cw==}
     engines: {node: '>=14.16'}
+
+  '@thednp/position-observer@1.0.10':
+    resolution: {integrity: sha512-kZCpB110751TI8Qv9sufEvxDmrjrFLEnfzwQ6Qy9bI5ORjgGwYFasp4sHp8MGvi0DM+oiQno2bps2863bUwrQA==}
+    engines: {node: '>=16', pnpm: '>=8.6.0'}
+
+  '@thednp/shorty@2.0.11':
+    resolution: {integrity: sha512-D+rLHt1l7c608yCuzXYJ75aDNWeMVbor+m1HO/XibhiWRbCpD8r6TUv3ayJI+feVfCnBNfrH+p6LSDn9l99uBA==}
+    engines: {node: '>=16', pnpm: '>=8.6.0'}
 
   '@trysound/sax@0.2.0':
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
@@ -2995,8 +3003,9 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  js.foresight@2.0.4:
-    resolution: {integrity: sha512-JI52g0CwGjPL0waze09f1UA8bfTmlWdfXZroGV3Xp3qHmhAZNkBxIZIyOrIQWRnf8zV5J9uqeV7yQbKA1Qh4JQ==}
+  js.foresight@file:js.foresight-2.1.0.tgz:
+    resolution: {integrity: sha512-3OUMK660ktY0GwaldKkhEtPbBg9PVBShCHODJiugWuy29EBNH8gzOeSaB0sm3VBJo2PT/ltCONwa89tHgUb22Q==, tarball: file:js.foresight-2.1.0.tgz}
+    version: 2.1.0
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
@@ -7027,6 +7036,12 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
+  '@thednp/position-observer@1.0.10':
+    dependencies:
+      '@thednp/shorty': 2.0.11
+
+  '@thednp/shorty@2.0.11': {}
+
   '@trysound/sax@0.2.0': {}
 
   '@types/body-parser@1.19.5':
@@ -8932,8 +8947,9 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js.foresight@2.0.4:
+  js.foresight@file:js.foresight-2.1.0.tgz:
     dependencies:
+      '@thednp/position-observer': 1.0.10
       tabbable: 6.2.0
 
   jsesc@3.0.2: {}

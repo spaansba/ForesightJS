@@ -20,7 +20,7 @@
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "@signalwire/docusaurus-plugin-llms-txt": "1.0.1",
-    "js.foresight": "^2.0.4",
+    "js.foresight": "file:./js.foresight-2.1.0.tgz",
     "lucide-react": "^0.510.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",

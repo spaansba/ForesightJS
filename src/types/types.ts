@@ -116,6 +116,7 @@ export type ForesightElementData = Required<
 }
 
 export type CallbackHits = {
+  total: number
   mouse: number
   tab: number
 }

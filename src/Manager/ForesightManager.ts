@@ -72,6 +72,7 @@ export class ForesightManager {
   private _globalCallbackHits: CallbackHits = {
     mouse: 0,
     tab: 0,
+    total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
     debug: DEFAULT_IS_DEBUG,
@@ -173,6 +174,7 @@ export class ForesightManager {
       callbackHits: {
         mouse: 0,
         tab: 0,
+        total: 0,
       },
       elementBounds: {
         originalRect: rect,
@@ -609,6 +611,7 @@ export class ForesightManager {
       elementData.callbackHits.tab++
       this._globalCallbackHits.tab++
     }
+    this._globalCallbackHits.total++
   }
 
   private callCallback(elementData: ForesightElementData | undefined, hitType: hitType) {
