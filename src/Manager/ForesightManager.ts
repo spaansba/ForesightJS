@@ -329,7 +329,7 @@ export class ForesightManager {
       this._globalSettings.debuggerSettings.showNameTags = props.debuggerSettings.showNameTags
       debuggerSettingsChanged = true
       if (this.debugger) {
-        this.debugger.toggleNameTagVisibility(this._globalSettings.debuggerSettings.showNameTags)
+        this.debugger.toggleNameTagVisibility()
       }
     }
 

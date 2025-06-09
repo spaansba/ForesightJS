@@ -139,7 +139,7 @@ export class ForesightDebugger {
     this.controlPanel.refreshElementList()
   }
 
-  public toggleNameTagVisibility(showNameTags: boolean) {
+  public toggleNameTagVisibility() {
     this.foresightManagerInstance.registeredElements.forEach((elementData) => {
       const overlays = this.debugLinkOverlays.get(elementData.element)
       if (!overlays) return
