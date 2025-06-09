@@ -55,11 +55,18 @@ Checks whether the ForesightManager has been initialized. Useful for conditional
 
 **Returns:** `Readonly<boolean>`
 
-## ForesightManager.instance.globalSettings
+## ForesightManager.instance.getManagerData
 
-Gets the current [global settings](/docs/getting_started/config#global-configuration) set by the default setting or by `ForesightManager.Initialize`
+Gets a comprehensive snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
 
-**Returns:** `Readonly<ForesightManagerProps>`
+**Returns:** `Readonly<ForesightManagerData>`
+
+**Properties:**
+
+- `registeredElements` - Map of all currently registered elements and their associated data
+- `globalSettings` - Current [global configuration](/docs/getting_started/config#global-configuration) settings
+- `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab)
+- `positionObserverElements` - Elements currently being tracked by the position observer (a.k.a elements that are currently visible)
 
 ## ForesightManager.instance.globalCallbackHits
 
