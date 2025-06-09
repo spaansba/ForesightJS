@@ -42,8 +42,7 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 
-import type { PositionObserverEntry } from "./helpers/pos"
-import PositionObserver from "@thednp/position-observer"
+import PositionObserver, { type PositionObserverEntry } from "./helpers/pos"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
 /**
@@ -116,6 +115,7 @@ export class ForesightManager {
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
+      console.log("ForesightManager is not initiated, creating a new instance.")
       ForesightManager.manager = new ForesightManager()
     }
     if (props !== undefined) {
@@ -176,7 +176,8 @@ export class ForesightManager {
         tab: 0,
       },
       elementBounds: {
-        expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
+        originalRect: rect,
+        expandedRect: getExpandedRect(rect, normalizedHitSlop),
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -191,9 +192,9 @@ export class ForesightManager {
     }
 
     this.elements.set(element, elementData)
-
     // Always connect the observer After the element is registered to avoid race conditions
     this.elementIntersectionObserver?.observe(element)
+    // this.positionObserver?.observe(element)
 
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
@@ -216,7 +217,13 @@ export class ForesightManager {
     }
 
     // this.elementIntersectionObserver?.unobserve(element)
-    this.positionObserver?.unobserve(element)
+    if (this.elementIntersectionObserver) {
+      this.elementIntersectionObserver?.unobserve(element)
+    } else {
+      console.warn(
+        "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when unregistering elements."
+      )
+    }
 
     this.elements.delete(element)
 
@@ -615,7 +622,6 @@ export class ForesightManager {
   private callCallback(elementData: ForesightElementData | undefined, hitType: hitType) {
     if (elementData) {
       this.updateHitCounters(elementData, hitType)
-
       elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
@@ -641,8 +647,13 @@ export class ForesightManager {
           elementData.elementBounds.originalRect,
           elementData.elementBounds.hitSlop
         )
-        console.log(this.positionObserver)
-        this.positionObserver?.observe(entry.target)
+        if (this.positionObserver) {
+          this.positionObserver?.observe(entry.target)
+        } else {
+          console.warn(
+            "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
+          )
+        }
         if (this._globalSettings.debug) {
           this.debugger?.createOrUpdateElementOverlay(elementData)
         }
@@ -735,6 +746,7 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
+    console.log("creating", this.positionObserver)
     this.positionObserver = new PositionObserver(this.handlePositionChange)
 
     // Avoid doing calculations on elements that arent in the viewport.

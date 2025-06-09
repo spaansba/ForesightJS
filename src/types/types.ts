@@ -1,3 +1,5 @@
+import PositionObserver from "@thednp/position-observer"
+
 export type Rect = {
   top: number
   left: number

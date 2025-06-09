@@ -18,7 +18,7 @@ function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
             <BaseForesightButton
               registerOptions={{
                 callback: () => {
-                  console.log(name)
+                  // console.log(name)
                 },
                 hitSlop: 0,
                 name: name,

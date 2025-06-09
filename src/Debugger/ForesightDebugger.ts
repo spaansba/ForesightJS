@@ -213,56 +213,52 @@ export class ForesightDebugger {
   }
 
   public showCallbackAnimation(elementData: ForesightElementData) {
-    // const overlays = this.debugLinkOverlays.get(elementData.element)
-    // if (!overlays) {
-    //   // Element is not being tracked, so we can't show an animation for it.
-    //   return
-    // }
-    // // --- Cleanup Previous Animation ---
-    // // If an animation object already exists, we're overwriting it.
-    // // Clear the old timeout and remove the old DOM element first.
-    // if (overlays.animation) {
-    //   clearTimeout(overlays.animation.timeoutId)
-    //   overlays.animation.overlay.remove()
-    // }
-    // // --- End Cleanup ---
-    // const animationOverlay = createAndAppendElement(
-    //   "div",
-    //   this.debugContainer,
-    //   "jsforesight-callback-indicator"
-    // )
-    // // Set the visual properties of the new animation overlay
-    // animationOverlay.style.display = "block"
-    // animationOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
-    // animationOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
-    // animationOverlay.style.width = `${
-    //   elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
-    // }px`
-    // animationOverlay.style.height = `${
-    //   elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
-    // }px`
-    // // Use requestAnimationFrame to ensure the 'animate' class is added after the element is rendered,
-    // // which correctly triggers the CSS animation.
-    // requestAnimationFrame(() => {
-    //   animationOverlay.classList.add("animate")
-    // })
-    // const animationDuration = 400
-    // const timeoutId = setTimeout(() => {
-    //   // When the animation duration is over, remove the overlay element
-    //   // and clear the animation state from the overlays map.
-    //   if (overlays.animation) {
-    //     overlays.animation.overlay.remove()
-    //     overlays.animation = undefined
-    //   }
-    // }, animationDuration)
-    // // Store the complete state for the new animation in the overlays map.
-    // // This single assignment overwrites any previous state.
-    // overlays.animation = {
-    //   overlay: animationOverlay,
-    //   startTime: Date.now(),
-    //   duration: animationDuration,
-    //   timeoutId: timeoutId,
-    // }
+    const overlays = this.debugLinkOverlays.get(elementData.element)
+    if (!overlays) {
+      return
+    }
+
+    // --- Cleanup Previous Animation ---
+    if (overlays.animation) {
+      clearTimeout(overlays.animation.timeoutId)
+      overlays.animation.overlay.remove()
+    }
+
+    const animationOverlay = createAndAppendElement(
+      "div",
+      this.debugContainer,
+      "jsforesight-callback-indicator"
+    )
+
+    // Set the visual properties of the new animation overlay
+    animationOverlay.style.display = "block"
+    animationOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
+    animationOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
+    animationOverlay.style.width = `${
+      elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
+    }px`
+    animationOverlay.style.height = `${
+      elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
+    }px`
+
+    requestAnimationFrame(() => {
+      animationOverlay.classList.add("animate")
+    })
+
+    const animationDuration = 400
+    const timeoutId = setTimeout(() => {
+      if (overlays.animation) {
+        overlays.animation.overlay.remove()
+        overlays.animation = undefined
+      }
+    }, animationDuration)
+
+    overlays.animation = {
+      overlay: animationOverlay,
+      startTime: Date.now(),
+      duration: animationDuration,
+      timeoutId: timeoutId,
+    }
   }
 
   public cleanup() {
@@ -281,7 +277,6 @@ const debuggerCSS = `
         pointer-events: none; z-index: 9999;
       }
 
-      /* --- Performance Optimization: Prepare for transform animations --- */
       .jsforesight-link-overlay, 
       .jsforesight-expanded-overlay, 
       .jsforesight-name-label, 
@@ -289,9 +284,8 @@ const debuggerCSS = `
         position: absolute;
         top: 0;
         left: 0;
-        will-change: transform; /* Hint for hardware acceleration */
+        will-change: transform; 
       }
-      /* --- End Performance Optimization --- */
 
       .jsforesight-link-overlay {
         /* position, top, left, will-change are now defined above */
@@ -299,7 +293,6 @@ const debuggerCSS = `
         background-color: rgba(100, 116, 139, 0.08);
         box-sizing: border-box;
         border-radius: 6px;
-        /* CORRECTED: The 'transform' property is no longer part of the transition. */
         transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
       }
       .jsforesight-link-overlay.active {
@@ -307,7 +300,7 @@ const debuggerCSS = `
         background-color: rgba(100, 116, 139, 0.15);
       }
       .jsforesight-link-overlay.trajectory-hit {
-        border-color: oklch(65% 0.2 250); /* A nice, modern blue */
+        border-color: oklch(65% 0.2 250);
         background-color: rgba(79, 70, 229, 0.15);
         box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
       }
@@ -365,12 +358,12 @@ const debuggerCSS = `
 
       @keyframes jsforesight-callback-pulse {
         0% {
-          transform: scale(1);
+          scale: 1;
           opacity: 1;
           box-shadow: 0 0 15px oklch(65% 0.22 280 / 0.7);
         }
         100% {
-          transform: scale(1.1);
+          scale: 1.1; 
           opacity: 0;
           box-shadow: 0 0 25px oklch(65% 0.22 280 / 0);
         }

@@ -9,7 +9,7 @@ function ForesightButtonNoName() {
         <BaseForesightButton
           registerOptions={{
             callback: () => {
-              console.log("no name button")
+              // console.log("no name button")
             },
             hitSlop: 20,
             unregisterOnCallback: true,
