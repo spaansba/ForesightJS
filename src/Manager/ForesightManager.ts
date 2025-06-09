@@ -619,7 +619,7 @@ export class ForesightManager {
       elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
-        this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
+        this.debugger.showCallbackAnimation(elementData)
       }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {

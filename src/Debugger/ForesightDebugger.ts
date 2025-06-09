@@ -17,6 +17,12 @@ export type ElementOverlays = {
   linkOverlay: HTMLElement
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
+  animation?: {
+    overlay: HTMLElement
+    startTime: number
+    duration: number
+    timeoutId: ReturnType<typeof setTimeout>
+  }
 }
 
 export class ForesightDebugger {
@@ -30,8 +36,6 @@ export class ForesightDebugger {
 
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
-  private debugCallbackIndicator: HTMLElement | null = null
-
   private controlPanel: DebuggerControlPanel
   private lastElementData: Map<
     ForesightElement,
@@ -64,11 +68,6 @@ export class ForesightDebugger {
       "div",
       this.debugContainer,
       "jsforesight-trajectory-line"
-    )
-    this.debugCallbackIndicator = createAndAppendElement(
-      "div",
-      this.debugContainer,
-      "jsforesight-callback-indicator"
     )
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
@@ -213,21 +212,57 @@ export class ForesightDebugger {
     this.controlPanel?.updateControlsState(settings)
   }
 
-  public showCallbackAnimation(whereToShow: Rect) {
-    if (!this.debugContainer || !this.shadowRoot || !this.debugCallbackIndicator) {
-      return
-    }
-
-    this.debugCallbackIndicator.style.display = "block"
-    this.debugCallbackIndicator.style.left = `${whereToShow.left}px`
-    this.debugCallbackIndicator.style.top = `${whereToShow.top}px`
-    this.debugCallbackIndicator.style.width = `${whereToShow.right - whereToShow.left}px`
-    this.debugCallbackIndicator.style.height = `${whereToShow.bottom - whereToShow.top}px`
-
-    this.debugCallbackIndicator.classList.remove("animate")
-    requestAnimationFrame(() => {
-      this.debugCallbackIndicator!.classList.add("animate")
-    })
+  public showCallbackAnimation(elementData: ForesightElementData) {
+    // const overlays = this.debugLinkOverlays.get(elementData.element)
+    // if (!overlays) {
+    //   // Element is not being tracked, so we can't show an animation for it.
+    //   return
+    // }
+    // // --- Cleanup Previous Animation ---
+    // // If an animation object already exists, we're overwriting it.
+    // // Clear the old timeout and remove the old DOM element first.
+    // if (overlays.animation) {
+    //   clearTimeout(overlays.animation.timeoutId)
+    //   overlays.animation.overlay.remove()
+    // }
+    // // --- End Cleanup ---
+    // const animationOverlay = createAndAppendElement(
+    //   "div",
+    //   this.debugContainer,
+    //   "jsforesight-callback-indicator"
+    // )
+    // // Set the visual properties of the new animation overlay
+    // animationOverlay.style.display = "block"
+    // animationOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
+    // animationOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
+    // animationOverlay.style.width = `${
+    //   elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
+    // }px`
+    // animationOverlay.style.height = `${
+    //   elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
+    // }px`
+    // // Use requestAnimationFrame to ensure the 'animate' class is added after the element is rendered,
+    // // which correctly triggers the CSS animation.
+    // requestAnimationFrame(() => {
+    //   animationOverlay.classList.add("animate")
+    // })
+    // const animationDuration = 400
+    // const timeoutId = setTimeout(() => {
+    //   // When the animation duration is over, remove the overlay element
+    //   // and clear the animation state from the overlays map.
+    //   if (overlays.animation) {
+    //     overlays.animation.overlay.remove()
+    //     overlays.animation = undefined
+    //   }
+    // }, animationDuration)
+    // // Store the complete state for the new animation in the overlays map.
+    // // This single assignment overwrites any previous state.
+    // overlays.animation = {
+    //   overlay: animationOverlay,
+    //   startTime: Date.now(),
+    //   duration: animationDuration,
+    //   timeoutId: timeoutId,
+    // }
   }
 
   public cleanup() {
@@ -237,7 +272,6 @@ export class ForesightDebugger {
     this.lastElementData.clear()
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
-    this.debugCallbackIndicator = null
   }
 }
 
