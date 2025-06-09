@@ -103,6 +103,9 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
 
+  private idleCallbackId: number | null = null
+  private elementsToProcess: ForesightElementData[] = []
+
   private domObserver: MutationObserver | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
   private positionObserver: PositionObserver | null = null
@@ -423,10 +426,6 @@ export class ForesightManager {
    */
   private handleSingleCallbackInteraction(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
-
-    // A physical hover is always a valid trigger.
-    const isHovering = isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)
-
     // A predicted trajectory intersection is also a valid trigger.
     const isTrajectoryHit =
       this._globalSettings.enableMousePrediction &&
@@ -437,7 +436,7 @@ export class ForesightManager {
       )
 
     // If either condition is met, fire the callback.
-    if (isHovering || isTrajectoryHit) {
+    if (isTrajectoryHit) {
       this.callCallback(elementData, "mouse")
     }
   }
@@ -511,7 +510,7 @@ export class ForesightManager {
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
 
-    this.elements.forEach((currentData, element) => {
+    this.elements.forEach((currentData) => {
       if (!currentData.isIntersectingWithViewport) {
         return
       }
