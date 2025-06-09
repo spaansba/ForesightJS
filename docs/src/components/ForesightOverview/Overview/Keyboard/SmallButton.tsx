@@ -44,6 +44,7 @@ function SmallButton({ index }: { index: number }) {
       className={`${styles.smallButton} ${
         isLoading ? styles.loading : isLoaded ? styles.loaded : styles.default
       }`}
+      id={`button-${index}`}
     >
       <div className={styles.buttonContent}>
         <div className={styles.buttonText}>{state()}</div>

@@ -21,6 +21,7 @@ function HomepageHeader() {
     tabOffset: 3,
     debuggerSettings: {
       isControlPanelDefaultMinimized: false,
+      showNameTags: false,
     },
   })
   const turnOffDebugMode = () => {

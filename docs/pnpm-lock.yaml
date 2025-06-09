@@ -3004,7 +3004,7 @@ packages:
     hasBin: true
 
   js.foresight@file:js.foresight-2.1.0.tgz:
-    resolution: {integrity: sha512-rGBIJBW16mA0SnpiWBkU/xwavaAJ/cAjA7iVvyneX0mVsD74lIGVhF1YQ2rA4w68a7yY2hG257Bj07o+zvHzSQ==, tarball: file:js.foresight-2.1.0.tgz}
+    resolution: {integrity: sha512-KGPituReSbBZ3x5DTnb3kNbaAftEZZt2CEl0dfVY12A8b2hbs5whK5vn9yhxFd24Rm5Ppmg7QxPpMHwa/oZAow==, tarball: file:js.foresight-2.1.0.tgz}
     version: 2.1.0
 
   jsesc@3.0.2:
