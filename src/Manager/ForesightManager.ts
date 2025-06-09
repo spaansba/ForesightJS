@@ -426,17 +426,19 @@ export class ForesightManager {
    */
   private handleSingleCallbackInteraction(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
-    // A predicted trajectory intersection is also a valid trigger.
-    const isTrajectoryHit =
-      this._globalSettings.enableMousePrediction &&
+
+    // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
+    if (!this._globalSettings.enableMousePrediction) {
+      if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
+        this.callCallback(elementData, "mouse")
+      }
+    } else if (
       lineSegmentIntersectsRect(
         this.trajectoryPositions.currentPoint,
         this.trajectoryPositions.predictedPoint,
         expandedRect
       )
-
-    // If either condition is met, fire the callback.
-    if (isTrajectoryHit) {
+    ) {
       this.callCallback(elementData, "mouse")
     }
   }
