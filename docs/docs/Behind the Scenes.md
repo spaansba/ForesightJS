@@ -73,7 +73,7 @@ The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/ma
 2.  **Velocity Calculation:** It calculates the average velocity (change in position over time) using the oldest and newest points in the recorded history.
 3.  **Extrapolation:** Using this calculated velocity and the `trajectoryPredictionTimeInMs` setting (which defines how far into the future to predict), the function projects the mouse's current position along its path to estimate its future `x` and `y` coordinates.
 
-This process yields a `predictedPoint`. ForesightJS then creates a line in memory between the current mouse position and this `predictedPoint` for intersection checks.
+This process yields a `predictedPoint`. ForesightJS then creates a line in memory between the current mouse position and this `predictedPoint` for intersection checks. It only checks elements that are currently visible with the `IntersectionObserver`.
 
 ### Trajectory Intersection Checking
 

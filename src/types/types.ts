@@ -5,6 +5,13 @@ export type Rect = {
   bottom: number
 }
 
+type PositionObserverEntry = {
+  target: Element
+  boundingClientRect: DOMRect
+  clientHeight: number
+  clientWidth: number
+}
+
 /**
  * A callback function that is executed when a foresight interaction
  * (e.g., hover, trajectory hit) occurs on a registered element.
@@ -114,8 +121,10 @@ export type CallbackHits = {
 export type hitType = "mouse" | "tab"
 
 export type ForesightManagerData = {
+  registeredElements: Map<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
+  positionObserverElements: Map<Element, PositionObserverEntry> | undefined
 }
 
 type BaseForesightManagerSettings = {

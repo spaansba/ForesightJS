@@ -5,6 +5,7 @@ import {
   useIsResized,
   useIsVisible,
 } from "../../stores/ButtonStateStore"
+import { ForesightManager } from "../../../../src/Manager/ForesightManager"
 
 type ControlButton = {
   id: string
@@ -27,6 +28,16 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
   const isResized = useIsResized()
   const controlButtons: ControlButton[] = [
     {
+      id: "log-static-properties",
+      label: "Log Static Properties",
+      description: "Log static properties of manager",
+      onClick: () => {
+        console.log(ForesightManager.instance.getManagerData)
+      },
+      isActive: true,
+      type: "button",
+    },
+    {
       id: "page-switch",
       label: "Switch to other page",
       description: "",
@@ -39,7 +50,9 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       id: "reset-all",
       label: "Reset All",
       description: "",
-      onClick: () => actions.resetAll(),
+      onClick: () => {
+        actions.resetAll()
+      },
       isActive: false,
       type: "button",
     },

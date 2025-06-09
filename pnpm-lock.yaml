@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@thednp/position-observer':
+        specifier: github:thednp/position-observer
+        version: https://codeload.github.com/thednp/position-observer/tar.gz/8e1d4ea85598d5de0626f218fc1e0b2c549b22b2
       tabbable:
         specifier: ^6.2.0
         version: 6.2.0
@@ -225,6 +228,15 @@ packages:
     resolution: {integrity: sha512-bwspbWB04XJpeElvsp+DCylKfF4trJDa2Y9Go8O6A7YLX2LIKGcNK/CYImJN6ZP4DcuOHB4Utl3iCbnR62DudA==}
     cpu: [x64]
     os: [win32]
+
+  '@thednp/position-observer@https://codeload.github.com/thednp/position-observer/tar.gz/8e1d4ea85598d5de0626f218fc1e0b2c549b22b2':
+    resolution: {tarball: https://codeload.github.com/thednp/position-observer/tar.gz/8e1d4ea85598d5de0626f218fc1e0b2c549b22b2}
+    version: 1.0.9
+    engines: {node: '>=16', pnpm: '>=8.6.0'}
+
+  '@thednp/shorty@2.0.11':
+    resolution: {integrity: sha512-D+rLHt1l7c608yCuzXYJ75aDNWeMVbor+m1HO/XibhiWRbCpD8r6TUv3ayJI+feVfCnBNfrH+p6LSDn9l99uBA==}
+    engines: {node: '>=16', pnpm: '>=8.6.0'}
 
   '@trysound/sax@0.2.0':
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
@@ -976,6 +988,12 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
+
+  '@thednp/position-observer@https://codeload.github.com/thednp/position-observer/tar.gz/8e1d4ea85598d5de0626f218fc1e0b2c549b22b2':
+    dependencies:
+      '@thednp/shorty': 2.0.11
+
+  '@thednp/shorty@2.0.11': {}
 
   '@trysound/sax@0.2.0': {}
 

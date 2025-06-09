@@ -173,7 +173,7 @@ export class DebuggerControlPanel {
     navigator.clipboard
       .writeText(
         objectToMethodCall(
-          this.foresightManagerInstance.globalSettings,
+          this.foresightManagerInstance.getManagerData.globalSettings,
           "ForesightManager.initialize"
         )
       )

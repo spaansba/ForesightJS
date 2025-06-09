@@ -42,9 +42,9 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 
-import PositionObserver, { type PositionObserverEntry } from "@thednp/position-observer"
-
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
+import PositionObserver from "./helpers/pos"
+import type { PositionObserverEntry } from "./helpers/pos"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -104,7 +104,6 @@ export class ForesightManager {
   }
 
   private domObserver: MutationObserver | null = null
-  private domMutationRectsUpdateTimeoutId: ReturnType<typeof setTimeout> | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
@@ -125,20 +124,21 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
+  public get getManagerData(): Readonly<ForesightManagerData> {
+    return {
+      registeredElements: this.elements,
+      globalSettings: this._globalSettings,
+      globalCallbackHits: this._globalCallbackHits,
+      positionObserverElements: this.positionObserver?.entries,
+    }
+  }
+
   public static get isInitiated(): Readonly<boolean> {
     return !!ForesightManager.manager
   }
 
   public static get instance(): ForesightManager {
     return this.initialize()
-  }
-
-  public get globalSettings(): Readonly<ForesightManagerSettings> {
-    return this._globalSettings
-  }
-
-  public get globalCallbackHits(): Readonly<CallbackHits> {
-    return this._globalCallbackHits
   }
 
   public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementData> {
@@ -155,13 +155,19 @@ export class ForesightManager {
     if (isTouchDevice()) {
       return { isTouchDevice: true, unregister: () => {} }
     }
+    if (this.elements.has(element)) {
+      return { isTouchDevice: false, unregister: () => this.unregister(element) }
+    }
+
+    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
+    if (!this.isSetup) {
+      this.initializeGlobalListeners()
+    }
 
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
-
-    this.elementIntersectionObserver?.observe(element)
-
+    const rect = element.getBoundingClientRect()
     const elementData: ForesightElementData = {
       element: element,
       callback,
@@ -170,7 +176,7 @@ export class ForesightManager {
         tab: 0,
       },
       elementBounds: {
-        expandedRect: { top: 0, bottom: 0, left: 0, right: 0 },
+        expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -183,18 +189,14 @@ export class ForesightManager {
       unregisterOnCallback: unregisterOnCallback ?? true,
       isIntersectingWithViewport: false,
     }
+
     this.elements.set(element, elementData)
 
-    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
-    }
+    // Always connect the observer After the element is registered to avoid race conditions
+    this.elementIntersectionObserver?.observe(element)
 
     if (this.debugger) {
-      const data = this.elements.get(element)
-      if (data) {
-        this.debugger.createOrUpdateElementOverlay(data)
-      }
+      this.debugger.createOrUpdateElementOverlay(elementData)
     }
 
     return { isTouchDevice: false, unregister: () => this.unregister(element) }
@@ -213,7 +215,7 @@ export class ForesightManager {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
-    this.elementIntersectionObserver?.unobserve(element)
+    // this.elementIntersectionObserver?.unobserve(element)
     this.positionObserver?.unobserve(element)
 
     this.elements.delete(element)
@@ -223,14 +225,7 @@ export class ForesightManager {
     }
 
     if (this.elements.size === 0 && this.isSetup) {
-      if (!this.debugger) {
-        this.removeGlobalListeners()
-      } else {
-        console.log(
-          "%cForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup actions now, but these are currently skipped while in debug mode.",
-          "color: #28a745; font-weight: bold;"
-        )
-      }
+      this.removeGlobalListeners()
     }
   }
 
@@ -318,7 +313,6 @@ export class ForesightManager {
       "enableTabPrediction"
     )
 
-    let onAnyCallbackChanges = false
     if (props?.onAnyCallbackFired !== undefined) {
       this._globalSettings.onAnyCallbackFired = props.onAnyCallbackFired
     }
@@ -515,12 +509,12 @@ export class ForesightManager {
 
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
-    let elementsToUpdateInDebugger: ForesightElement[] | null = null
-    if (this.debugger) {
-      elementsToUpdateInDebugger = []
-    }
 
     this.elements.forEach((currentData, element) => {
+      // if (!currentData.isIntersectingWithViewport) {
+      //   return
+      // }
+
       if (!currentData.unregisterOnCallback) {
         this.handleMultiCallbackInteraction(currentData)
       } else {
@@ -623,10 +617,7 @@ export class ForesightManager {
       this.updateHitCounters(elementData, hitType)
 
       elementData.callback()
-      this.globalSettings.onAnyCallbackFired(elementData, {
-        globalCallbackHits: this._globalCallbackHits,
-        globalSettings: this._globalSettings,
-      })
+      this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData.elementBounds.expandedRect)
       }
@@ -650,13 +641,14 @@ export class ForesightManager {
           elementData.elementBounds.originalRect,
           elementData.elementBounds.hitSlop
         )
+        console.log(this.positionObserver)
         this.positionObserver?.observe(entry.target)
-        if (this.globalSettings.debug) {
+        if (this._globalSettings.debug) {
           this.debugger?.createOrUpdateElementOverlay(elementData)
         }
       } else {
         this.positionObserver?.unobserve(entry.target)
-        if (this.globalSettings.debug) {
+        if (this._globalSettings.debug) {
           this.debugger?.removeElement(entry.target)
         }
       }
@@ -701,7 +693,6 @@ export class ForesightManager {
         expandedRect,
       },
     })
-
     if (this.debugger) {
       const updatedData = this.elements.get(elementData.element)
       if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
@@ -737,7 +728,7 @@ export class ForesightManager {
     this.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
-      attributes: true,
+      attributes: false,
     })
 
     // Handles all position based changes and update the rects of the elements. completely async to avoid dirtying the main thread.
@@ -751,21 +742,28 @@ export class ForesightManager {
     this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
       root: null,
       threshold: 0.0,
+      rootMargin: "50px",
     })
 
     this.isSetup = true
   }
 
   private removeGlobalListeners() {
-    this.globalListenersController?.abort() // Remove all event listeners
-    this.globalListenersController = null
-    this.domObserver?.disconnect()
-    this.positionObserver?.disconnect()
-    this.elementIntersectionObserver?.disconnect()
-    if (this.domMutationRectsUpdateTimeoutId) {
-      clearTimeout(this.domMutationRectsUpdateTimeoutId)
-      this.domMutationRectsUpdateTimeoutId = null
-    }
     this.isSetup = false
+    if (!this.debugger) {
+      this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
+      this.globalListenersController = null
+    } else {
+      console.log(
+        "%cForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup events now, but these are currently skipped while in debug mode. Observers are cleared up.",
+        "color: #28a745; font-weight: bold;"
+      )
+    }
+    this.domObserver?.disconnect()
+    this.domObserver = null
+    this.elementIntersectionObserver?.disconnect()
+    this.elementIntersectionObserver = null
+    this.positionObserver?.disconnect()
+    this.positionObserver = null
   }
 }

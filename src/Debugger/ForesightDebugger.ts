@@ -1,4 +1,3 @@
-// ForesightDebugger.ts
 import type { ForesightManager } from "../Manager/ForesightManager"
 import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new class
 import type {
@@ -74,7 +73,7 @@ export class ForesightDebugger {
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
       this.shadowRoot,
-      foresightManager.globalSettings.debuggerSettings
+      foresightManager.getManagerData.globalSettings.debuggerSettings
     )
 
     // Add style sheet
@@ -101,7 +100,7 @@ export class ForesightDebugger {
 
     ForesightDebugger.debuggerInstance.updateTrajectoryVisuals(
       trajectoryPositions,
-      foresightManager.globalSettings.enableMousePrediction
+      foresightManager.getManagerData.globalSettings.enableMousePrediction
     )
 
     return ForesightDebugger.debuggerInstance
@@ -137,9 +136,10 @@ export class ForesightDebugger {
     updateElementOverlays(
       overlays,
       newData,
-      this.foresightManagerInstance.globalSettings.debuggerSettings.showNameTags ??
+      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
         DEFAULT_SHOW_NAME_TAGS
     )
+    this.controlPanel.refreshElementList()
   }
 
   public toggleNameTagVisibility(showNameTags: boolean) {
