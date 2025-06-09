@@ -1,9 +1,8 @@
 import { ForesightManager } from "../Manager/ForesightManager"
-import { DebuggerControlPanel } from "./DebuggerControlPanel" // Import the new class
+import { DebuggerControlPanel } from "./DebuggerControlPanel"
 import type {
   ForesightElementData,
   ForesightElement,
-  Rect,
   TrajectoryPositions,
   ForesightManagerSettings,
 } from "../types/types"
@@ -42,13 +41,10 @@ export class ForesightDebugger {
     { isHovering: boolean; isTrajectoryHit: boolean }
   > = new Map()
 
-  // 1. The constructor is now simpler. It just stores the manager instance.
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
-    // The DOM setup is no longer here.
   }
 
-  // 2. All the DOM creation logic is moved into this private method.
   private _setupDOM() {
     // If for some reason we call this on an already-setup instance, do nothing.
     if (this.shadowHost) {
@@ -99,15 +95,12 @@ export class ForesightDebugger {
       return null
     }
 
-    // 3. The initialization logic is updated.
     if (!ForesightDebugger.isInitiated) {
       ForesightDebugger.debuggerInstance = new ForesightDebugger(foresightManager)
     }
 
     const instance = ForesightDebugger.debuggerInstance
 
-    // Key Change: If the instance exists but has been cleaned up (shadowHost is gone),
-    // run the setup logic again to "revive" it.
     if (!instance.shadowHost) {
       instance._setupDOM()
     }
@@ -246,7 +239,7 @@ export class ForesightDebugger {
       return
     }
 
-    // --- Cleanup Previous Animation ---
+    // Cleanup Previous Animation
     if (overlays.animation) {
       clearTimeout(overlays.animation.timeoutId)
       overlays.animation.overlay.remove()
@@ -258,16 +251,14 @@ export class ForesightDebugger {
       "jsforesight-callback-indicator"
     )
 
-    // Set the visual properties of the new animation overlay
+    const { left, top, right, bottom } = elementData.elementBounds.expandedRect
+    const width = right - left
+    const height = bottom - top
+
     animationOverlay.style.display = "block"
-    animationOverlay.style.left = `${elementData.elementBounds.expandedRect.left}px`
-    animationOverlay.style.top = `${elementData.elementBounds.expandedRect.top}px`
-    animationOverlay.style.width = `${
-      elementData.elementBounds.expandedRect.right - elementData.elementBounds.expandedRect.left
-    }px`
-    animationOverlay.style.height = `${
-      elementData.elementBounds.expandedRect.bottom - elementData.elementBounds.expandedRect.top
-    }px`
+    animationOverlay.style.translate = `${left}px ${top}px`
+    animationOverlay.style.width = `${width}px`
+    animationOverlay.style.height = `${height}px`
 
     requestAnimationFrame(() => {
       animationOverlay.classList.add("animate")
