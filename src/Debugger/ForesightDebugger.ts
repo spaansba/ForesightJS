@@ -210,6 +210,11 @@ export class ForesightDebugger {
 
   public updateControlsState(settings: ForesightManagerSettings) {
     this.controlPanel?.updateControlsState(settings)
+    this.controlPanel?.refreshElementList()
+  }
+
+  public refreshDebuggerElementList() {
+    this.controlPanel?.refreshElementList()
   }
 
   public showCallbackAnimation(elementData: ForesightElementData) {

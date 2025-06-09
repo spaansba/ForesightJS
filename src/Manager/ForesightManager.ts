@@ -215,14 +215,7 @@ export class ForesightManager {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
-    // this.elementIntersectionObserver?.unobserve(element)
-    if (this.elementIntersectionObserver) {
-      this.elementIntersectionObserver?.unobserve(element)
-    } else {
-      console.warn(
-        "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when unregistering elements."
-      )
-    }
+    this.elementIntersectionObserver?.unobserve(element)
 
     this.elements.delete(element)
 
@@ -625,6 +618,7 @@ export class ForesightManager {
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData)
+        this.debugger.refreshDebuggerElementList() // Update the registered element count in the Registered Elements tab
       }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {

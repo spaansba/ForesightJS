@@ -42,6 +42,7 @@ export class DebuggerControlPanel {
   private controlsContainer: HTMLElement
   private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
+  private callbackCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
   private controlPanelStyleElement: HTMLStyleElement
 
@@ -160,6 +161,7 @@ export class DebuggerControlPanel {
     )
     this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
     this.elementCountSpan = this.controlsContainer.querySelector("#element-count")
+    this.callbackCountSpan = this.controlsContainer.querySelector("#callback-count")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
     this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
       ".all-settings-sections-container"
@@ -396,6 +398,29 @@ export class DebuggerControlPanel {
     }
   }
 
+  private refreshRegisteredElementCountDisplay(
+    elementsMap: ReadonlyMap<Element, ForesightElementData>
+  ) {
+    if (!this.elementCountSpan || !this.callbackCountSpan) {
+      return
+    }
+
+    let visibleElementCount = 0
+    elementsMap.forEach((data) => {
+      if (data.isIntersectingWithViewport) {
+        visibleElementCount++
+      }
+    })
+    const totalElements = elementsMap.size
+    const { tab, mouse } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+    this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
+    this.elementCountSpan.title = `Total registered elements: ${totalElements}, visible in viewport: ${visibleElementCount}, not in viewport: ${
+      totalElements - visibleElementCount
+    }`
+    this.callbackCountSpan.textContent = `Mouse: ${mouse} Tab: ${tab}`
+    this.callbackCountSpan.title = `Total callbacks executed: Mouse: ${mouse}, Tab: ${tab}`
+  }
+
   public refreshElementList() {
     if (!this.elementListItemsContainer) return
 
@@ -403,10 +428,7 @@ export class DebuggerControlPanel {
     this.elementListItems.clear()
 
     const elementsMap = this.foresightManagerInstance.registeredElements
-
-    if (this.elementCountSpan) {
-      this.elementCountSpan.textContent = elementsMap.size.toString()
-    }
+    this.refreshRegisteredElementCountDisplay(elementsMap)
 
     if (elementsMap.size === 0) {
       this.elementListItemsContainer.innerHTML = "<em>No elements registered.</em>"
@@ -572,7 +594,7 @@ export class DebuggerControlPanel {
 
       <div class="debugger-section debugger-elements">
         <div class="debugger-section-header elements-list-header">
-          <h3>Registered Elements (<span id="element-count">0</span>)</h3>
+          <h3>Elements <span id="element-count"></span> <span id="callback-count"></span></h3>
            <button class="section-minimize-button">-</button>
         </div>
         <div class="debugger-section-content element-list">
@@ -625,6 +647,13 @@ export class DebuggerControlPanel {
       #debug-controls.minimized .info-icon {
         display: none;
       }
+
+      #element-count,#callback-count {
+        font-size: 12px;
+        color: #9e9e9e;
+      }
+
+
 
       .debugger-title-container {
         display: flex;
