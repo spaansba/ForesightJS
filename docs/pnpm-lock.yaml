@@ -1337,8 +1337,8 @@ packages:
     resolution: {integrity: sha512-+PmQX0PiAYPMeVYe237LJAYvOMYW1j2rH5YROyS3b4CTVJum34HfRvKvAzozHAQG0TnHNdUfY9nCeUyRAs//cw==}
     engines: {node: '>=14.16'}
 
-  '@thednp/position-observer@1.0.10':
-    resolution: {integrity: sha512-kZCpB110751TI8Qv9sufEvxDmrjrFLEnfzwQ6Qy9bI5ORjgGwYFasp4sHp8MGvi0DM+oiQno2bps2863bUwrQA==}
+  '@thednp/position-observer@1.0.11':
+    resolution: {integrity: sha512-G9eNhO00/wz74f35cnsTAK255mzH/VyKoLd0g+Ku0GUCl7srPZA5Ynflw/OtWnXU0k6WxKDvcb0nJwRFGAMtMg==}
     engines: {node: '>=16', pnpm: '>=8.6.0'}
 
   '@thednp/shorty@2.0.11':
@@ -3004,7 +3004,7 @@ packages:
     hasBin: true
 
   js.foresight@file:js.foresight-2.1.0.tgz:
-    resolution: {integrity: sha512-3OUMK660ktY0GwaldKkhEtPbBg9PVBShCHODJiugWuy29EBNH8gzOeSaB0sm3VBJo2PT/ltCONwa89tHgUb22Q==, tarball: file:js.foresight-2.1.0.tgz}
+    resolution: {integrity: sha512-rGBIJBW16mA0SnpiWBkU/xwavaAJ/cAjA7iVvyneX0mVsD74lIGVhF1YQ2rA4w68a7yY2hG257Bj07o+zvHzSQ==, tarball: file:js.foresight-2.1.0.tgz}
     version: 2.1.0
 
   jsesc@3.0.2:
@@ -7036,7 +7036,7 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@thednp/position-observer@1.0.10':
+  '@thednp/position-observer@1.0.11':
     dependencies:
       '@thednp/shorty': 2.0.11
 
@@ -8949,7 +8949,7 @@ snapshots:
 
   js.foresight@file:js.foresight-2.1.0.tgz:
     dependencies:
-      '@thednp/position-observer': 1.0.10
+      '@thednp/position-observer': 1.0.11
       tabbable: 6.2.0
 
   jsesc@3.0.2: {}

@@ -512,9 +512,9 @@ export class ForesightManager {
     this.updatePointerState(e)
 
     this.elements.forEach((currentData, element) => {
-      // if (!currentData.isIntersectingWithViewport) {
-      //   return
-      // }
+      if (!currentData.isIntersectingWithViewport) {
+        return
+      }
 
       if (!currentData.unregisterOnCallback) {
         this.handleMultiCallbackInteraction(currentData)

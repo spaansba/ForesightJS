@@ -20,12 +20,12 @@ export const Main = () => {
       <div className="px-8 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-wrap gap-8 justify-center mb-12">
-            {/* <ForesightButtonRegular name={"multi hit"} /> */}
+            <ForesightButtonRegular name={"multi hit"} />
             <ForesightButtonVisibility name="visibility" />
             <ForesightButtonResizeable name="resizeable" />
             <ForesightButtonRemoveable name="removeable" />
             <ForesightButtonNoName />
-            {/* <ForesightButtonVisibility name="visibility2" />
+            <ForesightButtonVisibility name="visibility2" />
             <ForesightButtonResizeable name="resizeable2" />
             <ForesightButtonRemoveable name="removeable2" />
             <ForesightButtonVisibility name="visibility3" />
@@ -35,7 +35,7 @@ export const Main = () => {
             <ForesightButtonVisibility name="visibility4" />
             <ForesightButtonResizeable name="resizeable4" />
             <ForesightButtonRemoveable name="removeable4" />
-            <ForesightButtonNoName /> */}
+            <ForesightButtonNoName />
           </div>
         </div>
       </div>
