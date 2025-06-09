@@ -42,9 +42,9 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 
-import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import PositionObserver from "./helpers/pos"
 import type { PositionObserverEntry } from "./helpers/pos"
+import PositionObserver from "@thednp/position-observer"
+import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.

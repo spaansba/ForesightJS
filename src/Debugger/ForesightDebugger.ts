@@ -76,8 +76,6 @@ export class ForesightDebugger {
       foresightManager.getManagerData.globalSettings.debuggerSettings
     )
 
-    // Add style sheet
-
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
   }
 
@@ -220,6 +218,7 @@ export class ForesightDebugger {
       return
     }
 
+    this.debugCallbackIndicator.style.display = "block"
     this.debugCallbackIndicator.style.left = `${whereToShow.left}px`
     this.debugCallbackIndicator.style.top = `${whereToShow.top}px`
     this.debugCallbackIndicator.style.width = `${whereToShow.right - whereToShow.left}px`
@@ -318,12 +317,13 @@ const debuggerCSS = `
       }
       .jsforesight-callback-indicator {
         /* position, top, left, will-change are now defined above */
-        border: 4px solid oklch(65% 0.22 280); /* Vibrant Violet */
+        border: 4px solid oklch(65% 0.22 280); 
         border-radius: 8px;
         box-sizing: border-box;
         pointer-events: none;
         opacity: 0;
         z-index: 10002;
+        display: none; 
       }
       .jsforesight-callback-indicator.animate {
         animation: jsforesight-callback-pulse 0.4s ease-out forwards;
