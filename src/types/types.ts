@@ -1,17 +1,10 @@
-import PositionObserver from "@thednp/position-observer"
+import type { PositionObserverEntry } from "../Manager/helpers/pos"
 
 export type Rect = {
   top: number
   left: number
   right: number
   bottom: number
-}
-
-type PositionObserverEntry = {
-  target: Element
-  boundingClientRect: DOMRect
-  clientHeight: number
-  clientWidth: number
 }
 
 /**

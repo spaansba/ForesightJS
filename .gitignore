@@ -2,4 +2,3 @@ node_modules
 dist
 notes.txt
 js.foresight-*
-src/manager/helpers/pos.ts

@@ -42,9 +42,7 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import PositionObserverExtended, {
-  type PositionObserverExtendedEntry,
-} from "./helpers/PositionObserverExtended"
+import PositionObserver from "@thednp/position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -105,7 +103,7 @@ export class ForesightManager {
   }
 
   private domObserver: MutationObserver | null = null
-  private positionObserver: PositionObserverExtended | null = null
+  private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
 
@@ -130,7 +128,7 @@ export class ForesightManager {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
-      positionObserverElements: this.positionObserver?.entries,
+      positionObserverElements: undefined,
     }
   }
 
@@ -706,25 +704,25 @@ export class ForesightManager {
     }
   }
 
-  private handlePositionChange = (
-    entries: PositionObserverExtendedEntry[],
-    _: PositionObserverExtended
-  ) => {
-    requestAnimationFrame(() => {
-      console.log("here")
-      entries.forEach((entry) => {
-        const elementData = this.elements.get(entry.target)
-        if (elementData) {
-          elementData.isIntersectingWithViewport = entry.isIntersecting
-          if (!entry.isIntersecting) {
-            if (this._globalSettings.debug) {
-              this.debugger?.removeElement(entry.target)
-            }
-          } else {
-            this.updateElementBounds(entry.boundingClientRect, elementData)
+  private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
+    console.log(
+      entries.reduce((acc, entry) => acc + (entry ? 1 : 0), 0),
+      "entries"
+    )
+    console.log(entries)
+    entries.forEach((entry) => {
+      console.log(entry)
+      const elementData = this.elements.get(entry.target)
+      if (elementData) {
+        elementData.isIntersectingWithViewport = entry.isIntersecting
+        if (!entry.isIntersecting) {
+          if (this._globalSettings.debug) {
+            this.debugger?.removeElement(entry.target)
           }
+        } else {
+          this.updateElementBounds(entry.boundingClientRect, elementData)
         }
-      })
+      }
     })
   }
 
@@ -755,7 +753,10 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    this.positionObserver = new PositionObserverExtended(this.handlePositionChange)
+    this.positionObserver = new PositionObserver(this.handlePositionChange, {
+      rootMargin: "50px",
+      callbackMode: "update",
+    })
 
     this.isSetup = true
   }
