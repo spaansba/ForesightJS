@@ -53,12 +53,14 @@ export class ForesightDebugger {
       "div",
       document.body,
       "",
+      "",
       "jsforesight-debugger-shadow-host"
     )
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
     this.debugContainer = createAndAppendElement(
       "div",
       this.shadowRoot,
+      "",
       "",
       "jsforesight-debug-container"
     )
