@@ -105,7 +105,6 @@ export class ForesightManager {
   }
 
   private domObserver: MutationObserver | null = null
-  private elementIntersectionObserver: IntersectionObserver | null = null
   private positionObserver: PositionObserverExtended | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
@@ -169,7 +168,7 @@ export class ForesightManager {
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
-    const rect = element.getBoundingClientRect()
+    // const rect = element.getBoundingClientRect()
     const elementData: ForesightElementData = {
       element: element,
       callback,
@@ -179,8 +178,7 @@ export class ForesightManager {
         total: 0,
       },
       elementBounds: {
-        originalRect: rect,
-        expandedRect: getExpandedRect(rect, normalizedHitSlop),
+        expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -191,14 +189,13 @@ export class ForesightManager {
       },
       name: name ?? element.id ?? "",
       unregisterOnCallback: unregisterOnCallback ?? true,
-      isIntersectingWithViewport: false,
+      isIntersectingWithViewport: true,
     }
 
     this.elements.set(element, elementData)
     // Always connect the observer After the element is registered to avoid race conditions
     //this.elementIntersectionObserver?.observe(element)
     this.positionObserver?.observe(element)
-
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
     }
@@ -632,37 +629,37 @@ export class ForesightManager {
     }
   }
 
-  private handleIntersection = (entries: IntersectionObserverEntry[]) => {
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
-      if (!elementData) {
-        return
-      }
-      elementData.isIntersectingWithViewport = entry.isIntersecting
-      if (entry.isIntersecting) {
-        elementData.elementBounds.originalRect = entry.boundingClientRect
-        elementData.elementBounds.expandedRect = getExpandedRect(
-          elementData.elementBounds.originalRect,
-          elementData.elementBounds.hitSlop
-        )
-        if (this.positionObserver) {
-          this.positionObserver?.observe(entry.target)
-        } else {
-          console.warn(
-            "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
-          )
-        }
-        if (this._globalSettings.debug) {
-          this.debugger?.createOrUpdateElementOverlay(elementData)
-        }
-      } else {
-        this.positionObserver?.unobserve(entry.target)
-        if (this._globalSettings.debug) {
-          this.debugger?.removeElement(entry.target)
-        }
-      }
-    }
-  }
+  // private handleIntersection = (entries: IntersectionObserverEntry[]) => {
+  //   for (const entry of entries) {
+  //     const elementData = this.elements.get(entry.target)
+  //     if (!elementData) {
+  //       return
+  //     }
+  //     elementData.isIntersectingWithViewport = entry.isIntersecting
+  //     if (entry.isIntersecting) {
+  //       elementData.elementBounds.originalRect = entry.boundingClientRect
+  //       elementData.elementBounds.expandedRect = getExpandedRect(
+  //         elementData.elementBounds.originalRect,
+  //         elementData.elementBounds.hitSlop
+  //       )
+  //       if (this.positionObserver) {
+  //         this.positionObserver?.observe(entry.target)
+  //       } else {
+  //         console.warn(
+  //           "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
+  //         )
+  //       }
+  //       if (this._globalSettings.debug) {
+  //         this.debugger?.createOrUpdateElementOverlay(elementData)
+  //       }
+  //     } else {
+  //       this.positionObserver?.unobserve(entry.target)
+  //       if (this._globalSettings.debug) {
+  //         this.debugger?.removeElement(entry.target)
+  //       }
+  //     }
+  //   }
+  // }
 
   /**
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
@@ -713,19 +710,21 @@ export class ForesightManager {
     entries: PositionObserverExtendedEntry[],
     _: PositionObserverExtended
   ) => {
-    entries.forEach((entry) => {
-      const elementData = this.elements.get(entry.target)
-
-      if (elementData) {
-        elementData.isIntersectingWithViewport = entry.isIntersecting
-        if (!entry.isIntersecting) {
-          if (this._globalSettings.debug) {
-            this.debugger?.removeElement(entry.target)
+    requestAnimationFrame(() => {
+      console.log("here")
+      entries.forEach((entry) => {
+        const elementData = this.elements.get(entry.target)
+        if (elementData) {
+          elementData.isIntersectingWithViewport = entry.isIntersecting
+          if (!entry.isIntersecting) {
+            if (this._globalSettings.debug) {
+              this.debugger?.removeElement(entry.target)
+            }
+          } else {
+            this.updateElementBounds(entry.boundingClientRect, elementData)
           }
-        } else {
-          this.updateElementBounds(entry.boundingClientRect, elementData)
         }
-      }
+      })
     })
   }
 
@@ -758,14 +757,6 @@ export class ForesightManager {
     // Handles scrolling
     this.positionObserver = new PositionObserverExtended(this.handlePositionChange)
 
-    // Avoid doing calculations on elements that arent in the viewport.
-    // Mostly used to observe/unobserve the positionObserver for elements not visible
-    this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
-      root: null,
-      threshold: 0.0,
-      rootMargin: "50px",
-    })
-
     this.isSetup = true
   }
 
@@ -782,8 +773,6 @@ export class ForesightManager {
     }
     this.domObserver?.disconnect()
     this.domObserver = null
-    this.elementIntersectionObserver?.disconnect()
-    this.elementIntersectionObserver = null
     this.positionObserver?.disconnect()
     this.positionObserver = null
   }

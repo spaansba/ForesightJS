@@ -1,23 +1,10 @@
 import type { PositionObserverEntry, PositionObserverOptions } from "@thednp/position-observer"
 import PositionObserver from "@thednp/position-observer"
 
-const errorString = "PositionObserver Error"
-
-// FIX 1: Self-contained helper function to replace the missing dependency.
-const isElement = (el: any): el is Element => {
-  return el instanceof Element
-}
-
-/**
- * The extended entry type that includes intersection status.
- */
 export type PositionObserverExtendedEntry = PositionObserverEntry & {
   isIntersecting: boolean
 }
 
-/**
- * The extended callback type that uses the new entry type.
- */
 export type PositionObserverExtendedCallback = (
   entries: PositionObserverExtendedEntry[],
   observer: PositionObserverExtended
@@ -43,25 +30,19 @@ export default class PositionObserverExtended extends PositionObserver {
   }
 
   public observe = (target: Element) => {
-    if (!isElement(target)) {
-      throw new Error(`${errorString}: ${target} is not an instance of Element.`)
-    }
     if (!this._root.contains(target)) return
-
-    // FIX 2: Explicitly type the resolved Promise value.
     this._new(target).then(({ boundingClientRect, isIntersecting }: IntersectionObserverEntry) => {
       if (boundingClientRect && !this.getEntry(target)) {
         const { clientWidth, clientHeight } = this._root
-
         this.entries.set(target, {
           target,
           boundingClientRect,
-          clientWidth,
+          clientWidth: 0,
           clientHeight,
           isIntersecting,
         })
+        console.log(isIntersecting)
       }
-
       if (!this._tick) this._tick = requestAnimationFrame(this._runCallback)
     })
   }
@@ -69,8 +50,10 @@ export default class PositionObserverExtended extends PositionObserver {
   protected _runCallback = () => {
     if (!this.entries.size) {
       this._tick = 0
+
       return
     }
+
     const { clientWidth, clientHeight } = this._root
 
     const queue = new Promise<PositionObserverExtendedEntry[]>((resolve) => {
@@ -85,7 +68,6 @@ export default class PositionObserverExtended extends PositionObserver {
         }) => {
           if (!this._root.contains(target)) return
 
-          // FIX 3: Explicitly type the resolved Promise value here as well.
           this._new(target).then(
             ({ boundingClientRect, isIntersecting }: IntersectionObserverEntry) => {
               if (!isIntersecting) {
@@ -102,15 +84,13 @@ export default class PositionObserverExtended extends PositionObserver {
                 }
                 return
               }
-
               const { left, top } = boundingClientRect
 
               if (
                 oldBoundingBox.top !== top ||
                 oldBoundingBox.left !== left ||
                 oldWidth !== clientWidth ||
-                oldHeight !== clientHeight ||
-                !oldIsIntersecting
+                oldHeight !== clientHeight
               ) {
                 const newEntry: PositionObserverExtendedEntry = {
                   target,
@@ -136,7 +116,4 @@ export default class PositionObserverExtended extends PositionObserver {
       this._runCallback()
     })
   }
-
-  public getEntry = (target: Element): PositionObserverExtendedEntry | undefined =>
-    this.entries.get(target)
 }
