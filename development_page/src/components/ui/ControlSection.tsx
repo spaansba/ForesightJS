@@ -40,6 +40,24 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       type: "small-button",
     },
     {
+      id: "main-thread-dirty",
+      label: "Main Thread Dirty",
+      description: "MAke main thread dirty for 10s",
+      onClick: () => {
+        let result = 0
+        let i = 0
+        const start = Date.now()
+        while (Date.now() - start < 10000) {
+          // Run for exactly 10 seconds
+          result += Math.sqrt(Math.random() * 1000000)
+          i++
+        }
+        console.log(`Result: ${result}, Iterations: ${i}`)
+      },
+      isActive: true,
+      type: "small-button",
+    },
+    {
       id: "toggle-debug",
       label: "Toggle Debug Mode",
       description: "Toggle Debug Mode",
