@@ -298,6 +298,7 @@ const debuggerCSS = `
       .jsforesight-callback-indicator,
       .jsforesight-mouse-predicted,
       .jsforesight-trajectory-line {
+        pointer-events: none;
         position: absolute;
         top: 0;
         left: 0;
