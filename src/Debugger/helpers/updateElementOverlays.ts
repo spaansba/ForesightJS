@@ -11,9 +11,6 @@ export function updateElementOverlays(
   const { expandedOverlay, nameLabel } = currentOverlays
   const { expandedRect } = newData.elementBounds
 
-  // elementOverlay.classList.toggle("trajectory-hit", newData.trajectoryHitData.isTrajectoryHit)
-  // elementOverlay.classList.toggle("active", newData.isHovering)
-
   const expandedWidth = expandedRect.right - expandedRect.left
   const expandedHeight = expandedRect.bottom - expandedRect.top
   expandedOverlay.style.width = `${expandedWidth}px`

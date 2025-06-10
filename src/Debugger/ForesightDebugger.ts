@@ -25,9 +25,8 @@ export type ElementOverlays = {
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
 
-  // Keep these properties, but they will be assigned in _setupDOM
   private foresightManagerInstance: ForesightManager
-  private shadowHost!: HTMLElement // Use '!' to indicate it will be definitely assigned
+  private shadowHost!: HTMLElement
   private shadowRoot!: ShadowRoot
   private debugContainer!: HTMLElement
   private controlPanel!: DebuggerControlPanel
@@ -112,15 +111,16 @@ export class ForesightDebugger {
     return instance
   }
 
-  private createElementOverlays(element: ForesightElement) {
+  private createElementOverlays(elementData: ForesightElementData) {
     const expandedOverlay = createAndAppendElement(
       "div",
       this.debugContainer!,
-      "jsforesight-expanded-overlay"
+      "jsforesight-expanded-overlay",
+      elementData.name
     )
     const nameLabel = createAndAppendElement("div", this.debugContainer, "jsforesight-name-label")
     const overlays = { expandedOverlay, nameLabel }
-    this.debugElementOverlays.set(element, overlays)
+    this.debugElementOverlays.set(elementData.element, overlays)
     return overlays
   }
 
@@ -132,7 +132,7 @@ export class ForesightDebugger {
     })
     let overlays = this.debugElementOverlays.get(newData.element)
     if (!overlays) {
-      overlays = this.createElementOverlays(newData.element)
+      overlays = this.createElementOverlays(newData)
     }
     updateElementOverlays(
       overlays,
