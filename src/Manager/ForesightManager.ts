@@ -42,7 +42,8 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import PositionObserver from "@thednp/position-observer"
+import PositionObserver from "./helpers/pos"
+// import PositionObserver from "@thednp/position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -128,7 +129,7 @@ export class ForesightManager {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
-      positionObserverElements: undefined,
+      positionObserverElements: this.positionObserver?.entries,
     }
   }
 
@@ -166,7 +167,7 @@ export class ForesightManager {
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
-    // const rect = element.getBoundingClientRect()
+
     const elementData: ForesightElementData = {
       element: element,
       callback,
@@ -191,9 +192,9 @@ export class ForesightManager {
     }
 
     this.elements.set(element, elementData)
-    // Always connect the observer After the element is registered to avoid race conditions
-    //this.elementIntersectionObserver?.observe(element)
+
     this.positionObserver?.observe(element)
+    console.log(this.positionObserver?.getEntry(element)?.boundingClientRect)
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
     }
@@ -705,25 +706,31 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
-    console.log(
-      entries.reduce((acc, entry) => acc + (entry ? 1 : 0), 0),
-      "entries"
-    )
-    console.log(entries)
-    entries.forEach((entry) => {
-      console.log(entry)
+    for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
-      if (elementData) {
-        elementData.isIntersectingWithViewport = entry.isIntersecting
-        if (!entry.isIntersecting) {
-          if (this._globalSettings.debug) {
-            this.debugger?.removeElement(entry.target)
-          }
-        } else {
-          this.updateElementBounds(entry.boundingClientRect, elementData)
+      if (!elementData) continue
+
+      const wasIntersecting = elementData.isIntersectingWithViewport
+      const isNowIntersecting = entry.isIntersecting
+      elementData.isIntersectingWithViewport = isNowIntersecting
+      if (!isNowIntersecting) {
+        if (this._globalSettings.debug && wasIntersecting) {
+          this.debugger?.removeElement(entry.target)
         }
+        continue
       }
-    })
+
+      this.updateElementBounds(entry.boundingClientRect, elementData)
+
+      if (
+        isPointInRectangle(
+          this.trajectoryPositions.currentPoint,
+          elementData?.elementBounds.expandedRect
+        )
+      ) {
+        this.callCallback(elementData, "mouse")
+      }
+    }
   }
 
   private initializeGlobalListeners() {
@@ -754,7 +761,7 @@ export class ForesightManager {
     // Handles resize of viewport
     // Handles scrolling
     this.positionObserver = new PositionObserver(this.handlePositionChange, {
-      rootMargin: "50px",
+      rootMargin: "10px",
       callbackMode: "update",
     })
 

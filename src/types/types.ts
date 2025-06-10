@@ -1,5 +1,3 @@
-import type { PositionObserverEntry } from "../Manager/helpers/pos"
-
 export type Rect = {
   top: number
   left: number
@@ -120,7 +118,7 @@ export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-  positionObserverElements: Map<Element, PositionObserverEntry> | undefined
+  positionObserverElements: Map<Element, IntersectionObserverEntry> | undefined
 }
 
 type BaseForesightManagerSettings = {

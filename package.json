@@ -36,7 +36,10 @@
     "interaction-prediction",
     "cursor-prediction",
     "vanilla-javascript",
-    "prefetching"
+    "prefetching",
+    "keyboard-tracking",
+    "keyboard-prefetching",
+    "tab-prefetching"
   ],
   "author": "Bart Spaans",
   "license": "MIT",
@@ -54,6 +57,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@thednp/position-observer": "github:thednp/position-observer",
     "tabbable": "^6.2.0"
   }
 }
