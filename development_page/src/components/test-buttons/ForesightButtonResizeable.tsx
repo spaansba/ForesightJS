@@ -19,7 +19,7 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         <BaseForesightButton
           registerOptions={{
             callback: () => {
-              // console.log(name)
+              console.log(name)
             },
             hitSlop: 30,
             name: name,

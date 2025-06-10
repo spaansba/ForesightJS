@@ -41,9 +41,10 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
-import PositionObserver from "@thednp/position-observer"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import type { PositionObserverEntry } from "@thednp/position-observer"
+import PositionObserverExtended, {
+  type PositionObserverExtendedEntry,
+} from "./helpers/PositionObserverExtended"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -105,7 +106,7 @@ export class ForesightManager {
 
   private domObserver: MutationObserver | null = null
   private elementIntersectionObserver: IntersectionObserver | null = null
-  private positionObserver: PositionObserver | null = null
+  private positionObserver: PositionObserverExtended | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
 
@@ -195,8 +196,8 @@ export class ForesightManager {
 
     this.elements.set(element, elementData)
     // Always connect the observer After the element is registered to avoid race conditions
-    this.elementIntersectionObserver?.observe(element)
-    // this.positionObserver?.observe(element)
+    //this.elementIntersectionObserver?.observe(element)
+    this.positionObserver?.observe(element)
 
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
@@ -218,8 +219,7 @@ export class ForesightManager {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
-    this.elementIntersectionObserver?.unobserve(element)
-
+    this.positionObserver?.unobserve(element)
     this.elements.delete(element)
 
     if (this.debugger) {
@@ -702,17 +702,29 @@ export class ForesightManager {
         expandedRect,
       },
     })
+
     if (this.debugger) {
       const updatedData = this.elements.get(elementData.element)
       if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
     }
   }
 
-  private handlePositionChange = (entries: PositionObserverEntry[], _: PositionObserver) => {
+  private handlePositionChange = (
+    entries: PositionObserverExtendedEntry[],
+    _: PositionObserverExtended
+  ) => {
     entries.forEach((entry) => {
       const elementData = this.elements.get(entry.target)
+
       if (elementData) {
-        this.updateElementBounds(entry.boundingClientRect, elementData)
+        elementData.isIntersectingWithViewport = entry.isIntersecting
+        if (!entry.isIntersecting) {
+          if (this._globalSettings.debug) {
+            this.debugger?.removeElement(entry.target)
+          }
+        } else {
+          this.updateElementBounds(entry.boundingClientRect, elementData)
+        }
       }
     })
   }
@@ -732,7 +744,7 @@ export class ForesightManager {
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 
-    // Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
+    //Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
       childList: true,
@@ -744,7 +756,7 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    this.positionObserver = new PositionObserver(this.handlePositionChange)
+    this.positionObserver = new PositionObserverExtended(this.handlePositionChange)
 
     // Avoid doing calculations on elements that arent in the viewport.
     // Mostly used to observe/unobserve the positionObserver for elements not visible
