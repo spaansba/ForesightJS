@@ -1,14 +1,18 @@
+type attributes = {
+  className?: string
+  data?: string
+  id?: string
+}
+
 export function createAndAppendElement(
   tag: string,
   parent: Node,
-  className?: string,
-  data?: string,
-  id?: string
+  attributes: attributes
 ): HTMLElement {
   const element = document.createElement(tag)
-  if (id) element.id = id
-  if (className) element.className = className
-  if (data) element.setAttribute("data-value", data)
+  if (attributes.id) element.id = attributes.id
+  if (attributes.className) element.className = attributes.className
+  if (attributes.data) element.setAttribute("data-value", attributes.data)
   return parent.appendChild(element)
 }
 

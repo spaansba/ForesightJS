@@ -49,31 +49,19 @@ export class ForesightDebugger {
       return
     }
 
-    this.shadowHost = createAndAppendElement(
-      "div",
-      document.body,
-      "",
-      "",
-      "jsforesight-debugger-shadow-host"
-    )
+    this.shadowHost = createAndAppendElement("div", document.body, {
+      id: "jsforesight-debugger-shadow-host",
+    })
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
-    this.debugContainer = createAndAppendElement(
-      "div",
-      this.shadowRoot,
-      "",
-      "",
-      "jsforesight-debug-container"
-    )
-    this.debugPredictedMouseIndicator = createAndAppendElement(
-      "div",
-      this.debugContainer,
-      "jsforesight-mouse-predicted"
-    )
-    this.debugTrajectoryLine = createAndAppendElement(
-      "div",
-      this.debugContainer,
-      "jsforesight-trajectory-line"
-    )
+    this.debugContainer = createAndAppendElement("div", this.shadowRoot, {
+      id: "jsforesight-debug-container",
+    })
+    this.debugPredictedMouseIndicator = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-mouse-predicted",
+    })
+    this.debugTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-trajectory-line",
+    })
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
       this.shadowRoot,
@@ -114,13 +102,13 @@ export class ForesightDebugger {
   }
 
   private createElementOverlays(elementData: ForesightElementData) {
-    const expandedOverlay = createAndAppendElement(
-      "div",
-      this.debugContainer!,
-      "jsforesight-expanded-overlay",
-      elementData.name
-    )
-    const nameLabel = createAndAppendElement("div", this.debugContainer, "jsforesight-name-label")
+    const expandedOverlay = createAndAppendElement("div", this.debugContainer!, {
+      className: "jsforesight-expanded-overlay",
+      data: elementData.name,
+    })
+    const nameLabel = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-name-label",
+    })
     const overlays = { expandedOverlay, nameLabel }
     this.debugElementOverlays.set(elementData.element, overlays)
     return overlays
@@ -240,11 +228,9 @@ export class ForesightDebugger {
       overlays.animation.overlay.remove()
     }
 
-    const animationOverlay = createAndAppendElement(
-      "div",
-      this.debugContainer,
-      "jsforesight-callback-indicator"
-    )
+    const animationOverlay = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-callback-indicator",
+    })
 
     const { left, top, right, bottom } = elementData.elementBounds.expandedRect
     const width = right - left

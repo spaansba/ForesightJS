@@ -113,6 +113,16 @@ Since ForesightJS is a relatively new and unknown library, most AI assistants an
 
 Additionally, every page in the documentation is available in markdown format (try adding .md to any documentation URL). You can share these markdown files as context with AI assistants, though all this information is also consolidated in the llms.txt file for convenience.
 
+## Future of ForesightJS
+
+ForesightJS will continue to evolve with a focus on staying as lightweight and performant as possible. To achieve this the plan is to decouple the debugger and make it its own standalone dev package, reducing the core library size even further.
+
+Beyond size optimization, performance remains central to every development decision. Each release will focus on improving prediction accuracy while reducing computational overhead, ensuring ForesightJS stays practical for production environments. We also want to move as much processing as possible off the main thread to keep user interfaces responsive.
+
+These performance improvements go hand in hand with expanding accessibility across different development environments. The documentation will grow to include more framework integrations beyond the current Next.js and React Router implementations, making ForesightJS accessible to developers working with different technology stacks and routing solutions.
+
+All of these efforts benefit from community input. [Contributions](/CONTRIBUTING.md) are always welcome, whether for new framework integrations, performance improvements, or feature ideas.
+
 # Contributing
 
 Please see the [contributing guidelines](/CONTRIBUTING.md)
