@@ -23,9 +23,9 @@ When you over simplify prefetching it exists of three parts.
 ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
 You supply the **What** and **How** inside your `callback` when you register an element.
 
-### [ForesightJS docs (with interactive demo)](https://foresightjs.com/)
+### [Playground](https://foresightjs.com/)
 
-![](https://github.com/spaansba/ForesightJS/blob/main/static/ForesightJSDemo.gif)
+![](https://github.com/user-attachments/assets/36c81a82-fee7-43d6-ba1e-c48214136f90)
 _In the GIF above, [debug mode](https://foresightjs.com/docs/getting_started/debug) is on. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
 
 ## Download
