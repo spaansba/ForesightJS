@@ -13,7 +13,6 @@ import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
 
 export type ElementOverlays = {
-  linkOverlay: HTMLElement
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
   animation?: {
@@ -33,7 +32,7 @@ export class ForesightDebugger {
   private debugContainer!: HTMLElement
   private controlPanel!: DebuggerControlPanel
 
-  private debugLinkOverlays: Map<ForesightElement, ElementOverlays> = new Map()
+  private debugElementOverlays: Map<ForesightElement, ElementOverlays> = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
   private lastElementData: Map<
@@ -114,19 +113,14 @@ export class ForesightDebugger {
   }
 
   private createElementOverlays(element: ForesightElement) {
-    const linkOverlay = createAndAppendElement(
-      "div",
-      this.debugContainer!,
-      "jsforesight-link-overlay"
-    )
     const expandedOverlay = createAndAppendElement(
       "div",
       this.debugContainer!,
       "jsforesight-expanded-overlay"
     )
     const nameLabel = createAndAppendElement("div", this.debugContainer, "jsforesight-name-label")
-    const overlays = { linkOverlay, expandedOverlay, nameLabel }
-    this.debugLinkOverlays.set(element, overlays)
+    const overlays = { expandedOverlay, nameLabel }
+    this.debugElementOverlays.set(element, overlays)
     return overlays
   }
 
@@ -136,7 +130,7 @@ export class ForesightDebugger {
       isHovering: newData.isHovering,
       isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
     })
-    let overlays = this.debugLinkOverlays.get(newData.element)
+    let overlays = this.debugElementOverlays.get(newData.element)
     if (!overlays) {
       overlays = this.createElementOverlays(newData.element)
     }
@@ -151,7 +145,7 @@ export class ForesightDebugger {
 
   public toggleNameTagVisibility() {
     this.foresightManagerInstance.registeredElements.forEach((elementData) => {
-      const overlays = this.debugLinkOverlays.get(elementData.element)
+      const overlays = this.debugElementOverlays.get(elementData.element)
       if (!overlays) return
       updateElementOverlays(
         overlays,
@@ -172,12 +166,12 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   public removeElement(element: ForesightElement) {
-    const overlays = this.debugLinkOverlays.get(element)
+    const overlays = this.debugElementOverlays.get(element)
     if (overlays) {
-      overlays.linkOverlay.remove()
+      // overlays.elementOverlay.remove()
       overlays.expandedOverlay.remove()
       overlays.nameLabel.remove()
-      this.debugLinkOverlays.delete(element)
+      this.debugElementOverlays.delete(element)
     }
     this.lastElementData.delete(element)
     this.controlPanel?.refreshElementList()
@@ -218,7 +212,7 @@ export class ForesightDebugger {
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
     // Use a single transform to position, rotate, and scale the line,
-    // avoiding reflow from top/left/width changes.
+    // avoiding reflow from top/left changes.
     this.debugTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
     this.debugTrajectoryLine.style.width = `${length}px`
     this.debugTrajectoryLine.style.display = "block"
@@ -234,12 +228,11 @@ export class ForesightDebugger {
   }
 
   public showCallbackAnimation(elementData: ForesightElementData) {
-    const overlays = this.debugLinkOverlays.get(elementData.element)
+    const overlays = this.debugElementOverlays.get(elementData.element)
     if (!overlays) {
       return
     }
 
-    // Cleanup Previous Animation
     if (overlays.animation) {
       clearTimeout(overlays.animation.timeoutId)
       overlays.animation.overlay.remove()
@@ -283,7 +276,7 @@ export class ForesightDebugger {
   public cleanup() {
     this.controlPanel?.cleanup()
     this.shadowHost?.remove()
-    this.debugLinkOverlays.clear()
+    this.debugElementOverlays.clear()
     this.lastElementData.clear()
     this.shadowHost = null!
     this.shadowRoot = null!
@@ -300,7 +293,6 @@ const debuggerCSS = `
         pointer-events: none; z-index: 9999;
       }
 
-      .jsforesight-link-overlay, 
       .jsforesight-expanded-overlay, 
       .jsforesight-name-label, 
       .jsforesight-callback-indicator,
@@ -310,23 +302,6 @@ const debuggerCSS = `
         top: 0;
         left: 0;
         will-change: transform; 
-      }
-
-      .jsforesight-link-overlay {
-        border: 2px solid rgba(100, 116, 139, 0.2);
-        background-color: rgba(100, 116, 139, 0.08);
-        box-sizing: border-box;
-        border-radius: 6px;
-        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-      }
-      .jsforesight-link-overlay.active {
-        border-color: rgba(100, 116, 139, 0.5);
-        background-color: rgba(100, 116, 139, 0.15);
-      }
-      .jsforesight-link-overlay.trajectory-hit {
-        border-color: oklch(65% 0.2 250);
-        background-color: rgba(79, 70, 229, 0.15);
-        box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
       }
       .jsforesight-expanded-overlay {
         border: 1px dashed rgba(100, 116, 139, 0.4);

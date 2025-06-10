@@ -8,11 +8,11 @@ export function updateElementOverlays(
   newData: ForesightElementData,
   showNameTags: boolean
 ) {
-  const { linkOverlay, expandedOverlay, nameLabel } = currentOverlays
+  const { expandedOverlay, nameLabel } = currentOverlays
   const { expandedRect } = newData.elementBounds
 
-  linkOverlay.classList.toggle("trajectory-hit", newData.trajectoryHitData.isTrajectoryHit)
-  linkOverlay.classList.toggle("active", newData.isHovering)
+  // elementOverlay.classList.toggle("trajectory-hit", newData.trajectoryHitData.isTrajectoryHit)
+  // elementOverlay.classList.toggle("active", newData.isHovering)
 
   const expandedWidth = expandedRect.right - expandedRect.left
   const expandedHeight = expandedRect.bottom - expandedRect.top
