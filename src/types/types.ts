@@ -106,13 +106,25 @@ export type ForesightElementData = Required<
   element: ForesightElement
 }
 
-export type CallbackHits = {
-  total: number
-  mouse: number
-  tab: number
+export type MouseCallbackCounts = {
+  hover: number
+  trajectory: number
 }
 
-export type hitType = "mouse" | "tab"
+export type TabCallbackCounts = {
+  reverse: number
+  forwards: number
+}
+
+export type CallbackHits = {
+  total: number
+  mouse: MouseCallbackCounts
+  tab: TabCallbackCounts
+}
+
+export type HitType =
+  | { kind: "mouse"; subType: keyof MouseCallbackCounts }
+  | { kind: "tab"; subType: keyof TabCallbackCounts }
 
 export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>

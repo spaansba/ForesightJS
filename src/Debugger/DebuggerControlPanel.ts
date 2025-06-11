@@ -411,15 +411,15 @@ export class DebuggerControlPanel {
       }
     })
     const totalElements = elementsMap.size
-    const { tab, mouse } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+    const { tab, mouse, total } = this.foresightManagerInstance.getManagerData.globalCallbackHits
     this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
     this.elementCountSpan.title = `Total registered elements: ${totalElements}, visible in viewport: ${visibleElementCount}, not in viewport: ${
       totalElements - visibleElementCount
     }`
-    this.callbackCountSpan.textContent = `Mouse: ${mouse} Tab: ${tab}`
-    this.callbackCountSpan.title = `Total callbacks executed: Mouse: ${mouse}, Tab: ${tab}, total: ${
-      mouse + tab
+    this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
+      tab.forwards + tab.reverse
     }`
+    this.callbackCountSpan.title = `Total callbacks executed: Mouse Trajectory: ${mouse.trajectory}, Mouse Hover: ${mouse.hover}, Tab Forwards: ${tab.forwards}, Tab Reverse: ${tab.reverse}, total: ${total}`
   }
 
   public refreshElementList() {

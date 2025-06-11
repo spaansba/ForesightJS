@@ -8,4 +8,5 @@ export type {
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
   ForesightElementData,
+  CallbackHits as ForesightCallbackHits,
 } from "./types/types"

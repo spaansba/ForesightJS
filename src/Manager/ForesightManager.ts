@@ -10,12 +10,13 @@ import type {
   ForesightManagerSettings,
   ForesightRegisterOptions,
   ForesightRegisterResult,
+  HitType,
   NumericSettingKeys,
   TrajectoryPositions,
   UpdateForsightManagerSettings,
-  hitType,
 } from "../types/types"
 import {
+  DEFAULT_CALLBACKHITS,
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
@@ -69,8 +70,14 @@ export class ForesightManager {
   private isSetup: boolean = false
   private debugger: ForesightDebugger | null = null
   private _globalCallbackHits: CallbackHits = {
-    mouse: 0,
-    tab: 0,
+    mouse: {
+      hover: 0,
+      trajectory: 0,
+    },
+    tab: {
+      forwards: 0,
+      reverse: 0,
+    },
     total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
@@ -171,8 +178,14 @@ export class ForesightManager {
       element: element,
       callback,
       callbackHits: {
-        mouse: 0,
-        tab: 0,
+        mouse: {
+          hover: 0,
+          trajectory: 0,
+        },
+        tab: {
+          forwards: 0,
+          reverse: 0,
+        },
         total: 0,
       },
       elementBounds: {
@@ -427,7 +440,8 @@ export class ForesightManager {
     // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
     if (!this._globalSettings.enableMousePrediction) {
       if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
-        this.callCallback(elementData, "mouse")
+        this.callCallback(elementData, { kind: "mouse", subType: "hover" })
+        return
       }
     } else if (
       lineSegmentIntersectsRect(
@@ -436,7 +450,7 @@ export class ForesightManager {
         expandedRect
       )
     ) {
-      this.callCallback(elementData, "mouse")
+      this.callCallback(elementData, { kind: "mouse", subType: "trajectory" })
     }
   }
 
@@ -469,7 +483,10 @@ export class ForesightManager {
       )
 
     if (isNewPhysicalHover || isNewTrajectoryHit) {
-      this.callCallback(elementData, "mouse")
+      this.callCallback(elementData, {
+        kind: "mouse",
+        subType: isNewPhysicalHover ? "hover" : "trajectory",
+      })
     }
 
     const hasStateChanged = isHovering !== elementData.isHovering || isNewTrajectoryHit
@@ -572,9 +589,8 @@ export class ForesightManager {
     const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
 
     // Determine the range of elements to check based on the tab direction and offset
-    const tabOffset = this.lastKeyDown.shiftKey
-      ? -this._globalSettings.tabOffset
-      : this._globalSettings.tabOffset
+    const isReversed = this.lastKeyDown.shiftKey
+    const tabOffset = isReversed ? -this._globalSettings.tabOffset : this._globalSettings.tabOffset
 
     this.lastKeyDown = null
     const elementsToPredict: ForesightElement[] = []
@@ -590,29 +606,36 @@ export class ForesightManager {
           : i <= currentIndex && i >= currentIndex + tabOffset
 
       if (isInRange && this.elements.has(element as ForesightElement)) {
-        for (let j = 0; j < tabOffset; j++) {
-          elementsToPredict.push(tabbableElements[i + j] as ForesightElement)
-        }
+        // for (let j = 0; j < tabOffset; j++) {
+        elementsToPredict.push(tabbableElements[i] as ForesightElement)
+        // }
       }
     }
 
     elementsToPredict.forEach((element) => {
-      this.callCallback(this.elements.get(element), "tab")
+      this.callCallback(this.elements.get(element), {
+        kind: "tab",
+        subType: isReversed ? "reverse" : "forwards",
+      })
     })
   }
 
-  private updateHitCounters(elementData: ForesightElementData, hitType: hitType) {
-    if (hitType === "mouse") {
-      elementData.callbackHits.mouse++
-      this._globalCallbackHits.mouse++
-    } else if (hitType === "tab") {
-      elementData.callbackHits.tab++
-      this._globalCallbackHits.tab++
+  private updateHitCounters(elementData: ForesightElementData, hitType: HitType) {
+    switch (hitType.kind) {
+      case "mouse":
+        elementData.callbackHits.mouse[hitType.subType]++
+        this._globalCallbackHits.mouse[hitType.subType]++
+        break
+      case "tab":
+        elementData.callbackHits.tab[hitType.subType]++
+        this._globalCallbackHits.tab[hitType.subType]++
+        break
     }
+    elementData.callbackHits.total++
     this._globalCallbackHits.total++
   }
 
-  private callCallback(elementData: ForesightElementData | undefined, hitType: hitType) {
+  private callCallback(elementData: ForesightElementData | undefined, hitType: HitType) {
     if (elementData) {
       this.updateHitCounters(elementData, hitType)
       elementData.callback()
@@ -728,7 +751,7 @@ export class ForesightManager {
           elementData?.elementBounds.expandedRect
         )
       ) {
-        this.callCallback(elementData, "mouse")
+        this.callCallback(elementData, { kind: "mouse", subType: "hover" })
       }
     }
   }
