@@ -42,9 +42,8 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import PositionObserver from "./helpers/pos"
-// import PositionObserver from "@thednp/position-observer"
-
+import PositionObserver from "@thednp/position-observer"
+// import PositionObserver from "./helpers/pos"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -194,7 +193,7 @@ export class ForesightManager {
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)
-    console.log(this.positionObserver?.getEntry(element)?.boundingClientRect)
+    // console.log(this.positionObserver?.getEntry(element)?.boundingClientRect)
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
     }
@@ -570,20 +569,19 @@ export class ForesightManager {
 
     const tabbableElements = tabbable(document.documentElement)
     const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
+    console.log(currentIndex)
 
     // Determine the range of elements to check based on the tab direction and offset
     const tabOffset = this.lastKeyDown.shiftKey
       ? -this._globalSettings.tabOffset
       : this._globalSettings.tabOffset
 
-    // Clear the lastKeyDown as we've processed this focus event
     this.lastKeyDown = null
     const elementsToPredict: ForesightElement[] = []
 
     // Iterate through the tabbable elements to find those within the prediction range
     for (let i = 0; i < tabbableElements.length; i++) {
       const element = tabbableElements[i]
-
       // Check if the current element is within the range defined by the current focus and the tabOffset
       // The range includes the element that just received focus (at currentIndex)
       let isInRange =
@@ -592,7 +590,9 @@ export class ForesightManager {
           : i <= currentIndex && i >= currentIndex + tabOffset
 
       if (isInRange && this.elements.has(element as ForesightElement)) {
-        elementsToPredict.push(element as ForesightElement)
+        for (let j = 0; j < tabOffset; j++) {
+          elementsToPredict.push(tabbableElements[i + j] as ForesightElement)
+        }
       }
     }
 
