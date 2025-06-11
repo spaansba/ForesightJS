@@ -15,7 +15,7 @@ export function updateElementOverlays(
   const expandedHeight = expandedRect.bottom - expandedRect.top
   expandedOverlay.style.width = `${expandedWidth}px`
   expandedOverlay.style.height = `${expandedHeight}px`
-  expandedOverlay.style.transform = `translate(${expandedRect.left}px, ${expandedRect.top}px)`
+  expandedOverlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
   expandedOverlay.style.display = "block"
 
   nameLabel.textContent = newData.name
@@ -23,6 +23,6 @@ export function updateElementOverlays(
     nameLabel.style.display = "none"
   } else {
     nameLabel.style.display = "block"
-    nameLabel.style.transform = `translate(${expandedRect.left}px, ${expandedRect.top - 25}px)`
+    nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top - 25}px, 0)`
   }
 }

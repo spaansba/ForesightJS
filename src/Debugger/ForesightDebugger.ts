@@ -185,7 +185,7 @@ export class ForesightDebugger {
 
     // Use transform for positioning to avoid layout reflow.
     // The CSS handles centering the element with `translate(-50%, -50%)`.
-    this.predictedMouseIndicator.style.transform = `translate(${predictedPoint.x}px, ${predictedPoint.y}px) translate(-50%, -50%)`
+    this.predictedMouseIndicator.style.transform = `translate3d(${predictedPoint.x}px, ${predictedPoint.y}px, 0) translate3d(-50%, -50%, 0)`
     this.predictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
 
     // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
@@ -207,21 +207,20 @@ export class ForesightDebugger {
 
     // Use a single transform to position, rotate, and scale the line,
     // avoiding reflow from top/left changes.
-    this.mouseTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.mouseTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
     this.mouseTrajectoryLine.style.width = `${length}px`
     this.mouseTrajectoryLine.style.display = "block"
   }
 
   public updateScrollTrajectoryVisuals(currentPoint: Point, predictedScrollPoint: Point) {
     if (!this.scrollTrajectoryLine) return
-
     const dx = predictedScrollPoint.x - currentPoint.x
     const dy = predictedScrollPoint.y - currentPoint.y
 
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-    this.scrollTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.scrollTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
     this.scrollTrajectoryLine.style.width = `${length}px`
     this.scrollTrajectoryLine.style.display = "block"
   }
@@ -261,7 +260,7 @@ export class ForesightDebugger {
     const height = bottom - top
 
     animationOverlay.style.display = "block"
-    animationOverlay.style.translate = `${left}px ${top}px`
+    animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
     animationOverlay.style.width = `${width}px`
     animationOverlay.style.height = `${height}px`
 

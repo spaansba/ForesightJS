@@ -747,7 +747,7 @@ export class ForesightManager {
   }
 
   private getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirection {
-    const scrollThreshold = 2
+    const scrollThreshold = 1
     const deltaY = newRect.top - oldRect!.top
     const deltaX = newRect.left - oldRect!.left
     if (deltaY > scrollThreshold) {
@@ -800,14 +800,18 @@ export class ForesightManager {
           elementData.elementBounds.originalRect!,
           entry.boundingClientRect
         )
-        this.calculatePredictedScrollPoint()
+        console.log(this.scrollDirection)
+        if (this.scrollDirection !== "none") {
+          this.calculatePredictedScrollPoint()
 
-        if (this.debugger) {
-          this.debugger.updateScrollTrajectoryVisuals(
-            this.trajectoryPositions.currentPoint,
-            this.predictedScrollPoint
-          )
+          if (this.debugger) {
+            this.debugger.updateScrollTrajectoryVisuals(
+              this.trajectoryPositions.currentPoint,
+              this.predictedScrollPoint
+            )
+          }
         }
+
         isFirst = false
       }
 
