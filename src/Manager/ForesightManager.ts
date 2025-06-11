@@ -748,6 +748,24 @@ export class ForesightManager {
     }
   }
 
+  private handleScroll(elementData: ForesightElementData, newRect: Rect) {
+    this.scrollDirection = getScrollDirection(elementData.elementBounds.originalRect!, newRect)
+    if (this.scrollDirection === "none") {
+      return
+    }
+
+    this.predictedScrollPoint = predictNextScrollPosition(
+      this.trajectoryPositions.currentPoint,
+      this.scrollDirection
+    )
+    if (this.debugger) {
+      this.debugger.updateScrollTrajectoryVisuals(
+        this.trajectoryPositions.currentPoint,
+        this.predictedScrollPoint
+      )
+    }
+  }
+
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
     let isFirst = true
     for (const entry of entries) {
@@ -759,24 +777,7 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (isFirst && wasIntersecting) {
-        this.scrollDirection = getScrollDirection(
-          elementData.elementBounds.originalRect!,
-          entry.boundingClientRect
-        )
-        console.log(this.scrollDirection)
-        if (this.scrollDirection !== "none") {
-          this.predictedScrollPoint = predictNextScrollPosition(
-            this.trajectoryPositions.currentPoint,
-            this.scrollDirection
-          )
-          if (this.debugger) {
-            this.debugger.updateScrollTrajectoryVisuals(
-              this.trajectoryPositions.currentPoint,
-              this.predictedScrollPoint
-            )
-          }
-        }
-
+        this.handleScroll(elementData, entry.boundingClientRect)
         isFirst = false
       }
 

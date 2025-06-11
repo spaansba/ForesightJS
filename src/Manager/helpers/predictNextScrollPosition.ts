@@ -6,11 +6,11 @@ export function predictNextScrollPosition(currentPoint: Point, direction: Scroll
   const predictedPoint = { x, y }
 
   switch (direction) {
-    case "up":
-      predictedPoint.y -= predictionDistance
-      break
     case "down":
       predictedPoint.y += predictionDistance
+      break
+    case "up":
+      predictedPoint.y -= predictionDistance
       break
     case "left":
       predictedPoint.x -= predictionDistance
