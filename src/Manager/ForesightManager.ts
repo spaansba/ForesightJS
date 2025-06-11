@@ -44,7 +44,7 @@ import {
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import PositionObserver from "@thednp/position-observer"
-// import PositionObserver from "./helpers/pos"
+
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -99,8 +99,8 @@ export class ForesightManager {
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     onAnyCallbackFired: (
-      elementData: ForesightElementData,
-      managerData: ForesightManagerData
+      _elementData: ForesightElementData,
+      _managerData: ForesightManagerData
     ) => {},
   }
   private trajectoryPositions: TrajectoryPositions = {
@@ -600,7 +600,7 @@ export class ForesightManager {
       const element = tabbableElements[i]
       // Check if the current element is within the range defined by the current focus and the tabOffset
       // The range includes the element that just received focus (at currentIndex)
-      let isInRange =
+      const isInRange =
         tabOffset > 0
           ? i >= currentIndex && i <= currentIndex + tabOffset
           : i <= currentIndex && i >= currentIndex + tabOffset
