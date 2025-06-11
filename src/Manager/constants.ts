@@ -19,7 +19,7 @@ export const MAX_HITSLOP = 2000
 export const DEFAULT_HITSLOP = 0
 
 export const DEFAULT_SCROLL_MARGIN = 150
-export const MIN_SCROLL_MARGIN = 10
+export const MIN_SCROLL_MARGIN = 30
 export const MAX_SCROLL_MARGIN = 500
 export const SCROLL_MARGIN_UNIT = "px"
 
