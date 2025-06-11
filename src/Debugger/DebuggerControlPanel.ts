@@ -479,34 +479,49 @@ export class DebuggerControlPanel {
     listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
     listItem.classList.toggle("not-in-viewport", !data.isIntersectingWithViewport)
 
-    listItem.title = data.isIntersectingWithViewport
-      ? `${data.name || "Element"} - is in viewport and being tracked by observers`
-      : `${data.name || "Element"} - is not in viewport and not being tracked by observers`
-
     const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
-    const hitBehaviorTitle = data.unregisterOnCallback
-      ? "Callback triggers once, then element unregisters."
-      : "Callback can trigger multiple times."
-
     let hitSlopText = "N/A"
-    let hitSlopTitle = "Hit Slop: Not defined"
 
     if (data.elementBounds.hitSlop) {
       const { top, right, bottom, left } = data.elementBounds.hitSlop
       hitSlopText = `T:${top} R:${right} B:${bottom} L:${left}`
-      hitSlopTitle = `Hit Slop (px): Top: ${top}, Right: ${right}, Bottom: ${bottom}, Left: ${left}`
     }
 
     const viewportIcon = data.isIntersectingWithViewport ? "👁️" : "🚫"
 
-    listItem.innerHTML = `
-      <span class="viewport-indicator"">${viewportIcon}</span>
-      <span class="element-name">${data.name || "Unnamed Element"}</span>
-      <span class="hit-slop" title="${hitSlopTitle}">${hitSlopText}</span>
-      <span class="hit-behavior" title="${hitBehaviorTitle}">${hitBehaviorText}</span>
-    `
-  }
+    // Create comprehensive title with all information
+    const comprehensiveTitle = [
+      `${data.name || "Unnamed Element"}`,
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "Viewport Status:",
+      data.isIntersectingWithViewport
+        ? "   ✓ In viewport - actively tracked by observers"
+        : "   ✗ Not in viewport - not being tracked",
+      "",
+      "Hit Behavior:",
+      data.unregisterOnCallback
+        ? "   • Single: Callback triggers once"
+        : "   • Multi: Callback can trigger multiple times",
+      "",
+      "Hit Slop:",
+      data.elementBounds.hitSlop
+        ? [
+            `     Top: ${data.elementBounds.hitSlop.top}px, Bottom: ${data.elementBounds.hitSlop.bottom}px `,
+            `     Right: ${data.elementBounds.hitSlop.right}px, Left: ${data.elementBounds.hitSlop.left}px`,
+          ].join("\n")
+        : "   • Not defined - using element's natural boundaries",
+      "",
+    ].join("\n")
 
+    listItem.title = comprehensiveTitle
+
+    listItem.innerHTML = `
+    <span class="viewport-indicator">${viewportIcon}</span>
+    <span class="element-name">${data.name || "Unnamed Element"}</span>
+    <span class="hit-slop">${hitSlopText}</span>
+    <span class="hit-behavior">${hitBehaviorText}</span>
+  `
+  }
   /**
    * The cleanup method is updated to be more thorough, nullifying all
    * DOM-related properties to put the instance in a dormant state.
