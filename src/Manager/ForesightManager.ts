@@ -43,7 +43,6 @@ import {
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import PositionObserver from "@thednp/position-observer"
-import PositionObserverExtended from "../PositionObserverExtended/PositionObserverExtended"
 // import PositionObserver from "./helpers/pos"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -571,7 +570,6 @@ export class ForesightManager {
 
     const tabbableElements = tabbable(document.documentElement)
     const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
-    console.log(currentIndex)
 
     // Determine the range of elements to check based on the tab direction and offset
     const tabOffset = this.lastKeyDown.shiftKey
@@ -707,11 +705,7 @@ export class ForesightManager {
     }
   }
 
-  private handlePositionChange = (
-    entries: IntersectionObserverEntry[],
-    observer: PositionObserver
-  ) => {
-    console.log(entries)
+  private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -766,7 +760,7 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    this.positionObserver = new PositionObserverExtended(this.handlePositionChange, {
+    this.positionObserver = new PositionObserver(this.handlePositionChange, {
       callbackMode: "update",
       rootMargin: "20px",
     })
