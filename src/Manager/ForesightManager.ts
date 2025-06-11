@@ -46,6 +46,8 @@ import {
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import PositionObserver from "@thednp/position-observer"
+import { getScrollDirection } from "./helpers/getScrollDirection"
+import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -746,45 +748,6 @@ export class ForesightManager {
     }
   }
 
-  private getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirection {
-    const scrollThreshold = 1
-    const deltaY = newRect.top - oldRect!.top
-    const deltaX = newRect.left - oldRect!.left
-    if (deltaY > scrollThreshold) {
-      return "up"
-    } else if (deltaY < -scrollThreshold) {
-      return "down"
-    }
-    if (deltaX > scrollThreshold) {
-      return "left"
-    } else if (deltaX < -scrollThreshold) {
-      return "right"
-    }
-    return "none"
-  }
-
-  private calculatePredictedScrollPoint(): void {
-    const { x, y } = this.trajectoryPositions.currentPoint
-    const predictionDistance = 150
-    const predictedPoint = { x, y }
-
-    switch (this.scrollDirection) {
-      case "up":
-        predictedPoint.y -= predictionDistance
-        break
-      case "down":
-        predictedPoint.y += predictionDistance
-        break
-      case "left":
-        predictedPoint.x -= predictionDistance
-        break
-      case "right":
-        predictedPoint.x += predictionDistance
-        break
-    }
-    this.predictedScrollPoint = predictedPoint
-  }
-
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
     let isFirst = true
     for (const entry of entries) {
@@ -796,14 +759,16 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (isFirst && wasIntersecting) {
-        this.scrollDirection = this.getScrollDirection(
+        this.scrollDirection = getScrollDirection(
           elementData.elementBounds.originalRect!,
           entry.boundingClientRect
         )
         console.log(this.scrollDirection)
         if (this.scrollDirection !== "none") {
-          this.calculatePredictedScrollPoint()
-
+          this.predictedScrollPoint = predictNextScrollPosition(
+            this.trajectoryPositions.currentPoint,
+            this.scrollDirection
+          )
           if (this.debugger) {
             this.debugger.updateScrollTrajectoryVisuals(
               this.trajectoryPositions.currentPoint,

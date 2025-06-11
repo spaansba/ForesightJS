@@ -268,7 +268,7 @@ export class ForesightDebugger {
       animationOverlay.classList.add("animate")
     })
 
-    const animationDuration = 400
+    const animationDuration = 500
     const timeoutId = setTimeout(() => {
       if (overlays.animation) {
         overlays.animation.overlay.remove()
@@ -369,17 +369,15 @@ const debuggerCSS = `
         display: none; 
       }
       .jsforesight-callback-indicator.animate {
-        animation: jsforesight-callback-pulse 0.4s ease-out forwards;
+        animation: jsforesight-callback-pulse 0.5s ease-out forwards;
       }
 
       @keyframes jsforesight-callback-pulse {
         0% {
-          scale: 1;
           opacity: 1;
           box-shadow: 0 0 15px oklch(65% 0.22 280 / 0.7);
         }
         100% {
-          scale: 1.1; 
           opacity: 0;
           box-shadow: 0 0 25px oklch(65% 0.22 280 / 0);
         }
