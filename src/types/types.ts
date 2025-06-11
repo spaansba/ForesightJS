@@ -170,6 +170,7 @@ type BaseForesightManagerSettings = {
    */
   enableTabPrediction: boolean
 
+  scrollMargin: number
   /**
    * Toggles whether scroll prediction is on
    * @default true

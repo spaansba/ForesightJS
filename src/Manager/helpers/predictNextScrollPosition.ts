@@ -1,22 +1,25 @@
 import type { Point, ScrollDirection } from "../../types/types"
 
-export function predictNextScrollPosition(currentPoint: Point, direction: ScrollDirection) {
+export function predictNextScrollPosition(
+  currentPoint: Point,
+  direction: ScrollDirection,
+  scrollMargin: number
+) {
   const { x, y } = currentPoint
-  const predictionDistance = 150
   const predictedPoint = { x, y }
 
   switch (direction) {
     case "down":
-      predictedPoint.y += predictionDistance
+      predictedPoint.y += scrollMargin
       break
     case "up":
-      predictedPoint.y -= predictionDistance
+      predictedPoint.y -= scrollMargin
       break
     case "left":
-      predictedPoint.x -= predictionDistance
+      predictedPoint.x -= scrollMargin
       break
     case "right":
-      predictedPoint.x += predictionDistance
+      predictedPoint.x += scrollMargin
       break
   }
   return predictedPoint

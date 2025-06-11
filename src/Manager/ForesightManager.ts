@@ -26,13 +26,16 @@ import {
   DEFAULT_IS_DEBUG,
   DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
+  DEFAULT_SCROLL_MARGIN,
   DEFAULT_SHOW_NAME_TAGS,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
+  MAX_SCROLL_MARGIN,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
   MIN_POSITION_HISTORY_SIZE,
+  MIN_SCROLL_MARGIN,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "./constants"
@@ -97,6 +100,7 @@ export class ForesightManager {
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
     trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
+    scrollMargin: DEFAULT_SCROLL_MARGIN,
     defaultHitSlop: {
       top: DEFAULT_HITSLOP,
       left: DEFAULT_HITSLOP,
@@ -318,6 +322,13 @@ export class ForesightManager {
       "trajectoryPredictionTime",
       MIN_TRAJECTORY_PREDICTION_TIME,
       MAX_TRAJECTORY_PREDICTION_TIME
+    )
+
+    const scrollMarginChanged = this.updateNumericSettings(
+      props?.scrollMargin,
+      "scrollMargin",
+      MIN_SCROLL_MARGIN,
+      MAX_SCROLL_MARGIN
     )
 
     const tabOffsetChanged = this.updateNumericSettings(
@@ -764,7 +775,8 @@ export class ForesightManager {
 
     this.predictedScrollPoint = predictNextScrollPosition(
       this.trajectoryPositions.currentPoint,
-      this.scrollDirection
+      this.scrollDirection,
+      this._globalSettings.scrollMargin
     )
     if (this.debugger) {
       this.debugger.updateScrollTrajectoryVisuals(
@@ -776,7 +788,6 @@ export class ForesightManager {
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
     let isFirst = true
-    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue

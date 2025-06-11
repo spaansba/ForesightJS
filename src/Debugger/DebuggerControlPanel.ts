@@ -12,12 +12,15 @@ import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_SHOW_NAME_TAGS,
   MAX_POSITION_HISTORY_SIZE,
+  MAX_SCROLL_MARGIN,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
   MIN_POSITION_HISTORY_SIZE,
+  MIN_SCROLL_MARGIN,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
   POSITION_HISTORY_SIZE_UNIT,
+  SCROLL_MARGIN_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../Manager/constants"
@@ -57,6 +60,8 @@ export class DebuggerControlPanel {
   private predictionValueSpan: HTMLSpanElement | null = null
   private tabOffsetSlider: HTMLInputElement | null = null
   private tabOffsetValueSpan: HTMLSpanElement | null = null
+  private scrollMarginSlider: HTMLInputElement | null = null
+  private scrollMarginValueSpan: HTMLSpanElement | null = null
   private showNameTagsCheckbox: HTMLInputElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
@@ -176,6 +181,8 @@ export class DebuggerControlPanel {
     this.predictionValueSpan = this.controlsContainer.querySelector("#prediction-value")
     this.tabOffsetSlider = this.controlsContainer.querySelector("#tab-offset")
     this.tabOffsetValueSpan = this.controlsContainer.querySelector("#tab-offset-value")
+    this.scrollMarginSlider = this.controlsContainer.querySelector("#scroll-margin")
+    this.scrollMarginValueSpan = this.controlsContainer.querySelector("#scroll-margin-value")
     this.elementListItemsContainer = this.controlsContainer.querySelector(
       "#element-list-items-container"
     )
@@ -298,6 +305,13 @@ export class DebuggerControlPanel {
       "tabOffset"
     )
 
+    this.createInputEventListener(
+      this.scrollMarginSlider,
+      this.scrollMarginValueSpan,
+      SCROLL_MARGIN_UNIT,
+      "scrollMargin"
+    )
+
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized
       this.updateContainerVisibilityState()
@@ -413,6 +427,10 @@ export class DebuggerControlPanel {
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
       this.tabOffsetSlider.value = settings.tabOffset.toString()
       this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
+    }
+    if (this.scrollMarginSlider && this.scrollMarginValueSpan) {
+      this.scrollMarginSlider.value = settings.scrollMargin.toString()
+      this.scrollMarginValueSpan.textContent = `${settings.scrollMargin} ${SCROLL_MARGIN_UNIT}`
     }
   }
 
@@ -573,6 +591,8 @@ export class DebuggerControlPanel {
     this.predictionValueSpan = null
     this.tabOffsetSlider = null
     this.tabOffsetValueSpan = null
+    this.scrollMarginSlider = null
+    this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
     this.copySettingsButton = null
   }
@@ -746,14 +766,40 @@ export class DebuggerControlPanel {
                 <span class="info-icon" title="${[
                   "Scroll Prediction Control",
                   "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "When enabled: Predicts user scroll",
-                  "intent and triggers callbacks for elements",
-                  "that are about to enter the viewport.",
+                  "When enabled: Uses the Scroll Margin to",
+                  "trigger callbacks for elements before they",
+                  "enter the viewport.",
+                  "",
+                  "When disabled: Callbacks only fire when",
+                  "an element is actually visible in the viewport.",
                   "",
                   "Property: enableScrollPrediction",
                 ].join("\n")}">i</span>
               </label>
               <input type="checkbox" id="scroll-enabled">
+            </div>
+            <div class="control-row">
+               <label for="scroll-margin">
+                Scroll Margin
+                <span class="info-icon" title="${[
+                  "Scroll Margin Configuration",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "An invisible margin (in pixels) added",
+                  "around the viewport.",
+                  "",
+                  "How it works:",
+                  "   • Triggers a callback when an element",
+                  "     enters this margin, before it becomes visible.",
+                  "   • A larger margin means callbacks fire earlier.",
+                  "",
+                  "This directly controls the 'rootMargin' property",
+                  "of the underlying IntersectionObserver.",
+                  "",
+                  "Property: scrollMargin",
+                ].join("\n")}">i</span>
+              </label>
+              <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
+              <span id="scroll-margin-value"></span>
             </div>
           </div>
         </div>
