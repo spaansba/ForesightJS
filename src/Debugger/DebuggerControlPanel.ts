@@ -397,6 +397,8 @@ export class DebuggerControlPanel {
     }
   }
 
+  // private create
+
   private refreshRegisteredElementCountDisplay(
     elementsMap: ReadonlyMap<Element, ForesightElementData>
   ) {
@@ -414,9 +416,16 @@ export class DebuggerControlPanel {
     const { tab, mouse, scroll, total } =
       this.foresightManagerInstance.getManagerData.globalCallbackHits
     this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
-    this.elementCountSpan.title = `Total registered elements: ${totalElements}, visible in viewport: ${visibleElementCount}, not in viewport: ${
-      totalElements - visibleElementCount
-    }`
+    this.elementCountSpan.title = [
+      "Element Visibility Status",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      `Visible in Viewport: ${visibleElementCount}`,
+      `Not in Viewport: ${totalElements - visibleElementCount}`,
+      `Total Registered Elements: ${totalElements}`,
+      "",
+      "Note: Only elements visible in the viewport",
+      "are actively tracked by intersection observers.",
+    ].join("\n")
     this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
     } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
@@ -541,9 +550,28 @@ export class DebuggerControlPanel {
         <button class="minimize-button">-</button>
         <div class="title-group">
           <h2>Foresight Debugger</h2>
-          <span class="info-icon" title="Changes made here are for the current session only and won't persist. Update initial values in the ForesightManager.initialize() props for permanent changes.">i</span>
+         <span class="info-icon" title="${[
+           "Foresight Debugger Information",
+           "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+           "Session-Only Changes:",
+           "All adjustments made here apply only to the",
+           "current browser session and won't persist.",
+           "",
+           "Permanent Configuration:",
+           "To make lasting changes, update the initial",
+           "values in your ForesightManager.initialize().",
+           "",
+           "You can copy the current debugger settings",
+           "with the button on the right",
+         ].join("\n")}">i</span>
         </div>
-        <button class="copy-settings-button" title="Copy current settings to clipboard">
+           <button class="copy-settings-button" title="${[
+             "Copy Settings to Clipboard",
+             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+             "Copies the current configuration as a",
+             "formatted method call that you can paste",
+             "directly into your code.",
+           ].join("\n")}">
           ${COPY_SVG_ICON}
         </button>
       </div>
@@ -556,24 +584,69 @@ export class DebuggerControlPanel {
           </div>
           <div class="debugger-section-content mouse-settings-content">
             <div class="control-row">
-              <label for="trajectory-enabled">
+             <label for="trajectory-enabled">
                 Enable Mouse Prediction
-                <span class="info-icon" title="Toggles mouse movement prediction. If disabled, only direct hovers trigger actions (or tab if enabled). - enableMousePrediction">i</span>
+                <span class="info-icon" title="${[
+                  "Mouse Prediction Control",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "When enabled: Predicts mouse movement",
+                  "trajectory and triggers callbacks before",
+                  "the cursor reaches the target element.",
+                  "",
+                  "When disabled: Only direct hover events",
+                  "trigger actions (next to tab/scroll).",
+                  "",
+                  "Property: enableMousePrediction",
+                ].join("\n")}">i</span>
               </label>
               <input type="checkbox" id="trajectory-enabled">
             </div>
             <div class="control-row">
-              <label for="history-size">
+             <label for="history-size">
                 History Size
-                <span class="info-icon" title="Number of past mouse positions to use for velocity calculation. Higher values smooth predictions but add latency. - positionHistorySize">i</span>
+                <span class="info-icon" title="${[
+                  "Position History Configuration",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Controls how many past mouse positions",
+                  "are stored for velocity calculations.",
+                  "",
+                  "Higher values:",
+                  "   • More accurate trajectory predictions",
+                  "   • Smoother movement detection",
+                  "   • Slightly increased processing overhead",
+                  "",
+                  "Lower values:",
+                  "   • Faster response to direction changes",
+                  "   • Less memory usage",
+                  "   • May be less accurate for fast movements",
+                  "",
+                  "Property: positionHistorySize",
+                ].join("\n")}">i</span>
               </label>
               <input type="range" id="history-size" min="${MIN_POSITION_HISTORY_SIZE}" max="${MAX_POSITION_HISTORY_SIZE}">
               <span id="history-value"></span>
             </div>
             <div class="control-row">
-              <label for="prediction-time">
+            <label for="prediction-time">
                 Prediction Time
-                <span class="info-icon" title="How many ${TRAJECTORY_PREDICTION_TIME_UNIT} in the future to calculate the mouse trajectory. Larger value detects elements sooner. - trajectoryPredictionTime">i</span>
+                <span class="info-icon" title="${[
+                  "Trajectory Prediction Timing",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  `How far into the future (in ${TRAJECTORY_PREDICTION_TIME_UNIT})`,
+                  "to calculate the mouse trajectory path.",
+                  "",
+                  "Larger values:",
+                  "   • Elements are detected sooner",
+                  "   • More time for preloading/preparation",
+                  "   • May trigger false positives for curved paths",
+                  "",
+                  "Smaller values:",
+                  "   • More precise targeting",
+                  "   • Reduced false positive rate",
+                  "   • Less time for preparation",
+                  "",
+                  "Property: trajectoryPredictionTime",
+                ].join("\n")}">i</span>
               </label>
               <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
               <span id="prediction-value"></span>
@@ -588,16 +661,37 @@ export class DebuggerControlPanel {
           </div>
           <div class="debugger-section-content keyboard-settings-content">
             <div class="control-row">
-              <label for="tab-enabled">
+             <label for="tab-enabled">
                 Enable Tab Prediction
-                <span class="info-icon" title="With tab prediction the callback will be executed when the user is tabOffset amount of ${TAB_OFFSET_UNIT} away from an registered element (works with reversed shift-tabs) - enableTabPrediction.">i</span>
+                <span class="info-icon" title="${[
+                  "Tab Navigation Prediction",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "When enabled: Callbacks are executed when",
+                  `the user is ${this.foresightManagerInstance.getManagerData.globalSettings.tabOffset} ${TAB_OFFSET_UNIT} away from a registered element`,
+                  "during tab navigation (works with Shift+Tab too).",
+                  "",
+                  "Property: enableTabPrediction",
+                ].join("\n")}">i</span>
               </label>
               <input type="checkbox" id="tab-enabled">
             </div>
             <div class="control-row">
-              <label for="tab-offset">
+               <label for="tab-offset">
                 Tab Prediction Offset
-                <span class="info-icon" title="Number of next/previous tabbable elements to consider for prediction when using the Tab key - tabOffset.">i</span>
+                <span class="info-icon" title="${[
+                  "Tab Offset Configuration",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Number of tabbable elements to look ahead",
+                  "when predicting tab navigation targets.",
+                  "",
+                  "How it works:",
+                  "   • Tracks the current focused element",
+                  "   • Looks ahead by the specified offset",
+                  "   • Triggers callbacks for registered elements",
+                  "     within that range",
+                  "",
+                  "Property: tabOffset",
+                ].join("\n")}">i</span>
               </label>
               <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
               <span id="tab-offset-value"></span>
@@ -614,7 +708,14 @@ export class DebuggerControlPanel {
            <div class="control-row">
               <label for="toggle-name-tags">
                 Show Name Tags
-                <span class="info-icon" title="Toggles name tags, purely for debugging. - showNameTags">i</span>
+                <span class="info-icon" title="${[
+                  "Visual Debug Name Tags",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "When enabled: Displays name tags over",
+                  "each registered element in debug mode.",
+                  "",
+                  "Property: debuggerSettings.showNameTags",
+                ].join("\n")}">i</span>
               </label>
               <input type="checkbox" id="toggle-name-tags">
             </div>
