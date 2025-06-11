@@ -1,3 +1,5 @@
+import type { CallbackHits } from "../types/types"
+
 //IMPORTANT: when altering these values change the type jsDocs/actual docs for BaseForesightManagerProps
 export const MIN_TRAJECTORY_PREDICTION_TIME = 10
 export const MAX_TRAJECTORY_PREDICTION_TIME = 200

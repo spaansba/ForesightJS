@@ -117,16 +117,19 @@ export type TabCallbackCounts = {
 }
 
 export type ScrollDirection = "down" | "up" | "left" | "right" | "none"
+export type ScrollCallbackCounts = Record<`${Exclude<ScrollDirection, "none">}`, number>
 
 export type CallbackHits = {
   total: number
   mouse: MouseCallbackCounts
   tab: TabCallbackCounts
+  scroll: ScrollCallbackCounts
 }
 
 export type HitType =
   | { kind: "mouse"; subType: keyof MouseCallbackCounts }
   | { kind: "tab"; subType: keyof TabCallbackCounts }
+  | { kind: "scroll"; subType: keyof ScrollCallbackCounts }
 
 export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>

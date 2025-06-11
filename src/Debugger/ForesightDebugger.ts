@@ -33,9 +33,9 @@ export class ForesightDebugger {
   private controlPanel!: DebuggerControlPanel
 
   private debugElementOverlays: Map<ForesightElement, ElementOverlays> = new Map()
-  private debugPredictedMouseIndicator: HTMLElement | null = null
-  private debugTrajectoryLine: HTMLElement | null = null
-  private debugScrollTrajectoryLine: HTMLElement | null = null
+  private predictedMouseIndicator: HTMLElement | null = null
+  private mouseTrajectoryLine: HTMLElement | null = null
+  private scrollTrajectoryLine: HTMLElement | null = null
   private lastElementData: Map<
     ForesightElement,
     { isHovering: boolean; isTrajectoryHit: boolean }
@@ -58,13 +58,13 @@ export class ForesightDebugger {
     this.debugContainer = createAndAppendElement("div", this.shadowRoot, {
       id: "jsforesight-debug-container",
     })
-    this.debugPredictedMouseIndicator = createAndAppendElement("div", this.debugContainer, {
+    this.predictedMouseIndicator = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-mouse-predicted",
     })
-    this.debugTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+    this.mouseTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-trajectory-line",
     })
-    this.debugScrollTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+    this.scrollTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-scroll-trajectory-line",
     })
     this.controlPanel = DebuggerControlPanel.initialize(
@@ -98,7 +98,7 @@ export class ForesightDebugger {
       instance._setupDOM()
     }
 
-    instance.updateTrajectoryVisuals(
+    instance.updateMouseTrajectoryVisuals(
       trajectoryPositions,
       foresightManager.getManagerData.globalSettings.enableMousePrediction
     )
@@ -171,31 +171,31 @@ export class ForesightDebugger {
     this.controlPanel?.refreshElementList()
   }
 
-  public updateTrajectoryVisuals(
+  public updateMouseTrajectoryVisuals(
     trajectoryPositions: TrajectoryPositions,
     enableMousePrediction: boolean
   ) {
     if (!this.shadowRoot || !this.debugContainer) {
       return
     }
-    if (!this.debugPredictedMouseIndicator || !this.debugTrajectoryLine) {
+    if (!this.predictedMouseIndicator || !this.mouseTrajectoryLine) {
       return
     }
     const { predictedPoint, currentPoint } = trajectoryPositions
 
     // Use transform for positioning to avoid layout reflow.
     // The CSS handles centering the element with `translate(-50%, -50%)`.
-    this.debugPredictedMouseIndicator.style.transform = `translate(${predictedPoint.x}px, ${predictedPoint.y}px) translate(-50%, -50%)`
-    this.debugPredictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
+    this.predictedMouseIndicator.style.transform = `translate(${predictedPoint.x}px, ${predictedPoint.y}px) translate(-50%, -50%)`
+    this.predictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
 
     // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
     if (predictedPoint.x === 0 && predictedPoint.y === 0) {
-      this.debugPredictedMouseIndicator.style.display = "none"
+      this.predictedMouseIndicator.style.display = "none"
       return
     }
 
     if (!enableMousePrediction) {
-      this.debugTrajectoryLine.style.display = "none"
+      this.mouseTrajectoryLine.style.display = "none"
       return
     }
 
@@ -207,13 +207,13 @@ export class ForesightDebugger {
 
     // Use a single transform to position, rotate, and scale the line,
     // avoiding reflow from top/left changes.
-    this.debugTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
-    this.debugTrajectoryLine.style.width = `${length}px`
-    this.debugTrajectoryLine.style.display = "block"
+    this.mouseTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.mouseTrajectoryLine.style.width = `${length}px`
+    this.mouseTrajectoryLine.style.display = "block"
   }
 
   public updateScrollTrajectoryVisuals(currentPoint: Point, predictedScrollPoint: Point) {
-    if (!this.debugScrollTrajectoryLine) return
+    if (!this.scrollTrajectoryLine) return
 
     const dx = predictedScrollPoint.x - currentPoint.x
     const dy = predictedScrollPoint.y - currentPoint.y
@@ -221,14 +221,14 @@ export class ForesightDebugger {
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-    this.debugScrollTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
-    this.debugScrollTrajectoryLine.style.width = `${length}px`
-    this.debugScrollTrajectoryLine.style.display = "block"
+    this.scrollTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.scrollTrajectoryLine.style.width = `${length}px`
+    this.scrollTrajectoryLine.style.display = "block"
   }
 
   public hideScrollTrajectoryVisuals() {
-    if (this.debugScrollTrajectoryLine) {
-      this.debugScrollTrajectoryLine.style.display = "none"
+    if (this.scrollTrajectoryLine) {
+      this.scrollTrajectoryLine.style.display = "none"
     }
   }
 
@@ -293,9 +293,9 @@ export class ForesightDebugger {
     this.shadowHost = null!
     this.shadowRoot = null!
     this.debugContainer = null!
-    this.debugPredictedMouseIndicator = null
-    this.debugTrajectoryLine = null
-    this.debugScrollTrajectoryLine = null
+    this.predictedMouseIndicator = null
+    this.mouseTrajectoryLine = null
+    this.scrollTrajectoryLine = null
     this.controlPanel = null!
   }
 }

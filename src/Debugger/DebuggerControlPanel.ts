@@ -411,15 +411,35 @@ export class DebuggerControlPanel {
       }
     })
     const totalElements = elementsMap.size
-    const { tab, mouse, total } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+    const { tab, mouse, scroll, total } =
+      this.foresightManagerInstance.getManagerData.globalCallbackHits
     this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
     this.elementCountSpan.title = `Total registered elements: ${totalElements}, visible in viewport: ${visibleElementCount}, not in viewport: ${
       totalElements - visibleElementCount
     }`
     this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
-    }`
-    this.callbackCountSpan.title = `Total callbacks executed: Mouse Trajectory: ${mouse.trajectory}, Mouse Hover: ${mouse.hover}, Tab Forwards: ${tab.forwards}, Tab Reverse: ${tab.reverse}, total: ${total}`
+    } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
+    this.callbackCountSpan.title = [
+      "Callback Execution Stats",
+      "━━━━━━━━━━━━━━━━━━━━━━━━",
+      "Mouse Callbacks",
+      `   • Trajectory: ${mouse.trajectory}`,
+      `   • Hover: ${mouse.hover}`,
+      `   • Subtotal: ${mouse.hover + mouse.trajectory}`,
+      "",
+      "Keyboard Callbacks:",
+      `   • Tab Forward: ${tab.forwards}`,
+      `   • Tab Reverse: ${tab.reverse}`,
+      `   • Subtotal: ${tab.forwards + tab.reverse}`,
+      "",
+      "Scroll Callbacks:",
+      `   • Up: ${scroll.up} | Down: ${scroll.down}`,
+      `   • Left: ${scroll.left} | Right: ${scroll.right}`,
+      `   • Subtotal: ${scroll.up + scroll.down + scroll.left + scroll.right}`,
+      "",
+      "Total Callbacks: " + total,
+    ].join("\n")
   }
 
   public refreshElementList() {

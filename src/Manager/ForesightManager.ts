@@ -80,6 +80,12 @@ export class ForesightManager {
       forwards: 0,
       reverse: 0,
     },
+    scroll: {
+      down: 0,
+      left: 0,
+      right: 0,
+      up: 0,
+    },
     total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
@@ -111,7 +117,7 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
   private predictedScrollPoint: Point = { x: 0, y: 0 }
-
+  private scrollDirection: ScrollDirection = "none"
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
@@ -188,6 +194,12 @@ export class ForesightManager {
         tab: {
           forwards: 0,
           reverse: 0,
+        },
+        scroll: {
+          down: 0,
+          left: 0,
+          right: 0,
+          up: 0,
         },
         total: 0,
       },
@@ -634,6 +646,10 @@ export class ForesightManager {
         elementData.callbackHits.tab[hitType.subType]++
         this._globalCallbackHits.tab[hitType.subType]++
         break
+      case "scroll":
+        elementData.callbackHits.scroll[hitType.subType]++
+        this._globalCallbackHits.scroll[hitType.subType]++
+        break
     }
     elementData.callbackHits.total++
     this._globalCallbackHits.total++
@@ -747,12 +763,12 @@ export class ForesightManager {
     return "none"
   }
 
-  private calculatePredictedScrollPoint(scrollDirection: ScrollDirection): void {
+  private calculatePredictedScrollPoint(): void {
     const { x, y } = this.trajectoryPositions.currentPoint
     const predictionDistance = 150
     const predictedPoint = { x, y }
 
-    switch (scrollDirection) {
+    switch (this.scrollDirection) {
       case "up":
         predictedPoint.y -= predictionDistance
         break
@@ -780,16 +796,19 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (isFirst && wasIntersecting) {
-        this.calculatePredictedScrollPoint(
-          this.getScrollDirection(elementData.elementBounds.originalRect!, entry.boundingClientRect)
+        this.scrollDirection = this.getScrollDirection(
+          elementData.elementBounds.originalRect!,
+          entry.boundingClientRect
         )
-        isFirst = false
+        this.calculatePredictedScrollPoint()
+
         if (this.debugger) {
           this.debugger.updateScrollTrajectoryVisuals(
             this.trajectoryPositions.currentPoint,
             this.predictedScrollPoint
           )
         }
+        isFirst = false
       }
 
       if (!isNowIntersecting) {
@@ -801,14 +820,6 @@ export class ForesightManager {
 
       this.updateElementBounds(entry.boundingClientRect, elementData)
 
-      // if (
-      //   isPointInRectangle(
-      //     this.trajectoryPositions.currentPoint,
-      //     elementData?.elementBounds.expandedRect
-      //   )
-      // ) {
-      //   this.callCallback(elementData, { kind: "mouse", subType: "hover" })
-      // }
       if (
         lineSegmentIntersectsRect(
           this.trajectoryPositions.currentPoint,
@@ -816,7 +827,10 @@ export class ForesightManager {
           elementData?.elementBounds.expandedRect
         )
       ) {
-        this.callCallback(elementData, { kind: "mouse", subType: "trajectory" })
+        this.callCallback(elementData, {
+          kind: "scroll",
+          subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
+        })
       }
     }
   }
