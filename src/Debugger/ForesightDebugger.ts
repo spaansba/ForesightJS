@@ -5,6 +5,7 @@ import type {
   ForesightElement,
   TrajectoryPositions,
   ForesightManagerSettings,
+  Point,
 } from "../types/types"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
@@ -34,6 +35,7 @@ export class ForesightDebugger {
   private debugElementOverlays: Map<ForesightElement, ElementOverlays> = new Map()
   private debugPredictedMouseIndicator: HTMLElement | null = null
   private debugTrajectoryLine: HTMLElement | null = null
+  private debugScrollTrajectoryLine: HTMLElement | null = null
   private lastElementData: Map<
     ForesightElement,
     { isHovering: boolean; isTrajectoryHit: boolean }
@@ -61,6 +63,9 @@ export class ForesightDebugger {
     })
     this.debugTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-trajectory-line",
+    })
+    this.debugScrollTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-scroll-trajectory-line",
     })
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
@@ -158,7 +163,6 @@ export class ForesightDebugger {
   public removeElement(element: ForesightElement) {
     const overlays = this.debugElementOverlays.get(element)
     if (overlays) {
-      // overlays.elementOverlay.remove()
       overlays.expandedOverlay.remove()
       overlays.nameLabel.remove()
       this.debugElementOverlays.delete(element)
@@ -206,6 +210,26 @@ export class ForesightDebugger {
     this.debugTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
     this.debugTrajectoryLine.style.width = `${length}px`
     this.debugTrajectoryLine.style.display = "block"
+  }
+
+  public updateScrollTrajectoryVisuals(currentPoint: Point, predictedScrollPoint: Point) {
+    if (!this.debugScrollTrajectoryLine) return
+
+    const dx = predictedScrollPoint.x - currentPoint.x
+    const dy = predictedScrollPoint.y - currentPoint.y
+
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+    this.debugScrollTrajectoryLine.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.debugScrollTrajectoryLine.style.width = `${length}px`
+    this.debugScrollTrajectoryLine.style.display = "block"
+  }
+
+  public hideScrollTrajectoryVisuals() {
+    if (this.debugScrollTrajectoryLine) {
+      this.debugScrollTrajectoryLine.style.display = "none"
+    }
   }
 
   public updateControlsState(settings: ForesightManagerSettings) {
@@ -271,6 +295,7 @@ export class ForesightDebugger {
     this.debugContainer = null!
     this.debugPredictedMouseIndicator = null
     this.debugTrajectoryLine = null
+    this.debugScrollTrajectoryLine = null
     this.controlPanel = null!
   }
 }
@@ -285,6 +310,7 @@ const debuggerCSS = `
       .jsforesight-name-label, 
       .jsforesight-callback-indicator,
       .jsforesight-mouse-predicted,
+      .jsforesight-scroll-trajectory-line,
       .jsforesight-trajectory-line {
         position: absolute;
         top: 0;
@@ -313,6 +339,14 @@ const debuggerCSS = `
         z-index: 9999;
         border-radius: 1px;
         /* width and transform are set dynamically via JS for performance */
+      }
+      .jsforesight-scroll-trajectory-line {
+        height: 2px;
+        background-color: oklch(65% 0.25 140); /* A nice, modern green */
+        transform-origin: left center;
+        z-index: 9999;
+        border-radius: 1px;
+        display: none; /* Hidden by default */
       }
       .jsforesight-name-label {
         background-color: rgba(27, 31, 35, 0.85);

@@ -542,6 +542,7 @@ export class ForesightManager {
     })
 
     if (this.debugger) {
+      this.debugger.hideScrollTrajectoryVisuals()
       this.debugger.updateTrajectoryVisuals(
         this.trajectoryPositions,
         this._globalSettings.enableMousePrediction
@@ -783,6 +784,12 @@ export class ForesightManager {
           this.getScrollDirection(elementData.elementBounds.originalRect!, entry.boundingClientRect)
         )
         isFirst = false
+        if (this.debugger) {
+          this.debugger.updateScrollTrajectoryVisuals(
+            this.trajectoryPositions.currentPoint,
+            this.predictedScrollPoint
+          )
+        }
       }
 
       if (!isNowIntersecting) {
