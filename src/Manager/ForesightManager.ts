@@ -41,10 +41,10 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
-import PositionObserver from "@thednp/position-observer"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import type { PositionObserverEntry } from "@thednp/position-observer"
-
+import PositionObserver from "@thednp/position-observer"
+import PositionObserverExtended from "../PositionObserverExtended/PositionObserverExtended"
+// import PositionObserver from "./helpers/pos"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -104,7 +104,6 @@ export class ForesightManager {
   }
 
   private domObserver: MutationObserver | null = null
-  private elementIntersectionObserver: IntersectionObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
   private lastKeyDown: KeyboardEvent | null = null
@@ -168,7 +167,7 @@ export class ForesightManager {
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
-    const rect = element.getBoundingClientRect()
+    const elementRect = element.getBoundingClientRect()
     const elementData: ForesightElementData = {
       element: element,
       callback,
@@ -178,8 +177,8 @@ export class ForesightManager {
         total: 0,
       },
       elementBounds: {
-        originalRect: rect,
-        expandedRect: getExpandedRect(rect, normalizedHitSlop),
+        originalRect: elementRect,
+        expandedRect: getExpandedRect(elementRect, normalizedHitSlop),
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -190,14 +189,13 @@ export class ForesightManager {
       },
       name: name ?? element.id ?? "",
       unregisterOnCallback: unregisterOnCallback ?? true,
-      isIntersectingWithViewport: false,
+      isIntersectingWithViewport: true,
     }
 
     this.elements.set(element, elementData)
-    // Always connect the observer After the element is registered to avoid race conditions
-    this.elementIntersectionObserver?.observe(element)
-    // this.positionObserver?.observe(element)
 
+    this.positionObserver?.observe(element)
+    // console.log(this.positionObserver?.getEntry(element)?.boundingClientRect)
     if (this.debugger) {
       this.debugger.createOrUpdateElementOverlay(elementData)
     }
@@ -218,8 +216,7 @@ export class ForesightManager {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
-    this.elementIntersectionObserver?.unobserve(element)
-
+    this.positionObserver?.unobserve(element)
     this.elements.delete(element)
 
     if (this.debugger) {
@@ -574,20 +571,19 @@ export class ForesightManager {
 
     const tabbableElements = tabbable(document.documentElement)
     const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
+    console.log(currentIndex)
 
     // Determine the range of elements to check based on the tab direction and offset
     const tabOffset = this.lastKeyDown.shiftKey
       ? -this._globalSettings.tabOffset
       : this._globalSettings.tabOffset
 
-    // Clear the lastKeyDown as we've processed this focus event
     this.lastKeyDown = null
     const elementsToPredict: ForesightElement[] = []
 
     // Iterate through the tabbable elements to find those within the prediction range
     for (let i = 0; i < tabbableElements.length; i++) {
       const element = tabbableElements[i]
-
       // Check if the current element is within the range defined by the current focus and the tabOffset
       // The range includes the element that just received focus (at currentIndex)
       let isInRange =
@@ -596,7 +592,9 @@ export class ForesightManager {
           : i <= currentIndex && i >= currentIndex + tabOffset
 
       if (isInRange && this.elements.has(element as ForesightElement)) {
-        elementsToPredict.push(element as ForesightElement)
+        for (let j = 0; j < tabOffset; j++) {
+          elementsToPredict.push(tabbableElements[i + j] as ForesightElement)
+        }
       }
     }
 
@@ -632,37 +630,37 @@ export class ForesightManager {
     }
   }
 
-  private handleIntersection = (entries: IntersectionObserverEntry[]) => {
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
-      if (!elementData) {
-        return
-      }
-      elementData.isIntersectingWithViewport = entry.isIntersecting
-      if (entry.isIntersecting) {
-        elementData.elementBounds.originalRect = entry.boundingClientRect
-        elementData.elementBounds.expandedRect = getExpandedRect(
-          elementData.elementBounds.originalRect,
-          elementData.elementBounds.hitSlop
-        )
-        if (this.positionObserver) {
-          this.positionObserver?.observe(entry.target)
-        } else {
-          console.warn(
-            "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
-          )
-        }
-        if (this._globalSettings.debug) {
-          this.debugger?.createOrUpdateElementOverlay(elementData)
-        }
-      } else {
-        this.positionObserver?.unobserve(entry.target)
-        if (this._globalSettings.debug) {
-          this.debugger?.removeElement(entry.target)
-        }
-      }
-    }
-  }
+  // private handleIntersection = (entries: IntersectionObserverEntry[]) => {
+  //   for (const entry of entries) {
+  //     const elementData = this.elements.get(entry.target)
+  //     if (!elementData) {
+  //       return
+  //     }
+  //     elementData.isIntersectingWithViewport = entry.isIntersecting
+  //     if (entry.isIntersecting) {
+  //       elementData.elementBounds.originalRect = entry.boundingClientRect
+  //       elementData.elementBounds.expandedRect = getExpandedRect(
+  //         elementData.elementBounds.originalRect,
+  //         elementData.elementBounds.hitSlop
+  //       )
+  //       if (this.positionObserver) {
+  //         this.positionObserver?.observe(entry.target)
+  //       } else {
+  //         console.warn(
+  //           "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
+  //         )
+  //       }
+  //       if (this._globalSettings.debug) {
+  //         this.debugger?.createOrUpdateElementOverlay(elementData)
+  //       }
+  //     } else {
+  //       this.positionObserver?.unobserve(entry.target)
+  //       if (this._globalSettings.debug) {
+  //         this.debugger?.removeElement(entry.target)
+  //       }
+  //     }
+  //   }
+  // }
 
   /**
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
@@ -702,19 +700,43 @@ export class ForesightManager {
         expandedRect,
       },
     })
+
     if (this.debugger) {
       const updatedData = this.elements.get(elementData.element)
       if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
     }
   }
 
-  private handlePositionChange = (entries: PositionObserverEntry[], _: PositionObserver) => {
-    entries.forEach((entry) => {
+  private handlePositionChange = (
+    entries: IntersectionObserverEntry[],
+    observer: PositionObserver
+  ) => {
+    console.log(entries)
+    for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
-      if (elementData) {
-        this.updateElementBounds(entry.boundingClientRect, elementData)
+      if (!elementData) continue
+
+      const wasIntersecting = elementData.isIntersectingWithViewport
+      const isNowIntersecting = entry.isIntersecting
+      elementData.isIntersectingWithViewport = isNowIntersecting
+      if (!isNowIntersecting) {
+        if (this._globalSettings.debug && wasIntersecting) {
+          this.debugger?.removeElement(entry.target)
+        }
+        continue
       }
-    })
+
+      this.updateElementBounds(entry.boundingClientRect, elementData)
+
+      if (
+        isPointInRectangle(
+          this.trajectoryPositions.currentPoint,
+          elementData?.elementBounds.expandedRect
+        )
+      ) {
+        this.callCallback(elementData, "mouse")
+      }
+    }
   }
 
   private initializeGlobalListeners() {
@@ -732,7 +754,7 @@ export class ForesightManager {
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 
-    // Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
+    //Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
       childList: true,
@@ -744,16 +766,10 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    this.positionObserver = new PositionObserver(this.handlePositionChange)
-
-    // Avoid doing calculations on elements that arent in the viewport.
-    // Mostly used to observe/unobserve the positionObserver for elements not visible
-    this.elementIntersectionObserver = new IntersectionObserver(this.handleIntersection, {
-      root: null,
-      threshold: 0.0,
-      rootMargin: "50px",
+    this.positionObserver = new PositionObserverExtended(this.handlePositionChange, {
+      callbackMode: "update",
+      rootMargin: "20px",
     })
-
     this.isSetup = true
   }
 
@@ -770,8 +786,6 @@ export class ForesightManager {
     }
     this.domObserver?.disconnect()
     this.domObserver = null
-    this.elementIntersectionObserver?.disconnect()
-    this.elementIntersectionObserver = null
     this.positionObserver?.disconnect()
     this.positionObserver = null
   }

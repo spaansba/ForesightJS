@@ -15,7 +15,7 @@ function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
         <BaseForesightButton
           registerOptions={{
             callback: () => {
-              // console.log(name)
+              console.log(name)
             },
             hitSlop: 0,
             name: name,

@@ -1,17 +1,8 @@
-import PositionObserver from "@thednp/position-observer"
-
 export type Rect = {
   top: number
   left: number
   right: number
   bottom: number
-}
-
-type PositionObserverEntry = {
-  target: Element
-  boundingClientRect: DOMRect
-  clientHeight: number
-  clientWidth: number
 }
 
 /**
@@ -127,7 +118,7 @@ export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-  positionObserverElements: Map<Element, PositionObserverEntry> | undefined
+  positionObserverElements: Map<Element, IntersectionObserverEntry> | undefined
 }
 
 type BaseForesightManagerSettings = {
