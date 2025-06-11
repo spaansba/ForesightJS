@@ -65,11 +65,5 @@ Gets a comprehensive snapshot of the current ForesightManager state, including a
 
 - `registeredElements` - Map of all currently registered elements and their associated data
 - `globalSettings` - Current [global configuration](/docs/getting_started/config#global-configuration) settings
-- `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab) also by subtype (hover/trajctory for mouse, forwards/reverse for tab)
+- `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab) and by subtype (hover/trajctory for mouse, forwards/reverse for tab)
 - `positionObserverElements` - Elements currently being tracked by the position observer (a.k.a elements that are currently visible)
-
-## ForesightManager.instance.globalCallbackHits
-
-Gets the total count of callback executions across all registered elements, broken down by interaction type (mouse / tab).
-
-**Returns:** `Readonly<CallbackHits>`
