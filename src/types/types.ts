@@ -171,6 +171,12 @@ type BaseForesightManagerSettings = {
   enableTabPrediction: boolean
 
   /**
+   * Toggles whether scroll prediction is on
+   * @default true
+   */
+  enableScrollPrediction: boolean
+
+  /**
    * Tab stops away from an element to trigger callback. Only works when @argument enableTabPrediction is true
    *
    * **This value is clamped between 0 and 20.**

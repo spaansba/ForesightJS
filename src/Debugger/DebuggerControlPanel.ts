@@ -27,6 +27,7 @@ import { createAndAppendStyle } from "./helpers/createAndAppend"
 type SectionStates = {
   mouse: boolean
   keyboard: boolean
+  scroll: boolean
   general: boolean
   elements: boolean
 }
@@ -49,6 +50,7 @@ export class DebuggerControlPanel {
 
   private trajectoryEnabledCheckbox: HTMLInputElement | null = null
   private tabEnabledCheckbox: HTMLInputElement | null = null
+  private scrollEnabledCheckbox: HTMLInputElement | null = null
   private historySizeSlider: HTMLInputElement | null = null
   private historyValueSpan: HTMLSpanElement | null = null
   private predictionTimeSlider: HTMLInputElement | null = null
@@ -64,6 +66,7 @@ export class DebuggerControlPanel {
 
   private isMouseSettingsMinimized: boolean = true
   private isKeyboardSettingsMinimized: boolean = true
+  private isScrollSettingsMinimized: boolean = true
   private isGeneralSettingsMinimized: boolean = true
   private isElementsListMinimized: boolean = true
   private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
@@ -142,6 +145,7 @@ export class DebuggerControlPanel {
 
     this.isMouseSettingsMinimized = loadedStates.mouse ?? true
     this.isKeyboardSettingsMinimized = loadedStates.keyboard ?? true
+    this.isScrollSettingsMinimized = loadedStates.scroll ?? true
     this.isGeneralSettingsMinimized = loadedStates.general ?? true
     this.isElementsListMinimized = loadedStates.elements ?? false
     return loadedStates
@@ -151,6 +155,7 @@ export class DebuggerControlPanel {
     const states: SectionStates = {
       mouse: this.isMouseSettingsMinimized,
       keyboard: this.isKeyboardSettingsMinimized,
+      scroll: this.isScrollSettingsMinimized,
       general: this.isGeneralSettingsMinimized,
       elements: this.isElementsListMinimized,
     }
@@ -164,6 +169,7 @@ export class DebuggerControlPanel {
   private queryDOMElements() {
     this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector("#trajectory-enabled")
     this.tabEnabledCheckbox = this.controlsContainer.querySelector("#tab-enabled")
+    this.scrollEnabledCheckbox = this.controlsContainer.querySelector("#scroll-enabled")
     this.historySizeSlider = this.controlsContainer.querySelector("#history-size")
     this.historyValueSpan = this.controlsContainer.querySelector("#history-value")
     this.predictionTimeSlider = this.controlsContainer.querySelector("#prediction-time")
@@ -255,6 +261,7 @@ export class DebuggerControlPanel {
     isMinimizedFlagName:
       | "isMouseSettingsMinimized"
       | "isKeyboardSettingsMinimized"
+      | "isScrollSettingsMinimized"
       | "isGeneralSettingsMinimized"
       | "isElementsListMinimized"
   ) {
@@ -268,6 +275,7 @@ export class DebuggerControlPanel {
   private setupEventListeners() {
     this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
     this.createChangeEventListener(this.tabEnabledCheckbox, "enableTabPrediction")
+    this.createChangeEventListener(this.scrollEnabledCheckbox, "enableScrollPrediction")
     this.createChangeEventListener(this.showNameTagsCheckbox, "name-tag")
     this.createInputEventListener(
       this.historySizeSlider,
@@ -303,6 +311,10 @@ export class DebuggerControlPanel {
     this.createSectionVisibilityToggleEventListener(
       this.controlsContainer.querySelector(".keyboard-settings-section"),
       "isKeyboardSettingsMinimized"
+    )
+    this.createSectionVisibilityToggleEventListener(
+      this.controlsContainer.querySelector(".scroll-settings-section"),
+      "isScrollSettingsMinimized"
     )
     this.createSectionVisibilityToggleEventListener(
       this.controlsContainer.querySelector(".general-settings-section"),
@@ -345,6 +357,10 @@ export class DebuggerControlPanel {
       states.keyboard ?? true
     )
     this.toggleMinimizeSection(
+      this.controlsContainer.querySelector(".scroll-settings-section"),
+      states.scroll ?? true
+    )
+    this.toggleMinimizeSection(
       this.controlsContainer.querySelector(".general-settings-section"),
       states.general ?? true
     )
@@ -378,6 +394,9 @@ export class DebuggerControlPanel {
     }
     if (this.tabEnabledCheckbox) {
       this.tabEnabledCheckbox.checked = settings.enableTabPrediction
+    }
+    if (this.scrollEnabledCheckbox) {
+      this.scrollEnabledCheckbox.checked = settings.enableScrollPrediction
     }
     if (this.showNameTagsCheckbox) {
       this.showNameTagsCheckbox.checked =
@@ -547,6 +566,7 @@ export class DebuggerControlPanel {
     this.debuggerElementsSection = null
     this.trajectoryEnabledCheckbox = null
     this.tabEnabledCheckbox = null
+    this.scrollEnabledCheckbox = null
     this.historySizeSlider = null
     this.historyValueSpan = null
     this.predictionTimeSlider = null
@@ -714,6 +734,30 @@ export class DebuggerControlPanel {
           </div>
         </div>
 
+        <div class="debugger-section scroll-settings-section">
+          <div class="debugger-section-header scroll-settings-header">
+            <h3>Scroll Settings</h3>
+            <button class="section-minimize-button">-</button>
+          </div>
+          <div class="debugger-section-content scroll-settings-content">
+            <div class="control-row">
+             <label for="scroll-enabled">
+                Enable Scroll Prediction
+                <span class="info-icon" title="${[
+                  "Scroll Prediction Control",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "When enabled: Predicts user scroll",
+                  "intent and triggers callbacks for elements",
+                  "that are about to enter the viewport.",
+                  "",
+                  "Property: enableScrollPrediction",
+                ].join("\n")}">i</span>
+              </label>
+              <input type="checkbox" id="scroll-enabled">
+            </div>
+          </div>
+        </div>
+
         <div class="debugger-section general-settings-section">
           <div class="debugger-section-header general-settings-header">
             <h3>General Settings</h3>
@@ -767,7 +811,7 @@ export class DebuggerControlPanel {
     return `
       #debug-controls {
         position: fixed; bottom: 10px; right: 10px;
-        background-color: rgba(0, 0, 0, 0.75); color: white; padding: 12px;
+        background-color: rgba(0, 0, 0, 0.90); color: white; padding: 12px;
         border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
         z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
         width: 400px;

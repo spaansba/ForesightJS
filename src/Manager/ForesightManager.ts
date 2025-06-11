@@ -20,6 +20,7 @@ import type {
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
+  DEFAULT_ENABLE_SCROLL_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
   DEFAULT_IS_DEBUG,
@@ -93,6 +94,7 @@ export class ForesightManager {
   private _globalSettings: ForesightManagerSettings = {
     debug: DEFAULT_IS_DEBUG,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
+    enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
     trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
     defaultHitSlop: {
@@ -336,6 +338,11 @@ export class ForesightManager {
       "enableMousePrediction"
     )
 
+    const scrollPredictionChanged = this.updateBooleanSetting(
+      props?.enableScrollPrediction,
+      "enableScrollPrediction"
+    )
+
     const tabPredictionChanged = this.updateBooleanSetting(
       props?.enableTabPrediction,
       "enableTabPrediction"
@@ -395,6 +402,7 @@ export class ForesightManager {
       tabOffsetChanged ||
       mousePredictionChanged ||
       tabPredictionChanged ||
+      scrollPredictionChanged ||
       debuggerSettingsChanged ||
       hitSlopChanged ||
       debugModeChanged
@@ -768,6 +776,7 @@ export class ForesightManager {
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
     let isFirst = true
+    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -776,7 +785,7 @@ export class ForesightManager {
       const isNowIntersecting = entry.isIntersecting
       elementData.isIntersectingWithViewport = isNowIntersecting
 
-      if (isFirst && wasIntersecting) {
+      if (isFirst && wasIntersecting && this._globalSettings.enableScrollPrediction) {
         this.handleScroll(elementData, entry.boundingClientRect)
         isFirst = false
       }
@@ -790,17 +799,32 @@ export class ForesightManager {
 
       this.updateElementBounds(entry.boundingClientRect, elementData)
 
-      if (
-        lineSegmentIntersectsRect(
-          this.trajectoryPositions.currentPoint,
-          this.predictedScrollPoint,
-          elementData?.elementBounds.expandedRect
-        )
-      ) {
-        this.callCallback(elementData, {
-          kind: "scroll",
-          subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
-        })
+      if (this._globalSettings.enableScrollPrediction) {
+        if (
+          lineSegmentIntersectsRect(
+            this.trajectoryPositions.currentPoint,
+            this.predictedScrollPoint,
+            elementData?.elementBounds.expandedRect
+          )
+        ) {
+          this.callCallback(elementData, {
+            kind: "scroll",
+            subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
+          })
+        }
+      }
+      {
+        if (
+          isPointInRectangle(
+            this.trajectoryPositions.currentPoint,
+            elementData.elementBounds.expandedRect
+          )
+        ) {
+          this.callCallback(elementData, {
+            kind: "mouse",
+            subType: "hover",
+          })
+        }
       }
     }
   }
