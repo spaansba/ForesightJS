@@ -543,7 +543,7 @@ export class ForesightManager {
 
     if (this.debugger) {
       this.debugger.hideScrollTrajectoryVisuals()
-      this.debugger.updateTrajectoryVisuals(
+      this.debugger.updateMouseTrajectoryVisuals(
         this.trajectoryPositions,
         this._globalSettings.enableMousePrediction
       )
