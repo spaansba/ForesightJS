@@ -12,11 +12,13 @@ import type {
   ForesightRegisterResult,
   HitType,
   NumericSettingKeys,
+  Point,
+  Rect,
+  ScrollDirection,
   TrajectoryPositions,
   UpdateForsightManagerSettings,
 } from "../types/types"
 import {
-  DEFAULT_CALLBACKHITS,
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
@@ -108,6 +110,7 @@ export class ForesightManager {
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
+  private predictedScrollPoint: Point = { x: 0, y: 0 }
 
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
@@ -710,15 +713,13 @@ export class ForesightManager {
   }
 
   private updateElementBounds(newRect: DOMRect, elementData: ForesightElementData) {
-    const expandedRect = getExpandedRect(newRect, elementData.elementBounds.hitSlop)
     // We dont check if rects are equal like we do in forceUpdateElementBounds, since rects can never be equal here
-
     this.elements.set(elementData.element, {
       ...elementData,
       elementBounds: {
         ...elementData.elementBounds,
         originalRect: newRect,
-        expandedRect,
+        expandedRect: getExpandedRect(newRect, elementData.elementBounds.hitSlop),
       },
     })
 
@@ -728,7 +729,47 @@ export class ForesightManager {
     }
   }
 
+  private getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirection {
+    const scrollThreshold = 2
+    const deltaY = newRect.top - oldRect!.top
+    const deltaX = newRect.left - oldRect!.left
+    if (deltaY > scrollThreshold) {
+      return "up"
+    } else if (deltaY < -scrollThreshold) {
+      return "down"
+    }
+    if (deltaX > scrollThreshold) {
+      return "left"
+    } else if (deltaX < -scrollThreshold) {
+      return "right"
+    }
+    return "none"
+  }
+
+  private calculatePredictedScrollPoint(scrollDirection: ScrollDirection): void {
+    const { x, y } = this.trajectoryPositions.currentPoint
+    const predictionDistance = 150
+    const predictedPoint = { x, y }
+
+    switch (scrollDirection) {
+      case "up":
+        predictedPoint.y -= predictionDistance
+        break
+      case "down":
+        predictedPoint.y += predictionDistance
+        break
+      case "left":
+        predictedPoint.x -= predictionDistance
+        break
+      case "right":
+        predictedPoint.x += predictionDistance
+        break
+    }
+    this.predictedScrollPoint = predictedPoint
+  }
+
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
+    let isFirst = true
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -736,6 +777,14 @@ export class ForesightManager {
       const wasIntersecting = elementData.isIntersectingWithViewport
       const isNowIntersecting = entry.isIntersecting
       elementData.isIntersectingWithViewport = isNowIntersecting
+
+      if (isFirst && wasIntersecting) {
+        this.calculatePredictedScrollPoint(
+          this.getScrollDirection(elementData.elementBounds.originalRect!, entry.boundingClientRect)
+        )
+        isFirst = false
+      }
+
       if (!isNowIntersecting) {
         if (this._globalSettings.debug && wasIntersecting) {
           this.debugger?.removeElement(entry.target)
@@ -745,13 +794,22 @@ export class ForesightManager {
 
       this.updateElementBounds(entry.boundingClientRect, elementData)
 
+      // if (
+      //   isPointInRectangle(
+      //     this.trajectoryPositions.currentPoint,
+      //     elementData?.elementBounds.expandedRect
+      //   )
+      // ) {
+      //   this.callCallback(elementData, { kind: "mouse", subType: "hover" })
+      // }
       if (
-        isPointInRectangle(
+        lineSegmentIntersectsRect(
           this.trajectoryPositions.currentPoint,
+          this.predictedScrollPoint,
           elementData?.elementBounds.expandedRect
         )
       ) {
-        this.callCallback(elementData, { kind: "mouse", subType: "hover" })
+        this.callCallback(elementData, { kind: "mouse", subType: "trajectory" })
       }
     }
   }

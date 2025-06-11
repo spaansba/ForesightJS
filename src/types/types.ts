@@ -116,6 +116,8 @@ export type TabCallbackCounts = {
   forwards: number
 }
 
+export type ScrollDirection = "down" | "up" | "left" | "right" | "none"
+
 export type CallbackHits = {
   total: number
   mouse: MouseCallbackCounts
