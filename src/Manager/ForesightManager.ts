@@ -697,7 +697,7 @@ export class ForesightManager {
   private callCallback(elementData: ForesightElementData | undefined, hitType: HitType) {
     if (elementData) {
       this.updateHitCounters(elementData, hitType)
-      // elementData.callback()
+      elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData)

@@ -18,9 +18,6 @@ export function getFocusedElementIndex(
   tabbableElementsCache: FocusableElement[],
   targetElement: HTMLElement
 ): number {
-  let currentIndex: number = -1
-
-  // --- Predictive Search (Fast Path) ---
   // First, try to predict the next index based on the last known position.
   if (lastFocusedIndex !== null) {
     const predictedIndex = isReversed ? lastFocusedIndex - 1 : lastFocusedIndex + 1
@@ -31,15 +28,10 @@ export function getFocusedElementIndex(
       predictedIndex < tabbableElementsCache.length &&
       tabbableElementsCache[predictedIndex] === targetElement
     ) {
-      console.log("hit")
-      // The prediction was correct! This is the O(1) success case.
-      currentIndex = predictedIndex
+      return predictedIndex
     }
   }
 
-  if (currentIndex === -1) {
-    currentIndex = tabbableElementsCache.findIndex((element) => element === targetElement)
-  }
-
-  return currentIndex
+  // Slow way if we dont find it
+  return tabbableElementsCache.findIndex((element) => element === targetElement)
 }
