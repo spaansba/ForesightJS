@@ -12,20 +12,22 @@ import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAn
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
+import PositionObserver from "@thednp/position-observer"
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
-  animation?: {
-    overlay: HTMLElement
-    startTime: number
-    duration: number
-    timeoutId: ReturnType<typeof setTimeout>
-  }
+}
+
+type callbackAnimation = {
+  overlay: HTMLElement
+  startTime: number
+  duration: number
+  timeoutId: ReturnType<typeof setTimeout>
 }
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
-
+  private callbackAnimations: Map<Element, callbackAnimation> = new Map()
   private foresightManagerInstance: ForesightManager
   private shadowHost!: HTMLElement
   private shadowRoot!: ShadowRoot
@@ -44,6 +46,8 @@ export class ForesightDebugger {
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
   }
+  private animationPositionObserver: PositionObserver | null = null
+  private animationFrameId: number | null = null // ADDED: To manage the animation loop
 
   private _setupDOM() {
     // If for some reason we call this on an already-setup instance, do nothing.
@@ -73,6 +77,10 @@ export class ForesightDebugger {
       this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings
     )
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
+
+    this.animationPositionObserver = new PositionObserver(this.updateAnimationOverlays, {
+      callbackMode: "all",
+    })
   }
 
   private static get isInitiated(): boolean {
@@ -119,6 +127,30 @@ export class ForesightDebugger {
     return overlays
   }
 
+  public updateAnimationOverlays(entries: IntersectionObserverEntry[]) {
+    console.log("here2")
+    for (const entry of entries) {
+      const element = entry.target
+      const animationData = this.callbackAnimations.get(element)
+      if (!animationData) continue
+
+      const elapsed = Date.now() - animationData.startTime
+      if (elapsed >= animationData.duration) {
+        this.animationPositionObserver?.unobserve(element)
+        animationData.overlay.remove()
+        this.callbackAnimations.delete(element)
+      } else {
+        const rect = entry.boundingClientRect
+        const width = rect.right - rect.left
+        const height = rect.bottom - rect.top
+
+        animationData.overlay.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`
+        animationData.overlay.style.width = `${width}px`
+        animationData.overlay.style.height = `${height}px`
+      }
+    }
+  }
+
   public createOrUpdateElementOverlay(newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
     this.lastElementData.set(newData.element, {
@@ -129,12 +161,27 @@ export class ForesightDebugger {
     if (!overlays) {
       overlays = this.createElementOverlays(newData)
     }
+
+    // This helper updates the static overlays (border, name tag)
     updateElementOverlays(
       overlays,
       newData,
       this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
         DEFAULT_SHOW_NAME_TAGS
     )
+
+    // If an animation is currently active for this element, update its position too.
+    // This ensures the animation "sticks" to the element during scrolls or resizes.
+    // if (overlays.animation) {
+    //   const { expandedRect } = newData.elementBounds
+    //   const width = expandedRect.right - expandedRect.left
+    //   const height = expandedRect.bottom - expandedRect.top
+
+    //   overlays.animation.overlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
+    //   overlays.animation.overlay.style.width = `${width}px`
+    //   overlays.animation.overlay.style.height = `${height}px`
+    // }
+
     this.controlPanel.refreshElementList()
   }
 
@@ -241,17 +288,15 @@ export class ForesightDebugger {
   }
 
   public showCallbackAnimation(elementData: ForesightElementData) {
-    const overlays = this.debugElementOverlays.get(elementData.element)
-    if (!overlays) {
-      return
+    const animateOverlay = this.callbackAnimations.get(elementData.element)
+    if (animateOverlay) {
+      clearTimeout(animateOverlay.timeoutId)
+      animateOverlay.overlay.remove()
+      // We remove it from the map here, so a new one can be created below
+      this.callbackAnimations.delete(elementData.element)
     }
 
-    if (overlays.animation) {
-      clearTimeout(overlays.animation.timeoutId)
-      overlays.animation.overlay.remove()
-    }
-
-    const animationOverlay = createAndAppendElement("div", this.debugContainer, {
+    const newAnimationOverlay = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-callback-indicator",
     })
 
@@ -259,32 +304,37 @@ export class ForesightDebugger {
     const width = right - left
     const height = bottom - top
 
-    animationOverlay.style.display = "block"
-    animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
-    animationOverlay.style.width = `${width}px`
-    animationOverlay.style.height = `${height}px`
+    newAnimationOverlay.style.display = "block"
+    newAnimationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
+    newAnimationOverlay.style.width = `${width}px`
+    newAnimationOverlay.style.height = `${height}px`
 
     requestAnimationFrame(() => {
-      animationOverlay.classList.add("animate")
+      newAnimationOverlay.classList.add("animate")
     })
-
+    this.animationPositionObserver?.observe(newAnimationOverlay)
     const animationDuration = 500
     const timeoutId = setTimeout(() => {
-      if (overlays.animation) {
-        overlays.animation.overlay.remove()
-        overlays.animation = undefined
-      }
+      // The main animation loop will handle removal, but this is a fallback.
+      newAnimationOverlay.remove()
+      this.callbackAnimations.delete(elementData.element)
     }, animationDuration)
 
-    overlays.animation = {
-      overlay: animationOverlay,
+    this.callbackAnimations.set(elementData.element, {
+      overlay: newAnimationOverlay,
       startTime: Date.now(),
-      duration: animationDuration,
+      duration: 500,
       timeoutId: timeoutId,
-    }
+    })
+    console.log(this.callbackAnimations)
   }
 
   public cleanup() {
+    // ADDED: Stop the animation loop on cleanup
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId)
+      this.animationFrameId = null
+    }
     this.controlPanel?.cleanup()
     this.shadowHost?.remove()
     this.debugElementOverlays.clear()

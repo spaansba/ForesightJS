@@ -416,6 +416,7 @@ export class ForesightManager {
       scrollPredictionChanged ||
       debuggerSettingsChanged ||
       hitSlopChanged ||
+      scrollMarginChanged ||
       debugModeChanged
 
     if (settingsActuallyChanged && this.debugger) {
