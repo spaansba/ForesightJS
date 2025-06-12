@@ -71,12 +71,21 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
     },
     {
       id: "page-switch",
-      label: "Switch to other page",
+      label: "Switch to test 1",
       description: "",
       onClick: () => {},
       isActive: false,
       type: "link",
       to: "/other",
+    },
+    {
+      id: "page-mass",
+      label: "Switch to mass",
+      description: "",
+      onClick: () => {},
+      isActive: false,
+      type: "link",
+      to: "/mass",
     },
     {
       id: "reset-all",
@@ -117,7 +126,8 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
   // Filter buttons by type
   const smallButtons = controlButtons.filter((button) => button.type === "small-button")
   const linkAndResetButtons = controlButtons.filter(
-    (button) => button.id === "page-switch" || button.id === "reset-all"
+    (button) =>
+      button.id === "page-switch" || button.id === "page-mass" || button.id === "reset-all"
   )
   const mainButtons = controlButtons.filter(
     (button) => button.type === "button" && button.id !== "reset-all"

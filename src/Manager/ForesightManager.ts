@@ -1,4 +1,4 @@
-import { tabbable } from "tabbable"
+import { tabbable, type FocusableElement } from "tabbable"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { isTouchDevice } from "../helpers/isTouchDevice"
 import type {
@@ -52,6 +52,7 @@ import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import PositionObserver from "@thednp/position-observer"
 import { getScrollDirection } from "./helpers/getScrollDirection"
 import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
+import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -124,6 +125,10 @@ export class ForesightManager {
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
+
+  private tabbableElementsCache: FocusableElement[] = []
+  private lastFocusedIndex: number | null = null
+
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
   private domObserver: MutationObserver | null = null
@@ -591,6 +596,11 @@ export class ForesightManager {
    *
    */
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
+    // Invalidate tabbale elements cache
+    if (mutationsList.length) {
+      this.tabbableElementsCache = []
+      this.lastFocusedIndex = null
+    }
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
         for (const element of Array.from(this.elements.keys())) {
@@ -621,30 +631,39 @@ export class ForesightManager {
       return
     }
 
-    const tabbableElements = tabbable(document.documentElement)
-    const currentIndex = tabbableElements.findIndex((element) => element === targetElement)
+    // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
+    if (!this.tabbableElementsCache.length) {
+      this.tabbableElementsCache = tabbable(document.documentElement)
+      if (this._globalSettings.debug) {
+        console.log("ForesightJS: Recomputed tabbable elements cache because of DOM change")
+      }
+    }
 
     // Determine the range of elements to check based on the tab direction and offset
     const isReversed = this.lastKeyDown.shiftKey
-    const tabOffset = isReversed ? -this._globalSettings.tabOffset : this._globalSettings.tabOffset
+
+    const currentIndex: number = getFocusedElementIndex(
+      isReversed,
+      this.lastFocusedIndex,
+      this.tabbableElementsCache,
+      targetElement
+    )
+
+    this.lastFocusedIndex = currentIndex
 
     this.lastKeyDown = null
     const elementsToPredict: ForesightElement[] = []
-
-    // Iterate through the tabbable elements to find those within the prediction range
-    for (let i = 0; i < tabbableElements.length; i++) {
-      const element = tabbableElements[i]
-      // Check if the current element is within the range defined by the current focus and the tabOffset
-      // The range includes the element that just received focus (at currentIndex)
-      const isInRange =
-        tabOffset > 0
-          ? i >= currentIndex && i <= currentIndex + tabOffset
-          : i <= currentIndex && i >= currentIndex + tabOffset
-
-      if (isInRange && this.elements.has(element as ForesightElement)) {
-        // for (let j = 0; j < tabOffset; j++) {
-        elementsToPredict.push(tabbableElements[i] as ForesightElement)
-        // }
+    for (let i = 0; i <= this._globalSettings.tabOffset; i++) {
+      if (isReversed) {
+        const element = this.tabbableElementsCache[currentIndex - i]
+        if (this.elements.has(element as ForesightElement)) {
+          elementsToPredict.push(element as ForesightElement)
+        }
+      } else {
+        const element = this.tabbableElementsCache[currentIndex + i]
+        if (this.elements.has(element as ForesightElement)) {
+          elementsToPredict.push(element as ForesightElement)
+        }
       }
     }
 
@@ -678,7 +697,7 @@ export class ForesightManager {
   private callCallback(elementData: ForesightElementData | undefined, hitType: HitType) {
     if (elementData) {
       this.updateHitCounters(elementData, hitType)
-      elementData.callback()
+      // elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData)
@@ -783,7 +802,6 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
-    console.log(entries)
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -835,7 +853,7 @@ export class ForesightManager {
     // Handles scrolling
     this.positionObserver = new PositionObserver(this.handlePositionChange, {
       callbackMode: "update",
-      rootMargin: "20px",
+      rootMargin: "50px",
     })
 
     this.isSetup = true
@@ -848,8 +866,7 @@ export class ForesightManager {
       this.globalListenersController = null
     } else {
       console.log(
-        "%cForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup events now, but these are currently skipped while in debug mode. Observers are cleared up.",
-        "color: #28a745; font-weight: bold;"
+        "ForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup events now, but these are currently skipped while in debug mode. Observers are cleared up."
       )
     }
     this.domObserver?.disconnect()

@@ -1,0 +1,76 @@
+import { useEffect, useRef, useState } from "react"
+import { ForesightManager } from "../../../../src/Manager/ForesightManager"
+
+function Mass() {
+  const [resetKey, setResetKey] = useState(0)
+  const buttons = Array.from({ length: 2000 }, (_, i) => (
+    <SmallButton key={`${resetKey}-${i}`} name={i} />
+  ))
+
+  ForesightManager.instance.alterGlobalSettings({
+    debug: false,
+  })
+
+  return (
+    <div>
+      <div className="w-screen h-[200px] flex items-center gap-4 p-4">
+        <a
+          className="size-20 bg-green-500 flex items-center justify-center text-white font-semibold rounded"
+          href="/"
+        >
+          Back
+        </a>
+        <button
+          className="size-20 bg-black text-white cursor-pointer rounded flex items-center justify-center font-semibold"
+          onClick={() => {
+            ForesightManager.instance.alterGlobalSettings({
+              debug: !ForesightManager.instance.getManagerData.globalSettings.debug,
+            })
+          }}
+        >
+          Debug
+        </button>
+        <button
+          className="size-20 bg-black text-white cursor-pointer rounded flex items-center justify-center font-semibold"
+          onClick={() => {
+            setResetKey((prev) => prev + 1)
+          }}
+        >
+          Reset
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-1 p-4">{buttons}</div>
+    </div>
+  )
+}
+
+function SmallButton({ name }: { name: number }) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!buttonRef.current) {
+      return
+    }
+    ForesightManager.instance.register({
+      element: buttonRef.current,
+      callback: () => {
+        // console.log(name)
+      },
+      hitSlop: 0,
+    })
+
+    return () => {}
+  }, [buttonRef, name])
+
+  return (
+    <button
+      ref={buttonRef}
+      className="flex justify-center items-center size-10 rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 bg-slate-100 hover:bg-slate-200"
+      onClick={() => console.log(name)}
+    >
+      <span className="text-center leading-tight">{name}</span>
+    </button>
+  )
+}
+
+export default Mass
