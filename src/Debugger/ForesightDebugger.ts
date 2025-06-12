@@ -47,7 +47,6 @@ export class ForesightDebugger {
     this.foresightManagerInstance = foresightManager
   }
   private animationPositionObserver: PositionObserver | null = null
-  private animationFrameId: number | null = null // ADDED: To manage the animation loop
 
   private _setupDOM() {
     // If for some reason we call this on an already-setup instance, do nothing.
@@ -90,13 +89,11 @@ export class ForesightDebugger {
         const rect = entry.boundingClientRect
         const { hitSlop, overlay } = animationData
 
-        // Calculate the expanded position and size using the live rect and stored hitSlop
         const newLeft = rect.left - hitSlop.left
         const newTop = rect.top - hitSlop.top
         const newWidth = rect.width + hitSlop.left + hitSlop.right
         const newHeight = rect.height + hitSlop.top + hitSlop.bottom
 
-        // Apply the new transform and dimensions
         overlay.style.transform = `translate3d(${newLeft}px, ${newTop}px, 0)`
         overlay.style.width = `${newWidth}px`
         overlay.style.height = `${newHeight}px`
@@ -147,30 +144,6 @@ export class ForesightDebugger {
     this.debugElementOverlays.set(elementData.element, overlays)
     return overlays
   }
-
-  // public updateAnimationOverlays(entries: IntersectionObserverEntry[]) {
-  //   console.log("here2")
-  //   for (const entry of entries) {
-  //     const element = entry.target
-  //     const animationData = this.callbackAnimations.get(element)
-  //     if (!animationData) continue
-
-  //     const elapsed = Date.now() - animationData.startTime
-  //     if (elapsed >= animationData.duration) {
-  //       this.animationPositionObserver?.unobserve(element)
-  //       animationData.overlay.remove()
-  //       this.callbackAnimations.delete(element)
-  //     } else {
-  //       const rect = entry.boundingClientRect
-  //       const width = rect.right - rect.left
-  //       const height = rect.bottom - rect.top
-
-  //       animationData.overlay.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`
-  //       animationData.overlay.style.width = `${width}px`
-  //       animationData.overlay.style.height = `${height}px`
-  //     }
-  //   }
-  // }
 
   public createOrUpdateElementOverlay(newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
@@ -315,7 +288,6 @@ export class ForesightDebugger {
     const width = right - left
     const height = bottom - top
 
-    // Set initial position and size
     animationOverlay.style.display = "block"
     animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
     animationOverlay.style.width = `${width}px`
@@ -325,31 +297,22 @@ export class ForesightDebugger {
 
     const animationDuration = 500
 
-    // Set a timeout to clean up the animation after it finishes
     const timeoutId = setTimeout(() => {
       animationOverlay.remove()
       this.callbackAnimations.delete(element)
-      // IMPORTANT: Stop observing the element to prevent memory leaks
       this.animationPositionObserver?.unobserve(element)
     }, animationDuration)
 
-    // Store the animation data
     this.callbackAnimations.set(element, {
       hitSlop: elementData.elementBounds.hitSlop,
       overlay: animationOverlay,
       timeoutId: timeoutId,
     })
 
-    // IMPORTANT: Start observing the element's position
     this.animationPositionObserver?.observe(element)
   }
 
   public cleanup() {
-    // ADDED: Stop the animation loop on cleanup
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId)
-      this.animationFrameId = null
-    }
     this.controlPanel?.cleanup()
     this.shadowHost?.remove()
     this.debugElementOverlays.clear()

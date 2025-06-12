@@ -124,8 +124,8 @@ export class ForesightManager {
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
-  private predictedScrollPoint: Point = { x: 0, y: 0 }
-  private scrollDirection: ScrollDirection = "none"
+  private predictedScrollPoint: Point | null = null
+  private scrollDirection: ScrollDirection | null = null
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
@@ -609,8 +609,6 @@ export class ForesightManager {
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Tab") {
       this.lastKeyDown = e
-    } else {
-      this.lastKeyDown = null
     }
   }
 
@@ -693,38 +691,6 @@ export class ForesightManager {
     }
   }
 
-  // private handleIntersection = (entries: IntersectionObserverEntry[]) => {
-  //   for (const entry of entries) {
-  //     const elementData = this.elements.get(entry.target)
-  //     if (!elementData) {
-  //       return
-  //     }
-  //     elementData.isIntersectingWithViewport = entry.isIntersecting
-  //     if (entry.isIntersecting) {
-  //       elementData.elementBounds.originalRect = entry.boundingClientRect
-  //       elementData.elementBounds.expandedRect = getExpandedRect(
-  //         elementData.elementBounds.originalRect,
-  //         elementData.elementBounds.hitSlop
-  //       )
-  //       if (this.positionObserver) {
-  //         this.positionObserver?.observe(entry.target)
-  //       } else {
-  //         console.warn(
-  //           "ForesightJS: PositionObserver is not initialized. This might lead to incorrect behavior when observing elements."
-  //         )
-  //       }
-  //       if (this._globalSettings.debug) {
-  //         this.debugger?.createOrUpdateElementOverlay(elementData)
-  //       }
-  //     } else {
-  //       this.positionObserver?.unobserve(entry.target)
-  //       if (this._globalSettings.debug) {
-  //         this.debugger?.removeElement(entry.target)
-  //       }
-  //     }
-  //   }
-  // }
-
   /**
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
@@ -768,77 +734,75 @@ export class ForesightManager {
     }
   }
 
-  private handleScroll(elementData: ForesightElementData, newRect: Rect) {
-    this.scrollDirection = getScrollDirection(elementData.elementBounds.originalRect!, newRect)
-    if (this.scrollDirection === "none") {
-      return
-    }
+  private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
+    if (this._globalSettings.enableScrollPrediction) {
+      // ONCE per animation frame we decide what the scroll direction is
+      this.scrollDirection =
+        this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect!, newRect)
 
-    this.predictedScrollPoint = predictNextScrollPosition(
-      this.trajectoryPositions.currentPoint,
-      this.scrollDirection,
-      this._globalSettings.scrollMargin
-    )
-    if (this.debugger) {
-      this.debugger.updateScrollTrajectoryVisuals(
-        this.trajectoryPositions.currentPoint,
-        this.predictedScrollPoint
-      )
+      // ONCE per animation frame we decide the predicted scroll point
+      this.predictedScrollPoint =
+        this.predictedScrollPoint ??
+        predictNextScrollPosition(
+          this.trajectoryPositions.currentPoint,
+          this.scrollDirection,
+          this._globalSettings.scrollMargin
+        )
+
+      if (
+        lineSegmentIntersectsRect(
+          this.trajectoryPositions.currentPoint,
+          this.predictedScrollPoint,
+          elementData?.elementBounds.expandedRect
+        )
+      ) {
+        this.callCallback(elementData, {
+          kind: "scroll",
+          subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
+        })
+      }
+      if (this.debugger) {
+        this.debugger.updateScrollTrajectoryVisuals(
+          this.trajectoryPositions.currentPoint,
+          this.predictedScrollPoint
+        )
+      }
+    } else {
+      if (
+        isPointInRectangle(
+          this.trajectoryPositions.currentPoint,
+          elementData.elementBounds.expandedRect
+        )
+      ) {
+        this.callCallback(elementData, {
+          kind: "mouse",
+          subType: "hover",
+        })
+      }
     }
   }
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
-    let isFirst = true
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
 
-      const wasIntersecting = elementData.isIntersectingWithViewport
+      const wasPreviouslyAlsoIntersecting = elementData.isIntersectingWithViewport
       const isNowIntersecting = entry.isIntersecting
       elementData.isIntersectingWithViewport = isNowIntersecting
 
-      if (isFirst && wasIntersecting && this._globalSettings.enableScrollPrediction) {
-        this.handleScroll(elementData, entry.boundingClientRect)
-        isFirst = false
-      }
-
       if (!isNowIntersecting) {
-        if (this._globalSettings.debug && wasIntersecting) {
+        if (this._globalSettings.debug && wasPreviouslyAlsoIntersecting) {
           this.debugger?.removeElement(entry.target)
         }
         continue
       }
-
       this.updateElementBounds(entry.boundingClientRect, elementData)
-
-      if (this._globalSettings.enableScrollPrediction) {
-        if (
-          lineSegmentIntersectsRect(
-            this.trajectoryPositions.currentPoint,
-            this.predictedScrollPoint,
-            elementData?.elementBounds.expandedRect
-          )
-        ) {
-          this.callCallback(elementData, {
-            kind: "scroll",
-            subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
-          })
-        }
-      }
-      {
-        if (
-          isPointInRectangle(
-            this.trajectoryPositions.currentPoint,
-            elementData.elementBounds.expandedRect
-          )
-        ) {
-          this.callCallback(elementData, {
-            kind: "mouse",
-            subType: "hover",
-          })
-        }
-      }
+      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
     }
+
+    this.scrollDirection = null
+    this.predictedScrollPoint = null
   }
 
   private initializeGlobalListeners() {
