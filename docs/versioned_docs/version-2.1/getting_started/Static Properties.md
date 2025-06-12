@@ -57,7 +57,7 @@ Checks whether the ForesightManager has been initialized. Useful for conditional
 
 ## ForesightManager.instance.getManagerData
 
-Gets a comprehensive snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+Snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
 
 **Returns:** `Readonly<ForesightManagerData>`
 

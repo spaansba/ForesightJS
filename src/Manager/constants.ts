@@ -20,7 +20,7 @@ export const DEFAULT_HITSLOP = 0
 
 export const DEFAULT_SCROLL_MARGIN = 150
 export const MIN_SCROLL_MARGIN = 30
-export const MAX_SCROLL_MARGIN = 500
+export const MAX_SCROLL_MARGIN = 300
 export const SCROLL_MARGIN_UNIT = "px"
 
 export const DEFAULT_ENABLE_TAB_PREDICTION = true

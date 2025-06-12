@@ -643,7 +643,7 @@ export class DebuggerControlPanel {
                 Enable Mouse Prediction
                 <span class="info-icon" title="${[
                   "Mouse Prediction Control",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                   "When enabled: Predicts mouse movement",
                   "trajectory and triggers callbacks before",
                   "the cursor reaches the target element.",
@@ -660,8 +660,8 @@ export class DebuggerControlPanel {
              <label for="history-size">
                 History Size
                 <span class="info-icon" title="${[
-                  "Position History Configuration",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Position History",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                   "Controls how many past mouse positions",
                   "are stored for velocity calculations.",
                   "",
@@ -685,8 +685,8 @@ export class DebuggerControlPanel {
             <label for="prediction-time">
                 Prediction Time
                 <span class="info-icon" title="${[
-                  "Trajectory Prediction Timing",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Trajectory Prediction Time",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                   `How far into the future (in ${TRAJECTORY_PREDICTION_TIME_UNIT})`,
                   "to calculate the mouse trajectory path.",
                   "",
@@ -720,10 +720,12 @@ export class DebuggerControlPanel {
                 Enable Tab Prediction
                 <span class="info-icon" title="${[
                   "Tab Navigation Prediction",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                   "When enabled: Callbacks are executed when",
-                  `the user is ${this.foresightManagerInstance.getManagerData.globalSettings.tabOffset} ${TAB_OFFSET_UNIT} away from a registered element`,
-                  "during tab navigation (works with Shift+Tab too).",
+                  `the user is ${this.foresightManagerInstance.getManagerData.globalSettings.tabOffset} (tabOffset) ${TAB_OFFSET_UNIT} away from`,
+                  "a registered element during tab navigation.",
+                  "",
+                  "(works with Shift+Tab too).",
                   "",
                   "Property: enableTabPrediction",
                 ].join("\n")}">i</span>
@@ -732,10 +734,10 @@ export class DebuggerControlPanel {
             </div>
             <div class="control-row">
                <label for="tab-offset">
-                Tab Prediction Offset
+                Tab Offset
                 <span class="info-icon" title="${[
-                  "Tab Offset Configuration",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Tab Offset",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
                   "Number of tabbable elements to look ahead",
                   "when predicting tab navigation targets.",
                   "",
@@ -759,48 +761,43 @@ export class DebuggerControlPanel {
             <h3>Scroll Settings</h3>
             <button class="section-minimize-button">-</button>
           </div>
-          <div class="debugger-section-content scroll-settings-content">
-            <div class="control-row">
-             <label for="scroll-enabled">
-                Enable Scroll Prediction
-                <span class="info-icon" title="${[
-                  "Scroll Prediction Control",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "When enabled: Uses the Scroll Margin to",
-                  "trigger callbacks for elements before they",
-                  "enter the viewport.",
-                  "",
-                  "When disabled: Callbacks only fire when",
-                  "an element is actually visible in the viewport.",
-                  "",
-                  "Property: enableScrollPrediction",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="checkbox" id="scroll-enabled">
-            </div>
-            <div class="control-row">
-               <label for="scroll-margin">
-                Scroll Margin
-                <span class="info-icon" title="${[
-                  "Scroll Margin Configuration",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "An invisible margin (in pixels) added",
-                  "around the viewport.",
-                  "",
-                  "How it works:",
-                  "   • Triggers a callback when an element",
-                  "     enters this margin, before it becomes visible.",
-                  "   • A larger margin means callbacks fire earlier.",
-                  "",
-                  "This directly controls the 'rootMargin' property",
-                  "of the underlying IntersectionObserver.",
-                  "",
-                  "Property: scrollMargin",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
-              <span id="scroll-margin-value"></span>
-            </div>
+        <div class="debugger-section-content scroll-settings-content">
+          <div class="control-row">
+          <label for="scroll-enabled">
+              Enable Scroll Prediction
+              <span class="info-icon" title="${[
+                "Scroll Prediction",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "Enables predictive scrolling based on mouse",
+                "position and scroll direction.",
+                "",
+                "When enabled, calculates scroll direction from",
+                "mouse movement and triggers callbacks for",
+                "elements that intersect the predicted path.",
+                "",
+                "Property: enableScrollPrediction",
+              ].join("\n")}">i</span>
+            </label>
+            <input type="checkbox" id="scroll-enabled">
+          </div>
+          <div class="control-row">
+            <label for="scroll-margin">
+              Scroll Margin
+              <span class="info-icon" title="${[
+                "Scroll Margin",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "Sets the pixel distance to check from the",
+                "mouse position in the scroll direction.",
+                "",
+                "Higher values check further ahead, allowing",
+                "earlier detection of elements that will come",
+                "into view during scrolling.",
+                "",
+                "Property: scrollMargin",
+              ].join("\n")}">i</span>
+            </label>
+            <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
+            <span id="scroll-margin-value"></span>
           </div>
         </div>
 

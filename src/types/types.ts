@@ -131,6 +131,9 @@ export type HitType =
   | { kind: "tab"; subType: keyof TabCallbackCounts }
   | { kind: "scroll"; subType: keyof ScrollCallbackCounts }
 
+/**
+ * Snapshot of the current ForesightManager state
+ */
 export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
@@ -143,6 +146,10 @@ type BaseForesightManagerSettings = {
    * Number of mouse positions to keep in history for trajectory calculation.
    * A higher number might lead to smoother but slightly delayed predictions.
    *
+   *
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
+   *
+   *
    * **This value is clamped between 2 and 30.**
    * @default 8
    */
@@ -152,6 +159,8 @@ type BaseForesightManagerSettings = {
    * How far ahead (in milliseconds) to predict the mouse trajectory.
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
    *
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
+   *
    * **This value is clamped between 10 and 200.**
    * @default 120
    */
@@ -160,19 +169,32 @@ type BaseForesightManagerSettings = {
   /**
    * Whether to enable mouse trajectory prediction.
    * If false, only direct hover/interaction is considered.
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
    * @default true
    */
   enableMousePrediction: boolean
 
   /**
    * Toggles whether keyboard prediction is on
+   *
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
    * @default true
    */
   enableTabPrediction: boolean
 
+  /**
+   * Sets the pixel distance to check from the mouse position in the scroll direction.
+   *
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
+   *
+   * **This value is clamped between 30 and 300.**
+   * @default 150
+   */
   scrollMargin: number
+
   /**
    * Toggles whether scroll prediction is on
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
    * @default true
    */
   enableScrollPrediction: boolean
@@ -212,15 +234,23 @@ type BaseForesightManagerSettings = {
 
 /**
  * Configuration options for the ForesightManager
+ * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
  */
 export type ForesightManagerSettings = BaseForesightManagerSettings & {
   defaultHitSlop: Exclude<HitSlop, number>
 }
 
+/**
+ * Update options for the ForesightManager
+ * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
+ */
 export type UpdateForsightManagerSettings = BaseForesightManagerSettings & {
   defaultHitSlop: HitSlop
 }
 
+/**
+ * Type used to register elements to the foresight manager
+ */
 export type ForesightRegisterOptions = {
   element: ForesightElement
   callback: ForesightCallback
@@ -229,8 +259,19 @@ export type ForesightRegisterOptions = {
   name?: string
 }
 
+/**
+ * Usefull for if you want to create a custom button component in a modern framework (for example React).
+ * And you want to have the ForesightRegisterOptions used in ForesightManager.instance.register({})
+ * without the element as the element will be the ref of the component.
+ *
+ * @link https://foresightjs.com/docs/getting_started/typescript#foresightregisteroptionswithoutelement
+ */
 export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">
 
+/**
+ * Fully invisible "slop" around the element.
+ * Basically increases the hover hitbox
+ */
 export type HitSlop = Rect | number
 
 /**
