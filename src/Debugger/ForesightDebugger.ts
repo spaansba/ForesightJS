@@ -437,6 +437,82 @@ const debuggerCSS = `
         animation: jsforesight-callback-pulse 0.5s ease-out forwards;
       }
 
+
+
+      .jsforesight-scroll-trajectory-line {
+      height: 2px;
+      background: repeating-linear-gradient(
+        90deg,
+        oklch(68% 0.18 145) 0px,
+        oklch(68% 0.18 145) 6px,
+        transparent 6px,
+        transparent 10px
+      );
+      transform-origin: left center;
+      z-index: 9999;
+      border-radius: 1px;
+      display: none;
+      animation: scroll-dash-flow 1.2s linear infinite;
+      position: relative;
+      }
+
+
+
+      .jsforesight-scroll-trajectory-line {
+      height: 2px;
+      background: repeating-linear-gradient(
+        90deg,
+        oklch(68% 0.18 145) 0px,
+        oklch(68% 0.18 145) 6px,
+        transparent 6px,
+        transparent 10px
+      );
+      transform-origin: left center;
+      z-index: 9999;
+      border-radius: 1px;
+      display: none;
+      animation: scroll-dash-flow 1.8s linear infinite;
+      position: relative;
+      }
+
+      .jsforesight-scroll-trajectory-line::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      background: oklch(68% 0.18 145);
+      border-radius: 50%;
+      animation: scroll-escape-squeeze 2.2s ease-in-out infinite;
+      }
+
+      @keyframes scroll-dash-flow {
+      0% { background-position: 0px 0px; }
+      100% { background-position: 10px 0px; }
+      }
+
+      @keyframes scroll-escape-squeeze {
+      0%, 100% { 
+        transform: translateY(-50%) scale(1);
+        right: -2px;
+      }
+      25% {
+        transform: translateY(-50%) scaleX(1.3) scaleY(0.7);
+        right: -3px;
+      }
+      50% {
+        transform: translateY(-50%) scaleX(0.8) scaleY(1.2);
+        right: -1px;
+      }
+      75% {
+        transform: translateY(-50%) scaleX(1.2) scaleY(0.8);
+        right: -3px;
+      }
+      }
+
+  
       @keyframes jsforesight-callback-pulse {
         0% {
           opacity: 1;
