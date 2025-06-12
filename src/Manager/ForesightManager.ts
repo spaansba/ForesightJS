@@ -783,6 +783,7 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
+    console.log(entries)
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -836,6 +837,7 @@ export class ForesightManager {
       callbackMode: "update",
       rootMargin: "20px",
     })
+
     this.isSetup = true
   }
 
