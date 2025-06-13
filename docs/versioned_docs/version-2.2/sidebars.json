@@ -1,0 +1,12 @@
+{
+  "docs": [
+    "intro",
+    "config",
+    "debug",
+    {
+      "type": "category",
+      "label": "Helpers",
+      "items": ["helpers/nextjs", "helpers/react"]
+    }
+  ]
+}

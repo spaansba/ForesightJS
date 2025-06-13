@@ -78,6 +78,8 @@ export type DebuggerSettings = {
    *   with a secondary documentOrder sort.
    * - `'documentOrder'`: Sorts elements based on their order of appearance in the
    *   document's structure (matching the HTML source).
+   * - `'insertionOrder'`: Sorts by registration order.
+   *
    *
    * @link https://foresightjs.com/docs/getting_started/debug
    *

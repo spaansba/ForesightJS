@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com/)
 
-ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation. By analyzing cursor trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
+ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements, scroll and keyboard navigation. By analyzing cursor/scroll trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
 
 ### Understanding ForesightJS's Role:
 
@@ -54,7 +54,7 @@ Many routers rely on hover-based prefetching, but this approach completely exclu
 
 ### The ForesightJS Solution
 
-ForesightJS bridges the gap between wasteful viewport prefetching and basic hover prefetching. The `ForesightManager` predicts user interactions by analyzing mouse trajectory patterns and keyboard navigation sequences. This allows you to prefetch resources at the optimal time to improve performance, but targeted enough to avoid waste.
+ForesightJS bridges the gap between wasteful viewport prefetching and basic hover prefetching. The `ForesightManager` predicts user interactions by analyzing mouse trajectory patterns, scroll direction and keyboard navigation sequences. This allows you to prefetch resources at the optimal time to improve performance, but targeted enough to avoid waste.
 
 ## Basic Usage Example
 
