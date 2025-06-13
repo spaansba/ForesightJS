@@ -30,6 +30,7 @@ _If you want the default global options you dont need to initialize the Foresigh
 import { ForesightManager } from "foresightjs"
 
 // Initialize the manager once at the top of your app if you want custom global settings
+// ALL SETTINGS ARE OPTIONAL
 ForesightManager.initialize({
   enableMousePrediction: true,
   positionHistorySize: 8,
@@ -39,9 +40,12 @@ ForesightManager.initialize({
   debuggerSettings: {
     isControlPanelDefaultMinimized: false,
     showNameTags: true,
+    sortElementList: "visibility",
   },
   enableTabPrediction: true,
   tabOffset: 3,
+  enableScrollPrediction: true,
+  scrollMargin: 150,
   onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => {
     console.log(`Callback hit from: ${elementData.name}`)
     console.log(`Total tab hits: ${managerData.globalCallbackHits.tab}`)
@@ -65,6 +69,8 @@ All numeric settings are clamped to their specified Min/Max values to prevent in
 | `defaultHitSlop`           | `number` \| `Rect`     | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox           |
 | `enableTabPrediction`      | `boolean`              | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                                  |
 | `tabOffset`                | `number`               | 2                                        | 0/20    | Tab stops away from an element to trigger callback                                                                         |
+| `enableScrollPrediction`   | `boolean`              | `true`                                   | -       | Toggles whether scroll prediction is on on                                                                                 |
+| `scrollMargin`             | `number`               | 150                                      | 30/300  | Sets the pixel distance to check from the mouse position in the scroll direction callback                                  |
 | `onAnyCallbackFired`       | `function` (see below) | `()=>{}`                                 | -       | see below                                                                                                                  |
 
 #### onAnyCallbackFired Details
