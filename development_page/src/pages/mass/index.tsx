@@ -56,6 +56,7 @@ function SmallButton({ name }: { name: number }) {
       callback: () => {
         console.log(name)
       },
+      name: name.toString(),
       hitSlop: 0,
     })
 

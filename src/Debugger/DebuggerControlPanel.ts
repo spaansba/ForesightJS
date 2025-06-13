@@ -7,6 +7,7 @@ import type {
   NumericSettingKeys,
   BooleanSettingKeys,
   ForesightManagerSettings,
+  SortElementList,
 } from "../types/types"
 import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
@@ -33,11 +34,11 @@ type SectionStates = {
   keyboard: boolean
   scroll: boolean
   general: boolean
-  elements: boolean
 }
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
 const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"
 
 export class DebuggerControlPanel {
@@ -65,6 +66,8 @@ export class DebuggerControlPanel {
   private scrollMarginSlider: HTMLInputElement | null = null
   private scrollMarginValueSpan: HTMLSpanElement | null = null
   private showNameTagsCheckbox: HTMLInputElement | null = null
+  private sortOptionsPopup: HTMLDivElement | null = null
+  private sortButton: HTMLButtonElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
   private allSettingsSectionsContainer: HTMLElement | null = null
@@ -75,11 +78,11 @@ export class DebuggerControlPanel {
   private isKeyboardSettingsMinimized: boolean = true
   private isScrollSettingsMinimized: boolean = true
   private isGeneralSettingsMinimized: boolean = true
-  private isElementsListMinimized: boolean = true
   private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
 
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+  private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
 
   /**
    * The constructor is now minimal, only storing the manager instance.
@@ -153,7 +156,6 @@ export class DebuggerControlPanel {
     this.isKeyboardSettingsMinimized = loadedStates.keyboard ?? true
     this.isScrollSettingsMinimized = loadedStates.scroll ?? true
     this.isGeneralSettingsMinimized = loadedStates.general ?? true
-    this.isElementsListMinimized = loadedStates.elements ?? false
     return loadedStates
   }
 
@@ -163,7 +165,6 @@ export class DebuggerControlPanel {
       keyboard: this.isKeyboardSettingsMinimized,
       scroll: this.isScrollSettingsMinimized,
       general: this.isGeneralSettingsMinimized,
-      elements: this.isElementsListMinimized,
     }
     try {
       sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(states))
@@ -188,6 +189,8 @@ export class DebuggerControlPanel {
       "#element-list-items-container"
     )
     this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
+    this.sortOptionsPopup = this.controlsContainer.querySelector("#sort-options-popup")
+    this.sortButton = this.controlsContainer.querySelector(".sort-button")
     this.elementCountSpan = this.controlsContainer.querySelector("#element-count")
     this.callbackCountSpan = this.controlsContainer.querySelector("#callback-count")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
@@ -271,7 +274,6 @@ export class DebuggerControlPanel {
       | "isKeyboardSettingsMinimized"
       | "isScrollSettingsMinimized"
       | "isGeneralSettingsMinimized"
-      | "isElementsListMinimized"
   ) {
     const sectionHeader = section?.querySelector(".debugger-section-header")
     sectionHeader?.addEventListener("click", (e) => {
@@ -313,6 +315,37 @@ export class DebuggerControlPanel {
       "scrollMargin"
     )
 
+    this.sortButton?.addEventListener("click", (e) => {
+      e.stopPropagation()
+      this.sortOptionsPopup?.classList.toggle("active")
+    })
+
+    this.sortOptionsPopup?.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement
+      const sortButton = target.closest("[data-sort]") as HTMLElement | null
+      if (!sortButton) return
+
+      const value = sortButton.dataset.sort as SortElementList
+      this.foresightManagerInstance.alterGlobalSettings({
+        debuggerSettings: {
+          sortElementList: value,
+        },
+      })
+      this.sortAndReorderElements()
+      this.updateSortOptionUI(value)
+      this.sortOptionsPopup?.classList.remove("active")
+    })
+
+    this.closeSortDropdownHandler = (e: MouseEvent) => {
+      if (
+        this.sortOptionsPopup?.classList.contains("active") &&
+        !this.sortButton?.contains(e.target as Node)
+      ) {
+        this.sortOptionsPopup.classList.remove("active")
+      }
+    }
+    document.addEventListener("click", this.closeSortDropdownHandler)
+
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized
       this.updateContainerVisibilityState()
@@ -334,10 +367,6 @@ export class DebuggerControlPanel {
     this.createSectionVisibilityToggleEventListener(
       this.controlsContainer.querySelector(".general-settings-section"),
       "isGeneralSettingsMinimized"
-    )
-    this.createSectionVisibilityToggleEventListener(
-      this.controlsContainer.querySelector(".debugger-elements"),
-      "isElementsListMinimized"
     )
   }
 
@@ -379,10 +408,13 @@ export class DebuggerControlPanel {
       this.controlsContainer.querySelector(".general-settings-section"),
       states.general ?? true
     )
-    this.toggleMinimizeSection(
-      this.controlsContainer.querySelector(".debugger-elements"),
-      states.elements ?? false
+    // Ensure the element list is always open by default
+    const elementListContent = this.debuggerElementsSection?.querySelector(
+      ".debugger-section-content"
     )
+    if (elementListContent) {
+      ;(elementListContent as HTMLElement).style.display = "flex"
+    }
   }
 
   private updateContainerVisibilityState() {
@@ -403,6 +435,18 @@ export class DebuggerControlPanel {
     }
   }
 
+  // Adds a tick before the choosen sort option
+  private updateSortOptionUI(currentSort: SortElementList) {
+    this.sortOptionsPopup?.querySelectorAll("[data-sort]").forEach((button) => {
+      const btn = button as HTMLElement
+      if (btn.dataset.sort === currentSort) {
+        btn.classList.add("active-sort-option")
+      } else {
+        btn.classList.remove("active-sort-option")
+      }
+    })
+  }
+
   public updateControlsState(settings: ForesightManagerSettings) {
     if (this.trajectoryEnabledCheckbox) {
       this.trajectoryEnabledCheckbox.checked = settings.enableMousePrediction
@@ -417,6 +461,7 @@ export class DebuggerControlPanel {
       this.showNameTagsCheckbox.checked =
         settings.debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
     }
+    this.updateSortOptionUI(settings.debuggerSettings.sortElementList ?? "visibility")
     if (this.historySizeSlider && this.historyValueSpan) {
       this.historySizeSlider.value = settings.positionHistorySize.toString()
       this.historyValueSpan.textContent = `${settings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
@@ -497,7 +542,6 @@ export class DebuggerControlPanel {
       this.elementListItems.delete(elementData.element)
       const elementsMap = this.foresightManagerInstance.registeredElements
       this.refreshRegisteredElementCountDisplay(elementsMap)
-      this._sortAndReorderElements()
 
       if (this.elementListItems.size === 0) {
         this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
@@ -507,43 +551,65 @@ export class DebuggerControlPanel {
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
-
     const listItem = this.elementListItems.get(elementData.element)
-    if (listItem) {
-      listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
-      const intersectingElement = listItem.querySelector(".intersecting-indicator")
-      if (intersectingElement) {
-        const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
-        intersectingElement.textContent = intersectingIcon
-      }
-      this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
-      this._sortAndReorderElements()
+    if (!listItem) {
+      this.addElementToList(elementData)
+      return
     }
+
+    listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
+    const intersectingElement = listItem.querySelector(".intersecting-indicator")
+    if (intersectingElement) {
+      const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
+      intersectingElement.textContent = intersectingIcon
+    }
+    this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
+    this.sortAndReorderElements()
   }
 
-  private _sortAndReorderElements() {
+  private sortAndReorderElements() {
     if (!this.elementListItemsContainer) return
+
+    const sortOrder =
+      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings
+        .sortElementList ?? "visibility"
 
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
 
-    elementsData.sort((a, b) => {
-      if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
-        return a.isIntersectingWithViewport ? -1 : 1
+    if (sortOrder !== "insertionOrder") {
+      const sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
+        const position = a.element.compareDocumentPosition(b.element)
+        if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
+        return 0
       }
-      const nameA = a.name || ""
-      const nameB = b.name || ""
-      return nameA.localeCompare(nameB)
-    })
 
+      if (sortOrder === "visibility") {
+        elementsData.sort((a, b) => {
+          if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
+            return a.isIntersectingWithViewport ? -1 : 1
+          }
+          return sortByDocumentPosition(a, b)
+        })
+      } else if (sortOrder === "documentOrder") {
+        elementsData.sort(sortByDocumentPosition)
+      }
+    }
+
+    const fragment = document.createDocumentFragment()
     elementsData.forEach((elementData) => {
       const listItem = this.elementListItems.get(elementData.element)
       if (listItem) {
-        this.elementListItemsContainer!.appendChild(listItem)
+        // Appending to the fragment is cheap (it's off-screen)
+        fragment.appendChild(listItem)
       }
     })
+
+    this.elementListItemsContainer.innerHTML = ""
+    this.elementListItemsContainer.appendChild(fragment)
   }
 
-  public addElementToList(elementData: ForesightElementData) {
+  public addElementToList(elementData: ForesightElementData, sort: boolean = true) {
     if (!this.elementListItemsContainer) return
     if (this.elementListItemsContainer.innerHTML === NO_ELEMENTS_STRING) {
       this.elementListItemsContainer.innerHTML = ""
@@ -555,13 +621,15 @@ export class DebuggerControlPanel {
     this.elementListItemsContainer!.appendChild(listItem)
     this.elementListItems.set(elementData.element, listItem)
     this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
-    this._sortAndReorderElements()
+    if (sort) {
+      this.sortAndReorderElements()
+    }
   }
 
   private updateListItemContent(listItem: HTMLElement, elementData: ForesightElementData) {
     // Determine the viewport icon based on current visibility status
     const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
-
+    listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
     const hitBehaviorText = elementData.unregisterOnCallback ? "Single" : "Multi"
     let hitSlopText = "N/A"
 
@@ -616,6 +684,11 @@ export class DebuggerControlPanel {
       this.copyTimeoutId = null
     }
 
+    if (this.closeSortDropdownHandler) {
+      document.removeEventListener("click", this.closeSortDropdownHandler)
+      this.closeSortDropdownHandler = null
+    }
+
     // Nullify all DOM-related properties to signal it's "cleaned up"
     this.controlsContainer = null!
     this.controlPanelStyleElement = null!
@@ -638,6 +711,8 @@ export class DebuggerControlPanel {
     this.scrollMarginSlider = null
     this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
+    this.sortOptionsPopup = null
+    this.sortButton = null
     this.copySettingsButton = null
   }
 
@@ -677,7 +752,7 @@ export class DebuggerControlPanel {
 
       <div class="all-settings-sections-container">
         <div class="debugger-section mouse-settings-section">
-          <div class="debugger-section-header mouse-settings-header">
+          <div class="debugger-section-header collapsible">
             <h3>Mouse Settings</h3>
             <button class="section-minimize-button">-</button>
           </div>
@@ -754,7 +829,7 @@ export class DebuggerControlPanel {
         </div>
 
         <div class="debugger-section keyboard-settings-section">
-          <div class="debugger-section-header keyboard-settings-header">
+          <div class="debugger-section-header collapsible">
             <h3>Keyboard Settings</h3>
             <button class="section-minimize-button">-</button>
           </div>
@@ -801,7 +876,7 @@ export class DebuggerControlPanel {
         </div>
 
         <div class="debugger-section scroll-settings-section">
-          <div class="debugger-section-header scroll-settings-header">
+          <div class="debugger-section-header collapsible">
             <h3>Scroll Settings</h3>
             <button class="section-minimize-button">-</button>
           </div>
@@ -846,7 +921,7 @@ export class DebuggerControlPanel {
         </div>
 
         <div class="debugger-section general-settings-section">
-          <div class="debugger-section-header general-settings-header">
+          <div class="debugger-section-header collapsible">
             <h3>General Settings</h3>
             <button class="section-minimize-button">-</button>
           </div>
@@ -872,7 +947,59 @@ export class DebuggerControlPanel {
       <div class="debugger-section debugger-elements">
         <div class="debugger-section-header elements-list-header">
           <h3>Elements <span id="element-count"></span> <span id="callback-count"></span></h3>
-           <button class="section-minimize-button">-</button>
+          <div class="header-controls">
+            <div class="sort-control-container">
+              <button class="sort-button" title="Change element list sort order">
+                ${SORT_SVG_ICON}
+              </button>
+              <div id="sort-options-popup">
+              <button
+  data-sort="visibility"
+  title="${[
+    "Sort by Visibility",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "Sorts elements by their viewport visibility",
+    "(visible elements first), with a secondary",
+    "sort by their order in the document.",
+    "",
+    "Property: debuggerSettings.sortElementList",
+    "Value: 'visibility'",
+  ].join("\n")}"
+>
+  Visibility
+</button>
+<button
+  data-sort="documentOrder"
+  title="${[
+    "Sort by Document Order",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "Sorts elements based on their order of",
+    "appearance in the document's structure",
+    "(matching the HTML source).",
+    "",
+    "Property: debuggerSettings.sortElementList",
+    "Value: 'documentOrder'",
+  ].join("\n")}"
+>
+  Document Order
+</button>
+<button
+  data-sort="insertionOrder"
+  title="${[
+    "Sort by Insertion Order",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "Sorts elements based on the order they",
+    "were registered with the ForesightManager.",
+    "",
+    "Property: debuggerSettings.sortElementList",
+    "Value: 'insertionOrder'",
+  ].join("\n")}"
+>
+  Insertion Order
+</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="debugger-section-content element-list">
           <div id="element-list-items-container">
@@ -929,8 +1056,6 @@ export class DebuggerControlPanel {
         color: #9e9e9e;
       }
 
-
-
       .debugger-title-container {
         display: flex;
         align-items: center;
@@ -974,6 +1099,8 @@ export class DebuggerControlPanel {
         margin-bottom: 2px;
         padding-bottom: 2px;
         border-bottom: 1px solid #444;
+      }
+      .debugger-section-header.collapsible {
         cursor: pointer;
       }
       .debugger-section-header h3 {
@@ -981,6 +1108,7 @@ export class DebuggerControlPanel {
          font-size: 14px;
          font-weight: bold;
          color: #b0c4de;
+         flex-grow: 1;
       }
 
       .section-minimize-button {
@@ -1066,6 +1194,70 @@ export class DebuggerControlPanel {
       }
 
       /* Element List Styles */
+      .elements-list-header { cursor: default; }
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sort-control-container {
+        position: relative;
+      }
+      .sort-button {
+        background: none; border: none; color: white; cursor: pointer;
+        padding: 0; display: flex; align-items: center; justify-content: center;
+      }
+      .sort-button svg {
+        width: 16px; height: 16px; stroke: #b0c4de; transition: stroke 0.2s;
+      }
+      .sort-button:hover svg { stroke: white; }
+      
+      #sort-options-popup {
+        position: absolute;
+        bottom: calc(100% + 5px);
+        right: -5px;
+        z-index: 10;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        background-color: #3a3a3a;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 3px;
+        width: 200px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      }
+      #sort-options-popup.active {
+        display: flex;
+      }
+      #sort-options-popup button {
+        background: none; border: none; color: #ccc;
+        font-size: 12px; text-align: left; padding: 5px 8px;
+        cursor: pointer; border-radius: 3px;
+        transition: background-color 0.2s, color 0.2s;
+        display: flex;
+        align-items: center;
+        height: 26px;
+      }
+      #sort-options-popup button:hover {
+        background-color: #555;
+        color: white;
+      }
+      #sort-options-popup button.active-sort-option {
+        color: #b0c4de;
+        font-weight: bold;
+      }
+      #sort-options-popup button.active-sort-option::before {
+        content: '✓';
+        margin-right: 6px;
+        width: 10px;
+      }
+      #sort-options-popup button::before {
+        content: '';
+        margin-right: 6px;
+        width: 10px;
+      }
+
       .element-list { /* Scroll container */
         min-height: ${elementListContainerHeight}px;
         max-height: ${elementListContainerHeight}px; 
@@ -1077,27 +1269,11 @@ export class DebuggerControlPanel {
       }
 
       /* Modern Scrollbar Styling */
-      .element-list::-webkit-scrollbar {
-        width: 8px; 
-      }
-      .element-list::-webkit-scrollbar-track {
-        background: rgba(30, 30, 30, 0.5); 
-        border-radius: 4px;
-      }
-      .element-list::-webkit-scrollbar-thumb {
-        background-color: rgba(176, 196, 222, 0.5); 
-        border-radius: 4px; 
-        border: 2px solid rgba(0, 0, 0, 0.2); 
-      }
-      .element-list::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(176, 196, 222, 0.7);
-      }
-      /* Firefox scrollbar styling */
-      .element-list {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5);
-      }
-
+      .element-list::-webkit-scrollbar { width: 8px; }
+      .element-list::-webkit-scrollbar-track { background: rgba(30, 30, 30, 0.5); border-radius: 4px; }
+      .element-list::-webkit-scrollbar-thumb { background-color: rgba(176, 196, 222, 0.5); border-radius: 4px; border: 2px solid rgba(0, 0, 0, 0.2); }
+      .element-list::-webkit-scrollbar-thumb:hover { background-color: rgba(176, 196, 222, 0.7); }
+      .element-list { scrollbar-width: thin; scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5); }
 
       #element-list-items-container { 
         display: flex;
@@ -1136,9 +1312,7 @@ export class DebuggerControlPanel {
       }
       
       /* Viewport intersection styling */
-      .element-list-item.not-in-viewport {
-        opacity: 0.4;
-      }
+      .element-list-item.not-in-viewport { opacity: 0.4; }
       
       .element-list-item .element-name {
         flex-grow: 1;

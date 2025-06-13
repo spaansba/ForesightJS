@@ -191,9 +191,9 @@ export class ForesightDebugger {
     }
   }
 
-  public addElement(elementData: ForesightElementData) {
+  public addElement(elementData: ForesightElementData, sort: boolean = true) {
     this.createOrUpdateElementOverlay(elementData)
-    this.controlPanel.addElementToList(elementData)
+    this.controlPanel.addElementToList(elementData, sort)
   }
 
   public updateMouseTrajectoryVisuals(

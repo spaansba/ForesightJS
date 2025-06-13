@@ -28,6 +28,7 @@ import {
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_SCROLL_MARGIN,
   DEFAULT_SHOW_NAME_TAGS,
+  DEFAULT_SORT_ELEMENT_LIST,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
@@ -113,6 +114,7 @@ export class ForesightManager {
     debuggerSettings: {
       isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
       showNameTags: DEFAULT_SHOW_NAME_TAGS,
+      sortElementList: DEFAULT_SORT_ELEMENT_LIST,
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
@@ -158,7 +160,6 @@ export class ForesightManager {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
-      positionObserverElements: undefined,
     }
   }
 
@@ -384,6 +385,14 @@ export class ForesightManager {
       }
     }
 
+    if (props?.debuggerSettings?.sortElementList !== undefined) {
+      this._globalSettings.debuggerSettings.sortElementList = props.debuggerSettings.sortElementList
+      debuggerSettingsChanged = true
+      if (this.debugger) {
+        // this.debugger.()
+      }
+    }
+
     let hitSlopChanged = false
     if (props?.defaultHitSlop !== undefined) {
       const normalizedNewHitSlop = normalizeHitSlop(
@@ -429,15 +438,16 @@ export class ForesightManager {
       this.debugger.updateControlsState(this._globalSettings)
     }
   }
-
   private turnOnDebugMode() {
     if (!this.debugger) {
       this.debugger = ForesightDebugger.initialize(
         ForesightManager.instance,
         this.trajectoryPositions
       )
-      this.elements.forEach((elementData) => {
-        this.debugger?.createOrUpdateElementOverlay(elementData)
+      const elementsArray = Array.from(this.elements.values())
+      elementsArray.forEach((elementData, index) => {
+        const isLastElement = index === elementsArray.length - 1
+        this.debugger?.addElement(elementData, isLastElement)
       })
     } else {
       this.debugger.updateControlsState(this._globalSettings)
@@ -814,12 +824,8 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        console.log("was", wasPreviouslyIntersecting)
-        console.log("is", isNowIntersecting)
-        console.log("")
         this.debugger?.updateElementVisibilityStatus(elementData)
       }
-
       if (!isNowIntersecting) {
         if (this._globalSettings.debug && wasPreviouslyIntersecting) {
           this.debugger?.removeElementOverlay(elementData)

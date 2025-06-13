@@ -55,11 +55,39 @@ export type ElementBounds = {
 }
 
 export type DebuggerSettings = {
-  /** If the control panel should be minimized on default @default false */
+  /**
+   * Determines if the debugger control panel should be initialized in a minimized state.
+   *
+   * @link https://foresightjs.com/docs/getting_started/debug
+   *
+   * @default false
+   */
   isControlPanelDefaultMinimized?: boolean
-  /** If we should show the name tags above elements @default false */
+  /**
+   * Determines if name tags should be displayed visually above each registered element.
+   * This is a helpful visual aid for identifying which elements are being tracked.
+   *
+   * @link https://foresightjs.com/docs/getting_started/debug
+   *
+   * @default false
+   */
   showNameTags?: boolean
+  /**
+   * Specifies the default sorting order for the list of registered elements in the debugger panel.
+   * - `'visibility'`: Sorts elements by their viewport visibility (visible elements first),
+   *   with a secondary documentOrder sort.
+   * - `'documentOrder'`: Sorts elements based on their order of appearance in the
+   *   document's structure (matching the HTML source).
+   *
+   * @link https://foresightjs.com/docs/getting_started/debug
+   *
+   * @default 'visibility'
+   *
+   */
+  sortElementList?: SortElementList
 }
+
+export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
 /**
  * Represents trajectory hit related data for a foresight element.
@@ -140,7 +168,7 @@ export type ForesightManagerData = {
   registeredElements: Map<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-  positionObserverElements: Map<Element, PositionObserverEntry> | undefined
+  // positionObserverElements: Map<Element, PositionObserverEntry> | undefined
 }
 
 type BaseForesightManagerSettings = {

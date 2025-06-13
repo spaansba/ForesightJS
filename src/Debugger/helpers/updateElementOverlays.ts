@@ -1,5 +1,3 @@
-// helpers/updateElementOverlays.ts
-
 import type { ForesightElementData } from "../../types/types"
 import type { ElementOverlays } from "../ForesightDebugger"
 
