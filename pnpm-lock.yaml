@@ -11,6 +11,9 @@ importers:
       '@thednp/position-observer':
         specifier: ^1.1.0
         version: 1.1.0
+      position-observer:
+        specifier: ^1.0.0
+        version: 1.0.0
       tabbable:
         specifier: ^6.2.0
         version: 6.2.0
@@ -506,6 +509,9 @@ packages:
   pify@5.0.0:
     resolution: {integrity: sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==}
     engines: {node: '>=10'}
+
+  position-observer@1.0.0:
+    resolution: {integrity: sha512-tY4RlMfplsW6pE/k0cARrcN9CzgvIisKLHlUY4gW7QK/Vo3/RpO1BXwrLzEGyhYegSM+Kvi6S84ZUV1wv9TBQw==}
 
   postcss-calc@8.2.4:
     resolution: {integrity: sha512-SmWMSJmB8MRnnULldx0lQIyhSNvuDl9HfrZkaqqE/WHAhToYsAvDq+yAsA/kIyINDszOp3Rh0GFoNuH5Ypsm3Q==}
@@ -1249,6 +1255,10 @@ snapshots:
   picomatch@4.0.2: {}
 
   pify@5.0.0: {}
+
+  position-observer@1.0.0:
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu': 4.43.0
 
   postcss-calc@8.2.4(postcss@8.5.5):
     dependencies:

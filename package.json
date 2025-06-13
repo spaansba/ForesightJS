@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "@thednp/position-observer": "^1.1.0",
+    "position-observer": "^1.0.0",
     "tabbable": "^6.2.0"
   }
 }

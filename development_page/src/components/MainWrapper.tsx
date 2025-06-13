@@ -4,7 +4,7 @@ import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
-import ForesightButtonRegular from "./test-buttons/ForesightButtonRegular"
+// import ForesightButtonRegular from "./test-buttons/ForesightButtonRegular"
 
 export const Main = () => {
   const resetKey = useResetKey()

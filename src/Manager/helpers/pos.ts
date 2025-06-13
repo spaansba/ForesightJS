@@ -14,11 +14,6 @@ const isObject = (obj?: unknown): obj is object =>
   (obj !== null && obj !== undefined && typeof obj === "object") || false
 
 const isFunction = (fn?: unknown): fn is Fn => typeof fn === "function" || false
-
-export type PositionObserverEntry = IntersectionObserverEntry & {
-  intersectionChange: "entered" | "exited" | "none"
-}
-
 export type PositionObserverCallback = (
   entries: IntersectionObserverEntry[],
   observer: PositionObserver
@@ -64,7 +59,7 @@ export default class PositionObserver {
    * The constructor takes two arguments, a `callback`, which is called
    * whenever the position of an observed element changes and an `options` object.
    * The callback function takes an array of `PositionObserverEntry` objects
-   * as its only argument, but it's not required.
+   * as its first argument and the PositionObserver instance as its second argument.
    *
    * @param callback the callback that applies to all targets of this observer
    * @param options the options of this observer
@@ -110,8 +105,6 @@ export default class PositionObserver {
       /* istanbul ignore else @preserve - don't allow duplicate entries */
       if (ioEntry.boundingClientRect && !this.getEntry(target)) {
         this.entries.set(target, ioEntry)
-
-        // this._c([ioEntry], this)
       }
 
       /* istanbul ignore else @preserve */
@@ -153,9 +146,10 @@ export default class PositionObserver {
             /* istanbul ignore if @preserve - make sure to only count visible entries */
             if (!ioEntry.isIntersecting) {
               if (this._cm === 1) {
-                // 1
+                // 1 = "intersecting"
                 return
               } else if (this._cm === 2) {
+                // 2 = "update"
                 if (oldIsIntersecting) {
                   this.entries.set(target, ioEntry)
                   updates.push(ioEntry)
@@ -163,7 +157,9 @@ export default class PositionObserver {
                 return
               }
             }
+            // 0 = "all"
             const { left, top } = ioEntry.boundingClientRect
+
             /* istanbul ignore else @preserve - only schedule entries that changed position */
             if (
               oldBoundingBox.top !== top ||
@@ -186,7 +182,7 @@ export default class PositionObserver {
 
     this._t = requestAnimationFrame(async () => {
       // execute the queue
-      const updates = await queue
+      const updates: IntersectionObserverEntry[] = await queue
 
       // only execute the callback if position actually changed
       /* istanbul ignore else @preserve */
@@ -234,7 +230,6 @@ export default class PositionObserver {
    * Immediately stop observing all elements.
    */
   public disconnect = () => {
-    console.log("disconnecting")
     cancelAnimationFrame(this._t)
     this.entries.clear()
     this._t = 0

@@ -49,10 +49,11 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import PositionObserver from "@thednp/position-observer"
+
 import { getScrollDirection } from "./helpers/getScrollDirection"
 import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
 import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
+import { PositionObserver, PositionObserverEntry } from "position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -157,7 +158,7 @@ export class ForesightManager {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
-      positionObserverElements: this.positionObserver?.entries,
+      positionObserverElements: undefined,
     }
   }
 
@@ -801,7 +802,8 @@ export class ForesightManager {
     }
   }
 
-  private handlePositionChange = (entries: IntersectionObserverEntry[]) => {
+  private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -851,10 +853,7 @@ export class ForesightManager {
     // Handles resize of elements
     // Handles resize of viewport
     // Handles scrolling
-    this.positionObserver = new PositionObserver(this.handlePositionChange, {
-      callbackMode: "update",
-      rootMargin: "50px",
-    })
+    this.positionObserver = new PositionObserver(this.handlePositionChange)
 
     this.isSetup = true
   }

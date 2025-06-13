@@ -54,7 +54,7 @@ function SmallButton({ name }: { name: number }) {
     ForesightManager.instance.register({
       element: buttonRef.current,
       callback: () => {
-        // console.log(name)
+        console.log(name)
       },
       hitSlop: 0,
     })
@@ -65,8 +65,7 @@ function SmallButton({ name }: { name: number }) {
   return (
     <button
       ref={buttonRef}
-      className="flex justify-center items-center size-10 rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 bg-slate-100 hover:bg-slate-200"
-      onClick={() => console.log(name)}
+      className="flex justify-center items-center size-10 rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 bg-slate-100 hover:bg-slate-200"
     >
       <span className="text-center leading-tight">{name}</span>
     </button>
