@@ -366,14 +366,6 @@ const debuggerCSS = `
         border-radius: 1px;
         /* width and transform are set dynamically via JS for performance */
       }
-      .jsforesight-scroll-trajectory-line {
-        height: 2px;
-        background-color: oklch(65% 0.25 140); /* A nice, modern green */
-        transform-origin: left center;
-        z-index: 9999;
-        border-radius: 1px;
-        display: none; /* Hidden by default */
-      }
       .jsforesight-name-label {
         background-color: rgba(27, 31, 35, 0.85);
         backdrop-filter: blur(4px);
@@ -398,28 +390,7 @@ const debuggerCSS = `
       .jsforesight-callback-indicator.animate {
         animation: jsforesight-callback-pulse 0.5s ease-out forwards;
       }
-
-
-
-      .jsforesight-scroll-trajectory-line {
-      height: 2px;
-      background: repeating-linear-gradient(
-        90deg,
-        oklch(68% 0.18 145) 0px,
-        oklch(68% 0.18 145) 6px,
-        transparent 6px,
-        transparent 10px
-      );
-      transform-origin: left center;
-      z-index: 9999;
-      border-radius: 1px;
-      display: none;
-      animation: scroll-dash-flow 1.2s linear infinite;
-      position: relative;
-      }
-
-
-
+        
       .jsforesight-scroll-trajectory-line {
       height: 2px;
       background: repeating-linear-gradient(

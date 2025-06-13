@@ -133,7 +133,7 @@ export class ForesightManager {
   private lastFocusedIndex: number | null = null
 
   private predictedScrollPoint: Point | null = null
-  private scrollDirection: ScrollDirection | null = "none"
+  private scrollDirection: ScrollDirection | null = null
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
@@ -305,6 +305,7 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     // Call each update function and store whether it made a change.
     // This ensures every update function is executed.
+    console.log("here")
     const oldPositionHistorySize = this._globalSettings.positionHistorySize
     const positionHistoryChanged = this.updateNumericSettings(
       props?.positionHistorySize,
@@ -772,6 +773,9 @@ export class ForesightManager {
       // ONCE per animation frame we decide what the scroll direction is
       this.scrollDirection =
         this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
+      if (this.scrollDirection === "none") {
+        return
+      }
 
       // ONCE per animation frame we decide the predicted scroll point
       this.predictedScrollPoint =
@@ -791,7 +795,7 @@ export class ForesightManager {
       ) {
         this.callCallback(elementData, {
           kind: "scroll",
-          subType: this.scrollDirection === "none" ? "down" : this.scrollDirection,
+          subType: this.scrollDirection,
         })
       }
       if (this.debugger) {

@@ -1,7 +1,7 @@
 import type { Rect, ScrollDirection } from "../../types/types"
 
 export function getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirection {
-  const scrollThreshold = 2
+  const scrollThreshold = 1
   const deltaY = newRect.top - oldRect.top
   const deltaX = newRect.left - oldRect.left
 
@@ -16,5 +16,6 @@ export function getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirectio
   } else if (deltaX < -scrollThreshold) {
     return "right"
   }
+
   return "none"
 }
