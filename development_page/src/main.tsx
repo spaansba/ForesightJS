@@ -16,7 +16,7 @@ ForesightManager.initialize({
     bottom: 10,
   },
   debuggerSettings: {
-    isControlPanelDefaultMinimized: true,
+    isControlPanelDefaultMinimized: false,
     showNameTags: true,
   },
   enableTabPrediction: true,

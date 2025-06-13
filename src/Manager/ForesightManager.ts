@@ -131,7 +131,7 @@ export class ForesightManager {
   private lastFocusedIndex: number | null = null
 
   private predictedScrollPoint: Point | null = null
-  private scrollDirection: ScrollDirection | null = null
+  private scrollDirection: ScrollDirection | null = "none"
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   // Track the last keydown event to determine if focus change was due to Tab
@@ -196,7 +196,7 @@ export class ForesightManager {
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
       : this._globalSettings.defaultHitSlop
-    const elementRect = element.getBoundingClientRect()
+    // const elementRect = element.getBoundingClientRect()
     const elementData: ForesightElementData = {
       element: element,
       callback,
@@ -218,8 +218,8 @@ export class ForesightManager {
         total: 0,
       },
       elementBounds: {
-        originalRect: elementRect,
-        expandedRect: getExpandedRect(elementRect, normalizedHitSlop),
+        originalRect: undefined,
+        expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
@@ -236,9 +236,9 @@ export class ForesightManager {
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)
-    // console.log(this.positionObserver?.getEntry(element)?.boundingClientRect)
+
     if (this.debugger) {
-      this.debugger.createOrUpdateElementOverlay(elementData)
+      this.debugger.addElement(elementData)
     }
 
     return { isTouchDevice: false, unregister: () => this.unregister(element) }
@@ -260,8 +260,8 @@ export class ForesightManager {
     this.positionObserver?.unobserve(element)
     this.elements.delete(element)
 
-    if (this.debugger) {
-      this.debugger.removeElement(element)
+    if (this.debugger && foresightElementData) {
+      this.debugger.removeElement(foresightElementData)
     }
 
     if (this.elements.size === 0 && this.isSetup) {
@@ -702,7 +702,6 @@ export class ForesightManager {
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
       if (this.debugger) {
         this.debugger.showCallbackAnimation(elementData)
-        this.debugger.refreshDebuggerElementList() // Update the registered element count in the Registered Elements tab
       }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
@@ -756,9 +755,13 @@ export class ForesightManager {
 
   private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
     if (this._globalSettings.enableScrollPrediction) {
+      // This means the foresightmanager is initializing registered elements, we dont want to calc the scroll direction here
+      if (!elementData.elementBounds.originalRect) {
+        return
+      }
       // ONCE per animation frame we decide what the scroll direction is
       this.scrollDirection =
-        this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect!, newRect)
+        this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
 
       // ONCE per animation frame we decide the predicted scroll point
       this.predictedScrollPoint =
@@ -803,18 +806,23 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
-
-      const wasPreviouslyAlsoIntersecting = elementData.isIntersectingWithViewport
+      const wasPreviouslyIntersecting = elementData.isIntersectingWithViewport
       const isNowIntersecting = entry.isIntersecting
       elementData.isIntersectingWithViewport = isNowIntersecting
 
+      if (wasPreviouslyIntersecting !== isNowIntersecting) {
+        console.log("was", wasPreviouslyIntersecting)
+        console.log("is", isNowIntersecting)
+        console.log("")
+        this.debugger?.updateElementVisibilityStatus(elementData)
+      }
+
       if (!isNowIntersecting) {
-        if (this._globalSettings.debug && wasPreviouslyAlsoIntersecting) {
-          this.debugger?.removeElement(entry.target)
+        if (this._globalSettings.debug && wasPreviouslyIntersecting) {
+          this.debugger?.removeElementOverlay(elementData)
         }
         continue
       }

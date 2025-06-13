@@ -13,7 +13,7 @@ import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAn
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
-import PositionObserver from "@thednp/position-observer"
+import { PositionObserver, type PositionObserverEntry } from "position-observer"
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement
@@ -38,10 +38,6 @@ export class ForesightDebugger {
   private predictedMouseIndicator: HTMLElement | null = null
   private mouseTrajectoryLine: HTMLElement | null = null
   private scrollTrajectoryLine: HTMLElement | null = null
-  private lastElementData: Map<
-    ForesightElement,
-    { isHovering: boolean; isTrajectoryHit: boolean }
-  > = new Map()
 
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
@@ -77,12 +73,10 @@ export class ForesightDebugger {
     )
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
 
-    this.animationPositionObserver = new PositionObserver(this.handleAnimationPositionChange, {
-      callbackMode: "all",
-    })
+    this.animationPositionObserver = new PositionObserver(this.handleAnimationPositionChange)
   }
 
-  private handleAnimationPositionChange = (entries: IntersectionObserverEntry[]) => {
+  private handleAnimationPositionChange = (entries: PositionObserverEntry[]) => {
     for (const entry of entries) {
       const animationData = this.callbackAnimations.get(entry.target)
       if (animationData) {
@@ -147,10 +141,7 @@ export class ForesightDebugger {
 
   public createOrUpdateElementOverlay(newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
-    this.lastElementData.set(newData.element, {
-      isHovering: newData.isHovering,
-      isTrajectoryHit: newData.trajectoryHitData.isTrajectoryHit,
-    })
+
     let overlays = this.debugElementOverlays.get(newData.element)
     if (!overlays) {
       overlays = this.createElementOverlays(newData)
@@ -162,8 +153,6 @@ export class ForesightDebugger {
       this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
         DEFAULT_SHOW_NAME_TAGS
     )
-
-    this.controlPanel.refreshElementList()
   }
 
   public toggleNameTagVisibility() {
@@ -188,15 +177,23 @@ export class ForesightDebugger {
    *
    * @param element - The ForesightElement to remove from debugging visualization
    */
-  public removeElement(element: ForesightElement) {
-    const overlays = this.debugElementOverlays.get(element)
+  public removeElement(elementData: ForesightElementData) {
+    this.removeElementOverlay(elementData)
+    this.controlPanel?.removeElementFromList(elementData)
+  }
+
+  public removeElementOverlay(elementData: ForesightElementData) {
+    const overlays = this.debugElementOverlays.get(elementData.element)
     if (overlays) {
       overlays.expandedOverlay.remove()
       overlays.nameLabel.remove()
-      this.debugElementOverlays.delete(element)
+      this.debugElementOverlays.delete(elementData.element)
     }
-    this.lastElementData.delete(element)
-    this.controlPanel?.refreshElementList()
+  }
+
+  public addElement(elementData: ForesightElementData) {
+    this.createOrUpdateElementOverlay(elementData)
+    this.controlPanel.addElementToList(elementData)
   }
 
   public updateMouseTrajectoryVisuals(
@@ -261,11 +258,14 @@ export class ForesightDebugger {
 
   public updateControlsState(settings: ForesightManagerSettings) {
     this.controlPanel?.updateControlsState(settings)
-    this.controlPanel?.refreshElementList()
   }
 
-  public refreshDebuggerElementList() {
-    this.controlPanel?.refreshElementList()
+  public updateElementVisibilityStatus(elementData: ForesightElementData) {
+    this.controlPanel?.updateElementVisibilityStatus(elementData)
+  }
+
+  public removeElementFromList(elementData: ForesightElementData) {
+    this.controlPanel?.removeElementFromList(elementData)
   }
 
   public showCallbackAnimation(elementData: ForesightElementData) {
@@ -316,7 +316,6 @@ export class ForesightDebugger {
     this.controlPanel?.cleanup()
     this.shadowHost?.remove()
     this.debugElementOverlays.clear()
-    this.lastElementData.clear()
     this.shadowHost = null!
     this.shadowRoot = null!
     this.debugContainer = null!

@@ -26,6 +26,7 @@ import {
 } from "../Manager/constants"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import { createAndAppendStyle } from "./helpers/createAndAppend"
+import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
 
 type SectionStates = {
   mouse: boolean
@@ -37,6 +38,7 @@ type SectionStates = {
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -111,7 +113,6 @@ export class DebuggerControlPanel {
     this.queryDOMElements()
     this.originalSectionStates()
     this.setupEventListeners()
-    this.refreshElementList()
     this.updateContainerVisibilityState()
   }
 
@@ -434,8 +435,6 @@ export class DebuggerControlPanel {
     }
   }
 
-  // private create
-
   private refreshRegisteredElementCountDisplay(
     elementsMap: ReadonlyMap<Element, ForesightElementData>
   ) {
@@ -488,63 +487,108 @@ export class DebuggerControlPanel {
     ].join("\n")
   }
 
-  public refreshElementList() {
+  public removeElementFromList(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
 
-    this.elementListItemsContainer.innerHTML = ""
-    this.elementListItems.clear()
+    const listItem = this.elementListItems.get(elementData.element)
 
-    const elementsMap = this.foresightManagerInstance.registeredElements
-    this.refreshRegisteredElementCountDisplay(elementsMap)
+    if (listItem) {
+      listItem.remove()
+      this.elementListItems.delete(elementData.element)
+      const elementsMap = this.foresightManagerInstance.registeredElements
+      this.refreshRegisteredElementCountDisplay(elementsMap)
+      this._sortAndReorderElements()
 
-    if (elementsMap.size === 0) {
-      this.elementListItemsContainer.innerHTML = "<em>No elements registered.</em>"
-      return
+      if (this.elementListItems.size === 0) {
+        this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
+      }
     }
+  }
 
-    elementsMap.forEach((data, element) => {
-      const listItem = document.createElement("div")
-      listItem.className = "element-list-item"
-      this.updateListItemContent(listItem, data)
-      this.elementListItemsContainer!.appendChild(listItem)
-      this.elementListItems.set(element, listItem)
+  public updateElementVisibilityStatus(elementData: ForesightElementData) {
+    if (!this.elementListItemsContainer) return
+
+    const listItem = this.elementListItems.get(elementData.element)
+    if (listItem) {
+      listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
+      const intersectingElement = listItem.querySelector(".intersecting-indicator")
+      if (intersectingElement) {
+        const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
+        intersectingElement.textContent = intersectingIcon
+      }
+      this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
+      this._sortAndReorderElements()
+    }
+  }
+
+  private _sortAndReorderElements() {
+    if (!this.elementListItemsContainer) return
+
+    const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
+
+    elementsData.sort((a, b) => {
+      if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
+        return a.isIntersectingWithViewport ? -1 : 1
+      }
+      const nameA = a.name || ""
+      const nameB = b.name || ""
+      return nameA.localeCompare(nameB)
+    })
+
+    elementsData.forEach((elementData) => {
+      const listItem = this.elementListItems.get(elementData.element)
+      if (listItem) {
+        this.elementListItemsContainer!.appendChild(listItem)
+      }
     })
   }
 
-  private updateListItemContent(listItem: HTMLElement, data: ForesightElementData) {
-    listItem.classList.toggle("hovering", data.isHovering)
-    listItem.classList.toggle("trajectory-hit", data.trajectoryHitData.isTrajectoryHit)
-    listItem.classList.toggle("not-in-viewport", !data.isIntersectingWithViewport)
+  public addElementToList(elementData: ForesightElementData) {
+    if (!this.elementListItemsContainer) return
+    if (this.elementListItemsContainer.innerHTML === NO_ELEMENTS_STRING) {
+      this.elementListItemsContainer.innerHTML = ""
+    }
+    if (this.elementListItems.has(elementData.element)) return
+    const listItem = document.createElement("div")
+    listItem.className = "element-list-item"
+    this.updateListItemContent(listItem, elementData)
+    this.elementListItemsContainer!.appendChild(listItem)
+    this.elementListItems.set(elementData.element, listItem)
+    this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
+    this._sortAndReorderElements()
+  }
 
-    const hitBehaviorText = data.unregisterOnCallback ? "Single" : "Multi"
+  private updateListItemContent(listItem: HTMLElement, elementData: ForesightElementData) {
+    // Determine the viewport icon based on current visibility status
+    const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
+
+    const hitBehaviorText = elementData.unregisterOnCallback ? "Single" : "Multi"
     let hitSlopText = "N/A"
 
-    if (data.elementBounds.hitSlop) {
-      const { top, right, bottom, left } = data.elementBounds.hitSlop
+    if (elementData.elementBounds.hitSlop) {
+      const { top, right, bottom, left } = elementData.elementBounds.hitSlop
       hitSlopText = `T:${top} R:${right} B:${bottom} L:${left}`
     }
 
-    const viewportIcon = data.isIntersectingWithViewport ? "👁️" : "🚫"
-
     // Create comprehensive title with all information
     const comprehensiveTitle = [
-      `${data.name || "Unnamed Element"}`,
+      `${elementData.name || "Unnamed Element"}`,
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       "Viewport Status:",
-      data.isIntersectingWithViewport
+      elementData.isIntersectingWithViewport
         ? "   ✓ In viewport - actively tracked by observers"
         : "   ✗ Not in viewport - not being tracked",
       "",
       "Hit Behavior:",
-      data.unregisterOnCallback
+      elementData.unregisterOnCallback
         ? "   • Single: Callback triggers once"
         : "   • Multi: Callback can trigger multiple times",
       "",
       "Hit Slop:",
-      data.elementBounds.hitSlop
+      elementData.elementBounds.hitSlop
         ? [
-            `     Top: ${data.elementBounds.hitSlop.top}px, Bottom: ${data.elementBounds.hitSlop.bottom}px `,
-            `     Right: ${data.elementBounds.hitSlop.right}px, Left: ${data.elementBounds.hitSlop.left}px`,
+            `     Top: ${elementData.elementBounds.hitSlop.top}px, Bottom: ${elementData.elementBounds.hitSlop.bottom}px `,
+            `     Right: ${elementData.elementBounds.hitSlop.right}px, Left: ${elementData.elementBounds.hitSlop.left}px`,
           ].join("\n")
         : "   • Not defined - using element's natural boundaries",
       "",
@@ -553,8 +597,8 @@ export class DebuggerControlPanel {
     listItem.title = comprehensiveTitle
 
     listItem.innerHTML = `
-    <span class="viewport-indicator">${viewportIcon}</span>
-    <span class="element-name">${data.name || "Unnamed Element"}</span>
+    <span class="intersecting-indicator">${intersectingIcon}</span>
+    <span class="element-name">${elementData.name || "Unnamed Element"}</span>
     <span class="hit-slop">${hitSlopText}</span>
     <span class="hit-behavior">${hitBehaviorText}</span>
   `
@@ -832,7 +876,6 @@ export class DebuggerControlPanel {
         </div>
         <div class="debugger-section-content element-list">
           <div id="element-list-items-container">
-            <em>Initializing...</em>
           </div>
         </div>
       </div>
@@ -1105,7 +1148,7 @@ export class DebuggerControlPanel {
         font-size: 12px; 
         font-weight: bold;
       }
-      .element-list-item .viewport-indicator {
+      .element-list-item .intersecting-indicator {
         font-size: 12px;
         flex-shrink: 0;
         display: inline-flex;
