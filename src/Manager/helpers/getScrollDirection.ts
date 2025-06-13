@@ -5,17 +5,19 @@ export function getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirectio
   const deltaY = newRect.top - oldRect.top
   const deltaX = newRect.left - oldRect.left
 
-  // check most likely scroll first
-  if (deltaY < scrollThreshold) {
-    return "down"
-  } else if (deltaY > -scrollThreshold) {
-    return "up"
-  }
-  if (deltaX > scrollThreshold) {
-    return "left"
-  } else if (deltaX < -scrollThreshold) {
-    return "right"
+  // Check vertical scroll first (most common)
+  if (deltaY < -scrollThreshold) {
+    return "down" // Element moved up in viewport = scrolled down
+  } else if (deltaY > scrollThreshold) {
+    return "up" // Element moved down in viewport = scrolled up
   }
 
-  return "none"
+  // Check horizontal scroll
+  if (deltaX < -scrollThreshold) {
+    return "right" // Element moved left in viewport = scrolled right
+  } else if (deltaX > scrollThreshold) {
+    return "left" // Element moved right in viewport = scrolled left
+  }
+
+  return "none" // No significant movement detected
 }

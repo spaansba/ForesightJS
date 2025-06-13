@@ -23,13 +23,15 @@ function ForesightStats() {
         const githubData = await githubResponse.json()
 
         setStats({
-          ...stats,
-          npmDownloads: npmData.downloads,
-          githubStars: githubData.stargazers_count,
-          githubForks: githubData.forks_count,
+          npmDownloads: npmData.downloads || 0,
+          githubStars: githubData.stargazers_count || 0,
+          githubForks: githubData.forks_count || 0,
+          githubContributors: 0, // You'll need to fetch contributors separately if needed
+          dependents: 0,
         })
       } catch (error) {
         console.error("Error fetching stats:", error)
+        // Keep default values on error
       }
     }
 
@@ -44,7 +46,9 @@ function ForesightStats() {
       >
         <Download className={styles.statIcon} size={24} />
         <div className={styles.statContent}>
-          <p className={styles.statValue}>{stats.npmDownloads.toLocaleString()}</p>
+          <p className={styles.statValue}>
+            {stats.npmDownloads === 0 ? "Not found" : stats.npmDownloads.toLocaleString()}
+          </p>
           <p className={styles.statLabel}>Downloads on npm</p>
         </div>
       </button>
@@ -54,7 +58,9 @@ function ForesightStats() {
       >
         <Star className={styles.statIcon} size={24} />
         <div className={styles.statContent}>
-          <p className={styles.statValue}>{stats.githubStars.toLocaleString()}</p>
+          <p className={styles.statValue}>
+            {stats.githubStars === 0 ? "Not found" : stats.githubStars.toLocaleString()}
+          </p>
           <p className={styles.statLabel}>Stars on GitHub</p>
         </div>
       </button>
@@ -64,7 +70,11 @@ function ForesightStats() {
       >
         <Users className={styles.statIcon} size={24} />
         <div className={styles.statContent}>
-          <p className={styles.statValue}>{stats.githubContributors}</p>
+          <p className={styles.statValue}>
+            {stats.githubContributors === 0
+              ? "Not found"
+              : stats.githubContributors.toLocaleString()}
+          </p>
           <p className={styles.statLabel}>Contributors on GitHub</p>
         </div>
       </button>

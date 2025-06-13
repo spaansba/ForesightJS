@@ -331,6 +331,7 @@ export class DebuggerControlPanel {
           sortElementList: value,
         },
       })
+      console.log("here")
       this.sortAndReorderElements()
       this.updateSortOptionUI(value)
       this.sortOptionsPopup?.classList.remove("active")
@@ -597,16 +598,19 @@ export class DebuggerControlPanel {
     }
 
     const fragment = document.createDocumentFragment()
-    elementsData.forEach((elementData) => {
-      const listItem = this.elementListItems.get(elementData.element)
-      if (listItem) {
-        // Appending to the fragment is cheap (it's off-screen)
-        fragment.appendChild(listItem)
-      }
-    })
 
-    this.elementListItemsContainer.innerHTML = ""
-    this.elementListItemsContainer.appendChild(fragment)
+    if (elementsData.length) {
+      elementsData.forEach((elementData) => {
+        const listItem = this.elementListItems.get(elementData.element)
+        if (listItem) {
+          // Appending to the fragment is cheap (it's off-screen)
+          fragment.appendChild(listItem)
+        }
+      })
+
+      this.elementListItemsContainer.innerHTML = ""
+      this.elementListItemsContainer.appendChild(fragment)
+    }
   }
 
   public addElementToList(elementData: ForesightElementData, sort: boolean = true) {

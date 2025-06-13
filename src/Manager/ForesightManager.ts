@@ -305,7 +305,6 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     // Call each update function and store whether it made a change.
     // This ensures every update function is executed.
-    console.log("here")
     const oldPositionHistorySize = this._globalSettings.positionHistorySize
     const positionHistoryChanged = this.updateNumericSettings(
       props?.positionHistorySize,
