@@ -1,0 +1,1 @@
+https://foresightjs.com/docs/integrations/nextjs https://foresightjs.com/docs/integrations/react/nextjs

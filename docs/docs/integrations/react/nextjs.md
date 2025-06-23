@@ -4,49 +4,42 @@ keywords:
   - ForesightJS
   - JS.Foresight
   - Prefetching
-  - Next.JS
+  - Next.js
   - NextJS
   - Routing
   - Router
   - React
-description: Integration details to add ForesightJS to your NextJS projects
+description: Integration details to add ForesightJS to your Next.js projects
 last_updated:
   date: 2025-06-23
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # Next.js
 
-## The Problem with Default Next.js Prefetching
+## Next.js default prefetching
 
-Next.js automatically prefetches links as they enter the viewport, which can lead to significant unnecessary data transfer. For example by scrolling down the [Next.js homepage](https://nextjs.org/) it triggers **~1.59MB** of prefetch requests as every single link on the page gets prefetched, regardless of user intent. This wastes bandwidth and server resources.
+Next.js's default prefetching method prefetches when links enter the viewport, this is a great user experience but can lead to unnecessary data transfer for bigger websites. For example by scrolling down the [Next.js homepage](https://nextjs.org/) it triggers **~1.59MB** of prefetch requests as every single link on the page gets prefetched, regardless of user intent.
 
-## ForesightJS Solution: Predictive Prefetching
-
-ForesightJS optimizes prefetching by only triggering for links the user is likely to click based on mouse movement:
-
-- Only prefetches when the user's cursor trajectory indicates intent
-- Dramatically reduces unnecessary network requests
-- Maintains the performance benefits of prefetching for actual user interactions
+To avoid this, we can wrap the `Link` component and add ForesightJS. The official Next.js [prefetching docs](https://nextjs.org/docs/app/guides/prefetching#extending-or-ejecting-link) mention ForesightJS as an example for custom prefetching strategies.
 
 ## ForesightLink Component
 
-ForesightJS can be implemented within NextJS in many ways. Below is an example of creating an wrapper around the Next.JS Link component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default Next.JS prefetch mode (which prefetches everything in the viewport).
+Below is an example of creating an wrapper around the Next.js `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default Next.js prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/next/integrations/react/useForesight).
 
 ```tsx
 "use client"
 import type { LinkProps } from "next/link"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { ForesightManager, type ForesightRect } from "js.foresight"
+import { type ForesightRegisterOptions } from "js.foresight"
+import useForesight from "../hooks/useForesight"
 import { useRouter } from "next/navigation"
 
-interface ForesightLinkProps extends Omit<LinkProps, "prefetch"> {
+interface ForesightLinkProps
+  extends Omit<LinkProps, "prefetch">,
+    Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
-  hitSlop?: number | ForesightRect
-  unregisterOnCallback?: boolean
-  name?: string
 }
 
 export function ForesightLink({
@@ -57,38 +50,46 @@ export function ForesightLink({
   name = "",
   ...props
 }: ForesightLinkProps) {
-  const LinkRef = useRef<HTMLAnchorElement>(null)
-  const [isTouchDevice, setIsTouchDevice] = useState(false)
   const router = useRouter() // import from "next/navigation" not "next/router"
 
-  useEffect(() => {
-    if (!LinkRef.current) {
-      return
-    }
-
-    const { unregister, isTouchDevice } = ForesightManager.instance.register({
-      element: LinkRef.current,
-      callback: () => router.prefetch(props.href.toString()),
-      hitSlop,
-      name,
-      unregisterOnCallback,
-    })
-
-    setIsTouchDevice(isTouchDevice)
-
-    return () => {
-      unregister()
-    }
-  }, [LinkRef, router, props.href, hitSlop, name])
+  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
+    callback: () => router.prefetch(props.href.toString()),
+    hitSlop: hitSlop,
+    name: name,
+    unregisterOnCallback: unregisterOnCallback,
+  })
 
   return (
-    <Link {...props} prefetch={isTouchDevice} ref={LinkRef} className={className}>
+    <Link
+      {...props}
+      prefetch={registerResults?.isTouchDevice ?? false}
+      ref={elementRef}
+      className={className}
+    >
       {children}
     </Link>
   )
 }
 ```
 
+## Basic Usage
+
+```TS
+import ForesightLink from "./ForesightLink"
+export default function Navigation() {
+  return (
+    <ForesightLink
+      href="/home"
+      className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+      name="nav-home"
+    >
+      Home
+    </ForesightLink>
+  )
+}
+
+```
+
 :::caution
-If you dont see the correct prefetching behaviour make sure you are in production. Next.JS only prefetches in production and not in development
+If you dont see the correct prefetching behaviour make sure you are in production. Next.js only prefetches in production and not in development
 :::

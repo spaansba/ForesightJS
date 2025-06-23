@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 4
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -7,7 +7,7 @@ keywords:
 description: Typescript helpers for the ForesightJS library
 last_updated:
   date: 2025-06-04
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # TypeScript

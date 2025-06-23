@@ -10,46 +10,31 @@ keywords:
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
   date: 2025-06-23
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # React Router
 
 ## React Router's Prefetching
 
-React Router DOM (v6.4+) includes a `prefetch` prop on its `<Link>` component to control when route modules and data (from `loader` functions) are preloaded:
-
-- **`none` (default):** No prefetching.
-- **`intent`:** Prefetches on hover or focus.
-- **`render`:** Prefetches when the link renders.
-- **`viewport`:** Prefetches when the link enters the viewport.
-
-### ForesightJS benefits within React Router
-
-ForesightJS enhances this with a more **predictive** approach. By analyzing mouse trajectory in real-time, it can:
-
-- **Initiate prefetching earlier than `intent` (on hover/focus)** if cursor movement indicates an imminent click.
-- **Be less wasteful than `render` or `viewport`** by targeting only links with high user intent, rather than prefetching everything that renders or scrolls into view.
-
----
+React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesnt have the same flexibility as ForesightJS. To add ForesightJS to React Router you can create a `ForesightLink` component wrapping the `Link` component.
 
 ## ForesightLink Component
 
-You can integrate ForesightJS with React Router in various ways. Below is an example of creating a `ForesightLink` component that wraps React Router's `Link`. It uses `ForesightManager` to predict intent and `useFetcher` to prefetch route data.
-
-Since ForesightJS's trajectory prediction requires a cursor, the component falls back to prefetching on render for touch devices.
+Below is an example of creating an wrapper around the React Router `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default React Router prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/next/integrations/react/useForesight).
 
 ```tsx
+i"use client"
 import { ForesightManager, type ForesightRect } from "js.foresight"
 import { useEffect, useRef, useState } from "react"
 import { Link, useFetcher, type LinkProps } from "react-router"
+import useForesight from "../hooks/useForesight"
 
-interface ForesightLinkProps extends Omit<LinkProps, "prefetch"> {
+interface ForesightLinkProps
+  extends Omit<LinkProps, "prefetch">,
+    Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
-  hitSlop?: number | ForesightRect
-  unregisterOnCallback?: boolean
-  name?: string
 }
 
 export function ForesightLink({
@@ -61,38 +46,23 @@ export function ForesightLink({
   ...props
 }: ForesightLinkProps) {
   const fetcher = useFetcher()
-  const linkRef = useRef<HTMLAnchorElement>(null)
-  const [isTouchDevice, setIsTouchDevice] = useState(false)
 
-  useEffect(() => {
-    if (!linkRef.current) {
-      return
-    }
-
-    const { isTouchDevice, unregister } = ForesightManager.instance.register({
-      element: linkRef.current,
-      callback: () => {
-        if (fetcher.state === "idle" && !fetcher.data) {
-          fetcher.load(props.to.toString())
-        }
-      },
-      hitSlop,
-      unregisterOnCallback,
-      name,
-    })
-
-    setIsTouchDevice(isTouchDevice)
-
-    return () => {
-      unregister()
-    }
-  }, [linkRef])
+  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
+    callback: () => {
+      if (fetcher.state === "idle" && !fetcher.data) {
+        fetcher.load(props.to.toString())
+      }
+    },
+    hitSlop: hitSlop,
+    name: name,
+    unregisterOnCallback: unregisterOnCallback,
+  })
 
   return (
     <Link
-      ref={linkRef}
       {...props}
-      prefetch={isTouchDevice ? "render" : "none"}
+      prefetch={registerResults?.isTouchDevice ? "render" : "none"}
+      ref={elementRef}
       className={className}
     >
       {children}

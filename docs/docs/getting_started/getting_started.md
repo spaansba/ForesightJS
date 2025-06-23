@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 0
 keywords:
   - Introduction
   - JS.Foresight
@@ -10,10 +10,10 @@ keywords:
 description: Introduction to ForesightJS, an lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
   date: 2025-06-06
-  author: spaansba
+  author: Bart Spaans
 ---
 
-# Introduction
+# Getting Started
 
 [![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)

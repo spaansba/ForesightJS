@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -10,7 +10,7 @@ keywords:
 description: Configuration documenation for the ForesightJS library
 last_updated:
   date: 2025-06-04
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # Configuration

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -10,7 +10,7 @@ keywords:
 description: Documentation on how to use the ForesightJS debugger
 last_updated:
   date: 2025-06-04
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # Debugging

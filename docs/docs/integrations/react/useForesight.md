@@ -10,7 +10,7 @@ keywords:
 description: React hook for ForesightJS integration
 last_updated:
   date: 2025-06-23
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # useForesight
@@ -59,8 +59,7 @@ The hook returns an object containing:
 
 **Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
 
-When
-When implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
+This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
 
 ## Basic Usage
 

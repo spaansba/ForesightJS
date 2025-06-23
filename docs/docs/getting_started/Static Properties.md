@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 3
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -9,7 +9,7 @@ keywords:
 description: Static properties exposed by the Foresight Manager
 last_updated:
   date: 2025-06-06
-  author: spaansba
+  author: Bart Spaans
 slug: Static_Properties
 ---
 

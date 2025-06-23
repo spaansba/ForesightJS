@@ -20,7 +20,7 @@ function HomepageHeader() {
     defaultHitSlop: 0,
     tabOffset: 3,
     debuggerSettings: {
-      isControlPanelDefaultMinimized: false,
+      isControlPanelDefaultMinimized: true,
       showNameTags: false,
     },
   })
