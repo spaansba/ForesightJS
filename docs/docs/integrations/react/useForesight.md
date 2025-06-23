@@ -50,7 +50,19 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
 }
 ```
 
-### Basic Usage
+## Return Values
+
+The hook returns an object containing:
+
+- `elementRef` - To attach to your target element
+- [`registerResults`](/docs/getting_started/config#return-value-of-register) - Registration details like `isRegistered`
+
+**Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
+
+When
+When implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
+
+## Basic Usage
 
 ```TS
 import useForesight from "./useForesight"
