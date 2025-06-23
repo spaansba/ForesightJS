@@ -8,12 +8,12 @@ import type {
   Point,
   HitSlop,
 } from "../types/types"
-import { isTouchDevice } from "../helpers/isTouchDevice"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
 import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
 import { PositionObserver, type PositionObserverEntry } from "position-observer"
+import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement
@@ -104,7 +104,7 @@ export class ForesightDebugger {
     trajectoryPositions: TrajectoryPositions
   ): ForesightDebugger | null {
     removeOldDebuggers()
-    if (typeof window === "undefined" || isTouchDevice()) {
+    if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
       return null
     }
 

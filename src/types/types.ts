@@ -106,7 +106,11 @@ export type TrajectoryHitData = {
 export type ForesightRegisterResult = {
   /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
   isTouchDevice: boolean
-  /** Function to unregister the element, optional to add the elementdata */
+  /** Whether the user has connection limitations (slow network (2g) or data saver enabled) that should prevent prefetching */
+  isLimitedConnection: boolean
+  /** Whether ForesightJS will actively track this element. False if touch device or limited connection, true otherwise */
+  isRegistered: boolean
+  /** Function to unregister the element */
   unregister: () => void
 }
 

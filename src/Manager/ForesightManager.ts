@@ -1,6 +1,6 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
-import { isTouchDevice } from "../helpers/isTouchDevice"
+import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
   BooleanSettingKeys,
   CallbackHits,
@@ -13,7 +13,6 @@ import type {
   HitType,
   NumericSettingKeys,
   Point,
-  Rect,
   ScrollDirection,
   TrajectoryPositions,
   UpdateForsightManagerSettings,
@@ -182,11 +181,14 @@ export class ForesightManager {
     unregisterOnCallback,
     name,
   }: ForesightRegisterOptions): ForesightRegisterResult {
-    if (isTouchDevice()) {
-      return { isTouchDevice: true, unregister: () => {} }
-    }
-    if (this.elements.has(element)) {
-      return { isTouchDevice: false, unregister: () => this.unregister(element) }
+    const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
+    if (!shouldRegister) {
+      return {
+        isLimitedConnection,
+        isTouchDevice,
+        isRegistered: false,
+        unregister: () => {},
+      }
     }
 
     // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
@@ -242,7 +244,12 @@ export class ForesightManager {
       this.debugger.addElement(elementData)
     }
 
-    return { isTouchDevice: false, unregister: () => this.unregister(element) }
+    return {
+      isTouchDevice,
+      isLimitedConnection,
+      isRegistered: true,
+      unregister: () => this.unregister(element),
+    }
   }
 
   private unregister(element: ForesightElement) {
