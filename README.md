@@ -58,7 +58,7 @@ ForesightJS bridges the gap between wasteful viewport prefetching and basic hove
 
 ## Basic Usage Example
 
-Both global and element specific configuration details can be found [here](https://foresightjs.com/docs/getting_started/config).
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs]().
 
 ```javascript
 import { ForesightManager } from "foresightjs"

@@ -120,5 +120,5 @@ The `ForesightManager.instance.register()` method returns an object with the fol
 
 | Property        | Type     | Description                                                                                                                                                                                 |
 | --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isTouchDevice` | boolean  | Indicates whether the current device is a touch device. Useful for implementing alternative prefetching logic on mobile. [See](/docs/getting_started/intro#what-about-touch-devices)        |
+| `isTouchDevice` | boolean  | Indicates whether the current device is a touch device. Useful for implementing alternative prefetching logic on mobile. [See](/docs/2.1/getting_started/intro#what-about-touch-devices)    |
 | `unregister`    | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones. |

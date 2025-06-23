@@ -99,11 +99,11 @@ unregister()
 
 ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
 
-An example of what to do with touch devices can be found in the [Next.js](/docs/integrations/nextjs) or [React Router](/docs/integrations/react) ForesightLink components.
+An example of what to do with touch devices can be found in the [Next.js](/docs/2.1/integrations/nextjs) or [React Router](/docs/2.1/integrations/react) ForesightLink components.
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/integrations/nextjs) and [React Router](/docs/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/2.1/integrations/nextjs) and [React Router](/docs/2.1/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 
@@ -227,11 +227,11 @@ unregister()
 
 ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
 
-An example of what to do with touch devices can be found in the [Next.js](/docs/integrations/nextjs) or [React Router](/docs/integrations/react) ForesightLink components.
+An example of what to do with touch devices can be found in the [Next.js](/docs/2.1/integrations/nextjs) or [React Router](/docs/2.1/integrations/react) ForesightLink components.
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/integrations/nextjs) and [React Router](/docs/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/2.1/integrations/nextjs) and [React Router](/docs/2.1/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 
