@@ -171,7 +171,7 @@ export type HitType =
  * Snapshot of the current ForesightManager state
  */
 export type ForesightManagerData = {
-  registeredElements: Map<ForesightElement, ForesightElementData>
+  registeredElements: ReadonlyMap<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
   // positionObserverElements: Map<Element, PositionObserverEntry> | undefined

@@ -56,6 +56,8 @@ ForesightManager.initialize({
 
 ### Available Global Settings
 
+**Typescript Type:** `ForesightManagerSettings`
+
 :::note
 All numeric settings are clamped to their specified Min/Max values to prevent invalid configurations.
 :::
@@ -75,7 +77,7 @@ All numeric settings are clamped to their specified Min/Max values to prevent in
 
 #### onAnyCallbackFired Details
 
-This global callback executes after every individual element callback fires, regardless of which element triggered it. Unlike element-specific callbacks that handle individual interactions, this function provides a centralized way to respond to all prediction events across your application. The managerData includes all [static properties](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata)
+This global callback executes after every individual element callback fires, regardless of which element triggered it. Unlike element-specific callbacks that handle individual interactions, this function provides a centralized way to respond to all prediction events across your application. The `managerData` includes all [static properties](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata)
 
 ```typescript
 // gesture
@@ -113,6 +115,8 @@ unregister(element)
 
 ### Element Registration Parameters
 
+**Typescript Type:** `ForesightRegisterOptions` or `ForesightRegisterOptionsWithoutElement` if you want to omit the `element`
+
 | Parameter              | Type           | Required | Description                                                                     | Default                             |
 | ---------------------- | -------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------- |
 | `element`              | HTMLElement    | Yes      | The DOM element to monitor                                                      |                                     |
@@ -125,9 +129,11 @@ unregister(element)
 
 The `ForesightManager.instance.register()` method returns an object with the following properties:
 
-| Property              | Type     | Description                                                                                                                                                                                                                                 |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Useful for implementing alternative prefetching logic on mobile since elements will not be registered on touch devices. [See](/docs/getting_started/intro#what-about-touch-devices) |
-| `isLimitedConnection` | boolean  | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                                                                          |
-| `isRegistered`        | boolean  | If `isTouchDevice` or `isLimitedConnection` is true this will become `false`                                                                                                                                                                |
-| `unregister`          | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones.                                                 |
+**Typescript Type:** `ForesightRegisterResult`
+
+| Property              | Type     | Description                                                                                                                                                                                 |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started/intro#what-about-touch-devices)                       |
+| `isLimitedConnection` | boolean  | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                          |
+| `isRegistered`        | boolean  | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                              |
+| `unregister`          | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones. |
