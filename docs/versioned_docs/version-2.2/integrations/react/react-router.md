@@ -9,7 +9,7 @@ keywords:
   - React
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
-  date: 2025-06-04
+  date: 2025-06-23
   author: spaansba
 ---
 

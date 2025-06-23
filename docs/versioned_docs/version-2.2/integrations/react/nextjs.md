@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 3
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -8,9 +8,10 @@ keywords:
   - NextJS
   - Routing
   - Router
+  - React
 description: Integration details to add ForesightJS to your NextJS projects
 last_updated:
-  date: 2025-06-04
+  date: 2025-06-23
   author: spaansba
 ---
 
