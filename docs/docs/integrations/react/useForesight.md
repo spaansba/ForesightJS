@@ -31,22 +31,24 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
   options: ForesightRegisterOptionsWithoutElement
 ) {
   const elementRef = useRef<T>(null)
-  const registerResults = useRef<ForesightRegisterResult | null>(null)
+  const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
 
   useEffect(() => {
     if (!elementRef.current) return
 
-    registerResults.current = ForesightManager.instance.register({
+    const result = ForesightManager.instance.register({
       element: elementRef.current,
       ...options,
     })
 
+    setRegisterResults(result)
+
     return () => {
-      registerResults.current?.unregister()
+      result.unregister()
     }
   }, [options])
 
-  return { elementRef, registerResults: registerResults.current }
+  return { elementRef, registerResults }
 }
 ```
 

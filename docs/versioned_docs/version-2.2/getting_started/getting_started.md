@@ -68,7 +68,7 @@ ForesightJS bridges the gap between wasteful viewport prefetching and basic hove
 
 ## Basic Usage Example
 
-Both global and element speicif configuration details can be found [here](/docs/getting_started/config).
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](/docs/integrations).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -97,7 +97,7 @@ unregister()
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/integrations/react/nextjs) and [React Router](/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built [integrations](/docs/integrations) for every framework, ready-to-use implementations for [Next.js](/docs/integrations/react/nextjs) and [React Router](/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 
