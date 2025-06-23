@@ -10,103 +10,79 @@ keywords:
 description: React hook for ForesightJS integration
 last_updated:
   date: 2025-06-23
-  author: spaansba
+  author: Bart Spaans
 ---
 
-# useForesight Hook
+# useForesight
 
-The `useForesight` hook provides a clean React way to integrate ForesightJS with your components.
+The `useForesight` hook serves as the base for all ForesightJS usage with any React framework.
 
-## Basic Usage
+## useForesight
 
 ```tsx
 import { useRef, useEffect } from "react"
-import { ForesightManager, type ForesightRect } from "js.foresight"
+import {
+  ForesightManager,
+  type ForesightRegisterOptionsWithoutElement,
+  type ForesightRegisterResult,
+} from "js.foresight"
 
-interface UseForesightOptions {
-  callback: () => void
-  hitSlop?: number | ForesightRect
-  unregisterOnCallback?: boolean
-  name?: string
-}
-
-function useForesight(options: UseForesightOptions) {
-  const elementRef = useRef<HTMLElement>(null)
+export default function useForesight<T extends HTMLElement = HTMLElement>(
+  options: ForesightRegisterOptionsWithoutElement
+) {
+  const elementRef = useRef<T>(null)
+  const registerResults = useRef<ForesightRegisterResult | null>(null)
 
   useEffect(() => {
     if (!elementRef.current) return
 
-    const { unregister } = ForesightManager.instance.register({
+    registerResults.current = ForesightManager.instance.register({
       element: elementRef.current,
       ...options,
     })
 
-    return unregister
-  }, [options.callback, options.hitSlop, options.unregisterOnCallback, options.name])
+    return () => {
+      registerResults.current?.unregister()
+    }
+  }, [options])
 
-  return elementRef
+  return { elementRef, registerResults: registerResults.current }
 }
-
-export default useForesight
 ```
 
-## Example Component
+### Return Values
 
-```tsx
+The hook returns an object containing:
+
+- `elementRef` - To attach to your target element
+- [`registerResults`](/docs/getting_started/config#return-value-of-register) - Registration details like `isRegistered`
+
+**Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
+
+This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
+
+### Basic Usage
+
+```TS
 import useForesight from "./useForesight"
 
-function PrefetchButton() {
-  const buttonRef = useForesight({
+function MyComponent() {
+  const { elementRef, registerResults } = useForesight<HTMLButtonElement>({
     callback: () => {
       console.log("Prefetching data...")
       // Your prefetch logic here
     },
-    hitSlop: 20,
-    name: "prefetch-button",
+    hitSlop: 10,
+    name: "my-button",
   })
 
-  return (
-    <button ref={buttonRef}>
-      Hover to prefetch
-    </button>
-  )
+  return <button ref={elementRef}>Hover to prefetch</button>
 }
 ```
 
-## Advanced Hook with State
+### Framework Integrations
 
-```tsx
-import { useRef, useEffect, useState } from "react"
-import { ForesightManager, type ForesightRect } from "js.foresight"
+For ready-to-use components built on top of useForesight, see our framework-specific integrations:
 
-interface UseForesightOptions {
-  callback: () => void
-  hitSlop?: number | ForesightRect
-  unregisterOnCallback?: boolean
-  name?: string
-}
-
-function useForesight(options: UseForesightOptions) {
-  const elementRef = useRef<HTMLElement>(null)
-  const [isPrefetched, setIsPrefetched] = useState(false)
-
-  useEffect(() => {
-    if (!elementRef.current) return
-
-    const { unregister } = ForesightManager.instance.register({
-      element: elementRef.current,
-      callback: () => {
-        setIsPrefetched(true)
-        options.callback()
-      },
-      hitSlop: options.hitSlop,
-      unregisterOnCallback: options.unregisterOnCallback,
-      name: options.name,
-    })
-
-    return unregister
-  }, [options.callback, options.hitSlop, options.unregisterOnCallback, options.name])
-
-  return { elementRef, isPrefetched }
-}
-```
+- [React Router](/docs/integrations/react/react-router#foresightlink-component)
+- [Next.js](/docs/integrations/react/nextjs#foresightlink-component)

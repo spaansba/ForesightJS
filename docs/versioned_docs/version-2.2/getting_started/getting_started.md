@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 0
 keywords:
   - Introduction
   - JS.Foresight
@@ -10,10 +10,10 @@ keywords:
 description: Introduction to ForesightJS, an lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
   date: 2025-06-06
-  author: spaansba
+  author: Bart Spaans
 ---
 
-# Introduction
+# Getting Started
 
 [![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
@@ -95,12 +95,6 @@ const { isTouchDevice, unregister } = ForesightManager.instance.register({
 unregister()
 ```
 
-## What About Touch Devices?
-
-ForesightJS focuses on using mouse movement for prefetching, so you'll need your own approach for touch devices like phones and tablets. The `ForesightManager.instance.register()` method returns an `isTouchDevice` boolean that you can use to create this separate logic. You can safely call `register()` even on touch devices, as the Foresight manager will bounce touch devices to avoid unnecessary processing.
-
-An example of what to do with touch devices can be found in the [Next.js](/docs/integrations/nextjs) or [React Router](/docs/integrations/react) ForesightLink components.
-
 ## Integrations
 
 Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](/docs/integrations/nextjs) and [React Router](/docs/integrations/react) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
@@ -112,6 +106,19 @@ ForesightJS can be used bare-bones but also can be configured. For all configura
 ## Debugging Visualization
 
 ForesightJS includes a [Visual Debugging](/docs/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+
+## What About Touch Devices and Slow Connections?
+
+Since ForesightJS relies on the keyboard/mouse it will not register elements for touch devices. For limited connections (2G or data-saver mode), we respect the user's preference to minimize data usage and skip registration aswell.
+
+The `ForesightManager.instance.register()` method returns these properties:
+
+- `isTouchDevice` - true if user is on a touch device
+- `isLimitedConnection` - true when user is on a 2G connection or has data-saver enabled
+- `isRegistered` - true if element was actually registered
+
+With these properties you could create your own fallback prefetching methods if required. For example if the user is on a touch device you could prefetch based on viewport.
+An example of this can be found in the [Next.js](/docs/integrations/react/nextjs) or [React Router](/docs/integrations/react/react-router) ForesightLink components.
 
 ## How Does ForesightJS Work?
 

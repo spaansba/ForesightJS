@@ -8,7 +8,7 @@ keywords:
 description: Integration details to add ForesightJS to your Tanstack Router projects
 last_updated:
   date: 2025-06-04
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # TanStack Router

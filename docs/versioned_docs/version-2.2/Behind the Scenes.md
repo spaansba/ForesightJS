@@ -13,7 +13,7 @@ keywords:
 description: A technical deep-dive into the internal workings of ForesightJS, explaining its architecture, how it predicts mouse movements using linear extrapolation and the Liang-Barsky algorithm, and how it predicts tab navigation.
 last_updated:
   date: 2025-06-04
-  author: spaansba
+  author: Bart Spaans
 ---
 
 # Behind the Scenes

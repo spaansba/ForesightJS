@@ -50,7 +50,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
 }
 ```
 
-## Return Values
+### Return Values
 
 The hook returns an object containing:
 
@@ -61,7 +61,7 @@ The hook returns an object containing:
 
 This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
 
-## Basic Usage
+### Basic Usage
 
 ```TS
 import useForesight from "./useForesight"

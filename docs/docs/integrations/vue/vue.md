@@ -14,9 +14,9 @@ last_updated:
 
 # Vue
 
-Vue integration examples coming soon. ForesightJS works with any framework or vanilla JavaScript.
+Vue integration examples coming soon.
 
-## Basic Usage
+<!-- ## Basic Usage
 
 ```vue
 <template>
@@ -56,4 +56,4 @@ const handleClick = () => {
   console.log("Button clicked!")
 }
 </script>
-```
+``` -->
