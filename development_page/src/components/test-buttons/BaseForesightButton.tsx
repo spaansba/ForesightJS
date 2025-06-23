@@ -6,8 +6,7 @@ type ForesightButtonProps = {
 }
 
 function ForesightButton({ registerOptions }: ForesightButtonProps) {
-  const { elementRef, registerResults } = useForesight<HTMLButtonElement>(registerOptions)
-  console.log(registerResults)
+  const { elementRef } = useForesight<HTMLButtonElement>(registerOptions)
   return (
     <button
       ref={elementRef}
