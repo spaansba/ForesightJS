@@ -24,7 +24,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
     return () => {
       result.unregister()
     }
-  }, [options]) // Remove registerResults from dependencies
+  }, [options])
 
   return { elementRef, registerResults }
 }

@@ -6,6 +6,7 @@ type ShouldRegister = {
 
 export function evaluateRegistrationConditions(): ShouldRegister {
   const isTouchDevice = userUsesTouchDevice()
+  console.log(isTouchDevice)
   const isLimitedConnection = hasConnectionLimitations()
   const shouldRegister = !isTouchDevice && !isLimitedConnection
   return { isTouchDevice, isLimitedConnection, shouldRegister }
