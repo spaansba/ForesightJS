@@ -28,28 +28,30 @@ This document delves into the internal workings of ForesightJS, offering a look 
 
 ForesightJS employs a singleton pattern, ensuring only one instance of `ForesightManager` exists. This central instance manages all prediction logic, registered elements, and global settings. Elements are stored in a `Map`, where the key is the registered element itself. Calling `ForesightManager.instance.register()` multiple times with the same element overwrites the existing entry rather than creating a duplicate.
 
-To keep the DOM clean and optimize for performance,
+Since the DOM and registered elements might change position, and we want to keep the DOM clean, we require the [`element.getBoundingClientRect`](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) for each element on each update. However, calling this function can trigger [reflows](https://developer.mozilla.org/en-US/docs/Glossary/Reflow), which we want to avoid. To obtain this rect and manage registered element state, we use observers instead.
 
-### General Observers
+### Observer Architecture
 
-ForesightJS utilizes browser-native Observers to monitor element positions and their presence in the DOM:
+ForesightJS utilizes both browser-native observers and a third-party observer library to monitor element positions and DOM changes:
 
-- **`MutationObserver`:** This observer detects when registered HTML elements are removed from the DOM, leading to their automatic unregistration. Not needed but helpful for if the user forgets to unregister their element on removal.
+- **`MutationObserver`:** This browser-native observer detects when registered elements are removed from the DOM, leading to their automatic unregistration. This provides a safety net if developers forget to manually unregister elements on removal.
 
-* **[`PositionObserver`](https://github.com/Shopify/position-observer/):** This observer, Created by [Shopify](https://github.com/Shopify), is used to asynchronously observe changes in the position of a registered element. Its callback provides a list of all detected changes, allowing us to consolidate multiple observer patterns. By implementing the `PositionObserver`, we avoid the need for:
+- **[`PositionObserver`](https://github.com/Shopify/position-observer/):** Created by [Shopify](https://github.com/Shopify), this library uses browser-native observers under the hood to asynchronously monitor changes in the position of registered elements without polling. Its callback provides a list of all detected changes, allowing us to consolidate multiple observer patterns. By implementing the `PositionObserver`, we avoid the need for:
 
-        - The window resize event
-        - The window scroll event
-        - The ResizeObserver
-        - The IntersectionObserver
+        - Window resize events
+        - Window scroll events
+        - ResizeObserver
+        - IntersectionObserver
+
+With the observer foundation in place, we can now examine how ForesightJS implements its three core prediction mechanisms, starting with mouse trajectory prediction.
 
 ## Mouse Prediction
 
+Mouse prediction analyzes cursor movement patterns to anticipate where users intend to click. By tracking mouse velocity and trajectory, ForesightJS can predict when a user's cursor path will intersect with registered elements.
+
 ### Event Handlers
 
-For accurate mouse predictions, ForesightJS captures mouse movements next to the previously mentioned layout changes:
-
-- **`mousemove`:** The library records the mouse's `clientX` and `clientY` coordinates on each `mousemove` event. ForesightJS maintains a history of these positions, the size of which is limited by the `positionHistorySize` setting.
+- **`mousemove`:** Records the mouse's `clientX` and `clientY` coordinates on each `mousemove` event. ForesightJS maintains a history of these positions, with the history size limited by the `positionHistorySize` setting.
 
 ### Mouse Position Prediction Mechanism
 
@@ -61,7 +63,7 @@ The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/ma
 2.  **Velocity Calculation:** It calculates the average velocity (change in position over time) using the oldest and newest points in the recorded history.
 3.  **Extrapolation:** Using this calculated velocity and the `trajectoryPredictionTimeInMs` setting (which defines how far into the future to predict), the function projects the mouse's current position along its path to estimate its future `x` and `y` coordinates.
 
-This process yields a `predictedPoint`. ForesightJS then creates a line in memory between the current mouse position and this `predictedPoint` for intersection checks. It only checks elements that are currently visible with the `IntersectionObserver`.
+This process yields a `predictedPoint` which allows for a line in memory between the current mouse position and this `predictedPoint` for intersection checks. It only checks elements that are currently visible in the viewport, as determined by the `PositionObserver`.
 
 ### Trajectory Intersection Checking
 
@@ -78,18 +80,22 @@ This mechanism allows ForesightJS to predict if the user's future mouse trajecto
 
 ## Tab Prediction
 
+Tab prediction anticipates keyboard navigation by monitoring Tab key presses and focus changes. When users navigate through tabbable elements using the Tab key,
+
 ### Event Handlers
 
 For tab prediction, ForesightJS monitors specific keyboard and focus events:
 
-- **`keydown`:** The library listens for `keydown` events to check if the `Tab` key was the last key pressed.
-- **`focusin`:** This event fires when an element gains focus. When a `focusin` event follows a `Tab` key press detected via `keydown`, ForesightJS identifies this sequence as tab navigation.
+- **`keydown`:** Listens for `keydown` events to detect when the `Tab` key was pressed.
+- **`focusin`:** Fires when an element gains focus. When a `focusin` event follows a `Tab` key press detected via `keydown`, ForesightJS identifies this sequence as tab navigation.
 
 These event listeners are managed by an `AbortController` for proper cleanup.
 
 ### Tab Navigation Prediction
 
-When ForesightJS detects a `Tab` key press followed by a `focusin` event, it recognizes this as user-initiated tab navigation. Identifying all currently tabbable elements on a page is a surprisingly complex task due to varying browser behaviors, element states, and accessibility considerations. Therefore, to reliably determine the tab order, ForesightJS leverages the robust and well-tested [`tabbable`](https://github.com/focus-trap/tabbable) library.
+When ForesightJS detects a `Tab` key press followed by a `focusin` event, it recognizes this as user-initiated tab navigation. Identifying all currently tabbable elements on a page is a surprisingly complex task due to varying browser behaviors, element states, and accessibility considerations. Therefore, to reliably determine the tab order, ForesightJS uses the [`tabbable`](https://github.com/focus-trap/tabbable) library.
+
+To optimize performance, ForesightJS caches the results from the `tabbable` library since calling `tabbable()` can be computationally expensive as it uses `element.getBoundingClientRect()` under the hood. The cache is invalidated and refreshed whenever DOM mutations are detected, ensuring the tab order remains accurate even as the page structure changes.
 
 The prediction logic then proceeds as follows:
 
@@ -100,6 +106,8 @@ The prediction logic then proceeds as follows:
 
 ## Scroll Prediction
 
-You might think we use an event handler for this, but we actually don't have to. If you remember how the `PositionObserver` functions, you might know where this is going. As mentioned before, the `PositionObserver` callback returns an array of elements that have been moved in some way. By checking the delta between the previous `boundingClientRect` and the new one for an element that stayed in the viewport, we can determine which direction the element is moving and thus determine the scroll direction.
+The final prediction mechanism leverages the existing observer infrastructure to detect scroll-based user intent without additional event listeners.
 
-Note that this approach might also trigger in other scenarios where elements move, such as animations or dynamic layout changes. If your website has a lot of these, you might need to turn off Scroll Prediction all together.
+Unlike mouse and tab prediction, scroll prediction does not require additional event handlers. The `PositionObserver` callback returns an array of elements that have moved in some way. By analyzing the delta between the previous `boundingClientRect` and the new one for elements that remain in the viewport, we can determine the direction elements are moving and thus infer the scroll direction.
+
+Note that this approach may also trigger in other scenarios where elements move, such as animations or dynamic layout changes. If your website has many such animations, you may need to disable scroll prediction entirely.
