@@ -25,7 +25,7 @@ To avoid this, we can wrap the `Link` component and add ForesightJS. The officia
 
 ## ForesightLink Component
 
-Below is an example of creating an wrapper around the Next.js `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default Next.js prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/next/integrations/react/useForesight).
+Below is an example of creating an wrapper around the Next.js `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default Next.js prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/integrations/react/useForesight).
 
 ```tsx
 "use client"

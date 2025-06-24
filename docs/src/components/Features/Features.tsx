@@ -50,11 +50,7 @@ export function Features() {
               <p>
                 Built with performance in mind using observers, minimal DOM queries, and caching to
                 avoid layout thrashing and unnecessary computations. Read about the magic in our{" "}
-                <a
-                  className={styles.inlineLink}
-                  href="/docs/next/Behind_the_Scenes"
-                  target="_blank"
-                >
+                <a className={styles.inlineLink} href="/docs/Behind_the_Scenes" target="_blank">
                   behind the scenes
                 </a>
               </p>
