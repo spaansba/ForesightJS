@@ -1,0 +1,149 @@
+.featuresSection {
+  padding: 120px 32px;
+  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+  color: white;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 64px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sectionTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.sectionSubtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 400;
+}
+
+.featuresContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 48px 64px;
+}
+
+.featureRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.featureNumber {
+  font-size: 1.5rem;
+  font-weight: 700;
+  min-width: 60px;
+  text-align: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.05);
+  backdrop-filter: blur(10px);
+  height: fit-content;
+}
+
+.featureInfo {
+  flex: 1;
+}
+
+.featureInfo h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+.featureInfo p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 24px;
+  font-size: 1rem;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featureList li {
+  position: relative;
+  padding: 8px 0 8px 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.featureList li:before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+@media screen and (max-width: 996px) {
+  .featuresContent {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .featuresSection {
+    padding: 80px 20px;
+  }
+  
+  .sectionHeader {
+    margin-bottom: 48px;
+  }
+  
+  .sectionTitle {
+    font-size: 2.5rem;
+  }
+  
+  .sectionSubtitle {
+    font-size: 1.125rem;
+  }
+  
+  .featureRow {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .featureNumber {
+    font-size: 1.25rem;
+    min-width: auto;
+    text-align: center;
+    align-self: flex-start;
+  }
+  
+  .featureInfo h3 {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+  
+  .featureInfo p {
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+}

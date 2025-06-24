@@ -6,25 +6,495 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #7a9bc5;
-  --ifm-color-primary-dark: #6e8cb1;
-  --ifm-color-primary-darker: #6885a7;
-  --ifm-color-primary-darkest: #566e8a;
-  --ifm-color-primary-light: #86aad9;
-  --ifm-color-primary-lighter: #8cb1dd;
-  --ifm-color-primary-lightest: #a3c5e5;
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2563eb;
+  --ifm-color-primary-darker: #1d4ed8;
+  --ifm-color-primary-darkest: #1e40af;
+  --ifm-color-primary-light: #60a5fa;
+  --ifm-color-primary-lighter: #93c5fd;
+  --ifm-color-primary-lightest: #dbeafe;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2563eb;
+  --ifm-color-primary-darker: #1d4ed8;
+  --ifm-color-primary-darkest: #1e40af;
+  --ifm-color-primary-light: #60a5fa;
+  --ifm-color-primary-lighter: #93c5fd;
+  --ifm-color-primary-lightest: #dbeafe;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Modern Navbar Styling */
+.navbar {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24) !important;
+  padding: 12px 0 !important;
+}
+
+.navbar__brand {
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  color: white !important;
+}
+
+.navbar__brand:hover {
+  color: #3b82f6 !important;
+  text-decoration: none !important;
+}
+
+.navbar__item {
+  font-weight: 500 !important;
+}
+
+.navbar__link {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.navbar__link:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  text-decoration: none !important;
+}
+
+.navbar__link--active {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: transparent !important;
+}
+
+.dropdown__menu {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dropdown__link {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dropdown__link:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+/* Toggle Button */
+.navbar__toggle {
+  color: white !important;
+}
+
+/* Mobile Menu */
+@media (max-width: 996px) {
+  .navbar-sidebar {
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  
+  .navbar-sidebar__brand {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .menu__link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin: 4px 0 !important;
+  }
+  
+  .menu__link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+  }
+  
+  .menu__link--active {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+}
+
+/* Global Dark Theme and Typography Improvements */
+body {
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  background: #000000;
+  color: white;
+}
+
+/* Main content wrapper dark theme */
+.main-wrapper {
+  background: #000000;
+}
+
+/* Footer dark theme */
+.footer {
+  background: #000000 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.footer__title {
+  color: white !important;
+}
+
+.footer__item {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.footer__item:hover {
+  color: white !important;
+}
+
+.footer__copyright {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Button improvements */
+.button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.button--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39) !important;
+}
+
+.button--primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.5) !important;
+}
+
+.button--secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.button--secondary:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide default Docusaurus background */
+[data-theme='dark'] {
+  --ifm-background-color: #000000;
+  --ifm-background-surface-color: #111111;
+}
+
+/* Content section spacing */
+section {
+  position: relative;
+}
+
+/* Ensure dark theme for docs pages */
+.theme-doc-page {
+  background: #000000;
+}
+
+/* Documentation content styling */
+.theme-doc-markdown {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-doc-markdown h1 {
+  color: white !important;
+  font-weight: 800 !important;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3) !important;
+  padding-bottom: 12px !important;
+}
+
+.theme-doc-markdown h2 {
+  color: white !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-bottom: 8px !important;
+}
+
+.theme-doc-markdown h3,
+.theme-doc-markdown h4,
+.theme-doc-markdown h5,
+.theme-doc-markdown h6 {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.theme-doc-markdown p {
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.7 !important;
+}
+
+.theme-doc-markdown li {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.theme-doc-markdown a {
+  color: #60a5fa !important;
+  text-decoration: none !important;
+}
+
+.theme-doc-markdown a:hover {
+  color: #93c5fd !important;
+  text-decoration: underline !important;
+}
+
+.theme-doc-markdown blockquote {
+  border-left: 4px solid #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.theme-doc-markdown table {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme-doc-markdown th {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme-doc-markdown td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.theme-doc-markdown tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Sidebar styling */
+.theme-doc-sidebar-container {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-doc-sidebar-menu {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.menu__link {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.menu__link:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+}
+
+.menu__link--active {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #60a5fa !important;
+  border-left: 3px solid #3b82f6 !important;
+}
+
+.menu__list-item-collapsible {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Dark theme for code blocks */
+.prism-code {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.codeBlockContainer {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.codeBlockTitle {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Inline code */
+.theme-doc-markdown code {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+}
+
+/* Admonitions */
+.alert {
+  border-radius: 8px !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.alert--primary {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert--secondary {
+  background: rgba(107, 114, 128, 0.1) !important;
+  border: 1px solid rgba(107, 114, 128, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert--success {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert--info {
+  background: rgba(6, 182, 212, 0.1) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert--warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert--danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Typography scale improvements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-weight: 800;
+}
+
+h2 {
+  font-weight: 700;
+}
+
+h3 {
+  font-weight: 600;
+}
+
+/* Table of Contents styling */
+.table-of-contents {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.table-of-contents__link {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.table-of-contents__link:hover {
+  color: #60a5fa !important;
+}
+
+.table-of-contents__link--active {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+/* Pagination */
+.pagination-nav {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.pagination-nav__link {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.pagination-nav__link:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: white !important;
+}
+
+.pagination-nav__label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.pagination-nav__sublabel {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  background: transparent !important;
+}
+
+.breadcrumbs__item {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.breadcrumbs__item--active {
+  color: white !important;
+}
+
+.breadcrumbs__link {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.breadcrumbs__link:hover {
+  color: #60a5fa !important;
+}
+
+/* Search */
+.DocSearch-Button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.DocSearch-Button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Version dropdown */
+.dropdown {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Mobile specific */
+@media screen and (max-width: 996px) {
+  .theme-doc-sidebar-container {
+    background: rgba(0, 0, 0, 0.95) !important;
+  }
+  
+  .navbar-sidebar__backdrop {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
 }

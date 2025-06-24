@@ -6,8 +6,8 @@ p {
   display: none;
   background-color: #f8f1ff;
   border-left: 4px solid #9b59b6;
-  padding: 1rem;
-  margin: 1.5rem 0;
+  padding: 16px;
+  margin: 24px 0;
   border-radius: 0 4px 4px 0;
 }
 
@@ -21,8 +21,8 @@ p {
 .demoNote {
   background-color: #fff3cd;
   border-left: 4px solid #ffc107;
-  padding: 1rem;
-  margin: 1.5rem 0;
+  padding: 16px;
+  margin: 24px 0;
   border-radius: 0 4px 4px 0;
 }
 
@@ -34,13 +34,13 @@ p {
 }
 
 .demoNote p + p {
-  margin-top: 0.75rem;
+  margin-top: 12px;
 }
 
 .demoNote code {
   background-color: #fff9db;
-  padding: 2px 5px;
-  border-radius: 3px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-family: monospace;
   font-size: 0.9em;
   color: #664d03;
@@ -56,8 +56,8 @@ p {
 .header {
   display: flex;
   flex-direction: column;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -68,12 +68,12 @@ p {
   background-color: #f8f9fa;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .tabButton {
   flex: 1;
-  padding: 1rem;
+  padding: 16px;
   border: none;
   background: transparent;
   font-size: 1rem;
@@ -98,7 +98,7 @@ p {
 .overviewContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .descriptionText {
@@ -107,7 +107,7 @@ p {
 }
 
 p {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
   font-size: 1rem;
 }
 
@@ -119,7 +119,7 @@ p {
   background: #ffffff;
   border: 2px solid #e9ecef;
   border-radius: 12px;
-  padding: 2rem 1.5rem;
+  padding: 32px 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
@@ -133,7 +133,7 @@ p {
 
 .featureIcon {
   font-size: 3rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 20px;
   opacity: 0.9;
   transition: all 0.3s ease;
 }
@@ -145,7 +145,7 @@ p {
 
 .featureCard h3 {
   font-size: 1.4rem;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
   color: #2c3e50;
   font-weight: 600;
   line-height: 1.3;
@@ -162,27 +162,27 @@ p {
 /* Demo section */
 .demoSection {
   background-color: #f8f9fa;
-  padding: 2rem 3rem;
+  padding: 32px 48px;
   border-radius: 8px;
-  margin-top: 2rem;
+  margin-top: 32px;
 }
 
 h2 {
   font-size: 1.8rem;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
   color: #2c3e50;
 }
 
 .keyboardTip {
-  margin-top: 1rem;
+  margin-top: 16px;
   text-align: center;
   font-size: 0.95rem;
-  color: #2d5016;
+  color: rgba(255, 255, 255, 0.8);
   position: relative;
 }
 
 .keyboardTip strong {
-  color: #1b5e20;
+  color: #3b82f6;
   font-weight: 600;
 }
 
@@ -191,17 +191,17 @@ h2 {
   border: 1px solid #c7c7c7;
   border-bottom: 2px solid #b0b0b0;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.85em;
   color: #333;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  margin: 0 2px;
+  margin: 0 4px;
 }
 
 .demoCards {
   display: flex;
-  gap: 1rem;
+  gap: 16px;
   justify-content: center;
   align-items: stretch;
   flex-wrap: nowrap;
@@ -226,16 +226,16 @@ h2 {
   font-size: 0.95rem;
   color: #495057;
   background-color: #e8f4fd;
-  padding: 1rem;
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid #3498db;
-  margin: 1.5rem 0;
+  margin: 24px 0;
 }
 
 .demoHint code {
   background-color: #d1ecff;
-  padding: 2px 5px;
-  border-radius: 3px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-family: monospace;
   font-size: 0.9em;
   color: #0366d6;
@@ -245,10 +245,10 @@ h2 {
   background: #f8f9fa;
   color: #6c757d;
   border: 1px solid #dee2e6;
-  padding: 0.75rem 1.5rem;
+  padding: 12px 24px;
   font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -271,7 +271,7 @@ h2 {
 
 .codeBlock {
   background-color: #f1f3f5;
-  padding: 1rem;
+  padding: 16px;
   border-radius: 4px;
   font-family: monospace;
   font-size: 0.9rem;
@@ -283,10 +283,10 @@ h2 {
   background: #fff3cd;
   color: #856404;
   border: 1px solid #ffeaa7;
-  padding: 0.75rem 1.5rem;
+  padding: 12px 24px;
   font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -299,7 +299,7 @@ h2 {
 .tooltip {
   position: absolute;
   z-index: 1000;
-  padding: 0.75rem 1rem;
+  padding: 12px 16px;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: white;
   border-radius: 8px;
@@ -382,15 +382,15 @@ h2 {
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 24px;
 }
 
 .demoCardGrid {
   display: flex;
   justify-content: space-around;
   justify-items: center;
-  gap: 3rem;
-  margin: 3rem 0 4rem 0;
+  gap: 48px;
+  margin: 48px 0 64px 0;
   flex-wrap: wrap;
 }
 
@@ -404,9 +404,10 @@ h2 {
   min-height: 140px;
   width: 250px;
   border-radius: 12px;
-  border: 2px solid #e9ecef;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -425,8 +426,8 @@ h2 {
 
 .demoTraditionalWrapper h3 {
   font-size: 1.3rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: white;
   margin: 0;
   text-align: center;
   position: relative;
@@ -440,7 +441,7 @@ h2 {
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, #e74c3c, #f39c12);
+  background: linear-gradient(90deg, #ef4444, #f97316);
   border-radius: 2px;
 }
 
@@ -456,8 +457,8 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
 .keyboardSection {
@@ -470,8 +471,8 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin: 3rem 0;
+  gap: 16px;
+  margin: 48px 0;
   padding: 0;
 }
 
@@ -489,20 +490,20 @@ h2 {
 .sectionDivider > * {
   position: relative;
   z-index: 2;
-  padding: 0 1rem;
+  padding: 0 16px;
 }
 
 .demoForesightWrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .demoForesightWrapper h3 {
   font-size: 1.3rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: white;
   margin: 0;
   text-align: center;
   position: relative;
@@ -532,15 +533,15 @@ h2 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem 0.5rem;
+  padding: 16px 8px;
   width: 100%;
 }
 
 .statusText {
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
+  margin-bottom: 8px;
+  color: white;
   line-height: 1.4;
 }
 
@@ -601,20 +602,26 @@ h2 {
 /* Enhanced card elements */
 .actionHint {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
   margin-top: 0.25rem;
   opacity: 0.8;
   transition: opacity 0.3s ease;
 }
 
+.cardContent:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
 .cardContent:hover .actionHint {
-  color: #3498db;
+  color: #3b82f6;
 }
 
 .successIndicator {
   font-size: 0.85rem;
-  color: #2e7d32;
+  color: #22c55e;
   font-weight: 600;
   margin-top: 0.25rem;
   animation: fadeIn 0.4s ease-out;

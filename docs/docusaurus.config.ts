@@ -72,21 +72,28 @@ const config: Config = {
         alt: "ForesightJS Logo",
         src: "img/logo.svg",
       },
+      hideOnScroll: false,
+      style: "dark",
       items: [
         {
           type: "docSidebar",
           sidebarId: "tutorialSidebar",
           position: "left",
-          label: "Docs",
+          label: "Documentation",
         },
-        // { to: "/blog", label: "Blog", position: "left" },
+        {
+          to: "/#playground",
+          label: "Playground",
+          position: "left",
+        },
+        {
+          type: "docsVersionDropdown",
+          position: "right",
+        },
         {
           href: "https://github.com/spaansba/ForesightJS",
           label: "GitHub",
           position: "right",
-        },
-        {
-          type: "docsVersionDropdown",
         },
       ],
     },

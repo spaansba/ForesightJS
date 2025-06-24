@@ -1,0 +1,130 @@
+.playgroundSection {
+  padding: 120px 32px;
+  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+  color: white;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 48px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sectionTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.sectionSubtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 400;
+}
+
+.playgroundInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.infoCard {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.infoCard h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.infoCard p {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.playgroundContainer {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+}
+
+.mobileMessage {
+  display: none;
+  background: rgba(251, 191, 36, 0.1);
+  border-left: 4px solid #f59e0b;
+  padding: 16px;
+  margin-bottom: 32px;
+  border-radius: 0 8px 8px 0;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.mobileMessage p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(251, 191, 36, 0.9);
+}
+
+@media screen and (max-width: 768px) {
+  .playgroundSection {
+    padding: 80px 20px;
+  }
+  
+  .sectionHeader {
+    margin-bottom: 32px;
+  }
+  
+  .sectionTitle {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+  
+  .sectionSubtitle {
+    font-size: 1.125rem;
+  }
+  
+  .playgroundInfo {
+    grid-template-columns: 1fr;
+    margin-bottom: 32px;
+    gap: 16px;
+  }
+  
+  .playgroundContainer {
+    padding: 24px;
+  }
+  
+  .mobileMessage {
+    display: block;
+    margin-bottom: 24px;
+    padding: 16px;
+  }
+  
+  .playgroundContainer {
+    display: none;
+  }
+}
