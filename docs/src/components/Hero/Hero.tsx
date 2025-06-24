@@ -75,12 +75,6 @@ export function Hero() {
                 >
                   Get Started
                 </Link>
-                <Link
-                  className={styles.secondaryButton}
-                  to="https://github.com/spaansba/ForesightJS"
-                >
-                  Learn ForesightJS
-                </Link>
               </div>
 
               {(stats.githubStars > 0 || stats.npmDownloads > 0) && (
