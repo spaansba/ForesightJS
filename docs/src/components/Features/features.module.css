@@ -1,7 +1,17 @@
 .featuresSection {
-  padding: 120px 32px;
+  padding: 60px 32px;
   background: transparent;
   color: white;
+}
+
+.inlineLink,
+.inlineLink:visited {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline dashed #b0c4de 1px;
+}
+
+.inlineLink:hover {
+  text-decoration-style: solid #b0c4de 1px;
 }
 
 .sectionHeader {
@@ -75,7 +85,7 @@
 .featureInfo p {
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   font-size: 1rem;
 }
 

@@ -24,8 +24,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       js.foresight:
-        specifier: ^2.2.2
-        version: 2.2.2
+        specifier: ^2.2.3
+        version: 2.2.3
       lucide-react:
         specifier: ^0.510.0
         version: 0.510.0(react@19.1.0)
@@ -3014,8 +3014,8 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  js.foresight@2.2.2:
-    resolution: {integrity: sha512-0wnnbdaXMGr0vL9zXFqCcdOF05bZA9oWQo1kHaUUhgK43Cqzp/RhBnvWzC8w94QO32ggVijwP6v3/U0859uU5w==}
+  js.foresight@2.2.3:
+    resolution: {integrity: sha512-ayXzagy58HV9uepZcSQZ0rOHzybDSm3lAerHQdGCD0zlCnETiWIR+PzLlUkICwVt+TwxcngYe8xMLfpmesN4VA==}
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
@@ -8973,7 +8973,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js.foresight@2.2.2:
+  js.foresight@2.2.3:
     dependencies:
       '@thednp/position-observer': 1.1.0
       position-observer: 1.0.0

@@ -14,7 +14,11 @@ function DemoWrapper() {
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>
             See predictions trigger in real-time with{" "}
-            <a href="http://localhost:3000/docs/next/getting_started/debug" target="_blank">
+            <a
+              className={styles.inlineLink}
+              href="http://localhost:3000/docs/next/getting_started/debug"
+              target="_blank"
+            >
               Debug Mode
             </a>
             . Move your mouse, scroll or use Tab navigation to experience intent detection.
