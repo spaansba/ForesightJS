@@ -10,7 +10,7 @@ function ResetCardsButton({ onReset }: ResetCardsButtonProps) {
   return (
     <Tooltip content="Reset all cards and buttons to their initial state" position="top">
       <button className={styles.resetAllButton} onClick={onReset}>
-        Reset All Cards
+        Reset Cards
       </button>
     </Tooltip>
   )

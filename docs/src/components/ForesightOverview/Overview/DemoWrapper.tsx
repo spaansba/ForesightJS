@@ -9,11 +9,15 @@ function DemoWrapper() {
         <div className={styles.mobileMessage}>
           <MobileMessage />
         </div>
-        
+
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>
-            See predictions trigger in real-time. Move your mouse or use Tab navigation to experience intent detection.
+            See predictions trigger in real-time with{" "}
+            <a href="http://localhost:3000/docs/next/getting_started/debug" target="_blank">
+              Debug Mode
+            </a>
+            . Move your mouse, scroll or use Tab navigation to experience intent detection.
           </p>
         </div>
 

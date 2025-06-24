@@ -350,21 +350,31 @@ const debuggerCSS = /* css */ `
         border-radius: 8px;
       }
       .jsforesight-mouse-predicted {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 2px solid #6b98e1;
-        background-color: rgba(176, 196, 222, 0.3);
-        z-index: 10000;
+        display: none !important;
         /* transform is now set dynamically via JS for performance */
       }
       .jsforesight-trajectory-line {
-        height: 2px;
-        background-color: #6b98e1;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.4));
         transform-origin: left center;
         z-index: 9999;
-        border-radius: 1px;
+        border-radius: 2px;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        position: relative;
         /* width and transform are set dynamically via JS for performance */
+      }
+      .jsforesight-trajectory-line::after {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid #3b82f6;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
       }
       .jsforesight-name-label {
         background-color: rgba(27, 31, 35, 0.85);
@@ -392,58 +402,54 @@ const debuggerCSS = /* css */ `
       }
         
       .jsforesight-scroll-trajectory-line {
-      height: 2px;
+      height: 4px;
       background: repeating-linear-gradient(
         90deg,
-        oklch(68% 0.18 145) 0px,
-        oklch(68% 0.18 145) 6px,
-        transparent 6px,
-        transparent 10px
+        #22c55e 0px,
+        #22c55e 8px,
+        transparent 8px,
+        transparent 16px
       );
       transform-origin: left center;
       z-index: 9999;
-      border-radius: 1px;
+      border-radius: 2px;
       display: none;
-      animation: scroll-dash-flow 1.8s linear infinite;
+      animation: scroll-dash-flow 1.5s linear infinite;
       position: relative;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
       }
 
       .jsforesight-scroll-trajectory-line::after {
       content: '';
       position: absolute;
-      right: -2px;
+      right: -6px;
       top: 50%;
       transform: translateY(-50%);
-      width: 6px;
-      height: 6px;
-      background: oklch(68% 0.18 145);
-      border-radius: 50%;
-      animation: scroll-escape-squeeze 2.2s ease-in-out infinite;
+      width: 0;
+      height: 0;
+      border-left: 8px solid #22c55e;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+      animation: scroll-arrow-pulse 1.5s ease-in-out infinite;
       }
 
       @keyframes scroll-dash-flow {
       0% { background-position: 0px 0px; }
-      100% { background-position: 10px 0px; }
+      100% { background-position: 16px 0px; }
       }
 
-      @keyframes scroll-escape-squeeze {
+      @keyframes scroll-arrow-pulse {
       0%, 100% { 
         transform: translateY(-50%) scale(1);
-        right: -2px;
-      }
-      25% {
-        transform: translateY(-50%) scaleX(1.3) scaleY(0.7);
-        right: -3px;
+        filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
       }
       50% {
-        transform: translateY(-50%) scaleX(0.8) scaleY(1.2);
-        right: -1px;
-      }
-      75% {
-        transform: translateY(-50%) scaleX(1.2) scaleY(0.8);
-        right: -3px;
+        transform: translateY(-50%) scale(1.2);
+        filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
       }
       }
+
 
   
       @keyframes jsforesight-callback-pulse {

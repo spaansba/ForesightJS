@@ -6,10 +6,6 @@ export function Features() {
       <div className="container">
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Prefetch Smarter</h2>
-          <p className={styles.sectionSubtitle}>
-            Advanced algorithms predict user behavior for smarter prefetching. Framework-agnostic
-            with ready-made integrations.
-          </p>
         </div>
 
         <div className={styles.featuresContent}>
