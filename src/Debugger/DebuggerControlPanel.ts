@@ -723,7 +723,7 @@ export class DebuggerControlPanel {
   private createControlContainer(): HTMLElement {
     const container = document.createElement("div")
     container.id = "debug-controls"
-    container.innerHTML = `
+    container.innerHTML = /* html */ `
       <div class="debugger-title-container">
         <button class="minimize-button">-</button>
         <div class="title-group">
@@ -958,49 +958,48 @@ export class DebuggerControlPanel {
               </button>
               <div id="sort-options-popup">
               <button
-  data-sort="visibility"
-  title="${[
-    "Sort by Visibility",
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "Sorts elements by their viewport visibility",
-    "(visible elements first), with a secondary",
-    "sort by their order in the document.",
-    "",
-    "Property: debuggerSettings.sortElementList",
-    "Value: 'visibility'",
-  ].join("\n")}"
->
-  Visibility
-</button>
-<button
-  data-sort="documentOrder"
-  title="${[
-    "Sort by Document Order",
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "Sorts elements based on their order of",
-    "appearance in the document's structure",
-    "(matching the HTML source).",
-    "",
-    "Property: debuggerSettings.sortElementList",
-    "Value: 'documentOrder'",
-  ].join("\n")}"
->
-  Document Order
-</button>
-<button
-  data-sort="insertionOrder"
-  title="${[
-    "Sort by Insertion Order",
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "Sorts elements based on the order they",
-    "were registered with the ForesightManager.",
-    "",
-    "Property: debuggerSettings.sortElementList",
-    "Value: 'insertionOrder'",
-  ].join("\n")}"
->
-  Insertion Order
-</button>
+                data-sort="visibility"
+                title="${[
+                  "Sort by Visibility",
+                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  "Sorts elements by their viewport visibility",
+                  "(visible elements first), with a secondary",
+                  "sort by their order in the document.",
+                  "",
+                  "Property: debuggerSettings.sortElementList",
+                  "Value: 'visibility'",
+                ].join("\n")}">
+                  Visibility
+                </button>
+                <button
+                  data-sort="documentOrder"
+                  title="${[
+                    "Sort by Document Order",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "Sorts elements based on their order of",
+                    "appearance in the document's structure",
+                    "(matching the HTML source).",
+                    "",
+                    "Property: debuggerSettings.sortElementList",
+                    "Value: 'documentOrder'",
+                  ].join("\n")}"
+                >
+                  Document Order
+                </button>
+                <button
+                  data-sort="insertionOrder"
+                  title="${[
+                    "Sort by Insertion Order",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "Sorts elements based on the order they",
+                    "were registered with the ForesightManager.",
+                    "",
+                    "Property: debuggerSettings.sortElementList",
+                    "Value: 'insertionOrder'",
+                  ].join("\n")}"
+                >
+                  Insertion Order
+                </button>
               </div>
             </div>
           </div>
@@ -1025,7 +1024,7 @@ export class DebuggerControlPanel {
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
     const elementListContainerHeight = rowsContentHeight + elementListItemsContainerPadding * 2
 
-    return `
+    return /* css */ `
       #debug-controls {
         position: fixed; bottom: 10px; right: 10px;
         background-color: rgba(0, 0, 0, 0.90); color: white; padding: 12px;
