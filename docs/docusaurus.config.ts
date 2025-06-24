@@ -140,7 +140,7 @@ const config: Config = {
     },
     prism: {
       theme: prismThemes.vsDark,
-      darkTheme: prismThemes.github,
+      darkTheme: prismThemes.vsDark,
     },
     colorMode: {
       defaultMode: "dark",
