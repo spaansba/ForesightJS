@@ -1,7 +1,5 @@
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
-import Heading from "@theme/Heading"
-import clsx from "clsx"
 import { ForesightManager } from "js.foresight"
 import { Star, Download } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -14,18 +12,18 @@ export function Hero() {
     githubStars: 0,
     npmDownloads: 0,
   })
-  
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const [githubResponse, npmResponse] = await Promise.all([
           fetch("https://api.github.com/repos/spaansba/foresightjs"),
-          fetch("https://api.npmjs.org/downloads/point/last-year/js.foresight")
+          fetch("https://api.npmjs.org/downloads/point/last-year/js.foresight"),
         ])
-        
+
         const githubData = await githubResponse.json()
         const npmData = await npmResponse.json()
-        
+
         setStats({
           githubStars: githubData.stargazers_count || 0,
           npmDownloads: npmData.downloads || 0,
@@ -36,7 +34,7 @@ export function Hero() {
     }
     fetchStats()
   }, [])
-  
+
   ForesightManager.initialize({
     enableMousePrediction: true,
     trajectoryPredictionTime: 110,
@@ -60,14 +58,15 @@ export function Hero() {
           <div className={styles.heroContent}>
             <div className={styles.heroText}>
               <h1 className={styles.heroTitle}>
-                Predict User Intent
+                Your User's Next Move.
                 <br />
-                <span className={styles.heroTitleGradient}>Before They Click</span>
+                <span className={styles.heroTitleGradient}>Already Fetched.</span>
               </h1>
               <p className={styles.heroDescription}>
-                ForesightJS gives you the best developer experience with all the features you need for production: mouse movement prediction, keyboard navigation, and intelligent prefetching out of the box.
+                ForesightJS predicts user intent from mouse and keyboard cues to deliver instant
+                navigation with zero waste.
               </p>
-              
+
               <div className={styles.heroActions}>
                 <Link
                   className={styles.primaryButton}
@@ -83,29 +82,35 @@ export function Hero() {
                   Learn ForesightJS
                 </Link>
               </div>
-              
+
               {(stats.githubStars > 0 || stats.npmDownloads > 0) && (
                 <div className={styles.heroStats}>
                   {stats.githubStars > 0 && (
-                    <div className={styles.stat}>
+                    <a
+                      className={styles.stat}
+                      href="https://github.com/spaansba/ForesightJS"
+                      target="_blank"
+                    >
                       <Star size={16} className={styles.statIcon} />
-                      <span>{stats.githubStars.toLocaleString()} stars on GitHub</span>
-                    </div>
+                      <span>{stats.githubStars.toLocaleString()} Stars on GitHub</span>
+                    </a>
                   )}
                   {stats.npmDownloads > 0 && (
-                    <div className={styles.stat}>
+                    <a
+                      className={styles.stat}
+                      href="https://www.npmjs.com/package/js.foresight"
+                      target="_blank"
+                    >
                       <Download size={16} className={styles.statIcon} />
-                      <span>{stats.npmDownloads.toLocaleString()} npm downloads</span>
-                    </div>
+                      <span>{stats.npmDownloads.toLocaleString()} Downloads</span>
+                    </a>
                   )}
                 </div>
               )}
             </div>
-            
+
             <div className={styles.heroDemo}>
-              <div className={styles.installWrapper}>
-                <PackageManagerTabs />
-              </div>
+              <PackageManagerTabs />
             </div>
           </div>
         </div>

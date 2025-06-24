@@ -1,4 +1,4 @@
-/**
+/* *
  * Any CSS included here will be global. The classic template
  * bundles Infima by default. Infima is a CSS framework designed to
  * work well for content-centric websites.
@@ -100,23 +100,23 @@
     background: rgba(0, 0, 0, 0.95) !important;
     backdrop-filter: blur(20px) !important;
   }
-  
+
   .navbar-sidebar__brand {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
-  
+
   .menu__link {
     color: rgba(255, 255, 255, 0.9) !important;
     border-radius: 8px !important;
     padding: 12px 16px !important;
     margin: 4px 0 !important;
   }
-  
+
   .menu__link:hover {
     background: rgba(255, 255, 255, 0.1) !important;
     color: white !important;
   }
-  
+
   .menu__link--active {
     background: transparent !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -196,7 +196,7 @@ html {
 }
 
 /* Hide default Docusaurus background */
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-background-color: #000000;
   --ifm-background-surface-color: #111111;
 }
@@ -253,7 +253,6 @@ section {
 }
 
 .theme-doc-markdown a:hover {
-  color: #93c5fd !important;
   text-decoration: underline !important;
 }
 
@@ -310,20 +309,6 @@ section {
 
 .menu__list-item-collapsible {
   color: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Dark theme for code blocks */
-.prism-code {
-  background: rgba(0, 0, 0, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px !important;
-}
-
-.codeBlockContainer {
-  background: rgba(0, 0, 0, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .codeBlockTitle {
@@ -384,7 +369,12 @@ section {
 }
 
 /* Typography scale improvements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
@@ -493,7 +483,7 @@ h3 {
   .theme-doc-sidebar-container {
     background: rgba(0, 0, 0, 0.95) !important;
   }
-  
+
   .navbar-sidebar__backdrop {
     background: rgba(0, 0, 0, 0.8) !important;
   }

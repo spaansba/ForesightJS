@@ -74,7 +74,7 @@ export function ForesightLink({
 
 ## Basic Usage
 
-```TS
+```tsx
 import ForesightLink from "./ForesightLink"
 export default function Navigation() {
   return (
@@ -87,7 +87,6 @@ export default function Navigation() {
     </ForesightLink>
   )
 }
-
 ```
 
 :::caution

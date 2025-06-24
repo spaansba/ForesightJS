@@ -1,5 +1,5 @@
 .playgroundSection {
-  padding: 120px 32px;
+  padding: 60px 32px;
   background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
   color: white;
 }
@@ -92,39 +92,40 @@
 
 @media screen and (max-width: 768px) {
   .playgroundSection {
-    padding: 80px 20px;
+    padding: 20px 20px;
   }
-  
+
   .sectionHeader {
     margin-bottom: 32px;
   }
-  
+
   .sectionTitle {
     font-size: 2.5rem;
     margin-bottom: 12px;
   }
-  
+
   .sectionSubtitle {
     font-size: 1.125rem;
   }
-  
+
   .playgroundInfo {
     grid-template-columns: 1fr;
     margin-bottom: 32px;
     gap: 16px;
   }
-  
+
   .playgroundContainer {
     padding: 24px;
   }
-  
+
   .mobileMessage {
     display: block;
     margin-bottom: 24px;
     padding: 16px;
   }
-  
-  .playgroundContainer {
+
+  .playgroundContainer,
+  .sectionHeader {
     display: none;
   }
 }

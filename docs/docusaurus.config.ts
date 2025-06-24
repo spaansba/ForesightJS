@@ -88,7 +88,7 @@ const config: Config = {
         },
         {
           type: "docsVersionDropdown",
-          position: "right",
+          position: "left",
         },
         {
           href: "https://github.com/spaansba/ForesightJS",
@@ -139,11 +139,11 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} ForesightJS, Inc. Built with Docusaurus.`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      theme: prismThemes.vsDark,
+      darkTheme: prismThemes.github,
     },
     colorMode: {
-      defaultMode: "light",
+      defaultMode: "dark",
       disableSwitch: true,
       respectPrefersColorScheme: false,
     },

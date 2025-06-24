@@ -1,8 +1,7 @@
 .heroSection {
   background: linear-gradient(to bottom, #000000, #111111);
   color: white;
-  padding: 120px 0 160px 0;
-  min-height: 100vh;
+  padding: 60px 0 60px 0;
   display: flex;
   align-items: center;
   position: relative;
@@ -10,7 +9,7 @@
 }
 
 .heroSection::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -40,7 +39,7 @@
 }
 
 .heroTitle {
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 24px;
@@ -57,9 +56,15 @@
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .heroDescription {
@@ -73,7 +78,7 @@
 .heroActions {
   display: flex;
   gap: 16px;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
   flex-wrap: wrap;
 }
 
@@ -145,17 +150,6 @@
   align-items: center;
 }
 
-.installWrapper {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 24px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  max-width: 500px;
-}
-
 /* Responsive Design */
 @media screen and (max-width: 1024px) {
   .heroContent {
@@ -163,11 +157,11 @@
     gap: 60px;
     text-align: center;
   }
-  
+
   .heroDemo {
     justify-content: center;
   }
-  
+
   .heroTitle {
     font-size: 3.5rem;
   }
@@ -178,43 +172,39 @@
     padding: 80px 0 120px 0;
     min-height: auto;
   }
-  
+
   .heroContainer {
     padding: 0 20px;
   }
-  
+
   .heroContent {
     gap: 40px;
   }
-  
+
   .heroTitle {
     font-size: 2.5rem;
     margin-bottom: 20px;
   }
-  
+
   .heroDescription {
     font-size: 1.125rem;
     margin-bottom: 32px;
   }
-  
+
   .heroActions {
     flex-direction: column;
     margin-bottom: 32px;
   }
-  
+
   .primaryButton,
   .secondaryButton {
     width: 100%;
     text-align: center;
   }
-  
+
   .heroStats {
     justify-content: center;
     gap: 24px;
-  }
-  
-  .installWrapper {
-    max-width: 100%;
   }
 }
 
@@ -222,11 +212,11 @@
   .heroTitle {
     font-size: 2rem;
   }
-  
+
   .heroDescription {
     font-size: 1rem;
   }
-  
+
   .primaryButton,
   .secondaryButton {
     padding: 14px 24px;

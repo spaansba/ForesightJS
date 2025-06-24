@@ -43,13 +43,13 @@ ForesightManager.instance.register({
             <h3>What you get:</h3>
             <ul className={styles.featureList}>
               <li>
-                <strong>Mouse prediction:</strong> Detect cursor trajectory before clicks
+                <strong>Mouse prediction:</strong> Detect cursor trajectory towards elements
               </li>
               <li>
                 <strong>Keyboard support:</strong> Predict tab navigation patterns
               </li>
               <li>
-                <strong>Scroll detection:</strong> Anticipate content entering viewport
+                <strong>Scroll Prediction:</strong> Detect scrolling towards a fetchable element
               </li>
               <li>
                 <strong>Debug mode:</strong> Visual feedback for fine-tuning
@@ -60,35 +60,29 @@ ForesightManager.instance.register({
             </ul>
 
             <div className={styles.actions}>
-              <Link
-                to="/docs/getting_started"
-                className="button button--primary"
-              >
+              <Link to="/docs/getting_started" className="button button--primary">
                 Full Documentation
               </Link>
-              <Link
-                to="/docs/getting_started/config"
-                className="button button--secondary"
-              >
+              <Link to="/docs/getting_started/config" className="button button--secondary">
                 Configuration
               </Link>
             </div>
 
             <div className={styles.integrations}>
-              <h4>Framework Integrations:</h4>
+              <h4>Premade Framework Integrations:</h4>
               <div className={styles.integrationLinks}>
                 <Link to="/docs/integrations/react/nextjs" className={styles.integrationLink}>
-                  Next.js Guide
+                  Next.js
                 </Link>
                 <Link to="/docs/integrations/react/react-router" className={styles.integrationLink}>
                   React Router
                 </Link>
-                <Link to="/docs/integrations/vue/vue" className={styles.integrationLink}>
+                {/* <Link to="/docs/integrations/vue/vue" className={styles.integrationLink}>
                   Vue.js
                 </Link>
                 <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
                   TanStack Router
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
