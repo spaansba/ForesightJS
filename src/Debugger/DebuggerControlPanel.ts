@@ -81,6 +81,7 @@ export class DebuggerControlPanel {
   private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
 
   private copySettingsButton: HTMLButtonElement | null = null
+  private minimizedElementCount: HTMLSpanElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
   private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
 
@@ -199,6 +200,7 @@ export class DebuggerControlPanel {
     )
     this.debuggerElementsSection = this.controlsContainer.querySelector(".debugger-elements")
     this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
+    this.minimizedElementCount = this.controlsContainer.querySelector(".minimized-element-count")
   }
 
   private handleCopySettings() {
@@ -427,12 +429,14 @@ export class DebuggerControlPanel {
         this.allSettingsSectionsContainer.style.display = "none"
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = "none"
       if (this.copySettingsButton) this.copySettingsButton.style.display = "none"
+      if (this.minimizedElementCount) this.minimizedElementCount.style.display = ""
     } else {
       this.controlsContainer.classList.remove("minimized")
       this.containerMinimizeButton.textContent = "-"
       if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
       if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
       if (this.copySettingsButton) this.copySettingsButton.style.display = ""
+      if (this.minimizedElementCount) this.minimizedElementCount.style.display = "none"
     }
   }
 
@@ -497,8 +501,7 @@ export class DebuggerControlPanel {
     const totalElements = elementsMap.size
     const { tab, mouse, scroll, total } =
       this.foresightManagerInstance.getManagerData.globalCallbackHits
-    this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
-    this.elementCountSpan.title = [
+    const visibleTitle = [
       "Element Visibility Status",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       `Visible in Viewport: ${visibleElementCount}`,
@@ -507,7 +510,14 @@ export class DebuggerControlPanel {
       "",
       "Note: Only elements visible in the viewport",
       "are actively tracked by intersection observers.",
-    ].join("\n")
+    ]
+    if (this.minimizedElementCount) {
+      this.minimizedElementCount.textContent = `${visibleElementCount}/${totalElements}`
+      this.minimizedElementCount.title = visibleTitle.join("\n")
+    }
+
+    this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
+    this.elementCountSpan.title = visibleTitle.join("\n")
     this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
     } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
@@ -752,6 +762,8 @@ export class DebuggerControlPanel {
            ].join("\n")}">
           ${COPY_SVG_ICON}
         </button>
+        <span class="minimized-element-count">
+        </span>
       </div>
 
       <div class="all-settings-sections-container">
@@ -1034,12 +1046,11 @@ export class DebuggerControlPanel {
         transition: width 0.3s ease, height 0.3s ease;
       }
       #debug-controls.minimized {
-        width: 220px;
+        width: 250px;
         overflow: hidden;
         padding: 12px 0; 
       }
       #debug-controls.minimized .debugger-title-container {
-        justify-content: flex-start; 
         padding-left: 10px; 
         padding-right: 10px;
         gap: 10px; 
@@ -1075,6 +1086,7 @@ export class DebuggerControlPanel {
         background: none; border: none; color: white;
         font-size: 22px; cursor: pointer;
         line-height: 1;
+        padding-inline: 0px;
       }
       .debugger-title-container h2 { margin: 0; font-size: 15px; }
 
@@ -1083,9 +1095,16 @@ export class DebuggerControlPanel {
         cursor: pointer; padding: 0;
         display: flex; align-items: center; justify-content: center;
       }
+
       .copy-settings-button svg {
         width: 16px; height: 16px;
         stroke: white;
+      }
+
+      .minimized-element-count {
+         font-size: 14px;
+         min-width: 30px;
+         text-align: right;
       }
 
       .all-settings-sections-container {
@@ -1120,7 +1139,7 @@ export class DebuggerControlPanel {
         color: white;
         font-size: 18px;
         cursor: pointer;
-        padding: 0;
+        padding: 0px;
         line-height: 1;
       }
 
