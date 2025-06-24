@@ -102,7 +102,7 @@ export function Hero() {
                       target="_blank"
                     >
                       <Download size={16} className={styles.statIcon} />
-                      <span>{stats.npmDownloads.toLocaleString()} Downloads</span>
+                      <span>{stats.npmDownloads.toLocaleString()} Went Before You</span>
                     </a>
                   )}
                 </div>

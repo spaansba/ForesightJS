@@ -1,6 +1,6 @@
 .featuresSection {
   padding: 120px 32px;
-  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+  background: transparent;
   color: white;
 }
 
@@ -112,36 +112,36 @@
   .featuresSection {
     padding: 80px 20px;
   }
-  
+
   .sectionHeader {
     margin-bottom: 48px;
   }
-  
+
   .sectionTitle {
     font-size: 2.5rem;
   }
-  
+
   .sectionSubtitle {
     font-size: 1.125rem;
   }
-  
+
   .featureRow {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .featureNumber {
     font-size: 1.25rem;
     min-width: auto;
     text-align: center;
     align-self: flex-start;
   }
-  
+
   .featureInfo h3 {
     font-size: 1.25rem;
     margin-bottom: 12px;
   }
-  
+
   .featureInfo p {
     font-size: 0.95rem;
     margin-bottom: 16px;

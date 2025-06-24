@@ -1,6 +1,6 @@
 .playgroundSection {
   padding: 60px 32px;
-  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+  background: transparent;
   color: white;
 }
 
@@ -42,23 +42,23 @@
 }
 
 .infoCard {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
   padding: 24px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .infoCard h4 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: white;
   margin: 0 0 12px 0;
 }
 
 .infoCard p {
-  color: #475569;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.95rem;
   line-height: 1.5;
   margin: 0;

@@ -1,6 +1,6 @@
 .quickStartSection {
   padding: 40px 32px;
-  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+  background: transparent;
   color: white;
 }
 
@@ -13,11 +13,12 @@
 }
 
 .sectionTitle {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
   color: white;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .sectionSubtitle {
@@ -59,14 +60,14 @@
 }
 
 .codeBlock {
-  padding: 24px;
-  margin: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.9);
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  padding: 24px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
   overflow-x: auto;
+  border-radius: 0 !important;
 }
 
 .codeBlock code {

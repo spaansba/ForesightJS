@@ -1,4 +1,5 @@
 import Link from "@docusaurus/Link"
+import { Highlight, themes } from "prism-react-renderer"
 import styles from "./quickstart.module.css"
 
 export function QuickStart() {
@@ -17,8 +18,9 @@ export function QuickStart() {
             <div className={styles.codeHeader}>
               <span>Basic Usage</span>
             </div>
-            <pre className={styles.codeBlock}>
-              <code>{`import { ForesightManager } from 'js.foresight'
+            <Highlight
+              theme={themes.vsDark}
+              code={`import { ForesightManager } from 'js.foresight'
 
 // Initialize the manager
 ForesightManager.initialize({
@@ -35,8 +37,21 @@ ForesightManager.instance.register({
     // Prefetch data or prepare content
     console.log('User intent detected!')
   }
-})`}</code>
-            </pre>
+})`}
+              language="javascript"
+            >
+              {({ className, style, tokens, getLineProps, getTokenProps }) => (
+                <pre className={`${styles.codeBlock} ${className}`} style={style}>
+                  {tokens.map((line, i) => (
+                    <div key={i} {...getLineProps({ line })}>
+                      {line.map((token, key) => (
+                        <span key={key} {...getTokenProps({ token })} />
+                      ))}
+                    </div>
+                  ))}
+                </pre>
+              )}
+            </Highlight>
           </div>
 
           <div className={styles.features}>

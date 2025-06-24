@@ -16,66 +16,68 @@
 .smallButton {
   width: 120px;
   height: 80px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
 }
 
 .smallButton:focus {
   outline: none;
-  border-color: #2196f3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2), 0 4px 12px rgba(33, 150, 243, 0.15);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 3px 12px rgba(59, 130, 246, 0.2);
 }
 
 .smallButton:focus-visible {
-  outline: 3px solid #2196f3;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
 .smallButton.default {
-  color: #495057;
-  border-color: #dee2e6;
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .smallButton.default:hover {
-  border-color: #3498db;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
 }
 
 .smallButton.default:focus {
-  border-color: #2196f3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3), 0 4px 12px rgba(33, 150, 243, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 16px rgba(59, 130, 246, 0.25);
 }
 
 .smallButton.loading {
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  border-color: #ff9800;
-  color: #e65100;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
   animation: loadingPulse 1.5s ease-in-out infinite;
 }
 
 .smallButton.loading:focus {
-  border-color: #f57c00;
-  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.3), 0 4px 12px rgba(255, 152, 0, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), 0 4px 16px rgba(245, 158, 11, 0.25);
 }
 
 .smallButton.loaded {
-  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-  border-color: #4caf50;
-  color: #2e7d32;
-  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
 .smallButton.loaded:focus {
-  border-color: #388e3c;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3), 0 4px 16px rgba(76, 175, 80, 0.25);
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3), 0 6px 20px rgba(34, 197, 94, 0.3);
 }
 
 .buttonContent {
@@ -104,7 +106,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background-color: #ff9800;
+  background-color: #fbbf24;
   animation: loadingDot 1.4s ease-in-out infinite both;
 }
 
@@ -128,10 +130,10 @@
 @keyframes loadingPulse {
   0%,
   100% {
-    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
   }
   50% {
-    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
   }
 }
 
