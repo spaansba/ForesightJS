@@ -303,7 +303,7 @@ h2 {
 
 .tooltip {
   position: absolute;
-  z-index: 1000;
+  z-index: 999;
   padding: 12px 16px;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: white;
