@@ -1,1 +1,2 @@
-https://foresightjs.com/docs/integrations/nextjs https://foresightjs.com/docs/integrations/react/nextjs
+/docs/integrations/nextjs /docs/integrations/react/nextjs
+/docs/getting_started/intro /docs/getting_started/
