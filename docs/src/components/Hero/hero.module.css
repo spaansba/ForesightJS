@@ -1,5 +1,5 @@
 .heroSection {
-  background: transparent;
+  background: linear-gradient(to bottom, #000000, #111111);
   color: white;
   padding: 60px 0 60px 0;
   display: flex;

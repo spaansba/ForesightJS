@@ -130,14 +130,13 @@
 body {
   font-feature-settings: "liga" 1, "kern" 1;
   text-rendering: optimizeLegibility;
-  background: linear-gradient(180deg, #000000 0%, #111111 100%);
-  background-attachment: fixed;
+  background: #000000;
   color: white;
 }
 
 /* Main content wrapper dark theme */
 .main-wrapper {
-  background: transparent;
+  background: linear-gradient(180deg, #000000 0%, #111111 50%, #0a0a0a 100%);
 }
 
 /* Footer dark theme */
@@ -201,7 +200,6 @@ html {
 
 /* Hide default Docusaurus background */
 [data-theme="dark"] {
-  --ifm-background-color: #000000;
   --ifm-background-surface-color: #111111;
 }
 

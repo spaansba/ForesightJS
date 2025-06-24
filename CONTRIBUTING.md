@@ -71,7 +71,21 @@ This opens the [development_page](/development_page) which directly imports ever
 - Create a new branch for your feature or bug fix
 - Test your changes in the development page
 
-**5. Submit a Pull Request**
+**5. Run Tests**
+
+Before submitting your pull request, make sure to run the test suite:
+
+```bash
+# Run all tests
+pnpm test:run
+
+# Run tests in watch mode during development
+pnpm test
+```
+
+All tests must pass before your PR will be reviewed.
+
+**6. Submit a Pull Request**
 
 - Push your changes to your fork
 - Create a pull request with a clear description of what you've changed
