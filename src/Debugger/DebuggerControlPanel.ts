@@ -661,7 +661,7 @@ export class DebuggerControlPanel {
     // Determine the viewport icon based on current visibility status
     const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
     listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
-    const hitBehaviorText = elementData.unregisterOnCallback ? "Single" : "Multi"
+
     let hitSlopText = "N/A"
 
     if (elementData.elementBounds.hitSlop) {
@@ -677,11 +677,6 @@ export class DebuggerControlPanel {
       elementData.isIntersectingWithViewport
         ? "   ✓ In viewport - actively tracked by observers"
         : "   ✗ Not in viewport - not being tracked",
-      "",
-      "Hit Behavior:",
-      elementData.unregisterOnCallback
-        ? "   • Single: Callback triggers once"
-        : "   • Multi: Callback can trigger multiple times",
       "",
       "Hit Slop:",
       elementData.elementBounds.hitSlop
@@ -699,7 +694,6 @@ export class DebuggerControlPanel {
     <span class="intersecting-indicator">${intersectingIcon}</span>
     <span class="element-name">${elementData.name || "Unnamed Element"}</span>
     <span class="hit-slop">${hitSlopText}</span>
-    <span class="hit-behavior">${hitBehaviorText}</span>
   `
   }
   /**
