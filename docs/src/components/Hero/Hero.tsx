@@ -8,7 +8,6 @@ import { PackageManagerTabs } from "./PackageManagerTabs"
 import { ForesightDebugger } from "js.foresight-devtools"
 
 export function Hero() {
-  const { siteConfig } = useDocusaurusContext()
   const [stats, setStats] = useState({
     githubStars: 0,
     npmDownloads: 0,
@@ -44,7 +43,9 @@ export function Hero() {
     tabOffset: 3,
   })
 
-  ForesightDebugger.initialize(ForesightManager.instance)
+  ForesightDebugger.initialize(ForesightManager.instance, {
+    showNameTags: true,
+  })
 
   const turnOffDebugMode = () => {
     ForesightDebugger.instance.alterDebuggerSettings({ showDebugger: false })

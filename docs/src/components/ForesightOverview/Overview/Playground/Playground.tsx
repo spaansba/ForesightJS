@@ -58,8 +58,11 @@ function Playground() {
           through the buttons above
         </div>
         <div className={styles.keyboardTip}>
-          <strong>TIP:</strong> Open the debugger in the bottom-right corner to change how
-          ForesightJS behaves in real time
+          <strong>TIP:</strong> Install{" "}
+          <a href="/docs/getting_started/development_tools" style={{ color: "#7dd3fc" }}>
+            Development Tools
+          </a>{" "}
+          for visual feedback and real-time tuning
         </div>
       </div>
     </>

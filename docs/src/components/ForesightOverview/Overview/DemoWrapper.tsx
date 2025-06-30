@@ -13,9 +13,13 @@ function DemoWrapper() {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>
-            See predictions trigger in real-time with{" "}
-            <a className={styles.inlineLink} href="/docs/getting_started/debug" target="_blank">
-              Debug Mode
+            See predictions trigger in real-time with the official{" "}
+            <a
+              style={{ color: "#7dd3fc" }}
+              href="/docs/getting_started/development_tools"
+              target="_blank"
+            >
+              Development Tools
             </a>
             . Move your mouse, scroll or use Tab navigation to experience intent detection.
           </p>

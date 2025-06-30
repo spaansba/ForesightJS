@@ -105,7 +105,7 @@ ForesightJS can be used bare-bones but also can be configured. For all configura
 
 ## Debugging Visualization
 
-ForesightJS includes a [Visual Debugging](/docs/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+ForesightJS includes a [Visual Debugging](/docs/2.2/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
 ## What About Touch Devices and Slow Connections?
 

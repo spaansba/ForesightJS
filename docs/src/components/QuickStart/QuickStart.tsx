@@ -67,12 +67,10 @@ ForesightManager.instance.register({
                 <strong>Scroll Prediction:</strong> Detect scrolling towards a fetchable element
               </li>
               <li>
-                <strong>Debug mode:</strong> Visual feedback for fine-tuning
-              </li>
-              <li>
                 <strong>TypeScript:</strong> Full type safety out of the box
               </li>
             </ul>
+
 
             <div className={styles.actions}>
               <Link to="/docs/getting_started" className="button button--primary">

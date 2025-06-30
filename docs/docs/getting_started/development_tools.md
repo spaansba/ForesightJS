@@ -7,36 +7,54 @@ keywords:
   - Debug Controller
   - mouse prediction
   - tab prediction
+  - Debugger
 description: Documentation on how to use the ForesightJS debugger
 last_updated:
-  date: 2025-06-04
+  date: 2025-06-30
   author: Bart Spaans
 ---
 
-# Debugging
+# Development Tools
 
-ForesightJS includes a debugger that helps you understand and tune how ForesightJS is working in your application. This is particularly helpful when setting up ForesightJS for the first time and understand what each configurable parameter does.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) that help you understand and tune how ForesightJS is working in your application. This standalone development package is particularly helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
 
-## Enabling Debug Mode
+## Installation
 
-The debugger is enabled during `ForesightManager.initialize` (see [configuration](/docs/getting_started/config))
+Install the ForesightJS Development Tools package:
+
+```bash
+pnpm add -D js.foresight-devtools
+# or
+npm install -D js.foresight-devtools
+# or
+yarn add -D js.foresight-devtools
+```
+
+## Enabling Development Tools
+
+The development tools are a separate package that work alongside your ForesightJS implementation:
 
 ```javascript
-import { ForesightManager } from "foresightjs"
+import { ForesightManager } from "js.foresight"
+import { ForesightDebugger } from "js.foresight-devtools"
 
+// Initialize ForesightJS
 ForesightManager.initialize({
-  debug: true, // Enable debug mode
-  debuggerSettings: {
-    isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
-    showNameTags: true, // optional setting which shows the name of the element
-    sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
-  },
+  // optional props
+})
+
+// Initialize the development tools
+ForesightDebugger.initialize(ForesightManager.instance, {
+  showDebugger: true,
+  isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
+  showNameTags: true, // optional setting which shows the name of the element
+  sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
 })
 ```
 
-## Debug Mode Features
+## Development Tools Features
 
-When debug mode is enabled, ForesightJS adds several visual elements to your application in a shadow-dom:
+When the development tools are enabled, the ForesightJS Development Tools add several visual elements to your application in a shadow-dom:
 
 ### Visual Debug Elements
 

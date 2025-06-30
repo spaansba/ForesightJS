@@ -26,7 +26,7 @@ You supply the **What** and **How** inside your `callback` when you register an 
 ### [Playground](https://foresightjs.com/)
 
 ![](https://github.com/user-attachments/assets/36c81a82-fee7-43d6-ba1e-c48214136f90)
-_In the GIF above, [debug mode](https://foresightjs.com/docs/getting_started/debug) is on. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
+_In the GIF above, the [ForesightJS DevTools](https://github.com/spaansba/ForesightJS-DevTools) are enabled. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
 
 ## Download
 
@@ -64,10 +64,8 @@ This basic example is in vanilla JS, ofcourse most people will use ForesightJS w
 import { ForesightManager } from "foresightjs"
 
 // Initialize the manager if you want custom global settings (do this once at app startup)
-// If you dont want global settings, you dont have to initialize the manager
 ForesightManager.initialize({
-  debug: false, // Set to true to see visualization
-  trajectoryPredictionTime: 80, // How far ahead (in milliseconds) to predict the mouse trajectory
+  // Optional props (see configuration)
 })
 
 // Register an element to be tracked
@@ -79,6 +77,7 @@ const { isTouchDevice, unregister } = ForesightManager.instance.register({
     // This is where your prefetching logic goes
   },
   hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
+  // other optional props (see configuration)
 })
 
 // Later, when done with this element:
@@ -93,9 +92,15 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/getting_started/config).
 
-## Debugging Visualization
+## Development Tools
 
-ForesightJS includes a [Visual Debugging](https://foresightjs.com/docs/getting_started/debug) system that helps you understand and tune how foresight is working in your application. This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution. It's particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+
+```bash
+npm install js.foresight-devtools
+```
+
+See the [development tools documentation](https://foresightjs.com/docs/getting_started/debug) for more details.
 
 ## What About Touch Devices and Slow Connections?
 
@@ -119,16 +124,6 @@ For a detailed technical explanation of its prediction algorithms and internal a
 Since ForesightJS is a relatively new and unknown library, most AI assistants and large language models (LLMs) may not have comprehensive knowledge about it in their training data. To help AI assistants better understand and work with ForesightJS, you can provide them with context from our [llms.txt](https://foresightjs.com/llms.txt) page, which contains structured information about the library's API and usage patterns.
 
 Additionally, every page in the documentation is available in markdown format (try adding .md to any documentation URL). You can share these markdown files as context with AI assistants, though all this information is also consolidated in the llms.txt file for convenience.
-
-## Future of ForesightJS
-
-ForesightJS will continue to evolve with a focus on staying as lightweight and performant as possible. To achieve this the plan is to decouple the debugger and make it its own standalone dev package, reducing the core library size even further.
-
-Beyond size optimization, performance remains central to every development decision. Each release will focus on improving prediction accuracy while reducing computational overhead, ensuring ForesightJS stays practical for production environments. We also want to move as much processing as possible off the main thread to keep user interfaces responsive.
-
-These performance improvements go hand in hand with expanding accessibility across different development environments. The documentation will grow to include more framework integrations beyond the current Next.js and React Router implementations, making ForesightJS accessible to developers working with different technology stacks and routing solutions.
-
-All of these efforts benefit from community input. [Contributions](/CONTRIBUTING.md) are always welcome, whether for new framework integrations, performance improvements, or feature ideas.
 
 # Contributing
 

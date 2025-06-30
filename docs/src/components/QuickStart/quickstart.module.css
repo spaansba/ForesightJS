@@ -111,6 +111,49 @@
   font-weight: 600;
 }
 
+.devToolsSection {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(10px);
+}
+
+.devToolsSection h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 12px 0;
+}
+
+.devToolsDescription {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.installCommand {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.4);
+  color: #7dd3fc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  font-size: 0.85rem;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  margin-bottom: 12px;
+}
+
+.devToolsNote {
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   gap: 16px;
@@ -213,6 +256,15 @@
 
   .featureList {
     margin-bottom: 24px;
+  }
+
+  .devToolsSection {
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .devToolsSection h4 {
+    margin-bottom: 8px;
   }
 
   .integrations {

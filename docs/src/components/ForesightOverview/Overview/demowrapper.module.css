@@ -4,16 +4,6 @@
   color: white;
 }
 
-.inlineLink,
-.inlineLink:visited {
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: underline dashed #b0c4de 2px;
-}
-
-.inlineLink:hover {
-  text-decoration-style: solid #b0c4de 2px;
-}
-
 .sectionHeader {
   text-align: center;
   margin-bottom: 48px;

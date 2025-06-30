@@ -5,8 +5,8 @@ import {
   useIsResized,
   useIsVisible,
 } from "../../stores/ButtonStateStore"
-import { ForesightManager } from "../../../../src/Manager/ForesightManager"
-import { ForesightDebugger } from "@js.foresight/debugger"
+import { ForesightManager } from "js.foresight"
+import { ForesightDebugger } from "js.foresight-devtools"
 
 type ControlButton = {
   id: string
