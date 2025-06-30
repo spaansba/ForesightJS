@@ -150,6 +150,14 @@ type BaseForesightManagerSettings = {
   positionHistorySize: number
 
   /**
+   *
+   * @deprecated will be removed from v4.0
+   * ForesightJS now have its stand-alone devtools library with the debugger built-in
+   * @link https://github.com/spaansba/ForesightJS-DevTools
+   */
+  debug: boolean
+
+  /**
    * How far ahead (in milliseconds) to predict the mouse trajectory.
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
    *

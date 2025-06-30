@@ -92,6 +92,7 @@ export class ForesightManager {
     total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
+    debug: false,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
