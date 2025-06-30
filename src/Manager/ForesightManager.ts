@@ -4,8 +4,11 @@ import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
   BooleanSettingKeys,
   CallbackHits,
+  ElementUnregisteredReason,
   ForesightElement,
   ForesightElementData,
+  ForesightEventMap,
+  ForesightEventType,
   ForesightManagerData,
   ForesightManagerSettings,
   ForesightRegisterOptions,
@@ -141,6 +144,10 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
+  private eventListeners: {
+    [K in ForesightEventType]?: ((event: ForesightEventMap[K]) => void)[]
+  } = {}
+
   // Never put something in the constructor, use initialize instead
   private constructor() {}
 
@@ -152,6 +159,85 @@ export class ForesightManager {
       ForesightManager.manager.alterGlobalSettings(props)
     }
     return ForesightManager.manager
+  }
+
+  // The new, improved addEventListener signature
+  public addEventListener<K extends ForesightEventType>(
+    eventType: K,
+    listener: (event: ForesightEventMap[K]) => void,
+    options?: { signal?: AbortSignal }
+  ): () => void {
+    if (options?.signal?.aborted) {
+      return () => {}
+    }
+    if (!this.eventListeners[eventType]) {
+      this.eventListeners[eventType] = []
+    }
+    this.eventListeners[eventType].push(listener)
+    const unsubscribe = () => {
+      this.removeEventListener(eventType, listener)
+    }
+    options?.signal?.addEventListener("abort", unsubscribe)
+    return unsubscribe
+  }
+
+  public removeEventListener<K extends ForesightEventType>(
+    eventType: K,
+    listener: (event: ForesightEventMap[K]) => void
+  ): void {
+    const listeners = this.eventListeners[eventType]
+    if (listeners) {
+      const index = listeners.indexOf(listener as any)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
+  }
+
+  // Used for debugging only
+  private logSubscribers(): void {
+    console.log("%c[ForesightManager] Current Subscribers:", "font-weight: bold; color: #3b82f6;")
+
+    const eventTypes = Object.keys(this.eventListeners) as ForesightEventType[]
+
+    if (eventTypes.length === 0) {
+      console.log("  No active subscribers.")
+      return
+    }
+
+    eventTypes.forEach((eventType) => {
+      const listeners = this.eventListeners[eventType]
+
+      if (listeners && listeners.length > 0) {
+        // Use groupCollapsed so the log isn't too noisy by default.
+        // The user can expand the events they are interested in.
+        console.groupCollapsed(
+          `Event: %c${eventType}`,
+          "font-weight: bold;",
+          `(${listeners.length} listener${listeners.length > 1 ? "s" : ""})`
+        )
+
+        listeners.forEach((listener, index) => {
+          console.log(`[${index}]:`, listener)
+        })
+
+        console.groupEnd()
+      }
+    })
+  }
+
+  // The new, improved emit
+  private emit<K extends ForesightEventType>(event: { type: K } & ForesightEventMap[K]): void {
+    const listeners = this.eventListeners[event.type]
+    if (listeners) {
+      listeners.forEach((listener) => {
+        try {
+          listener(event)
+        } catch (error) {
+          console.error(`Error in ForesightManager event listener for ${event.type}:`, error)
+        }
+      })
+    }
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
@@ -240,19 +326,22 @@ export class ForesightManager {
 
     this.positionObserver?.observe(element)
 
-    if (this.debugger) {
-      this.debugger.addElement(elementData)
-    }
+    this.emit({
+      type: "elementRegistered",
+      timestamp: Date.now(),
+      elementData,
+      sort: true,
+    })
 
     return {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => this.unregister(element),
+      unregister: () => this.unregister(element, "apiCall"),
     }
   }
 
-  private unregister(element: ForesightElement) {
+  private unregister(element: ForesightElement, unregisterReason: ElementUnregisteredReason) {
     const isRegistered = this.elements.has(element)
     if (!isRegistered) {
       // The element is already unregistered by something else (e.g. after hitting callback)
@@ -268,8 +357,13 @@ export class ForesightManager {
     this.positionObserver?.unobserve(element)
     this.elements.delete(element)
 
-    if (this.debugger && foresightElementData) {
-      this.debugger.removeElement(foresightElementData)
+    if (foresightElementData) {
+      this.emit({
+        type: "elementUnregistered",
+        elementData: foresightElementData,
+        timestamp: Date.now(),
+        unregisterReason: unregisterReason,
+      })
     }
 
     if (this.elements.size === 0 && this.isSetup) {
@@ -422,7 +516,7 @@ export class ForesightManager {
           this.turnOnDebugMode()
         } else {
           if (this.debugger) {
-            this.debugger.cleanup()
+            // this.debugger.cleanup()
             this.debugger = null
           }
         }
@@ -440,24 +534,34 @@ export class ForesightManager {
       hitSlopChanged ||
       scrollMarginChanged ||
       debugModeChanged
-
-    if (settingsActuallyChanged && this.debugger) {
-      this.debugger.updateControlsState(this._globalSettings)
+    if (settingsActuallyChanged) {
+      if (tabOffsetChanged) {
+        this.logSubscribers()
+        this.debugger?.cleanup()
+        this.logSubscribers()
+      }
+      this.emit({
+        type: "settingsChanged",
+        timestamp: Date.now(),
+        newSettings: this._globalSettings,
+      })
     }
   }
   private turnOnDebugMode() {
     if (!this.debugger) {
-      this.debugger = ForesightDebugger.initialize(
-        ForesightManager.instance,
-        this.trajectoryPositions
-      )
+      this.debugger = ForesightDebugger.initialize(ForesightManager.instance)
       const elementsArray = Array.from(this.elements.values())
       elementsArray.forEach((elementData, index) => {
-        const isLastElement = index === elementsArray.length - 1
-        this.debugger?.addElement(elementData, isLastElement)
+        this.emit({
+          type: "elementRegistered",
+          timestamp: Date.now(),
+          elementData,
+          isLastElement: index === elementsArray.length - 1,
+          sort: true,
+        })
       })
     } else {
-      this.debugger.updateControlsState(this._globalSettings)
+      // this.debugger.updateControlsState(this._globalSettings)
     }
   }
 
@@ -514,75 +618,6 @@ export class ForesightManager {
     }
   }
 
-  /**
-   * Processes persistent elements that can have multiple callbacks and require state tracking.
-   *
-   * This handler is responsible for elements where `unregisterOnCallback` is false.
-   * It triggers callbacks only on the "leading edge" of an interaction—that is,
-   * the first moment the mouse enters an element or the first moment a trajectory
-   * is predicted to hit it. This prevents the callback from firing on every
-   * mouse move. It also manages the element's state (`isHovering`, `isTrajectoryHit`)
-   * for visual feedback in the {@link ForesightDebugger}.
-   *
-   * @param elementData - The current data object for the foresight element.
-   * @param element - The HTML element being interacted with.
-   */
-  private handleMultiCallbackInteraction(elementData: ForesightElementData) {
-    const { expandedRect } = elementData.elementBounds
-    const isHovering = isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)
-
-    const isNewPhysicalHover = isHovering && !elementData.isHovering
-    const isNewTrajectoryHit =
-      this._globalSettings.enableMousePrediction &&
-      !isHovering &&
-      !elementData.trajectoryHitData.isTrajectoryHit &&
-      lineSegmentIntersectsRect(
-        this.trajectoryPositions.currentPoint,
-        this.trajectoryPositions.predictedPoint,
-        expandedRect
-      )
-
-    if (isNewPhysicalHover || isNewTrajectoryHit) {
-      this.callCallback(elementData, {
-        kind: "mouse",
-        subType: isNewPhysicalHover ? "hover" : "trajectory",
-      })
-    }
-
-    const hasStateChanged = isHovering !== elementData.isHovering || isNewTrajectoryHit
-
-    if (hasStateChanged) {
-      const newElementData: ForesightElementData = {
-        ...elementData,
-        isHovering: isHovering,
-        trajectoryHitData: {
-          ...elementData.trajectoryHitData,
-          isTrajectoryHit: isNewTrajectoryHit,
-          trajectoryHitTime: isNewTrajectoryHit
-            ? performance.now()
-            : elementData.trajectoryHitData.trajectoryHitTime,
-        },
-      }
-      if (isNewTrajectoryHit) {
-        if (newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-          clearTimeout(newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-        }
-        newElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId = setTimeout(() => {
-          const currentData = this.elements.get(elementData.element)
-          if (
-            currentData &&
-            currentData.trajectoryHitData.trajectoryHitTime ===
-              newElementData.trajectoryHitData.trajectoryHitTime
-          ) {
-            currentData.trajectoryHitData.isTrajectoryHit = false
-            this.debugger?.createOrUpdateElementOverlay(currentData)
-          }
-        }, 200)
-      }
-      this.elements.set(elementData.element, newElementData)
-    }
-  }
-
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
 
@@ -591,20 +626,15 @@ export class ForesightManager {
         return
       }
 
-      if (!currentData.unregisterOnCallback) {
-        this.handleMultiCallbackInteraction(currentData)
-      } else {
-        this.handleSingleCallbackInteraction(currentData)
-      }
+      this.handleSingleCallbackInteraction(currentData)
     })
 
-    if (this.debugger) {
-      this.debugger.hideScrollTrajectoryVisuals()
-      this.debugger.updateMouseTrajectoryVisuals(
-        this.trajectoryPositions,
-        this._globalSettings.enableMousePrediction
-      )
-    }
+    this.emit({
+      type: "mouseTrajectoryUpdate",
+      predictionEnabled: this._globalSettings.enableMousePrediction,
+      timestamp: Date.now(),
+      trajectoryPositions: this.trajectoryPositions,
+    })
   }
 
   /**
@@ -623,7 +653,7 @@ export class ForesightManager {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
         for (const element of Array.from(this.elements.keys())) {
           if (!element.isConnected) {
-            this.unregister(element)
+            this.unregister(element, "disconnected")
           }
         }
       }
@@ -717,12 +747,9 @@ export class ForesightManager {
       this.updateHitCounters(elementData, hitType)
       elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
-      if (this.debugger) {
-        this.debugger.showCallbackAnimation(elementData)
-      }
       // Do everything and then unregister. Always keep this at the end of the function
       if (elementData.unregisterOnCallback) {
-        this.unregister(elementData.element)
+        this.unregister(elementData.element, "callbackHit")
       }
     }
   }
@@ -735,39 +762,43 @@ export class ForesightManager {
     const newOriginalRect = elementData.element.getBoundingClientRect()
     const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
 
-    // Since its a force update, rects can be equal.
     if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
-      this.elements.set(elementData.element, {
+      const updatedElementData = {
         ...elementData,
         elementBounds: {
           ...elementData.elementBounds,
           originalRect: newOriginalRect,
           expandedRect,
         },
-      })
-
-      if (this.debugger) {
-        const updatedData = this.elements.get(elementData.element)
-        if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
       }
+      this.elements.set(elementData.element, updatedElementData)
+
+      // --- ADDED: Emit the update event ---
+      this.emit({
+        type: "elementUpdated",
+        timestamp: Date.now(),
+        elementData: updatedElementData,
+      })
     }
   }
 
   private updateElementBounds(newRect: DOMRect, elementData: ForesightElementData) {
-    // We dont check if rects are equal like we do in forceUpdateElementBounds, since rects can never be equal here
-    this.elements.set(elementData.element, {
+    const updatedElementData = {
       ...elementData,
       elementBounds: {
         ...elementData.elementBounds,
         originalRect: newRect,
         expandedRect: getExpandedRect(newRect, elementData.elementBounds.hitSlop),
       },
-    })
-
-    if (this.debugger) {
-      const updatedData = this.elements.get(elementData.element)
-      if (updatedData) this.debugger.createOrUpdateElementOverlay(updatedData)
     }
+    this.elements.set(elementData.element, updatedElementData)
+
+    // --- ADDED: Emit the update event ---
+    this.emit({
+      type: "elementUpdated",
+      timestamp: Date.now(),
+      elementData: updatedElementData,
+    })
   }
 
   private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
@@ -804,12 +835,12 @@ export class ForesightManager {
           subType: this.scrollDirection,
         })
       }
-      if (this.debugger) {
-        this.debugger.updateScrollTrajectoryVisuals(
-          this.trajectoryPositions.currentPoint,
-          this.predictedScrollPoint
-        )
-      }
+      this.emit({
+        type: "scrollTrajectoryUpdate",
+        timestamp: Date.now(),
+        currentPoint: this.trajectoryPositions.currentPoint,
+        predictedPoint: this.predictedScrollPoint,
+      })
     } else {
       if (
         isPointInRectangle(
@@ -834,16 +865,12 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        this.debugger?.updateElementVisibilityStatus(elementData)
+        this.emit({ type: "elementVisibilityChanged", elementData, timestamp: Date.now() })
       }
-      if (!isNowIntersecting) {
-        if (this._globalSettings.debug && wasPreviouslyIntersecting) {
-          this.debugger?.removeElementOverlay(elementData)
-        }
-        continue
+      if (isNowIntersecting) {
+        this.updateElementBounds(entry.boundingClientRect, elementData)
+        this.handleScrollPrefetch(elementData, entry.boundingClientRect)
       }
-      this.updateElementBounds(entry.boundingClientRect, elementData)
-      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
     }
 
     this.scrollDirection = null

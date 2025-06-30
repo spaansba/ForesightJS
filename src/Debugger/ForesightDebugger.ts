@@ -7,6 +7,13 @@ import type {
   ForesightManagerSettings,
   Point,
   HitSlop,
+  MouseTrajectoryUpdateEvent,
+  ElementUnregisteredEvent,
+  ElementRegisteredEvent,
+  ElementVisibilityChangedEvent,
+  ScrollTrajectoryUpdateEvent,
+  SettingsChangedEvent,
+  ElementUpdatedEvent,
 } from "../types/types"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
@@ -38,7 +45,7 @@ export class ForesightDebugger {
   private predictedMouseIndicator: HTMLElement | null = null
   private mouseTrajectoryLine: HTMLElement | null = null
   private scrollTrajectoryLine: HTMLElement | null = null
-
+  private managerSubscriptionsController: AbortController | null = null
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
   }
@@ -99,10 +106,7 @@ export class ForesightDebugger {
     return !!ForesightDebugger.debuggerInstance
   }
 
-  public static initialize(
-    foresightManager: ForesightManager,
-    trajectoryPositions: TrajectoryPositions
-  ): ForesightDebugger | null {
+  public static initialize(foresightManager: ForesightManager): ForesightDebugger | null {
     removeOldDebuggers()
     if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
       return null
@@ -117,13 +121,120 @@ export class ForesightDebugger {
     if (!instance.shadowHost) {
       instance._setupDOM()
     }
-
-    instance.updateMouseTrajectoryVisuals(
-      trajectoryPositions,
-      foresightManager.getManagerData.globalSettings.enableMousePrediction
-    )
-
+    instance.subscribeToManagerEvents()
     return instance
+  }
+
+  private subscribeToManagerEvents() {
+    this.managerSubscriptionsController = new AbortController()
+    const signal = this.managerSubscriptionsController.signal
+    const manager = this.foresightManagerInstance
+
+    manager.addEventListener("elementRegistered", this.handleAddElement)
+    manager.addEventListener("elementUnregistered", this.handleRemoveElement, { signal })
+    manager.addEventListener("elementUpdated", this.handleElementUpdated, { signal })
+    manager.addEventListener("elementVisibilityChanged", this.handleElementVisibilityChanged, {
+      signal,
+    })
+    manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, {
+      signal,
+    })
+    manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
+      signal,
+    })
+    manager.addEventListener("settingsChanged", this.handleSettingsChanged, { signal })
+  }
+
+  private handleElementUpdated = (e: ElementUpdatedEvent) => {
+    this.createOrUpdateElementOverlay(e.elementData)
+  }
+
+  /**
+   * Removes all debug overlays and data associated with an element.
+   *
+   * This method cleans up the link overlay, expanded overlay, and name label
+   * for the specified element, removes it from internal tracking maps, and
+   * refreshes the control panel's element list to reflect the removal.
+   *
+   * @param element - The ForesightElement to remove from debugging visualization
+   */
+  private handleRemoveElement = (e: ElementUnregisteredEvent) => {
+    if (e.unregisterReason === "callbackHit") {
+      this.showCallbackAnimation(e.elementData)
+    }
+    this.controlPanel?.removeElementFromList(e.elementData)
+    this.removeElementOverlay(e.elementData)
+  }
+
+  private handleElementVisibilityChanged = (e: ElementVisibilityChangedEvent) => {
+    if (!e.elementData.isIntersectingWithViewport) {
+      this.removeElementOverlay(e.elementData)
+    }
+    this.controlPanel?.updateElementVisibilityStatus(e.elementData)
+  }
+
+  private handleAddElement = (e: ElementRegisteredEvent) => {
+    this.createOrUpdateElementOverlay(e.elementData)
+    this.controlPanel.addElementToList(e.elementData, e.sort)
+  }
+
+  private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
+    if (!this.shadowRoot || !this.debugContainer) {
+      return
+    }
+    if (!this.predictedMouseIndicator || !this.mouseTrajectoryLine) {
+      return
+    }
+    //Hide scroll visuals on mouse move
+    if (this.scrollTrajectoryLine) {
+      this.scrollTrajectoryLine.style.display = "none"
+    }
+    const { predictedPoint, currentPoint } = e.trajectoryPositions
+
+    // Use transform for positioning to avoid layout reflow.
+    // The CSS handles centering the element with `translate(-50%, -50%)`.
+    this.predictedMouseIndicator.style.transform = `translate3d(${predictedPoint.x}px, ${predictedPoint.y}px, 0) translate3d(-50%, -50%, 0)`
+    this.predictedMouseIndicator.style.display = e.predictionEnabled ? "block" : "none"
+
+    // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
+    if (predictedPoint.x === 0 && predictedPoint.y === 0) {
+      this.predictedMouseIndicator.style.display = "none"
+      return
+    }
+
+    if (!e.predictionEnabled) {
+      this.mouseTrajectoryLine.style.display = "none"
+      return
+    }
+
+    const dx = predictedPoint.x - currentPoint.x
+    const dy = predictedPoint.y - currentPoint.y
+
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+    // Use a single transform to position, rotate, and scale the line,
+    // avoiding reflow from top/left changes.
+    this.mouseTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
+    this.mouseTrajectoryLine.style.width = `${length}px`
+    this.mouseTrajectoryLine.style.display = "block"
+  }
+
+  private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
+    if (!this.scrollTrajectoryLine) return
+    const dx = e.predictedPoint.x - e.currentPoint.x
+    const dy = e.predictedPoint.y - e.currentPoint.y
+
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+    this.scrollTrajectoryLine.style.transform = `translate3d(${e.currentPoint.x}px, ${e.currentPoint.y}px, 0) rotate(${angle}deg)`
+    this.scrollTrajectoryLine.style.width = `${length}px`
+    this.scrollTrajectoryLine.style.display = "block"
+  }
+
+  private handleSettingsChanged = (e: SettingsChangedEvent) => {
+    this.controlPanel?.updateControlsState(e.newSettings)
   }
 
   private createElementOverlays(elementData: ForesightElementData) {
@@ -139,7 +250,7 @@ export class ForesightDebugger {
     return overlays
   }
 
-  public createOrUpdateElementOverlay(newData: ForesightElementData) {
+  private createOrUpdateElementOverlay(newData: ForesightElementData) {
     if (!this.debugContainer || !this.shadowRoot) return
 
     let overlays = this.debugElementOverlays.get(newData.element)
@@ -168,21 +279,7 @@ export class ForesightDebugger {
     })
   }
 
-  /**
-   * Removes all debug overlays and data associated with an element.
-   *
-   * This method cleans up the link overlay, expanded overlay, and name label
-   * for the specified element, removes it from internal tracking maps, and
-   * refreshes the control panel's element list to reflect the removal.
-   *
-   * @param element - The ForesightElement to remove from debugging visualization
-   */
-  public removeElement(elementData: ForesightElementData) {
-    this.removeElementOverlay(elementData)
-    this.controlPanel?.removeElementFromList(elementData)
-  }
-
-  public removeElementOverlay(elementData: ForesightElementData) {
+  private removeElementOverlay(elementData: ForesightElementData) {
     const overlays = this.debugElementOverlays.get(elementData.element)
     if (overlays) {
       overlays.expandedOverlay.remove()
@@ -191,84 +288,7 @@ export class ForesightDebugger {
     }
   }
 
-  public addElement(elementData: ForesightElementData, sort: boolean = true) {
-    this.createOrUpdateElementOverlay(elementData)
-    this.controlPanel.addElementToList(elementData, sort)
-  }
-
-  public updateMouseTrajectoryVisuals(
-    trajectoryPositions: TrajectoryPositions,
-    enableMousePrediction: boolean
-  ) {
-    if (!this.shadowRoot || !this.debugContainer) {
-      return
-    }
-    if (!this.predictedMouseIndicator || !this.mouseTrajectoryLine) {
-      return
-    }
-    const { predictedPoint, currentPoint } = trajectoryPositions
-
-    // Use transform for positioning to avoid layout reflow.
-    // The CSS handles centering the element with `translate(-50%, -50%)`.
-    this.predictedMouseIndicator.style.transform = `translate3d(${predictedPoint.x}px, ${predictedPoint.y}px, 0) translate3d(-50%, -50%, 0)`
-    this.predictedMouseIndicator.style.display = enableMousePrediction ? "block" : "none"
-
-    // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
-    if (predictedPoint.x === 0 && predictedPoint.y === 0) {
-      this.predictedMouseIndicator.style.display = "none"
-      return
-    }
-
-    if (!enableMousePrediction) {
-      this.mouseTrajectoryLine.style.display = "none"
-      return
-    }
-
-    const dx = predictedPoint.x - currentPoint.x
-    const dy = predictedPoint.y - currentPoint.y
-
-    const length = Math.sqrt(dx * dx + dy * dy)
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-    // Use a single transform to position, rotate, and scale the line,
-    // avoiding reflow from top/left changes.
-    this.mouseTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
-    this.mouseTrajectoryLine.style.width = `${length}px`
-    this.mouseTrajectoryLine.style.display = "block"
-  }
-
-  public updateScrollTrajectoryVisuals(currentPoint: Point, predictedScrollPoint: Point) {
-    if (!this.scrollTrajectoryLine) return
-    const dx = predictedScrollPoint.x - currentPoint.x
-    const dy = predictedScrollPoint.y - currentPoint.y
-
-    const length = Math.sqrt(dx * dx + dy * dy)
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-    this.scrollTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
-    this.scrollTrajectoryLine.style.width = `${length}px`
-    this.scrollTrajectoryLine.style.display = "block"
-  }
-
-  public hideScrollTrajectoryVisuals() {
-    if (this.scrollTrajectoryLine) {
-      this.scrollTrajectoryLine.style.display = "none"
-    }
-  }
-
-  public updateControlsState(settings: ForesightManagerSettings) {
-    this.controlPanel?.updateControlsState(settings)
-  }
-
-  public updateElementVisibilityStatus(elementData: ForesightElementData) {
-    this.controlPanel?.updateElementVisibilityStatus(elementData)
-  }
-
-  public removeElementFromList(elementData: ForesightElementData) {
-    this.controlPanel?.removeElementFromList(elementData)
-  }
-
-  public showCallbackAnimation(elementData: ForesightElementData) {
+  private showCallbackAnimation(elementData: ForesightElementData) {
     const { element, elementBounds } = elementData
     const existingAnimation = this.callbackAnimations.get(element)
 
@@ -313,18 +333,12 @@ export class ForesightDebugger {
   }
 
   public cleanup() {
-    this.controlPanel?.cleanup()
-    this.shadowHost?.remove()
-    this.debugElementOverlays.clear()
-    this.shadowHost = null!
-    this.shadowRoot = null!
-    this.debugContainer = null!
-    this.predictedMouseIndicator = null
-    this.mouseTrajectoryLine = null
-    this.scrollTrajectoryLine = null
-    this.controlPanel = null!
+    this.foresightManagerInstance.removeEventListener("elementRegistered", this.handleAddElement)
+    // this.managerSubscriptionsController?.abort()
   }
 }
+
+// TODO tests: remove event listener with abort signal and with removeEvent
 
 const debuggerCSS = /* css */ `
       #jsforesight-debug-container { 

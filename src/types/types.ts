@@ -327,3 +327,92 @@ export type BooleanSettingKeys = {
     ? K
     : never
 }[keyof UpdateForsightManagerSettings]
+
+// This map connects the string name of an event to its data type
+export interface ForesightEventMap {
+  elementRegistered: ElementRegisteredEvent
+  elementUnregistered: ElementUnregisteredEvent
+  elementUpdated: ElementUpdatedEvent
+  callbackFired: CallbackFiredEvent
+  mouseTrajectoryUpdate: MouseTrajectoryUpdateEvent
+  scrollTrajectoryUpdate: ScrollTrajectoryUpdateEvent
+  settingsChanged: SettingsChangedEvent
+  elementVisibilityChanged: ElementVisibilityChangedEvent
+}
+
+// Update ForesightEventType to be the keys of this map for consistency
+export type ForesightEventType = keyof ForesightEventMap
+
+// Define the event data structures
+interface ForesightEvent {
+  type: ForesightEventType
+  timestamp: number
+}
+
+export interface ElementRegisteredEvent extends ForesightEvent {
+  type: "elementRegistered"
+  elementData: ForesightElementData
+  isLastElement?: boolean
+  // TODO fix sort
+  sort: boolean
+}
+
+export interface ElementUnregisteredEvent extends ForesightEvent {
+  type: "elementUnregistered"
+  elementData: ForesightElementData
+  unregisterReason: ElementUnregisteredReason
+}
+
+/**
+ * The reason an element was unregistered from ForesightManager's tracking.
+ * - `callbackHit`: The element was automatically unregistered after its callback fired.
+ * - `disconnected`: The element was automatically unregistered because it was removed from the DOM.
+ * - `apiCall`: The developer manually called the `unregister()` function for the element.
+ */
+export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCall"
+
+export interface ElementUpdatedEvent extends ForesightEvent {
+  type: "elementUpdated"
+  elementData: ForesightElementData
+}
+
+export interface CallbackFiredEvent extends ForesightEvent {
+  type: "callbackFired"
+  elementData: ForesightElementData
+  hitType: HitType
+}
+
+export interface MouseTrajectoryUpdateEvent extends ForesightEvent {
+  type: "mouseTrajectoryUpdate"
+  trajectoryPositions: TrajectoryPositions
+  predictionEnabled: boolean
+}
+
+export interface ScrollTrajectoryUpdateEvent extends ForesightEvent {
+  type: "scrollTrajectoryUpdate"
+  currentPoint: Point
+  predictedPoint: Point
+}
+
+export interface SettingsChangedEvent extends ForesightEvent {
+  type: "settingsChanged"
+  newSettings: ForesightManagerSettings
+}
+
+export interface ElementVisibilityChangedEvent extends ForesightEvent {
+  type: "elementVisibilityChanged"
+  elementData: ForesightElementData
+}
+
+export type ForesightEventData =
+  | ElementRegisteredEvent
+  | ElementUnregisteredEvent
+  | ElementUpdatedEvent
+  | CallbackFiredEvent
+  | MouseTrajectoryUpdateEvent
+  | ScrollTrajectoryUpdateEvent
+  | SettingsChangedEvent
+  | ElementVisibilityChangedEvent
+
+// Event listener type
+export type ForesightEventListener = (event: ForesightEventData) => void
