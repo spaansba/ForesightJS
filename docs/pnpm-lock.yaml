@@ -24,8 +24,11 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       js.foresight:
-        specifier: ^2.2.3
-        version: 2.2.3
+        specifier: ^3.0.0
+        version: 3.0.0
+      js.foresight-devtools:
+        specifier: ^0.0.1
+        version: 0.0.1(js.foresight@3.0.0)
       lucide-react:
         specifier: ^0.510.0
         version: 0.510.0(react@19.1.0)
@@ -3014,8 +3017,13 @@ packages:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
 
-  js.foresight@2.2.3:
-    resolution: {integrity: sha512-ayXzagy58HV9uepZcSQZ0rOHzybDSm3lAerHQdGCD0zlCnETiWIR+PzLlUkICwVt+TwxcngYe8xMLfpmesN4VA==}
+  js.foresight-devtools@0.0.1:
+    resolution: {integrity: sha512-CQX2n9RRcgn5Vj0i/SWaylTuKUJsrBBT+SCjT4vhMorn5rY68YFl6D6gWpm8lmgIk03X10mM5ODeyvLF9lo86w==}
+    peerDependencies:
+      js.foresight: ^3.0.0
+
+  js.foresight@3.0.0:
+    resolution: {integrity: sha512-8ynkh5vKbtzb0M7VDmYF20Xc8+0BbtVCV4gsyOSfljC+ezeO5FY0roKbe35OyT63WTrCxzHRWDTyKg7dCqrSXA==}
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
@@ -8973,9 +8981,13 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js.foresight@2.2.3:
+  js.foresight-devtools@0.0.1(js.foresight@3.0.0):
     dependencies:
       '@thednp/position-observer': 1.1.0
+      js.foresight: 3.0.0
+
+  js.foresight@3.0.0:
+    dependencies:
       position-observer: 1.0.0
       tabbable: 6.2.0
 

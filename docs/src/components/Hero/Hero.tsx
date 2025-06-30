@@ -5,6 +5,7 @@ import { Star, Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import styles from "./hero.module.css"
 import { PackageManagerTabs } from "./PackageManagerTabs"
+import { ForesightDebugger } from "js.foresight-devtools"
 
 export function Hero() {
   const { siteConfig } = useDocusaurusContext()
@@ -41,14 +42,12 @@ export function Hero() {
     positionHistorySize: 14,
     defaultHitSlop: 0,
     tabOffset: 3,
-    debuggerSettings: {
-      isControlPanelDefaultMinimized: true,
-      showNameTags: false,
-    },
   })
 
+  ForesightDebugger.initialize(ForesightManager.instance)
+
   const turnOffDebugMode = () => {
-    ForesightManager.instance.alterGlobalSettings({ debug: false })
+    ForesightDebugger.instance.alterDebuggerSettings({ showDebugger: false })
   }
 
   return (
