@@ -5,9 +5,11 @@ import type {
   ForesightElement,
   DebuggerSettings,
   NumericSettingKeys,
-  BooleanSettingKeys,
   ForesightManagerSettings,
   SortElementList,
+  ManagerBooleanSettingKeys,
+  DebuggerBooleanSettingKeys,
+  UpdateForsightManagerSettings,
 } from "../types/types"
 import {
   DEFAULT_IS_DEBUGGER_MINIMIZED,
@@ -28,6 +30,7 @@ import {
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import { createAndAppendStyle } from "./helpers/createAndAppend"
 import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
+import type { ForesightDebugger } from "./ForesightDebugger"
 
 type SectionStates = {
   mouse: boolean
@@ -43,6 +46,7 @@ const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
+  private debuggerInstance: ForesightDebugger
   private static debuggerControlPanelInstance: DebuggerControlPanel
 
   // These properties will be assigned in _setupDOMAndListeners
@@ -85,12 +89,34 @@ export class DebuggerControlPanel {
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
   private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
 
-  /**
-   * The constructor is now minimal, only storing the manager instance.
-   * The actual setup is deferred to _setupDOMAndListeners.
-   */
-  private constructor(foresightManager: ForesightManager) {
+  private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
+    this.debuggerInstance = debuggerInstance
+  }
+
+  /**
+   * The initialize method now creates the instance if needed,
+   * then calls the setup method to ensure the UI is ready.
+   */
+  public static initialize(
+    foresightManager: ForesightManager,
+    debuggerInstance: ForesightDebugger,
+    shadowRoot: ShadowRoot,
+    debuggerSettings: DebuggerSettings
+  ): DebuggerControlPanel {
+    if (!DebuggerControlPanel.isInitiated) {
+      DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(
+        foresightManager,
+        debuggerInstance
+      )
+    }
+
+    const instance = DebuggerControlPanel.debuggerControlPanelInstance
+
+    // This will build the DOM on first run or rebuild it on subsequent runs after cleanup.
+    instance._setupDOMAndListeners(shadowRoot, debuggerSettings)
+
+    return instance
   }
 
   /**
@@ -118,27 +144,6 @@ export class DebuggerControlPanel {
     this.originalSectionStates()
     this.setupEventListeners()
     this.updateContainerVisibilityState()
-  }
-
-  /**
-   * The initialize method now creates the instance if needed,
-   * then calls the setup method to ensure the UI is ready.
-   */
-  public static initialize(
-    foresightManager: ForesightManager,
-    shadowRoot: ShadowRoot,
-    debuggerSettings: DebuggerSettings
-  ): DebuggerControlPanel {
-    if (!DebuggerControlPanel.isInitiated) {
-      DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(foresightManager)
-    }
-
-    const instance = DebuggerControlPanel.debuggerControlPanelInstance
-
-    // This will build the DOM on first run or rebuild it on subsequent runs after cleanup.
-    instance._setupDOMAndListeners(shadowRoot, debuggerSettings)
-
-    return instance
   }
 
   private static get isInitiated(): boolean {
@@ -249,22 +254,36 @@ export class DebuggerControlPanel {
 
   private createChangeEventListener(
     element: HTMLElement | null,
-    setting: BooleanSettingKeys | "name-tag"
+    setting: ManagerBooleanSettingKeys | DebuggerBooleanSettingKeys
   ) {
     if (!element) {
       return
     }
+
+    // This is the crucial part. We get an object representing the debugger's
+    // settings so we can check against it at runtime.
+    // Replace `this.debuggerInstance.settings` with however you access
+    // the settings object on your instance.
+    const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
+
     element.addEventListener("change", (e) => {
-      if (setting === "name-tag") {
-        this.foresightManagerInstance.alterGlobalSettings({
-          debuggerSettings: {
-            showNameTags: (e.target as HTMLInputElement).checked,
-          },
-        })
+      const isChecked = (e.target as HTMLInputElement).checked
+
+      // The `in` operator checks if the key (e.g., "showOverlay") exists on the
+      // debuggerSettings object. This is a true runtime check.
+      if (setting in debuggerSettings) {
+        // Although we've confirmed the key belongs to the debugger, TypeScript's
+        // control flow analysis doesn't automatically narrow the type of the
+        // `setting` variable itself here.
+        // So, we use a type assertion to satisfy the compiler.
+        this.debuggerInstance.alterDebuggerSettings({
+          [setting]: isChecked,
+        } as Partial<DebuggerSettings>)
       } else {
+        // If the key is not in debuggerSettings, it must be a manager setting.
         this.foresightManagerInstance.alterGlobalSettings({
-          [setting]: (e.target as HTMLInputElement).checked,
-        })
+          [setting]: isChecked,
+        } as Partial<UpdateForsightManagerSettings>)
       }
     })
   }
@@ -288,7 +307,7 @@ export class DebuggerControlPanel {
     this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
     this.createChangeEventListener(this.tabEnabledCheckbox, "enableTabPrediction")
     this.createChangeEventListener(this.scrollEnabledCheckbox, "enableScrollPrediction")
-    this.createChangeEventListener(this.showNameTagsCheckbox, "name-tag")
+    this.createChangeEventListener(this.showNameTagsCheckbox, "showNameTags")
     this.createInputEventListener(
       this.historySizeSlider,
       this.historyValueSpan,
@@ -328,10 +347,8 @@ export class DebuggerControlPanel {
       if (!sortButton) return
 
       const value = sortButton.dataset.sort as SortElementList
-      this.foresightManagerInstance.alterGlobalSettings({
-        debuggerSettings: {
-          sortElementList: value,
-        },
+      this.debuggerInstance.alterDebuggerSettings({
+        sortElementList: value,
       })
       console.log("here")
       this.sortAndReorderElements()
@@ -452,36 +469,38 @@ export class DebuggerControlPanel {
     })
   }
 
-  public updateControlsState(settings: ForesightManagerSettings) {
+  public updateControlsState(
+    managerSettings: ForesightManagerSettings,
+    debuggerSettings: DebuggerSettings
+  ) {
     if (this.trajectoryEnabledCheckbox) {
-      this.trajectoryEnabledCheckbox.checked = settings.enableMousePrediction
+      this.trajectoryEnabledCheckbox.checked = managerSettings.enableMousePrediction
     }
     if (this.tabEnabledCheckbox) {
-      this.tabEnabledCheckbox.checked = settings.enableTabPrediction
+      this.tabEnabledCheckbox.checked = managerSettings.enableTabPrediction
     }
     if (this.scrollEnabledCheckbox) {
-      this.scrollEnabledCheckbox.checked = settings.enableScrollPrediction
+      this.scrollEnabledCheckbox.checked = managerSettings.enableScrollPrediction
     }
     if (this.showNameTagsCheckbox) {
-      this.showNameTagsCheckbox.checked =
-        settings.debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
+      this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
     }
-    this.updateSortOptionUI(settings.debuggerSettings.sortElementList ?? "visibility")
+    this.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
     if (this.historySizeSlider && this.historyValueSpan) {
-      this.historySizeSlider.value = settings.positionHistorySize.toString()
-      this.historyValueSpan.textContent = `${settings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
+      this.historySizeSlider.value = managerSettings.positionHistorySize.toString()
+      this.historyValueSpan.textContent = `${managerSettings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
     }
     if (this.predictionTimeSlider && this.predictionValueSpan) {
-      this.predictionTimeSlider.value = settings.trajectoryPredictionTime.toString()
-      this.predictionValueSpan.textContent = `${settings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
+      this.predictionTimeSlider.value = managerSettings.trajectoryPredictionTime.toString()
+      this.predictionValueSpan.textContent = `${managerSettings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
     }
     if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
-      this.tabOffsetSlider.value = settings.tabOffset.toString()
-      this.tabOffsetValueSpan.textContent = `${settings.tabOffset} ${TAB_OFFSET_UNIT}`
+      this.tabOffsetSlider.value = managerSettings.tabOffset.toString()
+      this.tabOffsetValueSpan.textContent = `${managerSettings.tabOffset} ${TAB_OFFSET_UNIT}`
     }
     if (this.scrollMarginSlider && this.scrollMarginValueSpan) {
-      this.scrollMarginSlider.value = settings.scrollMargin.toString()
-      this.scrollMarginValueSpan.textContent = `${settings.scrollMargin} ${SCROLL_MARGIN_UNIT}`
+      this.scrollMarginSlider.value = managerSettings.scrollMargin.toString()
+      this.scrollMarginValueSpan.textContent = `${managerSettings.scrollMargin} ${SCROLL_MARGIN_UNIT}`
     }
   }
 
@@ -581,9 +600,7 @@ export class DebuggerControlPanel {
   private sortAndReorderElements() {
     if (!this.elementListItemsContainer) return
 
-    const sortOrder =
-      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings
-        .sortElementList ?? "visibility"
+    const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
 
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
 

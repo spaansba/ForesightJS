@@ -12,7 +12,6 @@ describe("ForesightManager", () => {
   beforeEach(() => {
     // Initialize with basic settings
     manager = ForesightManager.initialize({
-      debug: false,
       enableMousePrediction: true,
       enableTabPrediction: true,
       enableScrollPrediction: true,
@@ -46,8 +45,8 @@ describe("ForesightManager", () => {
     })
 
     it("should initialize only once", () => {
-      const instance1 = ForesightManager.initialize({ debug: false })
-      const instance2 = ForesightManager.initialize({ debug: true })
+      const instance1 = ForesightManager.initialize()
+      const instance2 = ForesightManager.initialize()
       expect(instance1).toBe(instance2)
     })
 

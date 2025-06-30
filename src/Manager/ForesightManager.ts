@@ -2,7 +2,6 @@ import { tabbable, type FocusableElement } from "tabbable"
 import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
-  BooleanSettingKeys,
   CallbackHits,
   ElementUnregisteredReason,
   ForesightElement,
@@ -14,6 +13,7 @@ import type {
   ForesightRegisterOptions,
   ForesightRegisterResult,
   HitType,
+  ManagerBooleanSettingKeys,
   NumericSettingKeys,
   Point,
   ScrollDirection,
@@ -25,12 +25,8 @@ import {
   DEFAULT_ENABLE_SCROLL_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
-  DEFAULT_IS_DEBUG,
-  DEFAULT_IS_DEBUGGER_MINIMIZED,
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_SCROLL_MARGIN,
-  DEFAULT_SHOW_NAME_TAGS,
-  DEFAULT_SORT_ELEMENT_LIST,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
@@ -53,10 +49,10 @@ import {
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
+import { PositionObserver, PositionObserverEntry } from "position-observer"
+import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
 import { getScrollDirection } from "./helpers/getScrollDirection"
 import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
-import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
-import { PositionObserver, PositionObserverEntry } from "position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -68,7 +64,6 @@ import { PositionObserver, PositionObserverEntry } from "position-observer"
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
  * - Optionally unregistering elements after their callback is triggered.
  * - Handling global settings for prediction behavior (e.g., history size, prediction time).
- * - Optionally enabling a {@link ForesightDebugger} for visual feedback.
  * - Automatically updating element bounds on resize using {@link ResizeObserver}.
  * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
  * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
@@ -81,7 +76,6 @@ export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
   private isSetup: boolean = false
-  private debugger: ForesightDebugger | null = null
   private _globalCallbackHits: CallbackHits = {
     mouse: {
       hover: 0,
@@ -100,7 +94,6 @@ export class ForesightManager {
     total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
-    debug: DEFAULT_IS_DEBUG,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
@@ -113,11 +106,6 @@ export class ForesightManager {
       bottom: DEFAULT_HITSLOP,
     },
     resizeScrollThrottleDelay: 0,
-    debuggerSettings: {
-      isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
-      showNameTags: DEFAULT_SHOW_NAME_TAGS,
-      sortElementList: DEFAULT_SORT_ELEMENT_LIST,
-    },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     onAnyCallbackFired: (
@@ -161,12 +149,11 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
-  // The new, improved addEventListener signature
   public addEventListener<K extends ForesightEventType>(
     eventType: K,
     listener: (event: ForesightEventMap[K]) => void,
     options?: { signal?: AbortSignal }
-  ): () => void {
+  ) {
     if (options?.signal?.aborted) {
       return () => {}
     }
@@ -174,11 +161,8 @@ export class ForesightManager {
       this.eventListeners[eventType] = []
     }
     this.eventListeners[eventType].push(listener)
-    const unsubscribe = () => {
-      this.removeEventListener(eventType, listener)
-    }
-    options?.signal?.addEventListener("abort", unsubscribe)
-    return unsubscribe
+
+    options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
   public removeEventListener<K extends ForesightEventType>(
@@ -187,7 +171,7 @@ export class ForesightManager {
   ): void {
     const listeners = this.eventListeners[eventType]
     if (listeners) {
-      const index = listeners.indexOf(listener as any)
+      const index = listeners.indexOf(listener)
       if (index > -1) {
         listeners.splice(index, 1)
       }
@@ -195,7 +179,7 @@ export class ForesightManager {
   }
 
   // Used for debugging only
-  private logSubscribers(): void {
+  public logSubscribers(): void {
     console.log("%c[ForesightManager] Current Subscribers:", "font-weight: bold; color: #3b82f6;")
 
     const eventTypes = Object.keys(this.eventListeners) as ForesightEventType[]
@@ -226,7 +210,6 @@ export class ForesightManager {
     })
   }
 
-  // The new, improved emit
   private emit<K extends ForesightEventType>(event: { type: K } & ForesightEventMap[K]): void {
     const listeners = this.eventListeners[event.type]
     if (listeners) {
@@ -283,7 +266,7 @@ export class ForesightManager {
     }
 
     const normalizedHitSlop = hitSlop
-      ? normalizeHitSlop(hitSlop, this._globalSettings.debug)
+      ? normalizeHitSlop(hitSlop)
       : this._globalSettings.defaultHitSlop
     // const elementRect = element.getBoundingClientRect()
     const elementData: ForesightElementData = {
@@ -381,20 +364,14 @@ export class ForesightManager {
       return false
     }
 
-    this._globalSettings[setting] = clampNumber(
-      newValue,
-      min,
-      max,
-      this._globalSettings.debug,
-      setting
-    )
+    this._globalSettings[setting] = clampNumber(newValue, min, max, setting)
 
     return true
   }
 
   private updateBooleanSetting(
     newValue: boolean | undefined,
-    setting: BooleanSettingKeys
+    setting: ManagerBooleanSettingKeys
   ): boolean {
     if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
       return false
@@ -471,55 +448,13 @@ export class ForesightManager {
       this._globalSettings.onAnyCallbackFired = props.onAnyCallbackFired
     }
 
-    let debuggerSettingsChanged = false
-    if (props?.debuggerSettings?.isControlPanelDefaultMinimized !== undefined) {
-      this._globalSettings.debuggerSettings.isControlPanelDefaultMinimized =
-        props.debuggerSettings.isControlPanelDefaultMinimized
-      debuggerSettingsChanged = true
-    }
-
-    if (props?.debuggerSettings?.showNameTags !== undefined) {
-      this._globalSettings.debuggerSettings.showNameTags = props.debuggerSettings.showNameTags
-      debuggerSettingsChanged = true
-      if (this.debugger) {
-        this.debugger.toggleNameTagVisibility()
-      }
-    }
-
-    if (props?.debuggerSettings?.sortElementList !== undefined) {
-      this._globalSettings.debuggerSettings.sortElementList = props.debuggerSettings.sortElementList
-      debuggerSettingsChanged = true
-      if (this.debugger) {
-        // this.debugger.()
-      }
-    }
-
     let hitSlopChanged = false
     if (props?.defaultHitSlop !== undefined) {
-      const normalizedNewHitSlop = normalizeHitSlop(
-        props.defaultHitSlop,
-        this._globalSettings.debug
-      )
+      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
       if (!areRectsEqual(this._globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
         this._globalSettings.defaultHitSlop = normalizedNewHitSlop
         hitSlopChanged = true
         this.forceUpdateAllElementBounds()
-      }
-    }
-
-    let debugModeChanged = false
-    if (props?.debug !== undefined && this._globalSettings.debug !== props.debug) {
-      if (typeof window !== "undefined" && typeof document !== "undefined") {
-        this._globalSettings.debug = props.debug
-        debugModeChanged = true
-        if (this._globalSettings.debug) {
-          this.turnOnDebugMode()
-        } else {
-          if (this.debugger) {
-            // this.debugger.cleanup()
-            this.debugger = null
-          }
-        }
       }
     }
 
@@ -530,38 +465,15 @@ export class ForesightManager {
       mousePredictionChanged ||
       tabPredictionChanged ||
       scrollPredictionChanged ||
-      debuggerSettingsChanged ||
       hitSlopChanged ||
-      scrollMarginChanged ||
-      debugModeChanged
+      scrollMarginChanged
+
     if (settingsActuallyChanged) {
-      if (tabOffsetChanged) {
-        this.logSubscribers()
-        this.debugger?.cleanup()
-        this.logSubscribers()
-      }
       this.emit({
-        type: "settingsChanged",
+        type: "managerSettingsChanged",
         timestamp: Date.now(),
         newSettings: this._globalSettings,
       })
-    }
-  }
-  private turnOnDebugMode() {
-    if (!this.debugger) {
-      this.debugger = ForesightDebugger.initialize(ForesightManager.instance)
-      const elementsArray = Array.from(this.elements.values())
-      elementsArray.forEach((elementData, index) => {
-        this.emit({
-          type: "elementRegistered",
-          timestamp: Date.now(),
-          elementData,
-          isLastElement: index === elementsArray.length - 1,
-          sort: true,
-        })
-      })
-    } else {
-      // this.debugger.updateControlsState(this._globalSettings)
     }
   }
 
@@ -682,9 +594,6 @@ export class ForesightManager {
     // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
     if (!this.tabbableElementsCache.length) {
       this.tabbableElementsCache = tabbable(document.documentElement)
-      if (this._globalSettings.debug) {
-        console.log("ForesightJS: Recomputed tabbable elements cache because of DOM change")
-      }
     }
 
     // Determine the range of elements to check based on the tab direction and offset
@@ -911,14 +820,10 @@ export class ForesightManager {
 
   private removeGlobalListeners() {
     this.isSetup = false
-    if (!this.debugger) {
-      this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
-      this.globalListenersController = null
-    } else {
-      console.log(
-        "ForesightJS: All elements have successfully been unregistered. ForesightJS would typically perform cleanup events now, but these are currently skipped while in debug mode. Observers are cleared up."
-      )
-    }
+
+    this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
+    this.globalListenersController = null
+
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()

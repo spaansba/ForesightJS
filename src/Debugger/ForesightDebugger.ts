@@ -1,26 +1,31 @@
-import { ForesightManager } from "../Manager/ForesightManager"
-import { DebuggerControlPanel } from "./DebuggerControlPanel"
-import type {
-  ForesightElementData,
-  ForesightElement,
-  TrajectoryPositions,
-  ForesightManagerSettings,
-  Point,
-  HitSlop,
-  MouseTrajectoryUpdateEvent,
-  ElementUnregisteredEvent,
-  ElementRegisteredEvent,
-  ElementVisibilityChangedEvent,
-  ScrollTrajectoryUpdateEvent,
-  SettingsChangedEvent,
-  ElementUpdatedEvent,
-} from "../types/types"
-import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
-import { updateElementOverlays } from "./helpers/updateElementOverlays"
-import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
-import { DEFAULT_SHOW_NAME_TAGS } from "../Manager/constants"
 import { PositionObserver, type PositionObserverEntry } from "position-observer"
 import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
+import {
+  DEFAULT_IS_DEBUGGER_MINIMIZED,
+  DEFAULT_SHOW_DEBUGGER,
+  DEFAULT_SHOW_NAME_TAGS,
+  DEFAULT_SORT_ELEMENT_LIST,
+} from "../Manager/constants"
+import { ForesightManager } from "../Manager/ForesightManager"
+import { shouldUpdateSetting } from "../Manager/helpers/shouldUpdateSetting"
+import type {
+  DebuggerSettings,
+  ElementRegisteredEvent,
+  ElementUnregisteredEvent,
+  ElementUpdatedEvent,
+  ElementVisibilityChangedEvent,
+  ForesightDebuggerData,
+  ForesightElement,
+  ForesightElementData,
+  HitSlop,
+  ManagerSettingsChangedEvent,
+  MouseTrajectoryUpdateEvent,
+  ScrollTrajectoryUpdateEvent,
+} from "../types/types"
+import { DebuggerControlPanel } from "./DebuggerControlPanel"
+import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
+import { removeOldDebuggers } from "./helpers/removeOldDebuggers"
+import { updateElementOverlays } from "./helpers/updateElementOverlays"
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement
@@ -41,6 +46,13 @@ export class ForesightDebugger {
   private debugContainer!: HTMLElement
   private controlPanel!: DebuggerControlPanel
 
+  private _debuggerSettings: DebuggerSettings = {
+    showDebugger: DEFAULT_SHOW_DEBUGGER,
+    isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
+    showNameTags: DEFAULT_SHOW_NAME_TAGS,
+    sortElementList: DEFAULT_SORT_ELEMENT_LIST,
+  }
+
   private debugElementOverlays: Map<ForesightElement, ElementOverlays> = new Map()
   private predictedMouseIndicator: HTMLElement | null = null
   private mouseTrajectoryLine: HTMLElement | null = null
@@ -50,6 +62,42 @@ export class ForesightDebugger {
     this.foresightManagerInstance = foresightManager
   }
   private animationPositionObserver: PositionObserver | null = null
+
+  public get getDebuggerData(): Readonly<ForesightDebuggerData> {
+    return {
+      settings: this._debuggerSettings,
+    }
+  }
+
+  public static initialize(
+    foresightManager: ForesightManager,
+    props?: Partial<DebuggerSettings>
+  ): ForesightDebugger | null {
+    if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
+      return null
+    }
+    if (!ForesightDebugger.isInitiated) {
+      ForesightDebugger.debuggerInstance = new ForesightDebugger(foresightManager)
+    }
+
+    const instance = ForesightDebugger.debuggerInstance
+
+    if (!instance.shadowHost) {
+      instance._setupDOM()
+    }
+    instance.subscribeToManagerEvents()
+    instance.alterDebuggerSettings(props)
+    return instance
+  }
+
+  public static get instance(): ForesightDebugger {
+    if (!ForesightDebugger.debuggerInstance) {
+      throw new Error(
+        "ForesightDebugger has not been initialized. Call ForesightDebugger.initialize() first."
+      )
+    }
+    return ForesightDebugger.debuggerInstance
+  }
 
   private _setupDOM() {
     // If for some reason we call this on an already-setup instance, do nothing.
@@ -75,8 +123,9 @@ export class ForesightDebugger {
     })
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
+      ForesightDebugger.debuggerInstance,
       this.shadowRoot,
-      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings
+      this._debuggerSettings
     )
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
 
@@ -106,23 +155,30 @@ export class ForesightDebugger {
     return !!ForesightDebugger.debuggerInstance
   }
 
-  public static initialize(foresightManager: ForesightManager): ForesightDebugger | null {
-    removeOldDebuggers()
-    if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
-      return null
+  public alterDebuggerSettings(props?: Partial<DebuggerSettings>) {
+    if (shouldUpdateSetting(props?.showNameTags, this._debuggerSettings.showNameTags)) {
+      this._debuggerSettings.showNameTags = props.showNameTags
+      this.toggleNameTagVisibility()
     }
-
-    if (!ForesightDebugger.isInitiated) {
-      ForesightDebugger.debuggerInstance = new ForesightDebugger(foresightManager)
+    if (
+      shouldUpdateSetting(
+        props?.isControlPanelDefaultMinimized,
+        this._debuggerSettings.isControlPanelDefaultMinimized
+      )
+    ) {
+      this._debuggerSettings.isControlPanelDefaultMinimized = props.isControlPanelDefaultMinimized
     }
-
-    const instance = ForesightDebugger.debuggerInstance
-
-    if (!instance.shadowHost) {
-      instance._setupDOM()
+    if (shouldUpdateSetting(props?.sortElementList, this._debuggerSettings.sortElementList)) {
+      this._debuggerSettings.sortElementList = props.sortElementList
     }
-    instance.subscribeToManagerEvents()
-    return instance
+    if (shouldUpdateSetting(props?.showDebugger, this._debuggerSettings.showDebugger)) {
+      this._debuggerSettings.showDebugger = props.showDebugger
+      if (this._debuggerSettings.showDebugger) {
+        ForesightDebugger.initialize(this.foresightManagerInstance)
+      } else {
+        this.cleanup()
+      }
+    }
   }
 
   private subscribeToManagerEvents() {
@@ -130,7 +186,7 @@ export class ForesightDebugger {
     const signal = this.managerSubscriptionsController.signal
     const manager = this.foresightManagerInstance
 
-    manager.addEventListener("elementRegistered", this.handleAddElement)
+    manager.addEventListener("elementRegistered", this.handleAddElement, { signal })
     manager.addEventListener("elementUnregistered", this.handleRemoveElement, { signal })
     manager.addEventListener("elementUpdated", this.handleElementUpdated, { signal })
     manager.addEventListener("elementVisibilityChanged", this.handleElementVisibilityChanged, {
@@ -142,7 +198,7 @@ export class ForesightDebugger {
     manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
       signal,
     })
-    manager.addEventListener("settingsChanged", this.handleSettingsChanged, { signal })
+    manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
   }
 
   private handleElementUpdated = (e: ElementUpdatedEvent) => {
@@ -233,8 +289,8 @@ export class ForesightDebugger {
     this.scrollTrajectoryLine.style.display = "block"
   }
 
-  private handleSettingsChanged = (e: SettingsChangedEvent) => {
-    this.controlPanel?.updateControlsState(e.newSettings)
+  private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
+    this.controlPanel?.updateControlsState(e.newSettings, this._debuggerSettings)
   }
 
   private createElementOverlays(elementData: ForesightElementData) {
@@ -261,20 +317,19 @@ export class ForesightDebugger {
     updateElementOverlays(
       overlays,
       newData,
-      this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
-        DEFAULT_SHOW_NAME_TAGS
+      this._debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
     )
   }
 
-  public toggleNameTagVisibility() {
+  // TODO :fix
+  private toggleNameTagVisibility() {
     this.foresightManagerInstance.registeredElements.forEach((elementData) => {
       const overlays = this.debugElementOverlays.get(elementData.element)
       if (!overlays) return
       updateElementOverlays(
         overlays,
         elementData,
-        this.foresightManagerInstance.getManagerData.globalSettings.debuggerSettings.showNameTags ??
-          DEFAULT_SHOW_NAME_TAGS
+        this._debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
       )
     })
   }
@@ -333,12 +388,19 @@ export class ForesightDebugger {
   }
 
   public cleanup() {
-    this.foresightManagerInstance.removeEventListener("elementRegistered", this.handleAddElement)
-    // this.managerSubscriptionsController?.abort()
+    this.managerSubscriptionsController?.abort()
+    this.controlPanel?.cleanup()
+    this.shadowHost?.remove()
+    this.debugElementOverlays.clear()
+    this.shadowHost = null!
+    this.shadowRoot = null!
+    this.debugContainer = null!
+    this.predictedMouseIndicator = null
+    this.mouseTrajectoryLine = null
+    this.scrollTrajectoryLine = null
+    this.controlPanel = null!
   }
 }
-
-// TODO tests: remove event listener with abort signal and with removeEvent
 
 const debuggerCSS = /* css */ `
       #jsforesight-debug-container { 

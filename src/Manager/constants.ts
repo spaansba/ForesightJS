@@ -30,5 +30,5 @@ export const DEFAULT_ENABLE_MOUSE_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_SCROLL_PREDICTION: boolean = true
 export const DEFAULT_IS_DEBUGGER_MINIMIZED: boolean = false
 export const DEFAULT_SHOW_NAME_TAGS: boolean = true
-export const DEFAULT_IS_DEBUG: boolean = false
+export const DEFAULT_SHOW_DEBUGGER: boolean = true
 export const DEFAULT_SORT_ELEMENT_LIST: SortElementList = "visibility"

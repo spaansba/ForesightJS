@@ -6,6 +6,7 @@ import {
   useIsVisible,
 } from "../../stores/ButtonStateStore"
 import { ForesightManager } from "../../../../src/Manager/ForesightManager"
+import { ForesightDebugger } from "../../../../src/Debugger/ForesightDebugger"
 
 type ControlButton = {
   id: string
@@ -40,19 +41,11 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       type: "small-button",
     },
     {
-      id: "main-thread-dirty",
-      label: "Main Thread Dirty",
-      description: "MAke main thread dirty for 10s",
+      id: "Random",
+      label: "Random",
+      description: "Random",
       onClick: () => {
-        let result = 0
-        let i = 0
-        const start = Date.now()
-        while (Date.now() - start < 10000) {
-          // Run for exactly 10 seconds
-          result += Math.sqrt(Math.random() * 1000000)
-          i++
-        }
-        console.log(`Result: ${result}, Iterations: ${i}`)
+        ForesightManager.instance.logSubscribers()
       },
       isActive: true,
       type: "small-button",
@@ -62,8 +55,8 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       label: "Toggle Debug Mode",
       description: "Toggle Debug Mode",
       onClick: () => {
-        ForesightManager.instance.alterGlobalSettings({
-          debug: !ForesightManager.instance.getManagerData.globalSettings.debug,
+        ForesightDebugger.instance.alterDebuggerSettings({
+          showDebugger: !ForesightDebugger.instance.getDebuggerData.settings.showDebugger,
         })
       },
       isActive: true,

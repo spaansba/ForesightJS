@@ -4,11 +4,27 @@ import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
+import { ForesightManager } from "../../../src/Manager/ForesightManager"
+import { useEffect } from "react"
+import type { ElementUnregisteredEvent } from "../../../src/types/types"
+
 // import ForesightButtonRegular from "./test-buttons/ForesightButtonRegular"
 
 export const Main = () => {
   const resetKey = useResetKey()
 
+  useEffect(() => {
+    const handleCallbackFired = (e: ElementUnregisteredEvent) => {
+      if (e.unregisterReason === "callbackHit") {
+        console.log("✅ Callback Fired!", e.elementData)
+      }
+    }
+
+    ForesightManager.instance.addEventListener("elementUnregistered", handleCallbackFired)
+    return () => {
+      ForesightManager.instance.removeEventListener("elementUnregistered", handleCallbackFired)
+    }
+  }, [])
   return (
     <div key={resetKey} className="min-h-screen font-sans">
       <ControlSection

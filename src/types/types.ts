@@ -56,13 +56,20 @@ export type ElementBounds = {
 
 export type DebuggerSettings = {
   /**
+   * Whether to show visual debugging information on the screen.
+   * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
+   * @default true
+   */
+  showDebugger: boolean
+
+  /**
    * Determines if the debugger control panel should be initialized in a minimized state.
    *
    * @link https://foresightjs.com/docs/getting_started/debug
    *
    * @default false
    */
-  isControlPanelDefaultMinimized?: boolean
+  isControlPanelDefaultMinimized: boolean
   /**
    * Determines if name tags should be displayed visually above each registered element.
    * This is a helpful visual aid for identifying which elements are being tracked.
@@ -71,7 +78,7 @@ export type DebuggerSettings = {
    *
    * @default false
    */
-  showNameTags?: boolean
+  showNameTags: boolean
   /**
    * Specifies the default sorting order for the list of registered elements in the debugger panel.
    * - `'visibility'`: Sorts elements by their viewport visibility (visible elements first),
@@ -86,7 +93,7 @@ export type DebuggerSettings = {
    * @default 'visibility'
    *
    */
-  sortElementList?: SortElementList
+  sortElementList: SortElementList
 }
 
 export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
@@ -174,7 +181,10 @@ export type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-  // positionObserverElements: Map<Element, PositionObserverEntry> | undefined
+}
+
+export type ForesightDebuggerData = {
+  settings: Readonly<DebuggerSettings>
 }
 
 type BaseForesightManagerSettings = {
@@ -244,19 +254,9 @@ type BaseForesightManagerSettings = {
   tabOffset: number
 
   /**
-   * Whether to show visual debugging information on the screen.
-   * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
-   * @default false
-   */
-  debug: boolean
-
-  /**
    * @deprecated This property will be removed in v3.0.0. Use automatic optimization instead.
    */
   resizeScrollThrottleDelay: number
-
-  /** Options for the debugger */
-  debuggerSettings: DebuggerSettings
 
   /**
    * A global callback that runs whenever a callback is fired for any
@@ -322,11 +322,15 @@ export type NumericSettingKeys = {
 /**
  * Get all keys in UpdateForsightManagerSettings that are boolean
  */
-export type BooleanSettingKeys = {
+export type ManagerBooleanSettingKeys = {
   [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
     ? K
     : never
 }[keyof UpdateForsightManagerSettings]
+
+export type DebuggerBooleanSettingKeys = {
+  [K in keyof DebuggerSettings]: Required<DebuggerSettings>[K] extends boolean ? K : never
+}[keyof DebuggerSettings]
 
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
@@ -336,7 +340,7 @@ export interface ForesightEventMap {
   callbackFired: CallbackFiredEvent
   mouseTrajectoryUpdate: MouseTrajectoryUpdateEvent
   scrollTrajectoryUpdate: ScrollTrajectoryUpdateEvent
-  settingsChanged: SettingsChangedEvent
+  managerSettingsChanged: ManagerSettingsChangedEvent
   elementVisibilityChanged: ElementVisibilityChangedEvent
 }
 
@@ -394,8 +398,8 @@ export interface ScrollTrajectoryUpdateEvent extends ForesightEvent {
   predictedPoint: Point
 }
 
-export interface SettingsChangedEvent extends ForesightEvent {
-  type: "settingsChanged"
+export interface ManagerSettingsChangedEvent extends ForesightEvent {
+  type: "managerSettingsChanged"
   newSettings: ForesightManagerSettings
 }
 
@@ -411,7 +415,7 @@ export type ForesightEventData =
   | CallbackFiredEvent
   | MouseTrajectoryUpdateEvent
   | ScrollTrajectoryUpdateEvent
-  | SettingsChangedEvent
+  | ManagerSettingsChangedEvent
   | ElementVisibilityChangedEvent
 
 // Event listener type
