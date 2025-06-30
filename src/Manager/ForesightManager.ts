@@ -1,5 +1,4 @@
 import { tabbable, type FocusableElement } from "tabbable"
-import { ForesightDebugger } from "../Debugger/ForesightDebugger"
 import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
   CallbackHits,
@@ -105,7 +104,6 @@ export class ForesightManager {
       right: DEFAULT_HITSLOP,
       bottom: DEFAULT_HITSLOP,
     },
-    resizeScrollThrottleDelay: 0,
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     onAnyCallbackFired: (
@@ -132,9 +130,7 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
-  private eventListeners: {
-    [K in ForesightEventType]?: ((event: ForesightEventMap[K]) => void)[]
-  } = {}
+  private eventListeners: Map<ForesightEventType, ((event: any) => void)[]> = new Map()
 
   // Never put something in the constructor, use initialize instead
   private constructor() {}
@@ -157,10 +153,10 @@ export class ForesightManager {
     if (options?.signal?.aborted) {
       return () => {}
     }
-    if (!this.eventListeners[eventType]) {
-      this.eventListeners[eventType] = []
+    if (!this.eventListeners.has(eventType)) {
+      this.eventListeners.set(eventType, [])
     }
-    this.eventListeners[eventType].push(listener)
+    this.eventListeners.get(eventType)!.push(listener)
 
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
@@ -169,7 +165,7 @@ export class ForesightManager {
     eventType: K,
     listener: (event: ForesightEventMap[K]) => void
   ): void {
-    const listeners = this.eventListeners[eventType]
+    const listeners = this.eventListeners.get(eventType)
     if (listeners) {
       const index = listeners.indexOf(listener)
       if (index > -1) {
@@ -182,7 +178,7 @@ export class ForesightManager {
   public logSubscribers(): void {
     console.log("%c[ForesightManager] Current Subscribers:", "font-weight: bold; color: #3b82f6;")
 
-    const eventTypes = Object.keys(this.eventListeners) as ForesightEventType[]
+    const eventTypes = Array.from(this.eventListeners.keys())
 
     if (eventTypes.length === 0) {
       console.log("  No active subscribers.")
@@ -190,7 +186,7 @@ export class ForesightManager {
     }
 
     eventTypes.forEach((eventType) => {
-      const listeners = this.eventListeners[eventType]
+      const listeners = this.eventListeners.get(eventType)
 
       if (listeners && listeners.length > 0) {
         // Use groupCollapsed so the log isn't too noisy by default.
@@ -211,7 +207,7 @@ export class ForesightManager {
   }
 
   private emit<K extends ForesightEventType>(event: { type: K } & ForesightEventMap[K]): void {
-    const listeners = this.eventListeners[event.type]
+    const listeners = this.eventListeners.get(event.type)
     if (listeners) {
       listeners.forEach((listener) => {
         try {
@@ -247,7 +243,6 @@ export class ForesightManager {
     element,
     callback,
     hitSlop,
-    unregisterOnCallback,
     name,
   }: ForesightRegisterOptions): ForesightRegisterResult {
     const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
@@ -301,7 +296,6 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? element.id ?? "",
-      unregisterOnCallback: unregisterOnCallback ?? true,
       isIntersectingWithViewport: true,
     }
 
@@ -325,20 +319,11 @@ export class ForesightManager {
   }
 
   private unregister(element: ForesightElement, unregisterReason: ElementUnregisteredReason) {
-    const isRegistered = this.elements.has(element)
-    if (!isRegistered) {
-      // The element is already unregistered by something else (e.g. after hitting callback)
+    if (!this.elements.has(element)) {
       return
     }
+
     const foresightElementData = this.elements.get(element)
-
-    // Clear any pending trajectory expiration timeout
-    if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-      clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-    }
-
-    this.positionObserver?.unobserve(element)
-    this.elements.delete(element)
 
     if (foresightElementData) {
       this.emit({
@@ -348,6 +333,14 @@ export class ForesightManager {
         unregisterReason: unregisterReason,
       })
     }
+
+    // Clear any pending trajectory expiration timeout
+    if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
+
+    this.positionObserver?.unobserve(element)
+    this.elements.delete(element)
 
     if (this.elements.size === 0 && this.isSetup) {
       this.removeGlobalListeners()
@@ -422,12 +415,6 @@ export class ForesightManager {
       MIN_TAB_OFFSET,
       MAX_TAB_OFFSET
     )
-
-    if (props?.resizeScrollThrottleDelay !== undefined) {
-      console.warn(
-        "resizeScrollThrottleDelay is deprecated and will be removed in V3.0.0 of ForesightJS"
-      )
-    }
 
     const mousePredictionChanged = this.updateBooleanSetting(
       props?.enableMousePrediction,
@@ -510,7 +497,7 @@ export class ForesightManager {
    * @param elementData - The data object for the foresight element.
    * @param element - The HTML element being interacted with.
    */
-  private handleSingleCallbackInteraction(elementData: ForesightElementData) {
+  private handleCallbackInteraction(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
 
     // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
@@ -538,7 +525,7 @@ export class ForesightManager {
         return
       }
 
-      this.handleSingleCallbackInteraction(currentData)
+      this.handleCallbackInteraction(currentData)
     })
 
     this.emit({
@@ -656,10 +643,15 @@ export class ForesightManager {
       this.updateHitCounters(elementData, hitType)
       elementData.callback()
       this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
-      // Do everything and then unregister. Always keep this at the end of the function
-      if (elementData.unregisterOnCallback) {
-        this.unregister(elementData.element, "callbackHit")
-      }
+
+      this.emit({
+        type: "callbackFired",
+        timestamp: Date.now(),
+        elementData: elementData,
+        hitType: hitType,
+      })
+
+      this.unregister(elementData.element, "callbackHit")
     }
   }
 
@@ -682,7 +674,6 @@ export class ForesightManager {
       }
       this.elements.set(elementData.element, updatedElementData)
 
-      // --- ADDED: Emit the update event ---
       this.emit({
         type: "elementUpdated",
         timestamp: Date.now(),
@@ -702,7 +693,6 @@ export class ForesightManager {
     }
     this.elements.set(elementData.element, updatedElementData)
 
-    // --- ADDED: Emit the update event ---
     this.emit({
       type: "elementUpdated",
       timestamp: Date.now(),
@@ -797,7 +787,7 @@ export class ForesightManager {
 
     this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
-    document.addEventListener("mousemove", this.handleMouseMove, { signal })
+    document.addEventListener("mousemove", this.handleMouseMove) // Dont add signal we still need to emit events even without elements
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
 

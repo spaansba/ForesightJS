@@ -9,6 +9,7 @@ import {
 import { ForesightManager } from "../Manager/ForesightManager"
 import { shouldUpdateSetting } from "../Manager/helpers/shouldUpdateSetting"
 import type {
+  CallbackFiredEvent,
   DebuggerSettings,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
@@ -81,12 +82,13 @@ export class ForesightDebugger {
     }
 
     const instance = ForesightDebugger.debuggerInstance
+    instance.subscribeToManagerEvents()
+    instance.alterDebuggerSettings(props)
 
+    // Always call at the end of the initialize function
     if (!instance.shadowHost) {
       instance._setupDOM()
     }
-    instance.subscribeToManagerEvents()
-    instance.alterDebuggerSettings(props)
     return instance
   }
 
@@ -199,6 +201,8 @@ export class ForesightDebugger {
       signal,
     })
     manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
+
+    manager.addEventListener("callbackFired", this.handleCallbackFired, { signal })
   }
 
   private handleElementUpdated = (e: ElementUpdatedEvent) => {
@@ -215,11 +219,12 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   private handleRemoveElement = (e: ElementUnregisteredEvent) => {
-    if (e.unregisterReason === "callbackHit") {
-      this.showCallbackAnimation(e.elementData)
-    }
     this.controlPanel?.removeElementFromList(e.elementData)
     this.removeElementOverlay(e.elementData)
+  }
+
+  private handleCallbackFired = (e: CallbackFiredEvent) => {
+    this.showCallbackAnimation(e.elementData)
   }
 
   private handleElementVisibilityChanged = (e: ElementVisibilityChangedEvent) => {
@@ -418,6 +423,9 @@ const debuggerCSS = /* css */ `
         top: 0;
         left: 0;
         will-change: transform; 
+      }
+      .jsforesight-trajectory-line{
+        display: none;
       }
       .jsforesight-expanded-overlay {
         border: 1px dashed rgba(100, 116, 139, 0.4);

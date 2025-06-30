@@ -124,9 +124,7 @@ export type ForesightRegisterResult = {
 /**
  * Represents the data associated with a registered foresight element.
  */
-export type ForesightElementData = Required<
-  Pick<ForesightRegisterOptions, "callback" | "unregisterOnCallback" | "name">
-> & {
+export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "callback" | "name">> & {
   /** The boundary information for the element. */
   elementBounds: ElementBounds
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
@@ -140,7 +138,7 @@ export type ForesightElementData = Required<
    */
   isIntersectingWithViewport: boolean
   /**
-   * Amount of times this callback has been hit, will be 0/1 if unregisterOnCallback is true
+   * Amount of times this callback has been hit
    */
   callbackHits: CallbackHits
   /**
@@ -254,11 +252,6 @@ type BaseForesightManagerSettings = {
   tabOffset: number
 
   /**
-   * @deprecated This property will be removed in v3.0.0. Use automatic optimization instead.
-   */
-  resizeScrollThrottleDelay: number
-
-  /**
    * A global callback that runs whenever a callback is fired for any
    * registered element, just after the element's specific callback is fired.
    *
@@ -291,6 +284,9 @@ export type ForesightRegisterOptions = {
   element: ForesightElement
   callback: ForesightCallback
   hitSlop?: HitSlop
+  /**
+   * @deprecated will be removed in V4.0
+   */
   unregisterOnCallback?: boolean
   name?: string
 }

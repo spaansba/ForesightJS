@@ -6,23 +6,20 @@ import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
 import { ForesightManager } from "../../../src/Manager/ForesightManager"
 import { useEffect } from "react"
-import type { ElementUnregisteredEvent } from "../../../src/types/types"
-
-// import ForesightButtonRegular from "./test-buttons/ForesightButtonRegular"
+import type { CallbackFiredEvent } from "../../../src/types/types"
 
 export const Main = () => {
   const resetKey = useResetKey()
 
   useEffect(() => {
-    const handleCallbackFired = (e: ElementUnregisteredEvent) => {
-      if (e.unregisterReason === "callbackHit") {
-        console.log("✅ Callback Fired!", e.elementData)
-      }
+    const handleCallbackFired = (e: CallbackFiredEvent) => {
+      console.log("✅ Callback Fired!", e)
     }
 
-    ForesightManager.instance.addEventListener("elementUnregistered", handleCallbackFired)
+    ForesightManager.instance.addEventListener("callbackFired", handleCallbackFired)
+
     return () => {
-      ForesightManager.instance.removeEventListener("elementUnregistered", handleCallbackFired)
+      ForesightManager.instance.removeEventListener("callbackFired", handleCallbackFired)
     }
   }, [])
   return (
