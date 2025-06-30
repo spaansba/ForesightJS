@@ -22,14 +22,14 @@ ForesightManager.initialize({
   enableTabPrediction: true,
   tabOffset: 2,
   // onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => {
-  //   // console.log(`Intent predicted for: ${elementData.name}`)
-  //   // console.log(`Total tab hits: ${managerData.globalCallbackHits.tab}`)
-  //   // console.log(`total mouse hits ${managerData.globalCallbackHits.mouse}`)
+  // console.log(`Intent predicted for: ${elementData.name}`)
+  // console.log(`Total tab hits: ${managerData.globalCallbackHits.tab}`)
+  // console.log(`total mouse hits ${managerData.globalCallbackHits.mouse}`)
   // },
 })
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
-  <App />
-  // </StrictMode>
+  <StrictMode>
+    <App />
+  </StrictMode>
 )
