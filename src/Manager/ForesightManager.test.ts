@@ -113,7 +113,6 @@ describe("ForesightManager", () => {
 
       const elementData = manager.registeredElements.get(testElement)
       expect(elementData?.name).toBe("test-element")
-      expect(elementData?.unregisterOnCallback).toBe(true)
     })
 
     it("should handle registration with number hitSlop", () => {
@@ -194,18 +193,6 @@ describe("ForesightManager", () => {
       expect(data.globalSettings.positionHistorySize).toBeGreaterThanOrEqual(2)
     })
 
-    it("should update debugger settings", () => {
-      manager.alterGlobalSettings({
-        debuggerSettings: {
-          showNameTags: true,
-          sortElementList: "documentOrder",
-        },
-      })
-
-      const data = manager.getManagerData
-      expect(data.globalSettings.debuggerSettings.showNameTags).toBe(true)
-      expect(data.globalSettings.debuggerSettings.sortElementList).toBe("documentOrder")
-    })
   })
 
   describe("Mouse Interaction", () => {

@@ -7,9 +7,7 @@ function Mass() {
     <SmallButton key={`${resetKey}-${i}`} name={i} />
   ))
 
-  ForesightManager.instance.alterGlobalSettings({
-    debug: false,
-  })
+  // No debug settings needed - debugger is separate package
 
   return (
     <div>

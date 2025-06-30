@@ -47,11 +47,10 @@ import {
   normalizeHitSlop,
 } from "./helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-
-import { PositionObserver, PositionObserverEntry } from "position-observer"
 import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
 import { getScrollDirection } from "./helpers/getScrollDirection"
 import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
+import { PositionObserver, PositionObserverEntry } from "position-observer"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -675,9 +674,10 @@ export class ForesightManager {
       this.elements.set(elementData.element, updatedElementData)
 
       this.emit({
-        type: "elementUpdated",
+        type: "elementDataUpdated",
         timestamp: Date.now(),
         elementData: updatedElementData,
+        updatedProp: "bounds",
       })
     }
   }
@@ -694,9 +694,10 @@ export class ForesightManager {
     this.elements.set(elementData.element, updatedElementData)
 
     this.emit({
-      type: "elementUpdated",
+      type: "elementDataUpdated",
       timestamp: Date.now(),
       elementData: updatedElementData,
+      updatedProp: "bounds",
     })
   }
 
@@ -764,7 +765,13 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        this.emit({ type: "elementVisibilityChanged", elementData, timestamp: Date.now() })
+        // TODO check if visibility status is changing
+        this.emit({
+          type: "elementDataUpdated",
+          elementData,
+          timestamp: Date.now(),
+          updatedProp: "visibility",
+        })
       }
       if (isNowIntersecting) {
         this.updateElementBounds(entry.boundingClientRect, elementData)

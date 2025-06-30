@@ -2,15 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
-import { ForesightDebugger } from "../../src/Debugger/ForesightDebugger.ts"
-import { ForesightManager } from "../../src/Manager/ForesightManager.ts"
-
-ForesightDebugger.initialize(ForesightManager.instance, {
-  showDebugger: true,
-  showNameTags: true,
-  isControlPanelDefaultMinimized: false,
-  sortElementList: "visibility",
-})
+import { ForesightManager } from "../../src/Manager/ForesightManager"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -30,6 +22,14 @@ ForesightManager.initialize({
   // console.log(`total mouse hits ${managerData.globalCallbackHits.mouse}`)
   // },
 })
+
+// Initialize the debugger with the manager instance
+// ForesightDebugger.initialize(ForesightManager.instance, {
+//   showDebugger: true,
+//   showNameTags: true,
+//   isControlPanelDefaultMinimized: false,
+//   sortElementList: "visibility",
+// })
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

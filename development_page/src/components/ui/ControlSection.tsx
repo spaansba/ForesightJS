@@ -6,7 +6,7 @@ import {
   useIsVisible,
 } from "../../stores/ButtonStateStore"
 import { ForesightManager } from "../../../../src/Manager/ForesightManager"
-import { ForesightDebugger } from "../../../../src/Debugger/ForesightDebugger"
+import { ForesightDebugger } from "@js.foresight/debugger"
 
 type ControlButton = {
   id: string

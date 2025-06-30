@@ -9,4 +9,13 @@ export type {
   ForesightRegisterOptionsWithoutElement,
   ForesightElementData,
   CallbackHits as ForesightCallbackHits,
+  ForesightEvent,
+  ElementRegisteredEvent,
+  ElementUnregisteredEvent,
+  ElementDataUpdatedEvent,
+  CallbackFiredEvent,
+  MouseTrajectoryUpdateEvent,
+  ScrollTrajectoryUpdateEvent,
+  ManagerSettingsChangedEvent,
+  HitSlop,
 } from "./types/types"

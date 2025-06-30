@@ -9,13 +9,13 @@ import type { HitSlop, Rect, Point } from '../../types/types'
 
 describe('normalizeHitSlop', () => {
   it('should normalize number to all sides', () => {
-    const result = normalizeHitSlop(10, false)
+    const result = normalizeHitSlop(10)
     expect(result).toEqual({ top: 10, right: 10, bottom: 10, left: 10 })
   })
 
   it('should return object with clamped values when all properties are defined', () => {
     const hitSlop = { top: 5, right: 10, bottom: 15, left: 20 }
-    const result = normalizeHitSlop(hitSlop, false)
+    const result = normalizeHitSlop(hitSlop)
     expect(result).toEqual(hitSlop)
   })
 
@@ -23,7 +23,7 @@ describe('normalizeHitSlop', () => {
     // Note: The actual behavior depends on MIN_HITSLOP and MAX_HITSLOP constants
     // For now, let's test with valid values and check the structure
     const hitSlop = { top: 5, right: 10, bottom: 15, left: 20 }
-    const result = normalizeHitSlop(hitSlop, false)
+    const result = normalizeHitSlop(hitSlop)
     expect(result).toHaveProperty('top')
     expect(result).toHaveProperty('right')
     expect(result).toHaveProperty('bottom')
@@ -39,7 +39,7 @@ describe('getExpandedRect', () => {
   const baseRect: Rect = { top: 100, left: 100, right: 200, bottom: 200 }
 
   it('should expand rect with uniform hit slop', () => {
-    const hitSlop = normalizeHitSlop(10, false)
+    const hitSlop = normalizeHitSlop(10)
     const result = getExpandedRect(baseRect, hitSlop)
     
     expect(result).toEqual({
@@ -51,7 +51,7 @@ describe('getExpandedRect', () => {
   })
 
   it('should expand rect with different hit slop for each side', () => {
-    const hitSlop = normalizeHitSlop({ top: 5, right: 10, bottom: 15, left: 20 }, false)
+    const hitSlop = normalizeHitSlop({ top: 5, right: 10, bottom: 15, left: 20 })
     const result = getExpandedRect(baseRect, hitSlop)
     
     expect(result).toEqual({
@@ -63,7 +63,7 @@ describe('getExpandedRect', () => {
   })
 
   it('should handle zero hit slop', () => {
-    const hitSlop = normalizeHitSlop(0, false)
+    const hitSlop = normalizeHitSlop(0)
     const result = getExpandedRect(baseRect, hitSlop)
     
     expect(result).toEqual(baseRect)

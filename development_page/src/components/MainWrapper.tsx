@@ -5,8 +5,8 @@ import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
 import { ForesightManager } from "../../../src/Manager/ForesightManager"
-import { useEffect } from "react"
 import type { CallbackFiredEvent } from "../../../src/types/types"
+import { useEffect } from "react"
 
 export const Main = () => {
   const resetKey = useResetKey()

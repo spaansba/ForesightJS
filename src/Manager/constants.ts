@@ -1,5 +1,3 @@
-import type { SortElementList } from "../types/types"
-
 //IMPORTANT: when altering these values change the type jsDocs/actual docs for BaseForesightManagerProps
 export const MIN_TRAJECTORY_PREDICTION_TIME: number = 10
 export const MAX_TRAJECTORY_PREDICTION_TIME: number = 200
@@ -28,7 +26,3 @@ export const SCROLL_MARGIN_UNIT: string = "px"
 export const DEFAULT_ENABLE_TAB_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_MOUSE_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_SCROLL_PREDICTION: boolean = true
-export const DEFAULT_IS_DEBUGGER_MINIMIZED: boolean = false
-export const DEFAULT_SHOW_NAME_TAGS: boolean = true
-export const DEFAULT_SHOW_DEBUGGER: boolean = true
-export const DEFAULT_SORT_ELEMENT_LIST: SortElementList = "visibility"

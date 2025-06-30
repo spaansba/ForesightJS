@@ -1,15 +1,19 @@
 {
   "name": "js.foresight",
-  "version": "2.2.3",
+  "version": "3.0.0",
   "description": "Predicts mouse trajectory to trigger actions as users approach elements, enabling anticipatory UI updates or pre-loading. Made with vanilla javascript and usable in every framework.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build --clean && tsc",
+    "rollup": "rollup -c --bundleConfigAsCjs",
+    "prepublish": "echo 'Skipping prepublish script'",
+    "publish:core": "npm publish",
+    "publish:debugger": "cd packages/debugger && npm publish",
+    "publish:all": "npm run publish:core && npm run publish:debugger",
     "devpage": "cd ./development_page && pnpm dev",
     "installDevPage": "cd ./development_page && pnpm install",
-    "rollup": "rollup -c --bundleConfigAsCjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
@@ -69,7 +73,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@thednp/position-observer": "^1.1.0",
     "position-observer": "^1.0.0",
     "tabbable": "^6.2.0"
   }

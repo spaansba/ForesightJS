@@ -1,9 +1,9 @@
 import { useRef, useEffect, useState } from "react"
+import { ForesightManager } from "../../../src/Manager/ForesightManager"
 import type {
   ForesightRegisterOptionsWithoutElement,
   ForesightRegisterResult,
 } from "../../../src/types/types"
-import { ForesightManager } from "../../../src/Manager/ForesightManager"
 
 export default function useForesight<T extends HTMLElement = HTMLElement>(
   options: ForesightRegisterOptionsWithoutElement

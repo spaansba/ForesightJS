@@ -1,5 +1,3 @@
-import type { PositionObserverEntry } from "position-observer"
-
 export type Rect = {
   top: number
   left: number
@@ -53,50 +51,6 @@ export type ElementBounds = {
   /** The hit slop values applied to this element. */
   hitSlop: Exclude<HitSlop, number>
 }
-
-export type DebuggerSettings = {
-  /**
-   * Whether to show visual debugging information on the screen.
-   * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
-   * @default true
-   */
-  showDebugger: boolean
-
-  /**
-   * Determines if the debugger control panel should be initialized in a minimized state.
-   *
-   * @link https://foresightjs.com/docs/getting_started/debug
-   *
-   * @default false
-   */
-  isControlPanelDefaultMinimized: boolean
-  /**
-   * Determines if name tags should be displayed visually above each registered element.
-   * This is a helpful visual aid for identifying which elements are being tracked.
-   *
-   * @link https://foresightjs.com/docs/getting_started/debug
-   *
-   * @default false
-   */
-  showNameTags: boolean
-  /**
-   * Specifies the default sorting order for the list of registered elements in the debugger panel.
-   * - `'visibility'`: Sorts elements by their viewport visibility (visible elements first),
-   *   with a secondary documentOrder sort.
-   * - `'documentOrder'`: Sorts elements based on their order of appearance in the
-   *   document's structure (matching the HTML source).
-   * - `'insertionOrder'`: Sorts by registration order.
-   *
-   *
-   * @link https://foresightjs.com/docs/getting_started/debug
-   *
-   * @default 'visibility'
-   *
-   */
-  sortElementList: SortElementList
-}
-
-export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
 /**
  * Represents trajectory hit related data for a foresight element.
@@ -179,10 +133,6 @@ export type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-}
-
-export type ForesightDebuggerData = {
-  settings: Readonly<DebuggerSettings>
 }
 
 type BaseForesightManagerSettings = {
@@ -324,27 +274,22 @@ export type ManagerBooleanSettingKeys = {
     : never
 }[keyof UpdateForsightManagerSettings]
 
-export type DebuggerBooleanSettingKeys = {
-  [K in keyof DebuggerSettings]: Required<DebuggerSettings>[K] extends boolean ? K : never
-}[keyof DebuggerSettings]
-
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
   elementRegistered: ElementRegisteredEvent
   elementUnregistered: ElementUnregisteredEvent
-  elementUpdated: ElementUpdatedEvent
+  elementDataUpdated: ElementDataUpdatedEvent
   callbackFired: CallbackFiredEvent
   mouseTrajectoryUpdate: MouseTrajectoryUpdateEvent
   scrollTrajectoryUpdate: ScrollTrajectoryUpdateEvent
   managerSettingsChanged: ManagerSettingsChangedEvent
-  elementVisibilityChanged: ElementVisibilityChangedEvent
 }
 
 // Update ForesightEventType to be the keys of this map for consistency
 export type ForesightEventType = keyof ForesightEventMap
 
 // Define the event data structures
-interface ForesightEvent {
+export interface ForesightEvent {
   type: ForesightEventType
   timestamp: number
 }
@@ -371,9 +316,10 @@ export interface ElementUnregisteredEvent extends ForesightEvent {
  */
 export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCall"
 
-export interface ElementUpdatedEvent extends ForesightEvent {
-  type: "elementUpdated"
+export interface ElementDataUpdatedEvent extends ForesightEvent {
+  type: "elementDataUpdated"
   elementData: ForesightElementData
+  updatedProp: "bounds" | "visibility"
 }
 
 export interface CallbackFiredEvent extends ForesightEvent {
@@ -399,20 +345,14 @@ export interface ManagerSettingsChangedEvent extends ForesightEvent {
   newSettings: ForesightManagerSettings
 }
 
-export interface ElementVisibilityChangedEvent extends ForesightEvent {
-  type: "elementVisibilityChanged"
-  elementData: ForesightElementData
-}
-
 export type ForesightEventData =
   | ElementRegisteredEvent
   | ElementUnregisteredEvent
-  | ElementUpdatedEvent
+  | ElementDataUpdatedEvent
   | CallbackFiredEvent
   | MouseTrajectoryUpdateEvent
   | ScrollTrajectoryUpdateEvent
   | ManagerSettingsChangedEvent
-  | ElementVisibilityChangedEvent
 
 // Event listener type
 export type ForesightEventListener = (event: ForesightEventData) => void
