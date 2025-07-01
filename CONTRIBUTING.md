@@ -50,21 +50,21 @@ cd ForesightJS
 
 **2. Install dependencies**
 
+This project uses a monorepo structure with multiple packages. Install dependencies from the root:
+
 ```bash
-# Install main project dependencies
+# Install all workspace dependencies
 pnpm install
 ```
 
-**3. Start developing with the development_page**
+**3. Start developing with the development page**
 
 ```bash
-# Install development_page dependencies
-pnpm installDevPage
-# run dev project
-pnpm devpage
+# Start the development page from the monorepo root
+pnpm dev
 ```
 
-This opens the [development_page](/development_page) which directly imports everything from [src](/src/), meaning any changes you make to the `ForesightManager` or other source files are immediately reflected without needing to rebuild.
+The development page directly imports from the core library source code (`packages/js.foresight/src/`), meaning any changes you make to the `ForesightManager` or other source files are immediately reflected without needing to rebuild.
 
 **4. Make your changes**
 
