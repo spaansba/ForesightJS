@@ -1,0 +1,9 @@
+node_modules
+src
+tsconfig.json
+.gitignore
+development_page
+docs
+static
+
+

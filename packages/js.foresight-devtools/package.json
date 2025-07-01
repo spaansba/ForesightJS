@@ -1,0 +1,66 @@
+{
+  "name": "js.foresight-devtools",
+  "version": "0.0.1",
+  "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
+  "scripts": {
+    "build": "tsc --build --clean && tsc",
+    "rollup": "rollup -c --bundleConfigAsCjs",
+    "dev": "rollup -c --watch --bundleConfigAsCjs",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:run": "vitest run"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ForesightJS/devtools"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "foresight",
+    "debugger",
+    "mouse-trajectory",
+    "visualization",
+    "debug-tools",
+    "development",
+    "foresightjs",
+    "devtools"
+  ],
+  "author": "Bart Spaans",
+  "license": "MIT",
+  "peerDependencies": {
+    "js.foresight": "^3.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.15.30",
+    "rollup": "^4.42.0",
+    "rollup-plugin-dts": "^6.2.1",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@thednp/position-observer": "^1.1.0"
+  }
+}
