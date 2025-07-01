@@ -1,5 +1,10 @@
 import PositionObserver from "@thednp/position-observer"
-import type { DebuggerSettings, ForesightDebuggerData } from "../types"
+import type {
+  callbackAnimation,
+  DebuggerSettings,
+  ElementOverlays,
+  ForesightDebuggerData,
+} from "../types"
 import { DebuggerControlPanel } from "./DebuggerControlPanel"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
@@ -25,16 +30,6 @@ import {
 import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationConditions"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
-export type ElementOverlays = {
-  expandedOverlay: HTMLElement
-  nameLabel: HTMLElement
-}
-
-type callbackAnimation = {
-  hitSlop: Exclude<HitSlop, number>
-  overlay: HTMLElement
-  timeoutId: ReturnType<typeof setTimeout>
-}
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
   private callbackAnimations: Map<Element, callbackAnimation> = new Map()

@@ -1,3 +1,5 @@
+import type { HitSlop } from "js.foresight"
+
 export type DebuggerSettings = {
   /**
    * Whether to show visual debugging information on the screen.
@@ -49,3 +51,14 @@ export type ForesightDebuggerData = {
 export type DebuggerBooleanSettingKeys = {
   [K in keyof DebuggerSettings]: Required<DebuggerSettings>[K] extends boolean ? K : never
 }[keyof DebuggerSettings]
+
+export type ElementOverlays = {
+  expandedOverlay: HTMLElement
+  nameLabel: HTMLElement
+}
+
+export type callbackAnimation = {
+  hitSlop: Exclude<HitSlop, number>
+  overlay: HTMLElement
+  timeoutId: ReturnType<typeof setTimeout>
+}
