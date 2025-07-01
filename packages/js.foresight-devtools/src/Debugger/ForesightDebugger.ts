@@ -16,7 +16,6 @@ import type {
   ForesightElement,
   ForesightElementData,
   ForesightManager,
-  HitSlop,
   ManagerSettingsChangedEvent,
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
@@ -287,7 +286,7 @@ export class ForesightDebugger {
   }
 
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
-    this.controlPanel?.updateControlsState(e.newSettings, this._debuggerSettings)
+    this.controlPanel?.updateControlsState(e.managerData.globalSettings, this._debuggerSettings)
   }
 
   private createElementOverlays(elementData: ForesightElementData) {

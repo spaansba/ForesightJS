@@ -44,7 +44,7 @@
   "author": "Bart Spaans",
   "license": "MIT",
   "peerDependencies": {
-    "js.foresight": "^3.0.0"
+    "js.foresight": "^3.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.3",

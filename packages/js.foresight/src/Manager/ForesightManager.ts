@@ -263,27 +263,10 @@ export class ForesightManager {
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop)
       : this._globalSettings.defaultHitSlop
-    // const elementRect = element.getBoundingClientRect()
+
     const elementData: ForesightElementData = {
       element: element,
       callback,
-      callbackHits: {
-        mouse: {
-          hover: 0,
-          trajectory: 0,
-        },
-        tab: {
-          forwards: 0,
-          reverse: 0,
-        },
-        scroll: {
-          down: 0,
-          left: 0,
-          right: 0,
-          up: 0,
-        },
-        total: 0,
-      },
       elementBounds: {
         originalRect: undefined,
         expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
@@ -458,7 +441,7 @@ export class ForesightManager {
       this.emit({
         type: "managerSettingsChanged",
         timestamp: Date.now(),
-        newSettings: this._globalSettings,
+        managerData: this.getManagerData,
       })
     }
   }
@@ -621,19 +604,15 @@ export class ForesightManager {
   private updateHitCounters(elementData: ForesightElementData, hitType: HitType) {
     switch (hitType.kind) {
       case "mouse":
-        elementData.callbackHits.mouse[hitType.subType]++
         this._globalCallbackHits.mouse[hitType.subType]++
         break
       case "tab":
-        elementData.callbackHits.tab[hitType.subType]++
         this._globalCallbackHits.tab[hitType.subType]++
         break
       case "scroll":
-        elementData.callbackHits.scroll[hitType.subType]++
         this._globalCallbackHits.scroll[hitType.subType]++
         break
     }
-    elementData.callbackHits.total++
     this._globalCallbackHits.total++
   }
 
@@ -648,6 +627,7 @@ export class ForesightManager {
         timestamp: Date.now(),
         elementData: elementData,
         hitType: hitType,
+        managerData: this.getManagerData,
       })
 
       this.unregister(elementData.element, "callbackHit")

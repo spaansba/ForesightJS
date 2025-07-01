@@ -92,10 +92,6 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    */
   isIntersectingWithViewport: boolean
   /**
-   * Amount of times this callback has been hit
-   */
-  callbackHits: CallbackHits
-  /**
    * The element you registered
    */
   element: ForesightElement
@@ -331,6 +327,7 @@ export interface CallbackFiredEvent extends ForesightEvent {
   type: "callbackFired"
   elementData: ForesightElementData
   hitType: HitType
+  managerData: ForesightManagerData
 }
 
 export interface MouseTrajectoryUpdateEvent extends ForesightEvent {
@@ -347,7 +344,7 @@ export interface ScrollTrajectoryUpdateEvent extends ForesightEvent {
 
 export interface ManagerSettingsChangedEvent extends ForesightEvent {
   type: "managerSettingsChanged"
-  newSettings: ForesightManagerSettings
+  managerData: ForesightManagerData
 }
 
 export type ForesightEventData =

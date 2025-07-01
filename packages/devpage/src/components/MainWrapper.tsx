@@ -4,8 +4,7 @@ import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
-import { ForesightManager } from "js.foresight"
-import type { CallbackFiredEvent } from "../../../src/types/types"
+import { ForesightManager, type CallbackFiredEvent } from "js.foresight"
 import { useEffect } from "react"
 
 export const Main = () => {

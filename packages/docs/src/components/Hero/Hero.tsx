@@ -44,7 +44,8 @@ export function Hero() {
   })
 
   ForesightDebugger.initialize(ForesightManager.instance, {
-    showNameTags: true,
+    showNameTags: false,
+    isControlPanelDefaultMinimized: true,
   })
 
   const turnOffDebugMode = () => {

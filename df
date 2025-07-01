@@ -1,0 +1,433 @@
+* [35me41270b [37m Bart Spaans 39 minutes ago[m [1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m
+[31m|[m added missing types
+[31m|[m 
+* [35m386a256 [37m Bart Spaans 40 minutes ago[m 
+[31m|[m added missing helper functions and constant file
+[31m|[m 
+* [35m9243d77 [37m Bart Spaans 45 minutes ago[m 
+[31m|[m removed sort from ElementRegisteredEvent
+[31m|[m 
+* [35me1e7c40 [37m Bart Spaans 69 minutes ago[m 
+[31m|[m changed build process
+[31m|[m 
+* [35md46b0f6 [37m Bart Spaans 80 minutes ago[m 
+[31m|[m deleted wrangler file in docs
+[31m|[m 
+* [35mc570415 [37m Bart Spaans 2 hours ago[m 
+[31m|[m packages readme
+[31m|[m 
+* [35m347c930 [37m Bart Spaans 2 hours ago[m 
+[31m|[m added test script
+[31m|[m 
+* [35m9bd7eb4 [37m Bart Spaans 2 hours ago[m 
+[31m|[m fixed ts.config in docs
+[31m|[m 
+* [35m9db0079 [37m Bart Spaans 2 hours ago[m 
+[31m|[m extended js.config files
+[31m|[m 
+* [35me95ad8c [37m Bart Spaans 2 hours ago[m 
+[31m|[m added docs to monorepo
+[31m|[m 
+* [35me0efdea [37m Bart Spaans 2 hours ago[m 
+[31m|[m fixed bug where debugger didnt get initialized
+[31m|[m 
+* [35m7dd901e [37m Bart Spaans 2 hours ago[m 
+[31m|[m added base tsconfig and prettier file
+[31m|[m 
+* [35m3b0322c [37m Bart Spaans 2 hours ago[m 
+[31m|[m added devtools to monorepo
+[31m|[m 
+* [35meee743e [37m Bart Spaans 2 hours ago[m 
+[31m|[m altered readme and contribution guide to mention new workspace
+[31m|[m 
+* [35m68dac90 [37m Bart Spaans 3 hours ago[m 
+[31m|[m changed to monorepo
+[31m|[m 
+* [35me8f576a [37m Bart Spaans 3 hours ago[m 
+[31m|[m added devtools to monorepo
+[31m|[m 
+* [35m40b97a8 [37m Bart Spaans 13 hours ago[m 
+[31m|[m upped docs to v3.0
+[31m|[m 
+* [35ma0b3340 [37m Bart Spaans 14 hours ago[m 
+[31m|[m added deprecated message to debug
+[31m|[m 
+* [35m00f94f8 [37m Bart Spaans 14 hours ago[m 
+[31m|[m updated docs to 3.0
+[31m|[m 
+* [35m609ee59 [37m Bart Spaans 15 hours ago[m 
+[31m|[m bumped to v3
+[31m|[m 
+* [35m953fa6a [37m Bart Spaans 22 hours ago[m 
+[31m|[m removed hit behaviour hover text in control panel
+[31m|[m 
+* [35mee36518 [37m Bart Spaans 22 hours ago[m 
+[31m|[m fixed issue where mouse trajectory showed up on refresh in top left corner
+[31m|[m 
+* [35mfcd743b [37m Bart Spaans 22 hours ago[m 
+[31m|[m second iteration of decoupling the debugger
+[31m|[m 
+* [35mdf77a31 [37m Bart Spaans 24 hours ago[m 
+[31m|[m first iteration of decoupling the debugger
+[31m|[m 
+* [35mb8b39d6 [37m Bart Spaans 26 hours ago[m 
+[31m|[m removed empty file
+[31m|[m 
+* [35m7d7d347 [37m Bart Spaans 26 hours ago[m 
+[31m|[m removed unused gif
+[31m|[m 
+* [35m02f251a [37m Bart Spaans 27 hours ago[m 
+[31m|[m added custom icon
+[31m|[m 
+* [35m2d8f72d [37m Bart Spaans 7 days ago[m 
+[31m|[m fixed navbar on mobile for docs
+[31m|[m   
+*   [35m7e336c7 [37m Bart Spaans 7 days ago[m 
+[32m|[m[33m\[m  Merge branch 'main' of https://github.com/spaansba/ForesightJS
+[32m|[m [33m|[m 
+[32m|[m * [35m1e09f0c [37m Bart Spaans 7 days ago[m 
+[32m|[m [33m|[m Update README.md
+[32m|[m [33m|[m 
+* [33m|[m [35m86df52c [37m Bart Spaans 7 days ago[m 
+[33m|[m[33m/[m  added #playground to demo button
+[33m|[m 
+* [35m3f3c8f9 [37m Bart Spaans 7 days ago[m 
+[33m|[m fixed routing in docs
+[33m|[m 
+* [35m00ab7a9 [37m Bart Spaans 7 days ago[m 
+[33m|[m removed links in homepage
+[33m|[m 
+* [35mab3aaf8 [37m Bart Spaans 7 days ago[m [1;33mtag: [m[1;33mV2.2.3[m
+[33m|[m bumped version to v2.2.3
+[33m|[m 
+* [35m05dd01c [37m Bart Spaans 7 days ago[m 
+[33m|[m removed button from hero section
+[33m|[m 
+* [35mf6731ad [37m Bart Spaans 7 days ago[m 
+[33m|[m altered dark theme
+[33m|[m 
+* [35m3c13508 [37m Bart Spaans 7 days ago[m 
+[33m|[m added tests
+[33m|[m 
+* [35m6c87e02 [37m Bart Spaans 7 days ago[m 
+[33m|[m added element visibility to minimized debugger control panel
+[33m|[m 
+* [35ma4f8b31 [37m Bart Spaans 7 days ago[m 
+[33m|[m made visualization of mouse and scroll more modern
+[33m|[m 
+* [35m9281c2b [37m Bart Spaans 7 days ago[m 
+[33m|[m changed background in docs
+[33m|[m 
+* [35m7d155ce [37m Bart Spaans 7 days ago[m 
+[33m|[m altered docs
+[33m|[m 
+* [35mfc0ac8a [37m Bart Spaans 7 days ago[m 
+[33m|[m new docs
+[33m|[m 
+* [35md63ea2d [37m Bart Spaans 7 days ago[m 
+[33m|[m changed docs redirects
+[33m|[m 
+* [35ma41136c [37m Bart Spaans 7 days ago[m 
+[33m|[m changed redirects
+[33m|[m 
+* [35m66991f7 [37m Bart Spaans 7 days ago[m 
+[33m|[m added comment tagged template support to debugger
+[33m|[m 
+* [35mc22a941 [37m Bart Spaans 7 days ago[m 
+[33m|[m fixed routing
+[33m|[m 
+* [35m0bf0e0a [37m Bart Spaans 7 days ago[m 
+[33m|[m removed vue for now from 2.2 docs
+[33m|[m 
+* [35mdb0b152 [37m Bart Spaans 7 days ago[m 
+[33m|[m updated behind the scenes
+[33m|[m 
+* [35m014fac2 [37m Bart Spaans 8 days ago[m [1;33mtag: [m[1;33mV2.2.2[m
+[33m|[m bumped to 2.2.2
+[33m|[m 
+* [35m84a40c7 [37m Bart Spaans 8 days ago[m 
+[33m|[m bumped to V2.2.1
+[33m|[m 
+* [35mba84858 [37m Bart Spaans 8 days ago[m 
+[33m|[m fixed useForesight hook in docs
+[33m|[m 
+* [35ma88a86d [37m Bart Spaans 8 days ago[m 
+[33m|[m fixed routing in docs v2
+[33m|[m 
+* [35mf1385ad [37m Bart Spaans 8 days ago[m 
+[33m|[m fixed routing issues in docs
+[33m|[m 
+* [35md34cca5 [37m Bart Spaans 8 days ago[m 
+[33m|[m spelling error in readme
+[33m|[m 
+* [35m01ee281 [37m Bart Spaans 8 days ago[m 
+[33m|[m changed docs to 2.2 v2
+[33m|[m 
+* [35m5a5abca [37m Bart Spaans 8 days ago[m 
+[33m|[m reworked docs
+[33m|[m 
+* [35m6ac293b [37m Bart Spaans 8 days ago[m 
+[33m|[m added slow connection and touch device to docs
+[33m|[m 
+* [35m93d314b [37m Bart Spaans 8 days ago[m 
+[33m|[m added typescript types to config
+[33m|[m 
+* [35m1f553f8 [37m Bart Spaans 8 days ago[m 
+[33m|[m altered config in docs with isLimitedConnection and isRegistered
+[33m|[m 
+* [35m862b867 [37m Bart Spaans 8 days ago[m 
+[33m|[m added new foresighthook and isregistered option
+[33m|[m 
+* [35m71ab744 [37m Bart Spaans 8 days ago[m 
+[33m|[m changed integrations
+[33m|[m 
+* [35m3c78b8e [37m Bart Spaans 8 days ago[m 
+[33m|[m updated_gitignore
+[33m|[m 
+* [35m99cfaf0 [37m Bart Spaans 3 weeks ago[m [1;33mtag: [m[1;33mV2.2[m
+[33m|[m added enableScrollPrediction and scrollMargin to docs
+[33m|[m 
+* [35mc16d153 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m bumped docs to v2.2
+[33m|[m 
+* [35m5d63f26 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m bumped docusaurus version
+[33m|[m 
+* [35m2e62ff4 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m bumped to 2.2.0
+[33m|[m 
+* [35mbed0c1c [37m Bart Spaans 3 weeks ago[m 
+[33m|[m bumped doc version
+[33m|[m 
+* [35mbb7fd8e [37m Bart Spaans 3 weeks ago[m 
+[33m|[m removed unused css
+[33m|[m 
+* [35ma4b8283 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m created sort methods for element list
+[33m|[m 
+* [35ma9992b3 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added debugger visibility update
+[33m|[m 
+* [35m6fddef6 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m testing out shopify PO
+[33m|[m 
+* [35md39393a [37m Bart Spaans 3 weeks ago[m [1;32mtab-performance[m
+[33m|[m optimized tab
+[33m|[m 
+* [35m638ba10 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added cache to inFocus
+[33m|[m 
+* [35m680364d [37m Bart Spaans 3 weeks ago[m 
+[33m|[m removed console log
+[33m|[m 
+* [35m6011510 [37m Bart Spaans 3 weeks ago[m [1;31morigin/scroll-predict[m
+[33m|[m reworked scroll prefetch behvaiour
+[33m|[m 
+* [35mb4f7aaf [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added animations to the scroll indicator
+[33m|[m 
+* [35mdb26caa [37m Bart Spaans 3 weeks ago[m 
+[33m|[m first iteration of sticking animations
+[33m|[m 
+* [35mc5b7014 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m first try
+[33m|[m 
+* [35me82dafc [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added better jsdoc for types
+[33m|[m 
+* [35m1b2f0b3 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m bumped min scroll margin from 10 to 30
+[33m|[m 
+* [35m4a44264 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added scroll margin
+[33m|[m 
+* [35m6975cf0 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added scroll to debug controller
+[33m|[m 
+* [35mccecdcf [37m Bart Spaans 3 weeks ago[m 
+[33m|[m put handlescroll in seperate function
+[33m|[m 
+* [35md651873 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m created helper functions for scroll position
+[33m|[m 
+* [35m882cce6 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m fixed scroll flickering and added translate3d instead of normal translate
+[33m|[m 
+* [35m0c255d0 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added more detailed info icons to debug control panel
+[33m|[m 
+* [35m2140512 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added more detailed info icons to debug control panel
+[33m|[m 
+* [35m64fb3d2 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added callback stats for scroll
+[33m|[m 
+* [35mfc1924e [37m Bart Spaans 3 weeks ago[m 
+[33m|[m renamed some elements to make a distinction between mouse and scroll
+[33m|[m 
+* [35m6e075b9 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m added debug overlay for scroll
+[33m|[m 
+* [35m39ca0c2 [37m Bart Spaans 3 weeks ago[m 
+[33m|[m first dirty draft
+[33m|[m   
+*   [35m329e641 [37m Bart Spaans 3 weeks ago[m 
+[34m|[m[35m\[m  Merge branch 'main' of https://github.com/spaansba/ForesightJS
+[34m|[m [35m|[m   
+[34m|[m *   [35m5e73234 [37m Bart Spaans 3 weeks ago[m 
+[34m|[m [36m|[m[1;31m\[m  Merge pull request #5 from thednp/PositionObserverExtended
+[34m|[m [36m|[m [1;31m|[m 
+[34m|[m [36m|[m * [35m1734914 [37m thednp 3 weeks ago[m 
+[34m|[m [36m|[m [1;31m|[m some lint issues ;)
+[34m|[m [36m|[m [1;31m|[m 
+* [36m|[m [1;31m|[m [35mb1b0309 [37m Bart Spaans 3 weeks ago[m 
+[36m|[m[36m/[m [1;31m/[m  updated static properties doc
+[36m|[m [1;31m|[m 
+* [1;31m|[m [35m77c1ef7 [37m Bart Spaans 3 weeks ago[m 
+[1;31m|[m [1;31m|[m bummped version docs
+[1;31m|[m [1;31m|[m 
+* [1;31m|[m [35mdd180d9 [37m Bart Spaans 3 weeks ago[m [1;32mBetterCallbackHitData[m
+[1;31m|[m [1;31m|[m added callback types to hit counter
+[1;31m|[m [1;31m|[m 
+* [1;31m|[m [35m625db21 [37m Bart Spaans 3 weeks ago[m 
+[1;31m|[m [1;31m|[m bumped docs js.foresight version
+[1;31m|[m [1;31m|[m 
+* [1;31m|[m [35m27fa52f [37m Bart Spaans 3 weeks ago[m 
+[1;31m|[m [1;31m|[m bumped version
+[1;31m|[m [1;31m|[m 
+* [1;31m|[m [35m6e40c92 [37m Bart Spaans 3 weeks ago[m 
+[1;31m|[m [1;31m|[m removed console logs
+[1;31m|[m [1;31m|[m   
+* [1;31m|[m   [35m43dcc3a [37m Bart Spaans 3 weeks ago[m 
+[1;32m|[m[1;33m\[m [1;31m\[m  Merge branch 'PositionObserverExtended'
+[1;32m|[m [1;33m|[m [1;31m|[m 
+[1;32m|[m * [1;31m|[m [35mb676545 [37m Bart Spaans 3 weeks ago[m [1;32mPositionObserverExtended[m
+[1;32m|[m [1;31m|[m[1;31m/[m  add getBoundingClientRect back
+[1;32m|[m [1;31m|[m 
+[1;32m|[m * [35mab780bb [37m Bart Spaans 3 weeks ago[m [1;31morigin/PositionObserverExtended[m
+[1;32m|[m [1;33m|[m test
+[1;32m|[m [1;33m|[m 
+[1;32m|[m * [35m03cb738 [37m Bart Spaans 3 weeks ago[m 
+[1;32m|[m [1;33m|[m refactored manager
+[1;32m|[m [1;33m|[m 
+[1;32m|[m * [35mfcc826d [37m Bart Spaans 3 weeks ago[m 
+[1;32m|[m [1;33m|[m po 1.1.0 test
+[1;32m|[m [1;33m|[m 
+[1;32m|[m * [35m423e764 [37m Bart Spaans 3 weeks ago[m 
+[1;32m|[m [1;33m|[m added hack
+[1;32m|[m [1;33m|[m 
+[1;32m|[m * [35m38bdf7b [37m Bart Spaans 3 weeks ago[m 
+[1;32m|[m [1;33m|[m first iteration
+[1;32m|[m [1;33m|[m   
+* [1;33m|[m   [35m1ebeb0e [37m Bart Spaans 3 weeks ago[m 
+[1;33m|[m[1;35m\[m [1;33m\[m  Merge branch 'main' of https://github.com/spaansba/ForesightJS
+[1;33m|[m [1;35m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m   
+[1;33m|[m [1;35m|[m 
+[1;33m|[m * [35m6ad6210 [37m Bart Spaans 3 weeks ago[m 
+[1;33m|[m [1;35m|[m Update README.md
+[1;33m|[m [1;35m|[m 
+* [1;35m|[m [35m43a790f [37m Bart Spaans 3 weeks ago[m 
+[1;35m|[m[1;35m/[m  added 10s main thread dirtier for devpage
+[1;35m|[m 
+* [35m21b3384 [37m Bart Spaans 3 weeks ago[m 
+[1;35m|[m added future of ForesightJS to docs and readme
+[1;35m|[m 
+* [35m757d86c [37m Bart Spaans 3 weeks ago[m 
+[1;35m|[m bug fix with create and append elements
+[1;35m|[m   
+*   [35mf8e14e8 [37m Bart Spaans 3 weeks ago[m 
+[1;36m|[m[31m\[m  changes
+[1;36m|[m [31m|[m 
+[1;36m|[m * [35m2a0f600 [37m Bart Spaans 3 weeks ago[m 
+[1;36m|[m [31m|[m bumped docs version
+[1;36m|[m [31m|[m 
+[1;36m|[m * [35m711c23f [37m Bart Spaans 3 weeks ago[m 
+[1;36m|[m [31m|[m bumped
+[1;36m|[m [31m|[m 
+* [31m|[m [35me24d01f [37m Bart Spaans 3 weeks ago[m 
+[31m|[m [31m|[m bumped docs version
+[31m|[m [31m|[m 
+* [31m|[m [35m5b8ada1 [37m Bart Spaans 3 weeks ago[m [1;33mtag: [m[1;33mV2.1.1[m
+[31m|[m [31m|[m bumped version
+[31m|[m [31m|[m 
+* [31m|[m [35m986dfcc [37m Bart Spaans 3 weeks ago[m 
+[31m|[m [31m|[m made debug elements not clickeable
+[31m|[m [31m|[m 
+* [31m|[m [35m3dffa1d [37m Bart Spaans 3 weeks ago[m 
+[31m|[m[31m/[m  data attribute option for createAndAppendElement
+[31m|[m 
+* [35m4376b9e [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed unneeded linkoverlay from debugger
+[31m|[m 
+* [35mc45df06 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m fixed readme bug
+[31m|[m 
+* [35m0207c8e [37m Bart Spaans 3 weeks ago[m 
+[31m|[m edit static properties page to display 2.1
+[31m|[m 
+* [35mc5d2c35 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m edit debug and config pages to display 2.1
+[31m|[m 
+* [35m2883c8c [37m Bart Spaans 3 weeks ago[m 
+[31m|[m released 2.1 docs
+[31m|[m 
+* [35m6a2985c [37m Bart Spaans 3 weeks ago[m [1;33mtag: [m[1;33mV2.1[m
+[31m|[m pre update push
+[31m|[m 
+* [35m4ccc46f [37m Bart Spaans 3 weeks ago[m 
+[31m|[m changed animation calculation
+[31m|[m 
+* [35me9184ae [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed all constructors from debugmanager and debugcontroller
+[31m|[m 
+* [35m9c113de [37m Bart Spaans 3 weeks ago[m 
+[31m|[m fixed hover check
+[31m|[m 
+* [35m5d7ba45 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed unnececairy hover check in handleSingleCallbackInteraction
+[31m|[m 
+* [35m639ee16 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed resizeScrollThrottleDelay from the copy button in the debug control panel
+[31m|[m 
+* [35maed3272 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m properly place name tag when name tag is off > the element position changes > name tags are turned back on
+[31m|[m 
+* [35m287f975 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m fixed bug where isControlPanelDefaultMinimized wasnt working
+[31m|[m 
+* [35madd70cc [37m Bart Spaans 3 weeks ago[m 
+[31m|[m dont check for intersections if element is not in the viewport
+[31m|[m 
+* [35m3b49344 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m calculate mouse trajectory in debug mode with transform
+[31m|[m 
+* [35m906166b [37m Bart Spaans 3 weeks ago[m 
+[31m|[m added total callback count in type
+[31m|[m 
+* [35mbe88102 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m added element count with callback count inside debugger
+[31m|[m 
+* [35m8696409 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed console logs
+[31m|[m 
+* [35m9d72b39 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m begin rework animation
+[31m|[m 
+* [35m7a713f7 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m first try fix animation sticking to screen in debugmode
+[31m|[m 
+* [35medcc1f3 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m bumped position-observer
+[31m|[m 
+* [35m140be7e [37m Bart Spaans 3 weeks ago[m 
+[31m|[m added fix with positionobserver
+[31m|[m 
+* [35ma75cec7 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m correctly removed observers when there are no registered elements
+[31m|[m 
+* [35mc1b2d0f [37m Bart Spaans 3 weeks ago[m 
+[31m|[m added IntersectionObserver to docs behind the scenes pages
+[31m|[m 
+* [35m6617f05 [37m Bart Spaans 3 weeks ago[m 
+[31m|[m removed page
