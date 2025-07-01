@@ -139,8 +139,7 @@ export class DebuggerControlPanel {
     }
 
     this.shadowRoot = shadowRoot
-    this.isContainerMinimized =
-      debuggerSettings.isControlPanelDefaultMinimized ?? DEFAULT_IS_DEBUGGER_MINIMIZED
+    this.isContainerMinimized = debuggerSettings.isControlPanelDefaultMinimized
     this.controlsContainer = this.createControlContainer()
     this.shadowRoot.appendChild(this.controlsContainer)
 
@@ -153,6 +152,10 @@ export class DebuggerControlPanel {
     this.originalSectionStates()
     this.setupEventListeners()
     this.updateContainerVisibilityState()
+    this.updateControlsState(
+      this.foresightManagerInstance.getManagerData.globalSettings,
+      debuggerSettings
+    )
   }
 
   private static get isInitiated(): boolean {
@@ -238,7 +241,7 @@ export class DebuggerControlPanel {
           this.copyTimeoutId = null
         }, 3000)
       })
-      .catch((err) => {
+      .catch(err => {
         console.error("Foresight Debugger: Could not copy settings to clipboard", err)
       })
   }
@@ -252,7 +255,7 @@ export class DebuggerControlPanel {
     if (!element || !spanElement) {
       return
     }
-    element.addEventListener("input", (e) => {
+    element.addEventListener("input", e => {
       const value = parseInt((e.target as HTMLInputElement).value, 10)
       spanElement.textContent = `${value} ${unit}`
       this.foresightManagerInstance.alterGlobalSettings({
@@ -275,7 +278,7 @@ export class DebuggerControlPanel {
     // the settings object on your instance.
     const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
 
-    element.addEventListener("change", (e) => {
+    element.addEventListener("change", e => {
       const isChecked = (e.target as HTMLInputElement).checked
 
       // The `in` operator checks if the key (e.g., "showOverlay") exists on the
@@ -306,7 +309,7 @@ export class DebuggerControlPanel {
       | "isGeneralSettingsMinimized"
   ) {
     const sectionHeader = section?.querySelector(".debugger-section-header")
-    sectionHeader?.addEventListener("click", (e) => {
+    sectionHeader?.addEventListener("click", e => {
       e.stopPropagation()
       this.toggleMinimizeSection(section, (this[isMinimizedFlagName] = !this[isMinimizedFlagName]))
     })
@@ -345,12 +348,12 @@ export class DebuggerControlPanel {
       "scrollMargin"
     )
 
-    this.sortButton?.addEventListener("click", (e) => {
+    this.sortButton?.addEventListener("click", e => {
       e.stopPropagation()
       this.sortOptionsPopup?.classList.toggle("active")
     })
 
-    this.sortOptionsPopup?.addEventListener("click", (e) => {
+    this.sortOptionsPopup?.addEventListener("click", e => {
       const target = e.target as HTMLElement
       const sortButton = target.closest("[data-sort]") as HTMLElement | null
       if (!sortButton) return
@@ -359,7 +362,6 @@ export class DebuggerControlPanel {
       this.debuggerInstance.alterDebuggerSettings({
         sortElementList: value,
       })
-      console.log("here")
       this.sortAndReorderElements()
       this.updateSortOptionUI(value)
       this.sortOptionsPopup?.classList.remove("active")
@@ -468,7 +470,7 @@ export class DebuggerControlPanel {
 
   // Adds a tick before the choosen sort option
   private updateSortOptionUI(currentSort: SortElementList) {
-    this.sortOptionsPopup?.querySelectorAll("[data-sort]").forEach((button) => {
+    this.sortOptionsPopup?.querySelectorAll("[data-sort]").forEach(button => {
       const btn = button as HTMLElement
       if (btn.dataset.sort === currentSort) {
         btn.classList.add("active-sort-option")
@@ -492,7 +494,7 @@ export class DebuggerControlPanel {
       this.scrollEnabledCheckbox.checked = managerSettings.enableScrollPrediction
     }
     if (this.showNameTagsCheckbox) {
-      this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags ?? DEFAULT_SHOW_NAME_TAGS
+      this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags
     }
     this.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
     if (this.historySizeSlider && this.historyValueSpan) {
@@ -521,7 +523,7 @@ export class DebuggerControlPanel {
     }
 
     let visibleElementCount = 0
-    elementsMap.forEach((data) => {
+    elementsMap.forEach(data => {
       if (data.isIntersectingWithViewport) {
         visibleElementCount++
       }
@@ -636,7 +638,7 @@ export class DebuggerControlPanel {
     const fragment = document.createDocumentFragment()
 
     if (elementsData.length) {
-      elementsData.forEach((elementData) => {
+      elementsData.forEach(elementData => {
         const listItem = this.elementListItems.get(elementData.element)
         if (listItem) {
           // Appending to the fragment is cheap (it's off-screen)
