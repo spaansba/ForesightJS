@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "pnpm --parallel --filter \"./packages/**\" dev",
     "build": "pnpm --filter js.foresight build",
-    "build:devtools": "pnpm --filter js.foresight-devtools build"
+    "build:devtools": "pnpm --filter js.foresight-devtools build",
+    "docs:start": "pnpm --filter docs start",
+    "docs:build": "pnpm --filter docs build"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
