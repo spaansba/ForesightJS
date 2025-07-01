@@ -1,4 +1,8 @@
-import { ForesightManager } from "js.foresight"
+import PositionObserver from "@thednp/position-observer"
+import type { DebuggerSettings, ForesightDebuggerData } from "../types"
+import { DebuggerControlPanel } from "./DebuggerControlPanel"
+import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
+import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import type {
   CallbackFiredEvent,
   ElementDataUpdatedEvent,
@@ -6,16 +10,12 @@ import type {
   ElementUnregisteredEvent,
   ForesightElement,
   ForesightElementData,
+  ForesightManager,
   HitSlop,
   ManagerSettingsChangedEvent,
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
 } from "js.foresight"
-import PositionObserver from "@thednp/position-observer"
-import type { DebuggerSettings, ForesightDebuggerData } from "../types"
-import { DebuggerControlPanel } from "./DebuggerControlPanel"
-import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
-import { updateElementOverlays } from "./helpers/updateElementOverlays"
 // PositionObserver imported above
 
 // Import constants that should be available from js.foresight

@@ -1,14 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es5",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "noEmit": false,
-    "outDir": "./dist",
+    "outDir": "dist",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true
   },
   "include": ["src"],
-  "exclude": ["dist", "node_modules", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }

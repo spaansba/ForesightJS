@@ -9,7 +9,8 @@
     "docs:build": "pnpm --filter docs build",
     "fsinfo": "node ./scripts/list-packages.js",
     "test": "pnpm --filter \"./packages/**\" test",
-    "test:watch": "pnpm --filter \"./packages/**\" test:watch"
+    "test:watch": "pnpm --filter \"./packages/**\" test:watch",
+    "clean": "rm -r -force node_modules && rm pnpm-lock.yaml"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

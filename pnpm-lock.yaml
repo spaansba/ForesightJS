@@ -197,9 +197,6 @@ importers:
       '@thednp/position-observer':
         specifier: ^1.1.0
         version: 1.1.0
-      js.foresight:
-        specifier: ^3.0.0
-        version: 3.0.0
     devDependencies:
       '@rollup/plugin-commonjs':
         specifier: ^28.0.3
@@ -216,6 +213,9 @@ importers:
       '@types/node':
         specifier: ^22.15.30
         version: 22.15.34
+      js.foresight:
+        specifier: workspace:*
+        version: link:../js.foresight
       rollup:
         specifier: ^4.42.0
         version: 4.44.1
@@ -4264,9 +4264,6 @@ packages:
   js-yaml@4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
-
-  js.foresight@3.0.0:
-    resolution: {integrity: sha512-8ynkh5vKbtzb0M7VDmYF20Xc8+0BbtVCV4gsyOSfljC+ezeO5FY0roKbe35OyT63WTrCxzHRWDTyKg7dCqrSXA==}
 
   jsdom@26.1.0:
     resolution: {integrity: sha512-Cvc9WUhxSMEo4McES3P7oK3QaXldCfNWp7pl2NNeiIFlCoLr3kfq9kb1fxftiwk1FLV7CvpvDfonxtzUDeSOPg==}
@@ -12004,11 +12001,6 @@ snapshots:
   js-yaml@4.1.0:
     dependencies:
       argparse: 2.0.1
-
-  js.foresight@3.0.0:
-    dependencies:
-      position-observer: 1.0.0
-      tabbable: 6.2.0
 
   jsdom@26.1.0:
     dependencies:
