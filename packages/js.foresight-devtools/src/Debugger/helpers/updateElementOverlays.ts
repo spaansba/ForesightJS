@@ -1,5 +1,5 @@
-import type { ElementOverlays } from "../ForesightDebugger"
 import type { ForesightElementData } from "js.foresight"
+import type { ElementOverlays } from "../../types"
 
 export function updateElementOverlays(
   currentOverlays: ElementOverlays,
