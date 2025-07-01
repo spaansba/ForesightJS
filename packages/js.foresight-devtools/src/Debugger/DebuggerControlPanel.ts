@@ -1,4 +1,3 @@
-// DebuggerControlPanel.ts
 import { ForesightManager } from "js.foresight"
 import type {
   ForesightElementData,
@@ -6,47 +5,33 @@ import type {
   ForesightManagerSettings,
   UpdateForsightManagerSettings,
 } from "js.foresight"
-import type { DebuggerSettings, SortElementList, DebuggerBooleanSettingKeys } from "../types"
-
-// Define types that aren't exported from js.foresight but are needed internally
-type NumericSettingKeys = keyof {
-  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends number
-    ? K
-    : never
-}
-
-type ManagerBooleanSettingKeys = keyof {
-  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
-    ? K
-    : never
-}
-
-const DEFAULT_IS_DEBUGGER_MINIMIZED = false
-const DEFAULT_SHOW_NAME_TAGS = true
-const MAX_POSITION_HISTORY_SIZE = 30
-const MAX_SCROLL_MARGIN = 300
-const MAX_TAB_OFFSET = 20
-const MAX_TRAJECTORY_PREDICTION_TIME = 200
-const MIN_POSITION_HISTORY_SIZE = 2
-const MIN_SCROLL_MARGIN = 30
-const MIN_TAB_OFFSET = 0
-const MIN_TRAJECTORY_PREDICTION_TIME = 10
-const POSITION_HISTORY_SIZE_UNIT = "points"
-const SCROLL_MARGIN_UNIT = "px"
-const TAB_OFFSET_UNIT = "tabs"
-const TRAJECTORY_PREDICTION_TIME_UNIT = "ms"
+import type {
+  DebuggerSettings,
+  SortElementList,
+  DebuggerBooleanSettingKeys,
+  ManagerBooleanSettingKeys,
+  NumericSettingKeys,
+  SectionStates,
+} from "../types"
 
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import { createAndAppendStyle } from "./helpers/createAndAppend"
 import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
 import type { ForesightDebugger } from "./ForesightDebugger"
-
-type SectionStates = {
-  mouse: boolean
-  keyboard: boolean
-  scroll: boolean
-  general: boolean
-}
+import {
+  MIN_POSITION_HISTORY_SIZE,
+  MAX_POSITION_HISTORY_SIZE,
+  MIN_TRAJECTORY_PREDICTION_TIME,
+  MAX_TRAJECTORY_PREDICTION_TIME,
+  MIN_TAB_OFFSET,
+  MAX_TAB_OFFSET,
+  MIN_SCROLL_MARGIN,
+  MAX_SCROLL_MARGIN,
+  POSITION_HISTORY_SIZE_UNIT,
+  SCROLL_MARGIN_UNIT,
+  TAB_OFFSET_UNIT,
+  TRAJECTORY_PREDICTION_TIME_UNIT,
+} from "./constants"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`

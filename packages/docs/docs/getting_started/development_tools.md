@@ -5,6 +5,7 @@ keywords:
   - JS.Foresight
   - ForesightDebugger
   - Debug Controller
+  - js.foresight-debugger
   - mouse prediction
   - tab prediction
   - Debugger
