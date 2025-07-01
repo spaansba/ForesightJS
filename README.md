@@ -94,7 +94,7 @@ ForesightJS can be used bare-bones but also can be configured. For all configura
 
 ## Development Tools
 
-ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution. It's particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) created with [Foresight Events](https://foresightjs.com/docs/getting_started/events) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution. It's particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
 
 ```bash
 npm install js.foresight-devtools
