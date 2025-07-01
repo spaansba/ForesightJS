@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ForesightJS/devtools"
+    "url": "git+https://github.com/spaansba/ForesightJS/tree/main/packages/devpage"
   },
   "files": [
     "dist",

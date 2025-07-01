@@ -26,7 +26,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          editUrl: "https://github.com/spaansba/ForesightJS/tree/main/docs",
+          editUrl: "https://github.com/spaansba/ForesightJS/tree/main/packages/docs",
         },
         // blog: {
         //   showReadingTime: true,
