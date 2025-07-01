@@ -305,9 +305,6 @@ export interface ForesightEvent {
 export interface ElementRegisteredEvent extends ForesightEvent {
   type: "elementRegistered"
   elementData: ForesightElementData
-  isLastElement?: boolean
-  // TODO fix sort
-  sort: boolean
 }
 
 export interface ElementUnregisteredEvent extends ForesightEvent {

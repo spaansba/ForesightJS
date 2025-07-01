@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "scripts": {
-    "build": "tsc --build --clean && tsc",
+    "build": "rollup -c",
     "rollup": "rollup -c --bundleConfigAsCjs",
     "dev": "rollup -c --watch --bundleConfigAsCjs",
     "test": "vitest",

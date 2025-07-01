@@ -185,7 +185,7 @@ export class ForesightManager {
       return
     }
 
-    eventTypes.forEach((eventType) => {
+    eventTypes.forEach(eventType => {
       const listeners = this.eventListeners.get(eventType)
 
       if (listeners && listeners.length > 0) {
@@ -209,7 +209,7 @@ export class ForesightManager {
   private emit<K extends ForesightEventType>(event: { type: K } & ForesightEventMap[K]): void {
     const listeners = this.eventListeners.get(event.type)
     if (listeners) {
-      listeners.forEach((listener) => {
+      listeners.forEach(listener => {
         try {
           listener(event)
         } catch (error) {
@@ -307,7 +307,6 @@ export class ForesightManager {
       type: "elementRegistered",
       timestamp: Date.now(),
       elementData,
-      sort: true,
     })
 
     return {
@@ -520,7 +519,7 @@ export class ForesightManager {
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
 
-    this.elements.forEach((currentData) => {
+    this.elements.forEach(currentData => {
       if (!currentData.isIntersectingWithViewport) {
         return
       }
@@ -611,7 +610,7 @@ export class ForesightManager {
       }
     }
 
-    elementsToPredict.forEach((element) => {
+    elementsToPredict.forEach(element => {
       this.callCallback(this.elements.get(element), {
         kind: "tab",
         subType: isReversed ? "reverse" : "forwards",

@@ -1,4 +1,4 @@
-import { ForesightManager } from 'js.foresight'
+import { ForesightManager } from "js.foresight"
 import type {
   CallbackFiredEvent,
   ElementDataUpdatedEvent,
@@ -10,12 +10,12 @@ import type {
   ManagerSettingsChangedEvent,
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
-} from 'js.foresight'
-import PositionObserver from '@thednp/position-observer'
-import type { DebuggerSettings, ForesightDebuggerData } from '../types'
-import { DebuggerControlPanel } from './DebuggerControlPanel'
-import { createAndAppendElement, createAndAppendStyle } from './helpers/createAndAppend'
-import { updateElementOverlays } from './helpers/updateElementOverlays'
+} from "js.foresight"
+import PositionObserver from "@thednp/position-observer"
+import type { DebuggerSettings, ForesightDebuggerData } from "../types"
+import { DebuggerControlPanel } from "./DebuggerControlPanel"
+import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
+import { updateElementOverlays } from "./helpers/updateElementOverlays"
 // PositionObserver imported above
 
 // Import constants that should be available from js.foresight
@@ -23,7 +23,7 @@ import { updateElementOverlays } from './helpers/updateElementOverlays'
 const DEFAULT_IS_DEBUGGER_MINIMIZED = false
 const DEFAULT_SHOW_DEBUGGER = true
 const DEFAULT_SHOW_NAME_TAGS = true
-const DEFAULT_SORT_ELEMENT_LIST = 'visibility' as const
+const DEFAULT_SORT_ELEMENT_LIST = "visibility" as const
 
 // Helper function that should be available from js.foresight or implemented locally
 function shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): boolean {
@@ -33,7 +33,7 @@ function shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): boole
 // Helper function that should be available from js.foresight or implemented locally
 function evaluateRegistrationConditions(): { shouldRegister: boolean } {
   return {
-    shouldRegister: typeof window !== 'undefined' && !('ontouchstart' in window),
+    shouldRegister: typeof window !== "undefined" && !("ontouchstart" in window),
   }
 }
 
@@ -83,7 +83,7 @@ export class ForesightDebugger {
     foresightManager: ForesightManager,
     props?: Partial<DebuggerSettings>
   ): ForesightDebugger | null {
-    if (typeof window === 'undefined' || !evaluateRegistrationConditions().shouldRegister) {
+    if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
       return null
     }
     if (!ForesightDebugger.isInitiated) {
@@ -104,7 +104,7 @@ export class ForesightDebugger {
   public static get instance(): ForesightDebugger {
     if (!ForesightDebugger.debuggerInstance) {
       throw new Error(
-        'ForesightDebugger has not been initialized. Call ForesightDebugger.initialize() first.'
+        "ForesightDebugger has not been initialized. Call ForesightDebugger.initialize() first."
       )
     }
     return ForesightDebugger.debuggerInstance
@@ -116,21 +116,21 @@ export class ForesightDebugger {
       return
     }
 
-    this.shadowHost = createAndAppendElement('div', document.body, {
-      id: 'jsforesight-debugger-shadow-host',
+    this.shadowHost = createAndAppendElement("div", document.body, {
+      id: "jsforesight-debugger-shadow-host",
     })
-    this.shadowRoot = this.shadowHost.attachShadow({ mode: 'open' })
-    this.debugContainer = createAndAppendElement('div', this.shadowRoot, {
-      id: 'jsforesight-debug-container',
+    this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" })
+    this.debugContainer = createAndAppendElement("div", this.shadowRoot, {
+      id: "jsforesight-debug-container",
     })
-    this.predictedMouseIndicator = createAndAppendElement('div', this.debugContainer, {
-      className: 'jsforesight-mouse-predicted',
+    this.predictedMouseIndicator = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-mouse-predicted",
     })
-    this.mouseTrajectoryLine = createAndAppendElement('div', this.debugContainer, {
-      className: 'jsforesight-trajectory-line',
+    this.mouseTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-trajectory-line",
     })
-    this.scrollTrajectoryLine = createAndAppendElement('div', this.debugContainer, {
-      className: 'jsforesight-scroll-trajectory-line',
+    this.scrollTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-scroll-trajectory-line",
     })
     this.controlPanel = DebuggerControlPanel.initialize(
       this.foresightManagerInstance,
@@ -138,7 +138,7 @@ export class ForesightDebugger {
       this.shadowRoot,
       this._debuggerSettings
     )
-    createAndAppendStyle(debuggerCSS, this.shadowRoot, 'screen-visuals')
+    createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
 
     this.animationPositionObserver = new PositionObserver(this.handleAnimationPositionChange)
   }
@@ -197,26 +197,26 @@ export class ForesightDebugger {
     const signal = this.managerSubscriptionsController.signal
     const manager = this.foresightManagerInstance
 
-    manager.addEventListener('elementRegistered', this.handleAddElement, { signal })
-    manager.addEventListener('elementUnregistered', this.handleRemoveElement, { signal })
-    manager.addEventListener('elementDataUpdated', this.handleElementDataUpdated, { signal })
-    manager.addEventListener('mouseTrajectoryUpdate', this.handleMouseTrajectoryUpdate, {
+    manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
+    manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
+    manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
+    manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, {
       signal,
     })
-    manager.addEventListener('scrollTrajectoryUpdate', this.handleScrollTrajectoryUpdate, {
+    manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
       signal,
     })
-    manager.addEventListener('managerSettingsChanged', this.handleSettingsChanged, { signal })
+    manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
 
-    manager.addEventListener('callbackFired', this.handleCallbackFired, { signal })
+    manager.addEventListener("callbackFired", this.handleCallbackFired, { signal })
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
     switch (e.updatedProp) {
-      case 'bounds':
+      case "bounds":
         this.createOrUpdateElementOverlay(e.elementData)
         break
-      case 'visibility':
+      case "visibility":
         if (!e.elementData.isIntersectingWithViewport) {
           this.removeElementOverlay(e.elementData)
         }
@@ -234,7 +234,7 @@ export class ForesightDebugger {
    *
    * @param element - The ForesightElement to remove from debugging visualization
    */
-  private handleRemoveElement = (e: ElementUnregisteredEvent) => {
+  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
     this.controlPanel?.removeElementFromList(e.elementData)
     this.removeElementOverlay(e.elementData)
   }
@@ -243,9 +243,9 @@ export class ForesightDebugger {
     this.showCallbackAnimation(e.elementData)
   }
 
-  private handleAddElement = (e: ElementRegisteredEvent) => {
+  private handleRegisterElement = (e: ElementRegisteredEvent) => {
     this.createOrUpdateElementOverlay(e.elementData)
-    this.controlPanel.addElementToList(e.elementData, e.sort)
+    this.controlPanel.addElementToList(e.elementData)
   }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
@@ -257,23 +257,23 @@ export class ForesightDebugger {
     }
     //Hide scroll visuals on mouse move
     if (this.scrollTrajectoryLine) {
-      this.scrollTrajectoryLine.style.display = 'none'
+      this.scrollTrajectoryLine.style.display = "none"
     }
     const { predictedPoint, currentPoint } = e.trajectoryPositions
 
     // Use transform for positioning to avoid layout reflow.
     // The CSS handles centering the element with `translate(-50%, -50%)`.
     this.predictedMouseIndicator.style.transform = `translate3d(${predictedPoint.x}px, ${predictedPoint.y}px, 0) translate3d(-50%, -50%, 0)`
-    this.predictedMouseIndicator.style.display = e.predictionEnabled ? 'block' : 'none'
+    this.predictedMouseIndicator.style.display = e.predictionEnabled ? "block" : "none"
 
     // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
     if (predictedPoint.x === 0 && predictedPoint.y === 0) {
-      this.predictedMouseIndicator.style.display = 'none'
+      this.predictedMouseIndicator.style.display = "none"
       return
     }
 
     if (!e.predictionEnabled) {
-      this.mouseTrajectoryLine.style.display = 'none'
+      this.mouseTrajectoryLine.style.display = "none"
       return
     }
 
@@ -287,7 +287,7 @@ export class ForesightDebugger {
     // avoiding reflow from top/left changes.
     this.mouseTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
     this.mouseTrajectoryLine.style.width = `${length}px`
-    this.mouseTrajectoryLine.style.display = 'block'
+    this.mouseTrajectoryLine.style.display = "block"
   }
 
   private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
@@ -300,7 +300,7 @@ export class ForesightDebugger {
 
     this.scrollTrajectoryLine.style.transform = `translate3d(${e.currentPoint.x}px, ${e.currentPoint.y}px, 0) rotate(${angle}deg)`
     this.scrollTrajectoryLine.style.width = `${length}px`
-    this.scrollTrajectoryLine.style.display = 'block'
+    this.scrollTrajectoryLine.style.display = "block"
   }
 
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
@@ -308,12 +308,12 @@ export class ForesightDebugger {
   }
 
   private createElementOverlays(elementData: ForesightElementData) {
-    const expandedOverlay = createAndAppendElement('div', this.debugContainer!, {
-      className: 'jsforesight-expanded-overlay',
+    const expandedOverlay = createAndAppendElement("div", this.debugContainer!, {
+      className: "jsforesight-expanded-overlay",
       data: elementData.name,
     })
-    const nameLabel = createAndAppendElement('div', this.debugContainer, {
-      className: 'jsforesight-name-label',
+    const nameLabel = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-name-label",
     })
     const overlays = { expandedOverlay, nameLabel }
     this.debugElementOverlays.set(elementData.element, overlays)
@@ -369,20 +369,20 @@ export class ForesightDebugger {
       this.callbackAnimations.delete(element)
     }
 
-    const animationOverlay = createAndAppendElement('div', this.debugContainer, {
-      className: 'jsforesight-callback-indicator',
+    const animationOverlay = createAndAppendElement("div", this.debugContainer, {
+      className: "jsforesight-callback-indicator",
     })
 
     const { left, top, right, bottom } = elementBounds.expandedRect
     const width = right - left
     const height = bottom - top
 
-    animationOverlay.style.display = 'block'
+    animationOverlay.style.display = "block"
     animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
     animationOverlay.style.width = `${width}px`
     animationOverlay.style.height = `${height}px`
 
-    animationOverlay.classList.add('animate')
+    animationOverlay.classList.add("animate")
 
     const animationDuration = 500
 

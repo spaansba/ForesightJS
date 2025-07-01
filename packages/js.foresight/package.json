@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "Predicts mouse trajectory to trigger actions as users approach elements, enabling anticipatory UI updates or pre-loading. Made with vanilla javascript and usable in every framework.",
   "scripts": {
-    "build": "tsc --build --clean && tsc",
+    "build": "rollup -c --bundleConfigAsCjs",
     "rollup": "rollup -c --bundleConfigAsCjs",
     "dev": "rollup -c --bundleConfigAsCjs --watch",
     "test": "vitest",
