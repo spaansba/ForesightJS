@@ -17,7 +17,9 @@ last_updated:
 
 # Development Tools
 
-ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) that help you understand and tune how ForesightJS is working in your application. This standalone development package is particularly helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools) that help you understand and tune how ForesightJS is working in your application. This standalone development package is particularly helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
+
+The development tools are built entirely using ForesightJS's [built-in events](/docs/getting_started/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
 ## Installation
 

@@ -104,7 +104,7 @@ ForesightJS can be used bare-bones but also can be configured. For all configura
 
 ## Development Tools
 
-ForesightJS has dedicated [Development Tools](/docs/getting_started/development_tools) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution.
+ForesightJS has dedicated [Development Tools](/docs/getting_started/development_tools) created with [Foresight Events](/docs/getting_started/events) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution.
 
 ```bash
 npm install js.foresight-devtools
@@ -145,16 +145,6 @@ For a detailed technical explanation of its prediction algorithms and internal a
 Since ForesightJS is a relatively new and unknown library, most AI assistants and large language models (LLMs) may not have comprehensive knowledge about it in their training data. To help AI assistants better understand and work with ForesightJS, you can provide them with context from our [llms.txt](https://foresightjs.com/llms.txt) page, which contains structured information about the library's API and usage patterns.
 
 Additionally, every page in our documentation is available in markdown format (try adding .md to any documentation URL). You can share these markdown files as context with AI assistants, though all this information is also consolidated in the llms.txt file for convenience.
-
-## Future of ForesightJS
-
-ForesightJS continues to evolve with a focus on staying as lightweight and performant as possible. The development tools have been decoupled into their own standalone package, reducing the core library size.
-
-Beyond size optimization, performance remains central to every development decision. Each release will focus on improving prediction accuracy while reducing computational overhead, ensuring ForesightJS stays practical for production environments. We also want to move as much processing as possible off the main thread to keep user interfaces responsive.
-
-These performance improvements go hand in hand with expanding accessibility across different development environments. The documentation will grow to include more framework integrations beyond the current Next.js and React Router implementations, making ForesightJS accessible to developers working with different technology stacks and routing solutions.
-
-All of these efforts benefit from community input. [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md) are always welcome, whether for new framework integrations, performance improvements, or feature ideas.
 
 ## Contributing
 
