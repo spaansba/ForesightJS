@@ -16,26 +16,14 @@ import type {
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
 } from "js.foresight"
-// PositionObserver imported above
-
-// Import constants that should be available from js.foresight
-// These constants need to be part of the main package's public API
-const DEFAULT_IS_DEBUGGER_MINIMIZED = false
-const DEFAULT_SHOW_DEBUGGER = true
-const DEFAULT_SHOW_NAME_TAGS = true
-const DEFAULT_SORT_ELEMENT_LIST = "visibility" as const
-
-// Helper function that should be available from js.foresight or implemented locally
-function shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): boolean {
-  return newValue !== undefined && newValue !== currentValue
-}
-
-// Helper function that should be available from js.foresight or implemented locally
-function evaluateRegistrationConditions(): { shouldRegister: boolean } {
-  return {
-    shouldRegister: typeof window !== "undefined" && !("ontouchstart" in window),
-  }
-}
+import {
+  DEFAULT_IS_DEBUGGER_MINIMIZED,
+  DEFAULT_SHOW_DEBUGGER,
+  DEFAULT_SHOW_NAME_TAGS,
+  DEFAULT_SORT_ELEMENT_LIST,
+} from "./constants"
+import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationConditions"
+import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement

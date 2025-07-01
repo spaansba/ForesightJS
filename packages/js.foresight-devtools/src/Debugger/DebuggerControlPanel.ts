@@ -515,6 +515,7 @@ export class DebuggerControlPanel {
     }
   }
 
+  // TODO only refresh it instead of readding
   private refreshRegisteredElementCountDisplay(
     elementsMap: ReadonlyMap<Element, ForesightElementData>
   ) {
@@ -664,7 +665,7 @@ export class DebuggerControlPanel {
     this.elementListItems.set(elementData.element, listItem)
     this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
     if (sort) {
-      this.sortAndReorderElements()
+      // this.sortAndReorderElements()
     }
   }
 
