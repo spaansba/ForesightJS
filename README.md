@@ -26,7 +26,7 @@ You supply the **What** and **How** inside your `callback` when you register an 
 ### [Playground](https://foresightjs.com/)
 
 ![](https://github.com/user-attachments/assets/36c81a82-fee7-43d6-ba1e-c48214136f90)
-_In the GIF above, the [ForesightJS DevTools](https://github.com/spaansba/ForesightJS-DevTools) are enabled. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
+_In the GIF above, the [ForesightJS DevTools](https://foresightjs.com/docs/getting_started/development_tools) are enabled. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
 
 ## Download
 
