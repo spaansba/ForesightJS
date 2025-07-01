@@ -1,5 +1,5 @@
+import { ForesightManager } from "js.foresight"
 import { useEffect, useRef, useState } from "react"
-import { ForesightManager } from "../../../../src/Manager/ForesightManager"
 
 function Mass() {
   const [resetKey, setResetKey] = useState(0)

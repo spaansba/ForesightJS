@@ -1,3 +1,0 @@
-overrides:
-  js.foresight-devtools: link:../../../../../../../AppData/Local/pnpm/global/5/node_modules/js.foresight-devtools
-  js.foresight-debugger: link:../../../../../../../AppData/Local/pnpm/global/5/node_modules/js.foresight-debugger
