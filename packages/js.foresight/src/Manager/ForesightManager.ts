@@ -583,10 +583,13 @@ export class ForesightManager {
     }
 
     elementsToPredict.forEach(element => {
-      this.callCallback(this.elements.get(element), {
-        kind: "tab",
-        subType: isReversed ? "reverse" : "forwards",
-      })
+      const foresightElement = this.elements.get(element)
+      if (foresightElement) {
+        this.callCallback(foresightElement, {
+          kind: "tab",
+          subType: isReversed ? "reverse" : "forwards",
+        })
+      }
     })
   }
 
@@ -605,23 +608,18 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
-  private callCallback(
-    elementData: ForesightElementData | undefined,
-    callbackHitType: CallbackHitType
-  ) {
-    if (elementData) {
-      this.updateHitCounters(callbackHitType)
-      elementData.callback()
-      this.emit({
-        type: "callbackFired",
-        timestamp: Date.now(),
-        elementData: elementData,
-        hitType: callbackHitType,
-        managerData: this.getManagerData,
-      })
+  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
+    this.updateHitCounters(callbackHitType)
+    elementData.callback()
+    this.emit({
+      type: "callbackFired",
+      timestamp: Date.now(),
+      elementData: elementData,
+      hitType: callbackHitType,
+      managerData: this.getManagerData,
+    })
 
-      this.unregister(elementData.element, "callbackHit")
-    }
+    this.unregister(elementData.element, "callbackHit")
   }
 
   /**
