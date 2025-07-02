@@ -790,7 +790,7 @@ export class ForesightManager {
 
     this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
     this.globalListenersController = null
-
+    this.tabbableElementsCache = []
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()

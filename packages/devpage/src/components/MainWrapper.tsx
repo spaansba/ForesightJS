@@ -12,7 +12,7 @@ export const Main = () => {
 
   useEffect(() => {
     const handleCallbackFired = (e: CallbackFiredEvent) => {
-      console.log("✅ Callback Fired!", e)
+      // console.log("✅ Callback Fired!", e)
     }
 
     ForesightManager.instance.addEventListener("callbackFired", handleCallbackFired)
