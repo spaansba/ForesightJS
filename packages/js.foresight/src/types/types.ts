@@ -204,15 +204,6 @@ type BaseForesightManagerSettings = {
    * @default 2
    */
   tabOffset: number
-
-  /**
-   * A global callback that runs whenever a callback is fired for any
-   * registered element, just after the element's specific callback is fired.
-   *
-   * @param elementData - The ForesightTarget object for the element that triggered the event.
-   * @param managerData - Data about the ForesightManager
-   */
-  onAnyCallbackFired: (elementData: ForesightElementData, managerData: ForesightManagerData) => void
 }
 
 /**

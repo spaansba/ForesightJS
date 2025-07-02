@@ -106,10 +106,6 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
-    onAnyCallbackFired: (
-      _elementData: ForesightElementData,
-      _managerData: ForesightManagerData
-    ) => {},
   }
   private trajectoryPositions: TrajectoryPositions = {
     positions: [],
@@ -413,10 +409,6 @@ export class ForesightManager {
       "enableTabPrediction"
     )
 
-    if (props?.onAnyCallbackFired !== undefined) {
-      this._globalSettings.onAnyCallbackFired = props.onAnyCallbackFired
-    }
-
     let hitSlopChanged = false
     if (props?.defaultHitSlop !== undefined) {
       const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
@@ -469,8 +461,6 @@ export class ForesightManager {
   }
 
   /**
-   * Processes elements that unregister after a single callback.
-   *
    * This is a "fire-and-forget" handler. Its only goal is to trigger the
    * callback once. It does so if the mouse trajectory is predicted to hit the
    * element (if prediction is on) OR if the mouse physically hovers over it.
@@ -601,7 +591,7 @@ export class ForesightManager {
     })
   }
 
-  private updateHitCounters(elementData: ForesightElementData, hitType: HitType) {
+  private updateHitCounters(hitType: HitType) {
     switch (hitType.kind) {
       case "mouse":
         this._globalCallbackHits.mouse[hitType.subType]++
@@ -618,10 +608,8 @@ export class ForesightManager {
 
   private callCallback(elementData: ForesightElementData | undefined, hitType: HitType) {
     if (elementData) {
-      this.updateHitCounters(elementData, hitType)
+      this.updateHitCounters(hitType)
       elementData.callback()
-      this._globalSettings.onAnyCallbackFired(elementData, this.getManagerData)
-
       this.emit({
         type: "callbackFired",
         timestamp: Date.now(),

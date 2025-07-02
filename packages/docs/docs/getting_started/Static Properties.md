@@ -86,7 +86,6 @@ The return will look something like this:
     "enableMousePrediction": true,
     "enableScrollPrediction": true,
     "enableTabPrediction": true,
-    "onAnyCallbackFired": "function",
     "positionHistorySize": 10,
     "resizeScrollThrottleDelay": 0,
     "scrollMargin": 150,
