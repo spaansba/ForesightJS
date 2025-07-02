@@ -387,13 +387,13 @@ export class ForesightDebugger {
 
     switch (hitType.kind) {
       case "mouse":
-        animationOverlay.style.borderColor = "oklch(65% 0.22 220)" // Blue
+        animationOverlay.style.borderColor = "#3b82f6" // Blue - matches trajectory line
         break
       case "scroll":
-        animationOverlay.style.borderColor = "oklch(65% 0.22 120)" // Green
+        animationOverlay.style.borderColor = "#22c55e" // Green - matches scroll trajectory line
         break
       case "tab":
-        animationOverlay.style.borderColor = "oklch(65% 0.22 40)" // Orange
+        animationOverlay.style.borderColor = "#f97316" // Orange
         break
     }
 
