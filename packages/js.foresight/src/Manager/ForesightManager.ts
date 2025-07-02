@@ -37,20 +37,20 @@ import {
   MIN_SCROLL_MARGIN,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
-} from "./constants"
-import { clampNumber } from "./helpers/clampNumber"
-import { lineSegmentIntersectsRect } from "./helpers/lineSigmentIntersectsRect"
-import { predictNextMousePosition } from "./helpers/predictNextMousePosition"
+} from "../constants"
+import { clampNumber } from "../helpers/clampNumber"
+import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import {
   areRectsEqual,
   getExpandedRect,
   isPointInRectangle,
   normalizeHitSlop,
-} from "./helpers/rectAndHitSlop"
-import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import { getFocusedElementIndex } from "./helpers/getFocusedElementIndex"
-import { getScrollDirection } from "./helpers/getScrollDirection"
-import { predictNextScrollPosition } from "./helpers/predictNextScrollPosition"
+} from "../helpers/rectAndHitSlop"
+import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
+import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
+import { getScrollDirection } from "../helpers/getScrollDirection"
+import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 
 /**

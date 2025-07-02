@@ -1,4 +1,4 @@
-import type { Rect, ScrollDirection } from "../../types/types"
+import type { Rect, ScrollDirection } from "../types/types"
 
 export function getScrollDirection(oldRect: Rect, newRect: Rect): ScrollDirection {
   const scrollThreshold = 1

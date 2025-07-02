@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { predictNextMousePosition } from "./predictNextMousePosition"
-import type { MousePosition, Point } from "../../types/types"
+import type { MousePosition, Point } from "../types/types"
 
 describe("predictNextMousePosition", () => {
   let history: MousePosition[]
@@ -157,7 +157,7 @@ describe("predictNextMousePosition", () => {
 
     vi.spyOn(performance, "now").mockImplementation(() => times[history.length] || 64)
 
-    points.forEach((point) => {
+    points.forEach(point => {
       predictNextMousePosition(point, history, positionHistorySize, trajectoryPredictionTime)
     })
 

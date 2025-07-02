@@ -1,4 +1,4 @@
-import type { Point, ScrollDirection } from "../../types/types"
+import type { Point, ScrollDirection } from "../types/types"
 
 export function predictNextScrollPosition(
   currentPoint: Point,

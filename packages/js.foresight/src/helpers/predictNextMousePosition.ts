@@ -1,4 +1,4 @@
-import type { MousePosition, Point } from "../../types/types"
+import type { MousePosition, Point } from "../types/types"
 
 /**
  * Predicts the next mouse position based on a history of recent movements.

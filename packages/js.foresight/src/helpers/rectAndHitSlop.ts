@@ -1,4 +1,4 @@
-import type { HitSlop, Point, Rect } from "../../types/types"
+import type { HitSlop, Point, Rect } from "../types/types"
 import { MAX_HITSLOP, MIN_HITSLOP } from "../constants"
 import { clampNumber } from "./clampNumber"
 
