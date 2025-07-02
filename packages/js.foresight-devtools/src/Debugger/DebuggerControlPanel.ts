@@ -501,38 +501,32 @@ export class DebuggerControlPanel {
   }
 
   // TODO only refresh it instead of readding
-  private refreshRegisteredElementCountDisplay(
-    elementsMap: ReadonlyMap<Element, ForesightElementData>
-  ) {
+  private refreshRegisteredElementCountDisplay() {
     if (!this.elementCountSpan || !this.callbackCountSpan) {
       return
     }
+    const { isIntersecting, total: totalElements } =
+      this.debuggerInstance.getDebuggerData.elementCount
 
-    let visibleElementCount = 0
-    elementsMap.forEach(data => {
-      if (data.isIntersectingWithViewport) {
-        visibleElementCount++
-      }
-    })
-    const totalElements = elementsMap.size
     const { tab, mouse, scroll, total } =
       this.foresightManagerInstance.getManagerData.globalCallbackHits
+
     const visibleTitle = [
       "Element Visibility Status",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      `Visible in Viewport: ${visibleElementCount}`,
-      `Not in Viewport: ${totalElements - visibleElementCount}`,
+      `Visible in Viewport: ${isIntersecting}`,
+      `Not in Viewport: ${totalElements - isIntersecting}`,
       `Total Registered Elements: ${totalElements}`,
       "",
       "Note: Only elements visible in the viewport",
       "are actively tracked by intersection observers.",
     ]
     if (this.minimizedElementCount) {
-      this.minimizedElementCount.textContent = `${visibleElementCount}/${totalElements}`
+      this.minimizedElementCount.textContent = `${isIntersecting}/${totalElements}`
       this.minimizedElementCount.title = visibleTitle.join("\n")
     }
 
-    this.elementCountSpan.textContent = `Visible: ${visibleElementCount}/${totalElements} ~ `
+    this.elementCountSpan.textContent = `Visible: ${isIntersecting}/${totalElements} ~ `
     this.elementCountSpan.title = visibleTitle.join("\n")
     this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
@@ -567,9 +561,7 @@ export class DebuggerControlPanel {
     if (listItem) {
       listItem.remove()
       this.elementListItems.delete(elementData.element)
-      const elementsMap = this.foresightManagerInstance.registeredElements
-      this.refreshRegisteredElementCountDisplay(elementsMap)
-
+      this.refreshRegisteredElementCountDisplay()
       if (this.elementListItems.size === 0) {
         this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
       }
@@ -590,7 +582,7 @@ export class DebuggerControlPanel {
       const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
       intersectingElement.textContent = intersectingIcon
     }
-    this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
+    this.refreshRegisteredElementCountDisplay()
     this.sortAndReorderElements()
   }
 
@@ -648,7 +640,7 @@ export class DebuggerControlPanel {
     this.updateListItemContent(listItem, elementData)
     this.elementListItemsContainer!.appendChild(listItem)
     this.elementListItems.set(elementData.element, listItem)
-    this.refreshRegisteredElementCountDisplay(this.foresightManagerInstance.registeredElements)
+    this.refreshRegisteredElementCountDisplay()
     if (sort) {
       // this.sortAndReorderElements()
     }

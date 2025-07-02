@@ -46,6 +46,12 @@ export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
 export type ForesightDebuggerData = {
   settings: Readonly<DebuggerSettings>
+  elementCount: Readonly<ElementCount>
+}
+
+export type ElementCount = {
+  total: number
+  isIntersecting: number
 }
 
 export type DebuggerBooleanSettingKeys = {
