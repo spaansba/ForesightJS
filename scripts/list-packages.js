@@ -1,9 +1,6 @@
-// scripts/list-packages.js
-
 const fs = require("fs")
 const path = require("path")
 
-// Simple color constants for better terminal output
 const colors = {
   reset: "\x1b[0m",
   bright: "\x1b[1m",
@@ -42,13 +39,7 @@ try {
       const fileContent = fs.readFileSync(packageJsonPath, "utf8")
       const packageJson = JSON.parse(fileContent)
 
-      const {
-        name,
-        version,
-        description,
-        private: isPrivate,
-        repository, // Get the repository field
-      } = packageJson
+      const { name, version, description, private: isPrivate, repository } = packageJson
 
       console.log(`${colors.cyan}${colors.bright}${name || "N/A"}${colors.reset}`)
       console.log(`  - ${colors.green}Version:${colors.reset} ${version || "N/A"}`)
@@ -62,13 +53,10 @@ try {
       )
       console.log(`  - ${colors.green}Location:${colors.reset}  ./packages/${folder}`)
 
-      // --- NEW: Logic to find and format the GitHub link ---
       let githubUrl = null
       if (repository) {
-        // Handle both object { "url": "..." } and string "..." formats
         const url = typeof repository === "string" ? repository : repository.url
         if (url) {
-          // Clean up the URL for direct browser access
           githubUrl = url.replace("git+", "").replace(".git", "")
         }
       }
@@ -76,9 +64,8 @@ try {
       if (githubUrl) {
         console.log(`  - ${colors.green}GitHub:${colors.reset}    ${githubUrl}`)
       }
-      // --- End of new section ---
 
-      console.log("") // Add a blank line for spacing
+      console.log("")
     }
   })
 } catch (error) {
