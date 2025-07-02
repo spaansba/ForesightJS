@@ -19,7 +19,7 @@ The ForesightManager exposes several static properties for accessing and checkin
 
 **_All properties are read-only_**
 
-## `ForesightManager.instance`
+## ForesightManager.instance
 
 Gets the singleton instance of ForesightManager, initializing it if necessary. This is the primary way to access the manager throughout your application.
 

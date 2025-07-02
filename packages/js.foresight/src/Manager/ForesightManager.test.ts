@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import type { ForesightRegisterOptions, ForesightManagerSettings } from "../types/types"
-import { createMockElement, mockElementBounds, simulateMouseEvent } from "../../test-setup"
+import {
+  createMockElement,
+  mockElementBounds,
+  simulateMouseEvent,
+  simulateKeyboardEvent,
+} from "../../test-setup"
 
 describe("ForesightManager", () => {
   let manager: ForesightManager
@@ -29,7 +34,7 @@ describe("ForesightManager", () => {
 
   afterEach(() => {
     // Call all unregister functions
-    unregisterFunctions.forEach((unregister) => unregister())
+    unregisterFunctions.forEach(unregister => unregister())
     unregisterFunctions = []
 
     // Clear DOM
@@ -192,7 +197,6 @@ describe("ForesightManager", () => {
       expect(data.globalSettings.trajectoryPredictionTime).toBeLessThanOrEqual(200)
       expect(data.globalSettings.positionHistorySize).toBeGreaterThanOrEqual(2)
     })
-
   })
 
   describe("Mouse Interaction", () => {
@@ -303,6 +307,191 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("Event Listener Management", () => {
+    it("should add and trigger event listeners", () => {
+      const listener = vi.fn()
+
+      manager.addEventListener("elementRegistered", listener)
+
+      // Register an element to trigger the event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+        name: "test-element",
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "elementRegistered",
+          elementData: expect.any(Object),
+          timestamp: expect.any(Number),
+        })
+      )
+    })
+
+    it("should remove event listeners", () => {
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
+
+      manager.addEventListener("elementRegistered", listener1)
+      manager.addEventListener("elementRegistered", listener2)
+
+      // Remove first listener
+      manager.removeEventListener("elementRegistered", listener1)
+
+      // Register an element to trigger the event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Only listener2 should have been called
+      expect(listener1).not.toHaveBeenCalled()
+      expect(listener2).toHaveBeenCalled()
+    })
+
+    it("should handle removing non-existent listeners gracefully", () => {
+      const listener = vi.fn()
+
+      expect(() => {
+        manager.removeEventListener("elementRegistered", listener)
+      }).not.toThrow()
+    })
+
+    it("should support AbortController for automatic cleanup", () => {
+      const listener = vi.fn()
+      const controller = new AbortController()
+
+      manager.addEventListener("elementRegistered", listener, { signal: controller.signal })
+
+      // Abort the controller
+      controller.abort()
+
+      // Register an element to trigger the event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Listener should not be called after abort
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it("should not add listeners if signal is already aborted", () => {
+      const listener = vi.fn()
+      const controller = new AbortController()
+
+      // Abort before adding listener
+      controller.abort()
+
+      manager.addEventListener("elementRegistered", listener, { signal: controller.signal })
+
+      // Register an element to trigger the event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Listener should not be called
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it("should handle multiple listeners with mixed abort signals", () => {
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
+      const listener3 = vi.fn()
+
+      const controller1 = new AbortController()
+      const controller2 = new AbortController()
+
+      manager.addEventListener("elementRegistered", listener1, { signal: controller1.signal })
+      manager.addEventListener("elementRegistered", listener2, { signal: controller2.signal })
+      manager.addEventListener("elementRegistered", listener3) // No signal
+
+      // Abort only the first controller
+      controller1.abort()
+
+      // Register an element to trigger the event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Only listener1 should not be called
+      expect(listener1).not.toHaveBeenCalled()
+      expect(listener2).toHaveBeenCalled()
+      expect(listener3).toHaveBeenCalled()
+    })
+
+    it("should emit different event types correctly", () => {
+      const elementRegisteredListener = vi.fn()
+      const elementUnregisteredListener = vi.fn()
+      const managerSettingsListener = vi.fn()
+
+      manager.addEventListener("elementRegistered", elementRegisteredListener)
+      manager.addEventListener("elementUnregistered", elementUnregisteredListener)
+      manager.addEventListener("managerSettingsChanged", managerSettingsListener)
+
+      // Register element
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      expect(elementRegisteredListener).toHaveBeenCalled()
+
+      // Change settings
+      manager.alterGlobalSettings({ enableMousePrediction: false })
+
+      expect(managerSettingsListener).toHaveBeenCalled()
+
+      // Unregister element
+      result.unregister()
+
+      expect(elementUnregisteredListener).toHaveBeenCalled()
+    })
+
+    it("should handle listener errors gracefully", () => {
+      const errorListener = vi.fn(() => {
+        throw new Error("Listener error")
+      })
+      const normalListener = vi.fn()
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      manager.addEventListener("elementRegistered", errorListener)
+      manager.addEventListener("elementRegistered", normalListener)
+
+      // Register an element
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Both listeners should be called, error should be logged
+      expect(errorListener).toHaveBeenCalled()
+      expect(normalListener).toHaveBeenCalled()
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Error in ForesightManager event listener"),
+        expect.any(Error)
+      )
+
+      consoleSpy.mockRestore()
+    })
+  })
+
   describe("Performance and Edge Cases", () => {
     it("should handle elements with zero dimensions", () => {
       const zeroElement = createMockElement("div")
@@ -328,6 +517,36 @@ describe("ForesightManager", () => {
       })
 
       expect(result.isRegistered).toBe(true)
+    })
+
+    it("should handle rapid event listener additions and removals", () => {
+      const listeners = Array.from({ length: 100 }, () => vi.fn())
+
+      // Add all listeners
+      listeners.forEach(listener => {
+        manager.addEventListener("elementRegistered", listener)
+      })
+
+      // Remove half of them
+      listeners.slice(0, 50).forEach(listener => {
+        manager.removeEventListener("elementRegistered", listener)
+      })
+
+      // Trigger event
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Only the remaining 50 listeners should be called
+      listeners.slice(0, 50).forEach(listener => {
+        expect(listener).not.toHaveBeenCalled()
+      })
+      listeners.slice(50).forEach(listener => {
+        expect(listener).toHaveBeenCalled()
+      })
     })
   })
 })

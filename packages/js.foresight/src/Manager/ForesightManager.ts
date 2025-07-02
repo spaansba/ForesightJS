@@ -11,7 +11,7 @@ import type {
   ForesightManagerSettings,
   ForesightRegisterOptions,
   ForesightRegisterResult,
-  HitType,
+  CallbackHitType,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
   Point,
@@ -503,7 +503,6 @@ export class ForesightManager {
     this.emit({
       type: "mouseTrajectoryUpdate",
       predictionEnabled: this._globalSettings.enableMousePrediction,
-      timestamp: Date.now(),
       trajectoryPositions: this.trajectoryPositions,
     })
   }
@@ -591,30 +590,33 @@ export class ForesightManager {
     })
   }
 
-  private updateHitCounters(hitType: HitType) {
-    switch (hitType.kind) {
+  private updateHitCounters(callbackHitType: CallbackHitType) {
+    switch (callbackHitType.kind) {
       case "mouse":
-        this._globalCallbackHits.mouse[hitType.subType]++
+        this._globalCallbackHits.mouse[callbackHitType.subType]++
         break
       case "tab":
-        this._globalCallbackHits.tab[hitType.subType]++
+        this._globalCallbackHits.tab[callbackHitType.subType]++
         break
       case "scroll":
-        this._globalCallbackHits.scroll[hitType.subType]++
+        this._globalCallbackHits.scroll[callbackHitType.subType]++
         break
     }
     this._globalCallbackHits.total++
   }
 
-  private callCallback(elementData: ForesightElementData | undefined, hitType: HitType) {
+  private callCallback(
+    elementData: ForesightElementData | undefined,
+    callbackHitType: CallbackHitType
+  ) {
     if (elementData) {
-      this.updateHitCounters(hitType)
+      this.updateHitCounters(callbackHitType)
       elementData.callback()
       this.emit({
         type: "callbackFired",
         timestamp: Date.now(),
         elementData: elementData,
-        hitType: hitType,
+        hitType: callbackHitType,
         managerData: this.getManagerData,
       })
 

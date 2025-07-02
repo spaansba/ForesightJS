@@ -18,4 +18,5 @@ export type {
   ScrollTrajectoryUpdateEvent,
   ManagerSettingsChangedEvent,
   HitSlop,
+  CallbackHitType,
 } from "./types/types"

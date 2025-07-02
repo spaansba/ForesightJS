@@ -7,6 +7,6 @@
     "sourceMap": true,
     "composite": true
   },
-  "include": ["src"],
+  "include": ["src", "test-setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

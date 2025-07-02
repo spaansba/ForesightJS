@@ -117,7 +117,7 @@ export type CallbackHits = {
   scroll: ScrollCallbackCounts
 }
 
-export type HitType =
+export type CallbackHitType =
   | { kind: "mouse"; subType: keyof MouseCallbackCounts }
   | { kind: "tab"; subType: keyof TabCallbackCounts }
   | { kind: "scroll"; subType: keyof ScrollCallbackCounts }
@@ -309,11 +309,11 @@ export interface ElementDataUpdatedEvent extends ForesightBaseEvent {
 export interface CallbackFiredEvent extends ForesightBaseEvent {
   type: "callbackFired"
   elementData: ForesightElementData
-  hitType: HitType
+  hitType: CallbackHitType
   managerData: ForesightManagerData
 }
 
-export interface MouseTrajectoryUpdateEvent extends ForesightBaseEvent {
+export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "mouseTrajectoryUpdate"
   trajectoryPositions: TrajectoryPositions
   predictionEnabled: boolean

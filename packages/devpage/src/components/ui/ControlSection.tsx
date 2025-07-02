@@ -44,9 +44,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       id: "Random",
       label: "Random",
       description: "Random",
-      onClick: () => {
-        ForesightManager.instance.logSubscribers()
-      },
+      onClick: () => {},
       isActive: true,
       type: "small-button",
     },
@@ -117,13 +115,12 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
   ]
 
   // Filter buttons by type
-  const smallButtons = controlButtons.filter((button) => button.type === "small-button")
+  const smallButtons = controlButtons.filter(button => button.type === "small-button")
   const linkAndResetButtons = controlButtons.filter(
-    (button) =>
-      button.id === "page-switch" || button.id === "page-mass" || button.id === "reset-all"
+    button => button.id === "page-switch" || button.id === "page-mass" || button.id === "reset-all"
   )
   const mainButtons = controlButtons.filter(
-    (button) => button.type === "button" && button.id !== "reset-all"
+    button => button.type === "button" && button.id !== "reset-all"
   )
 
   return (
@@ -135,7 +132,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
           {/* Small buttons section */}
           <div className="flex flex-col gap-1 w-48">
             {/* Small utility buttons */}
-            {smallButtons.map((button) => (
+            {smallButtons.map(button => (
               <div key={button.id} className="flex-1">
                 <button
                   onClick={button.onClick}
@@ -151,7 +148,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
             ))}
 
             {/* Link and reset buttons */}
-            {linkAndResetButtons.map((button) => (
+            {linkAndResetButtons.map(button => (
               <div key={button.id} className="flex-1">
                 {button.type === "link" ? (
                   <Link
@@ -175,7 +172,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
           </div>
 
           {/* Main control buttons */}
-          {mainButtons.map((button) => (
+          {mainButtons.map(button => (
             <div key={button.id} className="flex-1 min-w-64">
               <button
                 onClick={button.onClick}

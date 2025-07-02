@@ -10,6 +10,7 @@ import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAn
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import type {
   CallbackFiredEvent,
+  CallbackHitType,
   ElementDataUpdatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
@@ -222,7 +223,7 @@ export class ForesightDebugger {
   }
 
   private handleCallbackFired = (e: CallbackFiredEvent) => {
-    this.showCallbackAnimation(e.elementData)
+    this.showCallbackAnimation(e.elementData, e.hitType)
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
@@ -339,7 +340,7 @@ export class ForesightDebugger {
     }
   }
 
-  private showCallbackAnimation(elementData: ForesightElementData) {
+  private showCallbackAnimation(elementData: ForesightElementData, hitType: CallbackHitType) {
     const { element, elementBounds } = elementData
     const existingAnimation = this.callbackAnimations.get(element)
 
@@ -363,6 +364,18 @@ export class ForesightDebugger {
     animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
     animationOverlay.style.width = `${width}px`
     animationOverlay.style.height = `${height}px`
+
+    switch (hitType.kind) {
+      case "mouse":
+        animationOverlay.style.borderColor = "oklch(65% 0.22 220)" // Blue
+        break
+      case "scroll":
+        animationOverlay.style.borderColor = "oklch(65% 0.22 120)" // Green
+        break
+      case "tab":
+        animationOverlay.style.borderColor = "oklch(65% 0.22 40)" // Orange
+        break
+    }
 
     animationOverlay.classList.add("animate")
 
