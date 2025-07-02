@@ -4,4 +4,4 @@ export type {
   SortElementList,
   ForesightDebuggerData,
   DebuggerBooleanSettingKeys,
-} from "./types"
+} from "./types/types"

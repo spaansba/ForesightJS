@@ -10,7 +10,7 @@ import type {
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
   SectionStates,
-} from "../../types"
+} from "../types/types"
 
 import {
   MAX_POSITION_HISTORY_SIZE,
@@ -26,7 +26,7 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../constants"
-import type { ForesightDebugger } from "../ForesightDebugger"
+import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../helpers/createAndAppend"
 import { objectToMethodCall } from "../helpers/objectToMethodCall"
 import { ControlPanelElementList } from "./ControlPanelElementList"

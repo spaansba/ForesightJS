@@ -5,10 +5,10 @@ import type {
   ElementCount,
   ElementOverlays,
   ForesightDebuggerData,
-} from "../types"
-import { DebuggerControlPanel } from "./control_panel/DebuggerControlPanel"
-import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
-import { updateElementOverlays } from "./helpers/updateElementOverlays"
+} from "../types/types"
+import { DebuggerControlPanel } from "../control_panel/DebuggerControlPanel"
+import { createAndAppendElement, createAndAppendStyle } from "../helpers/createAndAppend"
+import { updateElementOverlays } from "../helpers/updateElementOverlays"
 import type {
   CallbackFiredEvent,
   CallbackHitType,
@@ -27,9 +27,9 @@ import {
   DEFAULT_SHOW_DEBUGGER,
   DEFAULT_SHOW_NAME_TAGS,
   DEFAULT_SORT_ELEMENT_LIST,
-} from "./constants"
-import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationConditions"
-import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
+} from "../constants"
+import { evaluateRegistrationConditions } from "../helpers/evaluateRegistrationConditions"
+import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
