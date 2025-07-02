@@ -150,11 +150,9 @@ export class ForesightManager {
     if (options?.signal?.aborted) {
       return () => {}
     }
-    if (!this.eventListeners.has(eventType)) {
-      this.eventListeners.set(eventType, [])
-    }
-    this.eventListeners.get(eventType)!.push(listener as ForesightEventListener)
-
+    const listeners = this.eventListeners.get(eventType) ?? []
+    listeners.push(listener as ForesightEventListener)
+    this.eventListeners.set(eventType, listeners)
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
@@ -163,18 +161,19 @@ export class ForesightManager {
     listener: (event: ForesightEventMap[K]) => void
   ): void {
     const listeners = this.eventListeners.get(eventType)
-    if (listeners) {
-      const index = listeners.indexOf(listener as ForesightEventListener)
-      if (index > -1) {
-        listeners.splice(index, 1)
-      }
+    if (!listeners) {
+      return
+    }
+    const index = listeners.indexOf(listener as ForesightEventListener)
+    if (index > -1) {
+      listeners.splice(index, 1)
     }
   }
 
   // Used for debugging only
   public logSubscribers(): void {
     console.log("%c[ForesightManager] Current Subscribers:", "font-weight: bold; color: #3b82f6;")
-
+    console.log(this.eventListeners)
     const eventTypes = Array.from(this.eventListeners.keys())
 
     if (eventTypes.length === 0) {
@@ -186,8 +185,6 @@ export class ForesightManager {
       const listeners = this.eventListeners.get(eventType)
 
       if (listeners && listeners.length > 0) {
-        // Use groupCollapsed so the log isn't too noisy by default.
-        // The user can expand the events they are interested in.
         console.groupCollapsed(
           `Event: %c${eventType}`,
           "font-weight: bold;",
@@ -205,15 +202,16 @@ export class ForesightManager {
 
   private emit<K extends ForesightEvent>(event: { type: K } & ForesightEventMap[K]): void {
     const listeners = this.eventListeners.get(event.type)
-    if (listeners) {
-      listeners.forEach(listener => {
-        try {
-          listener(event)
-        } catch (error) {
-          console.error(`Error in ForesightManager event listener for ${event.type}:`, error)
-        }
-      })
+    if (!listeners) {
+      return
     }
+    listeners.forEach(listener => {
+      try {
+        listener(event)
+      } catch (error) {
+        console.error(`Error in ForesightManager event listener for ${event.type}:`, error)
+      }
+    })
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
@@ -221,6 +219,7 @@ export class ForesightManager {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
+      eventListeners: this.eventListeners,
     }
   }
 

@@ -62,6 +62,7 @@ Snapshot of the current ForesightManager state, including all [global settings](
 **Properties:**
 
 - `registeredElements` - Map of all currently registered elements and their associated data
+- `eventListeners` - Map of all event listeners listening to [ForesightManager Events](/docs/getting_started/events).
 - `globalSettings` - Current [global configuration](/docs/getting_started/config#global-configuration) settings
 - `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab/scroll) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
 - `positionObserverElements` - Elements currently being tracked by the position observer (a.k.a elements that are currently visible)
@@ -75,6 +76,29 @@ The return will look something like this:
   "registeredElements": {
     "size": 7,
     "entries": "<all your currently registered elements>"
+  },
+  "eventListeners": {
+    "0": {
+      "elementRegistered": []
+    },
+    "1": {
+      "elementUnregistered": []
+    },
+    "2": {
+      "elementDataUpdated": []
+    },
+    "3": {
+      "mouseTrajectoryUpdate": []
+    },
+    "4": {
+      "scrollTrajectoryUpdate": []
+    },
+    "5": {
+      "managerSettingsChanged": []
+    },
+    "6": {
+      "callbackFired": []
+    }
   },
   "globalSettings": {
     "defaultHitSlop": {
@@ -92,7 +116,6 @@ The return will look something like this:
     "tabOffset": 2,
     "trajectoryPredictionTime": 100
   },
-  // The total count of callbacks + which type/subtype of callback
   "globalCallbackHits": {
     "mouse": {
       "hover": 0,

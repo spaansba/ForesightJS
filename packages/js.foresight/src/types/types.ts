@@ -129,6 +129,7 @@ export type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementData>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
+  eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
 }
 
 type BaseForesightManagerSettings = {

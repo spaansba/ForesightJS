@@ -144,7 +144,7 @@ export class ForesightDebugger {
     }
   }
 
-  private static get isInitiated(): boolean {
+  public static get isInitiated(): boolean {
     return !!ForesightDebugger.debuggerInstance
   }
 
