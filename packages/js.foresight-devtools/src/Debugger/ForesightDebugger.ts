@@ -234,7 +234,7 @@ export class ForesightDebugger {
     if (e.elementData.isIntersectingWithViewport) {
       this._elementCount.isIntersecting--
     }
-    this.controlPanel?.removeElementFromList(e.elementData)
+    this.controlPanel?.removeElementFromListContainer(e.elementData)
     this.removeElementOverlay(e.elementData)
   }
 

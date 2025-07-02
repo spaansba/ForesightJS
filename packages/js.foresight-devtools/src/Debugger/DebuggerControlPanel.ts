@@ -501,33 +501,30 @@ export class DebuggerControlPanel {
   }
 
   // TODO only refresh it instead of readding
-  private refreshRegisteredElementCountDisplay() {
-    if (!this.elementCountSpan || !this.callbackCountSpan) {
-      return
-    }
-    const { isIntersecting, total: totalElements } =
-      this.debuggerInstance.getDebuggerData.elementCount
-
-    const { tab, mouse, scroll, total } =
-      this.foresightManagerInstance.getManagerData.globalCallbackHits
-
+  private updateElementCountsDisplay() {
+    if (!this.elementCountSpan || !this.minimizedElementCount) return
+    const { isIntersecting, total } = this.debuggerInstance.getDebuggerData.elementCount
     const visibleTitle = [
       "Element Visibility Status",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       `Visible in Viewport: ${isIntersecting}`,
-      `Not in Viewport: ${totalElements - isIntersecting}`,
-      `Total Registered Elements: ${totalElements}`,
+      `Not in Viewport: ${total - isIntersecting}`,
+      `Total Registered Elements: ${total}`,
       "",
       "Note: Only elements visible in the viewport",
       "are actively tracked by intersection observers.",
     ]
-    if (this.minimizedElementCount) {
-      this.minimizedElementCount.textContent = `${isIntersecting}/${totalElements}`
-      this.minimizedElementCount.title = visibleTitle.join("\n")
-    }
-
-    this.elementCountSpan.textContent = `Visible: ${isIntersecting}/${totalElements} ~ `
+    this.minimizedElementCount.textContent = `${isIntersecting}/${total}`
+    this.minimizedElementCount.title = visibleTitle.join("\n")
+    this.elementCountSpan.textContent = `Visible: ${isIntersecting}/${total} ~ `
     this.elementCountSpan.title = visibleTitle.join("\n")
+  }
+
+  private updateCallbackCountsDisplay() {
+    if (!this.callbackCountSpan) return
+
+    const { tab, mouse, scroll, total } =
+      this.foresightManagerInstance.getManagerData.globalCallbackHits
     this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
     } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
@@ -553,18 +550,21 @@ export class DebuggerControlPanel {
     ].join("\n")
   }
 
-  public removeElementFromList(elementData: ForesightElementData) {
+  public removeElementFromListContainer(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
 
     const listItem = this.elementListItems.get(elementData.element)
 
-    if (listItem) {
-      listItem.remove()
-      this.elementListItems.delete(elementData.element)
-      this.refreshRegisteredElementCountDisplay()
-      if (this.elementListItems.size === 0) {
-        this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
-      }
+    if (!listItem) {
+      return
+    }
+
+    listItem.remove()
+    this.elementListItems.delete(elementData.element)
+    this.updateElementCountsDisplay()
+    this.updateCallbackCountsDisplay()
+    if (this.elementListItems.size === 0) {
+      this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
     }
   }
 
@@ -582,7 +582,7 @@ export class DebuggerControlPanel {
       const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
       intersectingElement.textContent = intersectingIcon
     }
-    this.refreshRegisteredElementCountDisplay()
+    this.updateElementCountsDisplay()
     this.sortAndReorderElements()
   }
 
@@ -640,7 +640,7 @@ export class DebuggerControlPanel {
     this.updateListItemContent(listItem, elementData)
     this.elementListItemsContainer!.appendChild(listItem)
     this.elementListItems.set(elementData.element, listItem)
-    this.refreshRegisteredElementCountDisplay()
+    this.updateElementCountsDisplay()
     if (sort) {
       // this.sortAndReorderElements()
     }
