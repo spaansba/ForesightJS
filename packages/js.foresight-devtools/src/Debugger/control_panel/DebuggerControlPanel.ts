@@ -12,12 +12,12 @@ import type {
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
   SectionStates,
-} from "../types"
+} from "../../types"
 
-import { objectToMethodCall } from "./helpers/objectToMethodCall"
-import { createAndAppendStyle } from "./helpers/createAndAppend"
-import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
-import type { ForesightDebugger } from "./ForesightDebugger"
+import { objectToMethodCall } from "../helpers/objectToMethodCall"
+import { createAndAppendStyle } from "../helpers/createAndAppend"
+import { getIntersectingIcon } from "../helpers/getIntersectingIcon"
+import type { ForesightDebugger } from "../ForesightDebugger"
 import {
   MIN_POSITION_HISTORY_SIZE,
   MAX_POSITION_HISTORY_SIZE,
@@ -31,8 +31,8 @@ import {
   SCROLL_MARGIN_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
-} from "./constants"
-import { sortByDocumentPosition } from "./helpers/sortByDocumentPosition"
+} from "../constants"
+import { sortByDocumentPosition } from "../helpers/sortByDocumentPosition"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
@@ -348,7 +348,7 @@ export class DebuggerControlPanel {
       this.debuggerInstance.alterDebuggerSettings({
         sortElementList: value,
       })
-      this.sortAndReorderElements()
+      this.reorderElementsInListContainer(this.sortElementsInListContainer())
       this.updateSortOptionUI(value)
       this.sortOptionsPopup?.classList.remove("active")
     })
@@ -553,13 +553,10 @@ export class DebuggerControlPanel {
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
-
     const listItem = this.elementListItems.get(elementData.element)
-
     if (!listItem) {
       return
     }
-
     listItem.remove()
     this.elementListItems.delete(elementData.element)
     this.updateElementCountsDisplay()
@@ -584,16 +581,12 @@ export class DebuggerControlPanel {
       intersectingElement.textContent = intersectingIcon
     }
     this.updateElementCountsDisplay()
-    this.sortAndReorderElements()
+    this.reorderElementsInListContainer(this.sortElementsInListContainer())
   }
 
-  private sortAndReorderElements() {
-    if (!this.elementListItemsContainer) return
-
-    const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
-
+  private sortElementsInListContainer(): ForesightElementData[] {
+    const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
-
     switch (sortOrder) {
       case "insertionOrder":
         //default behaviour of adding elements to the registered elements map.
@@ -612,18 +605,22 @@ export class DebuggerControlPanel {
         })
         break
     }
+    return elementsData
+  }
+
+  private reorderElementsInListContainer(sortedElements: ForesightElementData[]) {
+    if (!this.elementListItemsContainer) return
 
     const fragment = document.createDocumentFragment()
 
-    if (elementsData.length) {
-      elementsData.forEach(elementData => {
+    if (sortedElements.length) {
+      sortedElements.forEach(elementData => {
         const listItem = this.elementListItems.get(elementData.element)
         if (listItem) {
           // Appending to the fragment is cheap (it's off-screen)
           fragment.appendChild(listItem)
         }
       })
-
       this.elementListItemsContainer.innerHTML = ""
       this.elementListItemsContainer.appendChild(fragment)
     }

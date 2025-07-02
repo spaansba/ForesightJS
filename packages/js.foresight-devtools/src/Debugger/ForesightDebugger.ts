@@ -6,7 +6,7 @@ import type {
   ElementOverlays,
   ForesightDebuggerData,
 } from "../types"
-import { DebuggerControlPanel } from "./DebuggerControlPanel"
+import { DebuggerControlPanel } from "./control_panel/DebuggerControlPanel"
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import type {

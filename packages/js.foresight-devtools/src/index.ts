@@ -1,5 +1,5 @@
-export { ForesightDebugger } from "./Debugger/ForesightDebugger"
-export { DebuggerControlPanel } from "./Debugger/DebuggerControlPanel"
+export { ForesightDebugger } from "./debugger/ForesightDebugger"
+export { DebuggerControlPanel } from "./debugger/control_panel/DebuggerControlPanel"
 export type {
   DebuggerSettings,
   SortElementList,
