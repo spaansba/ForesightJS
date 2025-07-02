@@ -24,6 +24,7 @@
       }
     }
   },
+  "homepage": "https://foresightjs.com/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/spaansba/ForesightJS"
