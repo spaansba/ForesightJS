@@ -1,57 +1,50 @@
-import { ForesightManager } from "js.foresight"
 import type {
   ForesightElementData,
-  ForesightElement,
   ForesightManagerSettings,
   UpdateForsightManagerSettings,
 } from "js.foresight"
+import { ForesightManager } from "js.foresight"
 import type {
-  DebuggerSettings,
-  SortElementList,
   DebuggerBooleanSettingKeys,
+  DebuggerSettings,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
   SectionStates,
 } from "../../types"
 
-import { objectToMethodCall } from "../helpers/objectToMethodCall"
-import { createAndAppendStyle } from "../helpers/createAndAppend"
-import { getIntersectingIcon } from "../helpers/getIntersectingIcon"
-import type { ForesightDebugger } from "../ForesightDebugger"
 import {
-  MIN_POSITION_HISTORY_SIZE,
   MAX_POSITION_HISTORY_SIZE,
-  MIN_TRAJECTORY_PREDICTION_TIME,
-  MAX_TRAJECTORY_PREDICTION_TIME,
-  MIN_TAB_OFFSET,
-  MAX_TAB_OFFSET,
-  MIN_SCROLL_MARGIN,
   MAX_SCROLL_MARGIN,
+  MAX_TAB_OFFSET,
+  MAX_TRAJECTORY_PREDICTION_TIME,
+  MIN_POSITION_HISTORY_SIZE,
+  MIN_SCROLL_MARGIN,
+  MIN_TAB_OFFSET,
+  MIN_TRAJECTORY_PREDICTION_TIME,
   POSITION_HISTORY_SIZE_UNIT,
   SCROLL_MARGIN_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../constants"
-import { sortByDocumentPosition } from "../helpers/sortByDocumentPosition"
+import type { ForesightDebugger } from "../ForesightDebugger"
+import { createAndAppendStyle } from "../helpers/createAndAppend"
+import { objectToMethodCall } from "../helpers/objectToMethodCall"
+import { ControlPanelElementList } from "./ControlPanelElementList"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
-const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private debuggerInstance: ForesightDebugger
   private static debuggerControlPanelInstance: DebuggerControlPanel
+  private elementListManager!: ControlPanelElementList
 
   // These properties will be assigned in _setupDOMAndListeners
   private shadowRoot!: ShadowRoot
   private controlsContainer!: HTMLElement
   private controlPanelStyleElement!: HTMLStyleElement
-  private elementListItemsContainer: HTMLElement | null = null
-  private elementCountSpan: HTMLSpanElement | null = null
-  private callbackCountSpan: HTMLSpanElement | null = null
-  private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
 
   private trajectoryEnabledCheckbox: HTMLInputElement | null = null
   private tabEnabledCheckbox: HTMLInputElement | null = null
@@ -65,8 +58,6 @@ export class DebuggerControlPanel {
   private scrollMarginSlider: HTMLInputElement | null = null
   private scrollMarginValueSpan: HTMLSpanElement | null = null
   private showNameTagsCheckbox: HTMLInputElement | null = null
-  private sortOptionsPopup: HTMLDivElement | null = null
-  private sortButton: HTMLButtonElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
   private allSettingsSectionsContainer: HTMLElement | null = null
@@ -82,7 +73,6 @@ export class DebuggerControlPanel {
   private copySettingsButton: HTMLButtonElement | null = null
   private minimizedElementCount: HTMLSpanElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
 
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
@@ -135,6 +125,7 @@ export class DebuggerControlPanel {
       "debug-control-panel"
     )
     this.queryDOMElements()
+    this.initializeElementListManager()
     this.originalSectionStates()
     this.setupEventListeners()
     this.updateContainerVisibilityState()
@@ -189,14 +180,7 @@ export class DebuggerControlPanel {
     this.tabOffsetValueSpan = this.controlsContainer.querySelector("#tab-offset-value")
     this.scrollMarginSlider = this.controlsContainer.querySelector("#scroll-margin")
     this.scrollMarginValueSpan = this.controlsContainer.querySelector("#scroll-margin-value")
-    this.elementListItemsContainer = this.controlsContainer.querySelector(
-      "#element-list-items-container"
-    )
     this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
-    this.sortOptionsPopup = this.controlsContainer.querySelector("#sort-options-popup")
-    this.sortButton = this.controlsContainer.querySelector(".sort-button")
-    this.elementCountSpan = this.controlsContainer.querySelector("#element-count")
-    this.callbackCountSpan = this.controlsContainer.querySelector("#callback-count")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
     this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
       ".all-settings-sections-container"
@@ -204,6 +188,14 @@ export class DebuggerControlPanel {
     this.debuggerElementsSection = this.controlsContainer.querySelector(".debugger-elements")
     this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
     this.minimizedElementCount = this.controlsContainer.querySelector(".minimized-element-count")
+  }
+
+  private initializeElementListManager() {
+    this.elementListManager = new ControlPanelElementList(
+      this.foresightManagerInstance,
+      this.debuggerInstance
+    )
+    this.elementListManager.initialize(this.controlsContainer)
   }
 
   private handleCopySettings() {
@@ -334,35 +326,6 @@ export class DebuggerControlPanel {
       "scrollMargin"
     )
 
-    this.sortButton?.addEventListener("click", e => {
-      e.stopPropagation()
-      this.sortOptionsPopup?.classList.toggle("active")
-    })
-
-    this.sortOptionsPopup?.addEventListener("click", e => {
-      const target = e.target as HTMLElement
-      const sortButton = target.closest("[data-sort]") as HTMLElement | null
-      if (!sortButton) return
-
-      const value = sortButton.dataset.sort as SortElementList
-      this.debuggerInstance.alterDebuggerSettings({
-        sortElementList: value,
-      })
-      this.reorderElementsInListContainer(this.sortElementsInListContainer())
-      this.updateSortOptionUI(value)
-      this.sortOptionsPopup?.classList.remove("active")
-    })
-
-    this.closeSortDropdownHandler = (e: MouseEvent) => {
-      if (
-        this.sortOptionsPopup?.classList.contains("active") &&
-        !this.sortButton?.contains(e.target as Node)
-      ) {
-        this.sortOptionsPopup.classList.remove("active")
-      }
-    }
-    document.addEventListener("click", this.closeSortDropdownHandler)
-
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized
       this.updateContainerVisibilityState()
@@ -454,18 +417,6 @@ export class DebuggerControlPanel {
     }
   }
 
-  // Adds a tick before the choosen sort option
-  private updateSortOptionUI(currentSort: SortElementList) {
-    this.sortOptionsPopup?.querySelectorAll("[data-sort]").forEach(button => {
-      const btn = button as HTMLElement
-      if (btn.dataset.sort === currentSort) {
-        btn.classList.add("active-sort-option")
-      } else {
-        btn.classList.remove("active-sort-option")
-      }
-    })
-  }
-
   public updateControlsState(
     managerSettings: ForesightManagerSettings,
     debuggerSettings: DebuggerSettings
@@ -482,7 +433,7 @@ export class DebuggerControlPanel {
     if (this.showNameTagsCheckbox) {
       this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags
     }
-    this.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
+    this.elementListManager.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
     if (this.historySizeSlider && this.historyValueSpan) {
       this.historySizeSlider.value = managerSettings.positionHistorySize.toString()
       this.historyValueSpan.textContent = `${managerSettings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
@@ -503,184 +454,24 @@ export class DebuggerControlPanel {
 
   // TODO only refresh it instead of readding
   private updateElementCountsDisplay() {
-    if (!this.elementCountSpan || !this.minimizedElementCount) return
-    const { isIntersecting, total } = this.debuggerInstance.getDebuggerData.elementCount
-    const visibleTitle = [
-      "Element Visibility Status",
-      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      `Visible in Viewport: ${isIntersecting}`,
-      `Not in Viewport: ${total - isIntersecting}`,
-      `Total Registered Elements: ${total}`,
-      "",
-      "Note: Only elements visible in the viewport",
-      "are actively tracked by intersection observers.",
-    ]
-    this.minimizedElementCount.textContent = `${isIntersecting}/${total}`
-    this.minimizedElementCount.title = visibleTitle.join("\n")
-    this.elementCountSpan.textContent = `Visible: ${isIntersecting}/${total} ~ `
-    this.elementCountSpan.title = visibleTitle.join("\n")
+    this.elementListManager.updateElementCountsDisplay()
+    this.elementListManager.updateMinimizedElementCount(this.minimizedElementCount)
   }
 
   private updateCallbackCountsDisplay() {
-    if (!this.callbackCountSpan) return
-
-    const { tab, mouse, scroll, total } =
-      this.foresightManagerInstance.getManagerData.globalCallbackHits
-    this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
-      tab.forwards + tab.reverse
-    } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
-    this.callbackCountSpan.title = [
-      "Callback Execution Stats",
-      "━━━━━━━━━━━━━━━━━━━━━━━━",
-      "Mouse Callbacks",
-      `   • Trajectory: ${mouse.trajectory}`,
-      `   • Hover: ${mouse.hover}`,
-      `   • Subtotal: ${mouse.hover + mouse.trajectory}`,
-      "",
-      "Keyboard Callbacks:",
-      `   • Tab Forward: ${tab.forwards}`,
-      `   • Tab Reverse: ${tab.reverse}`,
-      `   • Subtotal: ${tab.forwards + tab.reverse}`,
-      "",
-      "Scroll Callbacks:",
-      `   • Up: ${scroll.up} | Down: ${scroll.down}`,
-      `   • Left: ${scroll.left} | Right: ${scroll.right}`,
-      `   • Subtotal: ${scroll.up + scroll.down + scroll.left + scroll.right}`,
-      "",
-      "Total Callbacks: " + total,
-    ].join("\n")
+    this.elementListManager.updateCallbackCountsDisplay()
   }
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
-    if (!this.elementListItemsContainer) return
-    const listItem = this.elementListItems.get(elementData.element)
-    if (!listItem) {
-      return
-    }
-    listItem.remove()
-    this.elementListItems.delete(elementData.element)
-    this.updateElementCountsDisplay()
-    this.updateCallbackCountsDisplay()
-    if (this.elementListItems.size === 0) {
-      this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
-    }
+    this.elementListManager.removeElementFromListContainer(elementData)
   }
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
-    if (!this.elementListItemsContainer) return
-    const listItem = this.elementListItems.get(elementData.element)
-    if (!listItem) {
-      this.addElementToList(elementData)
-      return
-    }
-
-    listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
-    const intersectingElement = listItem.querySelector(".intersecting-indicator")
-    if (intersectingElement) {
-      const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
-      intersectingElement.textContent = intersectingIcon
-    }
-    this.updateElementCountsDisplay()
-    this.reorderElementsInListContainer(this.sortElementsInListContainer())
-  }
-
-  private sortElementsInListContainer(): ForesightElementData[] {
-    const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList
-    const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
-    switch (sortOrder) {
-      case "insertionOrder":
-        //default behaviour of adding elements to the registered elements map.
-        break
-      case "documentOrder":
-        // based on the elements place in the document
-        elementsData.sort(sortByDocumentPosition)
-        break
-      case "visibility":
-        // based on if the element is visible or not (visible at the top)
-        elementsData.sort((a, b) => {
-          if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
-            return a.isIntersectingWithViewport ? -1 : 1
-          }
-          return sortByDocumentPosition(a, b)
-        })
-        break
-    }
-    return elementsData
-  }
-
-  private reorderElementsInListContainer(sortedElements: ForesightElementData[]) {
-    if (!this.elementListItemsContainer) return
-
-    const fragment = document.createDocumentFragment()
-
-    if (sortedElements.length) {
-      sortedElements.forEach(elementData => {
-        const listItem = this.elementListItems.get(elementData.element)
-        if (listItem) {
-          // Appending to the fragment is cheap (it's off-screen)
-          fragment.appendChild(listItem)
-        }
-      })
-      this.elementListItemsContainer.innerHTML = ""
-      this.elementListItemsContainer.appendChild(fragment)
-    }
+    this.elementListManager.updateElementVisibilityStatus(elementData)
   }
 
   public addElementToList(elementData: ForesightElementData, sort: boolean = true) {
-    if (!this.elementListItemsContainer) return
-    if (this.elementListItemsContainer.innerHTML === NO_ELEMENTS_STRING) {
-      this.elementListItemsContainer.innerHTML = ""
-    }
-    if (this.elementListItems.has(elementData.element)) return
-    const listItem = document.createElement("div")
-    listItem.className = "element-list-item"
-    this.updateListItemContent(listItem, elementData)
-    this.elementListItemsContainer!.appendChild(listItem)
-    this.elementListItems.set(elementData.element, listItem)
-    this.updateElementCountsDisplay()
-    if (sort) {
-      // this.sortAndReorderElements()
-    }
-  }
-
-  private updateListItemContent(listItem: HTMLElement, elementData: ForesightElementData) {
-    // Determine the viewport icon based on current visibility status
-    const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
-    listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
-
-    let hitSlopText = "N/A"
-
-    if (elementData.elementBounds.hitSlop) {
-      const { top, right, bottom, left } = elementData.elementBounds.hitSlop
-      hitSlopText = `T:${top} R:${right} B:${bottom} L:${left}`
-    }
-
-    // Create comprehensive title with all information
-    const comprehensiveTitle = [
-      `${elementData.name || "Unnamed Element"}`,
-      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      "Viewport Status:",
-      elementData.isIntersectingWithViewport
-        ? "   ✓ In viewport - actively tracked by observers"
-        : "   ✗ Not in viewport - not being tracked",
-      "",
-      "Hit Slop:",
-      elementData.elementBounds.hitSlop
-        ? [
-            `     Top: ${elementData.elementBounds.hitSlop.top}px, Bottom: ${elementData.elementBounds.hitSlop.bottom}px `,
-            `     Right: ${elementData.elementBounds.hitSlop.right}px, Left: ${elementData.elementBounds.hitSlop.left}px`,
-          ].join("\n")
-        : "   • Not defined - using element's natural boundaries",
-      "",
-    ].join("\n")
-
-    listItem.title = comprehensiveTitle
-
-    listItem.innerHTML = `
-    <span class="intersecting-indicator">${intersectingIcon}</span>
-    <span class="element-name">${elementData.name || "Unnamed Element"}</span>
-    <span class="hit-slop">${hitSlopText}</span>
-  `
+    this.elementListManager.addElementToList(elementData, sort)
   }
   /**
    * The cleanup method is updated to be more thorough, nullifying all
@@ -695,18 +486,11 @@ export class DebuggerControlPanel {
       this.copyTimeoutId = null
     }
 
-    if (this.closeSortDropdownHandler) {
-      document.removeEventListener("click", this.closeSortDropdownHandler)
-      this.closeSortDropdownHandler = null
-    }
+    this.elementListManager.cleanup()
 
     // Nullify all DOM-related properties to signal it's "cleaned up"
     this.controlsContainer = null!
     this.controlPanelStyleElement = null!
-    this.elementListItemsContainer = null
-    this.elementCountSpan = null
-    this.callbackCountSpan = null
-    this.elementListItems.clear()
     this.containerMinimizeButton = null
     this.allSettingsSectionsContainer = null
     this.debuggerElementsSection = null
@@ -722,8 +506,6 @@ export class DebuggerControlPanel {
     this.scrollMarginSlider = null
     this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
-    this.sortOptionsPopup = null
-    this.sortButton = null
     this.copySettingsButton = null
   }
 
