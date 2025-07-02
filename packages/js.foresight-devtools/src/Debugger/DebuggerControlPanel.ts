@@ -32,6 +32,7 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "./constants"
+import { sortByDocumentPosition } from "./helpers/sortByDocumentPosition"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
@@ -593,24 +594,23 @@ export class DebuggerControlPanel {
 
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
 
-    if (sortOrder !== "insertionOrder") {
-      const sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
-        const position = a.element.compareDocumentPosition(b.element)
-        if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
-        if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
-        return 0
-      }
-
-      if (sortOrder === "visibility") {
+    switch (sortOrder) {
+      case "insertionOrder":
+        //default behaviour of adding elements to the registered elements map.
+        break
+      case "documentOrder":
+        // based on the elements place in the document
+        elementsData.sort(sortByDocumentPosition)
+        break
+      case "visibility":
+        // based on if the element is visible or not (visible at the top)
         elementsData.sort((a, b) => {
           if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
             return a.isIntersectingWithViewport ? -1 : 1
           }
           return sortByDocumentPosition(a, b)
         })
-      } else if (sortOrder === "documentOrder") {
-        elementsData.sort(sortByDocumentPosition)
-      }
+        break
     }
 
     const fragment = document.createDocumentFragment()
