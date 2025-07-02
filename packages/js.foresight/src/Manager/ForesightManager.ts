@@ -158,7 +158,7 @@ export class ForesightManager {
 
   public removeEventListener<K extends ForesightEvent>(
     eventType: K,
-    listener: (event: ForesightEventMap[K]) => void
+    listener: ForesightEventListener<K>
   ): void {
     const listeners = this.eventListeners.get(eventType)
     if (!listeners) {
@@ -168,36 +168,6 @@ export class ForesightManager {
     if (index > -1) {
       listeners.splice(index, 1)
     }
-  }
-
-  // Used for debugging only
-  public logSubscribers(): void {
-    console.log("%c[ForesightManager] Current Subscribers:", "font-weight: bold; color: #3b82f6;")
-    console.log(this.eventListeners)
-    const eventTypes = Array.from(this.eventListeners.keys())
-
-    if (eventTypes.length === 0) {
-      console.log("  No active subscribers.")
-      return
-    }
-
-    eventTypes.forEach(eventType => {
-      const listeners = this.eventListeners.get(eventType)
-
-      if (listeners && listeners.length > 0) {
-        console.groupCollapsed(
-          `Event: %c${eventType}`,
-          "font-weight: bold;",
-          `(${listeners.length} listener${listeners.length > 1 ? "s" : ""})`
-        )
-
-        listeners.forEach((listener, index) => {
-          console.log(`[${index}]:`, listener)
-        })
-
-        console.groupEnd()
-      }
-    })
   }
 
   private emit<K extends ForesightEvent>(event: { type: K } & ForesightEventMap[K]): void {
@@ -789,6 +759,7 @@ export class ForesightManager {
     this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
     this.globalListenersController = null
     this.tabbableElementsCache = []
+    this.lastFocusedIndex = null
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()
