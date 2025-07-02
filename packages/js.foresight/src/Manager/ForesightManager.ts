@@ -6,7 +6,7 @@ import type {
   ForesightElement,
   ForesightElementData,
   ForesightEventMap,
-  ForesightEventType,
+  ForesightEvent,
   ForesightManagerData,
   ForesightManagerSettings,
   ForesightRegisterOptions,
@@ -18,6 +18,7 @@ import type {
   ScrollDirection,
   TrajectoryPositions,
   UpdateForsightManagerSettings,
+  ForesightEventListener,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -126,7 +127,7 @@ export class ForesightManager {
   // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
 
-  private eventListeners: Map<ForesightEventType, ((event: any) => void)[]> = new Map()
+  private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
 
   // Never put something in the constructor, use initialize instead
   private constructor() {}
@@ -141,9 +142,9 @@ export class ForesightManager {
     return ForesightManager.manager
   }
 
-  public addEventListener<K extends ForesightEventType>(
+  public addEventListener<K extends ForesightEvent>(
     eventType: K,
-    listener: (event: ForesightEventMap[K]) => void,
+    listener: ForesightEventListener<K>,
     options?: { signal?: AbortSignal }
   ) {
     if (options?.signal?.aborted) {
@@ -152,18 +153,18 @@ export class ForesightManager {
     if (!this.eventListeners.has(eventType)) {
       this.eventListeners.set(eventType, [])
     }
-    this.eventListeners.get(eventType)!.push(listener)
+    this.eventListeners.get(eventType)!.push(listener as ForesightEventListener)
 
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
-  public removeEventListener<K extends ForesightEventType>(
+  public removeEventListener<K extends ForesightEvent>(
     eventType: K,
     listener: (event: ForesightEventMap[K]) => void
   ): void {
     const listeners = this.eventListeners.get(eventType)
     if (listeners) {
-      const index = listeners.indexOf(listener)
+      const index = listeners.indexOf(listener as ForesightEventListener)
       if (index > -1) {
         listeners.splice(index, 1)
       }
@@ -202,7 +203,7 @@ export class ForesightManager {
     })
   }
 
-  private emit<K extends ForesightEventType>(event: { type: K } & ForesightEventMap[K]): void {
+  private emit<K extends ForesightEvent>(event: { type: K } & ForesightEventMap[K]): void {
     const listeners = this.eventListeners.get(event.type)
     if (listeners) {
       listeners.forEach(listener => {

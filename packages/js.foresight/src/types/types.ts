@@ -280,21 +280,12 @@ export interface ForesightEventMap {
   managerSettingsChanged: ManagerSettingsChangedEvent
 }
 
-// Update ForesightEventType to be the keys of this map for consistency
-export type ForesightEventType = keyof ForesightEventMap
-
-// Define the event data structures
-export interface ForesightEvent {
-  type: ForesightEventType
-  timestamp: number
-}
-
-export interface ElementRegisteredEvent extends ForesightEvent {
+export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
   elementData: ForesightElementData
 }
 
-export interface ElementUnregisteredEvent extends ForesightEvent {
+export interface ElementUnregisteredEvent extends ForesightBaseEvent {
   type: "elementUnregistered"
   elementData: ForesightElementData
   unregisterReason: ElementUnregisteredReason
@@ -308,44 +299,46 @@ export interface ElementUnregisteredEvent extends ForesightEvent {
  */
 export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCall"
 
-export interface ElementDataUpdatedEvent extends ForesightEvent {
+export interface ElementDataUpdatedEvent extends ForesightBaseEvent {
   type: "elementDataUpdated"
   elementData: ForesightElementData
   updatedProp: "bounds" | "visibility"
 }
 
-export interface CallbackFiredEvent extends ForesightEvent {
+export interface CallbackFiredEvent extends ForesightBaseEvent {
   type: "callbackFired"
   elementData: ForesightElementData
   hitType: HitType
   managerData: ForesightManagerData
 }
 
-export interface MouseTrajectoryUpdateEvent extends ForesightEvent {
+export interface MouseTrajectoryUpdateEvent extends ForesightBaseEvent {
   type: "mouseTrajectoryUpdate"
   trajectoryPositions: TrajectoryPositions
   predictionEnabled: boolean
 }
 
-export interface ScrollTrajectoryUpdateEvent extends ForesightEvent {
+export interface ScrollTrajectoryUpdateEvent extends ForesightBaseEvent {
   type: "scrollTrajectoryUpdate"
   currentPoint: Point
   predictedPoint: Point
 }
 
-export interface ManagerSettingsChangedEvent extends ForesightEvent {
+export interface ManagerSettingsChangedEvent extends ForesightBaseEvent {
   type: "managerSettingsChanged"
   managerData: ForesightManagerData
 }
 
-export type ForesightEventData =
-  | ElementRegisteredEvent
-  | ElementUnregisteredEvent
-  | ElementDataUpdatedEvent
-  | CallbackFiredEvent
-  | MouseTrajectoryUpdateEvent
-  | ScrollTrajectoryUpdateEvent
-  | ManagerSettingsChangedEvent
-
 // Event listener type
-export type ForesightEventListener = (event: ForesightEventData) => void
+export type ForesightEventListener<K extends ForesightEvent = ForesightEvent> = (
+  event: ForesightEventMap[K]
+) => void
+
+// Update ForesightEventType to be the keys of this map for consistency
+export type ForesightEvent = keyof ForesightEventMap
+
+// Define the event data structures
+interface ForesightBaseEvent {
+  type: ForesightEvent
+  timestamp: number
+}
