@@ -170,6 +170,7 @@ export class DebuggerControlPanel {
 
   public updateMinimizedElementCount() {
     if (!this.minimizedElementCount) return
+    console.log("here")
     const registeredElements = Array.from(
       this.foresightManagerInstance.registeredElements.entries()
     )

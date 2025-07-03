@@ -31,7 +31,7 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
       </div>
 
       {/* Padding Change */}
-      <div className="flex flex-col items-center space-y-4">
+      {/* <div className="flex flex-col items-center space-y-4">
         <h3 className="text-lg font-semibold">Padding Change</h3>
         <div
           className={`${
@@ -47,7 +47,7 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
           />
         </div>
         <ForesightButtonParagraph paragraph="Tests padding changes that affect element boundaries" />
-      </div>
+      </div> */}
 
       {/* Border Change */}
       <div className="flex flex-col items-center space-y-4">

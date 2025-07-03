@@ -277,15 +277,6 @@ export class ForesightManager {
 
     const foresightElementData = this.elements.get(element)
 
-    if (foresightElementData) {
-      this.emit({
-        type: "elementUnregistered",
-        elementData: foresightElementData,
-        timestamp: Date.now(),
-        unregisterReason: unregisterReason,
-      })
-    }
-
     // Clear any pending trajectory expiration timeout
     if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
@@ -296,6 +287,14 @@ export class ForesightManager {
 
     if (this.elements.size === 0 && this.isSetup) {
       this.removeGlobalListeners()
+    }
+    if (foresightElementData) {
+      this.emit({
+        type: "elementUnregistered",
+        elementData: foresightElementData,
+        timestamp: Date.now(),
+        unregisterReason: unregisterReason,
+      })
     }
   }
 
