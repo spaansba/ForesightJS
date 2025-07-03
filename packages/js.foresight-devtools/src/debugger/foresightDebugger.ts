@@ -207,7 +207,6 @@ export class ForesightDebugger {
 
     // Check if 'visibility' is included in the updatedProps array
     if (e.updatedProps.includes("visibility")) {
-      console.log(e)
       if (!e.elementData.isIntersectingWithViewport) {
         this.removeElementOverlay(e.elementData)
       }

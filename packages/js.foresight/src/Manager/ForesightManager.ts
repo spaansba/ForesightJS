@@ -626,15 +626,72 @@ export class ForesightManager {
     this.elements.set(elementData.element, updatedElementData)
   }
 
+  private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    for (const entry of entries) {
+      const elementData = this.elements.get(entry.target)
+      if (!elementData) {
+        continue
+      }
+      // Always call handlePositionChangeDataUpdates before handleScrollPrefetch
+      this.handlePositionChangeDataUpdates(elementData, entry)
+      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
+    }
+    // Reset scroll prefetch
+    this.scrollDirection = null
+    this.predictedScrollPoint = null
+  }
+
+  private handlePositionChangeDataUpdates = (
+    elementData: ForesightElementData,
+    entry: PositionObserverEntry
+  ) => {
+    let updatedProps: UpdatedDataPropertyNames[] = []
+    const wasPreviouslyIntersecting = elementData.isIntersectingWithViewport
+    const isNowIntersecting = entry.isIntersecting
+    elementData.isIntersectingWithViewport = isNowIntersecting
+    if (wasPreviouslyIntersecting !== isNowIntersecting) {
+      updatedProps.push("visibility")
+    }
+    if (isNowIntersecting) {
+      updatedProps.push("bounds")
+      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
+      this.updateElementBounds(entry.boundingClientRect, elementData)
+    }
+    if (updatedProps.length) {
+      this.emit({
+        type: "elementDataUpdated",
+        elementData,
+        timestamp: Date.now(),
+        updatedProps: updatedProps,
+      })
+    }
+  }
+
   private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
-    if (this._globalSettings.enableScrollPrediction) {
-      // ONCE per animation frame we decide what the scroll direction is
+    if (!elementData.isIntersectingWithViewport) {
+      return
+    }
+    if (!this._globalSettings.enableScrollPrediction) {
+      // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
+      if (
+        isPointInRectangle(
+          this.trajectoryPositions.currentPoint,
+          elementData.elementBounds.expandedRect
+        )
+      ) {
+        this.callCallback(elementData, {
+          kind: "mouse",
+          subType: "hover",
+        })
+      }
+    } else {
+      // ONCE per handlePositionChange batch we decide what the scroll direction is
       this.scrollDirection =
         this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
       if (this.scrollDirection === "none") {
         return
       }
-      // ONCE per animation frame we decide the predicted scroll point
+      // ONCE per handlePositionChange batch we decide the predicted scroll point
       this.predictedScrollPoint =
         this.predictedScrollPoint ??
         predictNextScrollPosition(
@@ -643,11 +700,12 @@ export class ForesightManager {
           this._globalSettings.scrollMargin
         )
 
+      // Check if the scroll is going to intersect with an registered element
       if (
         lineSegmentIntersectsRect(
           this.trajectoryPositions.currentPoint,
           this.predictedScrollPoint,
-          elementData?.elementBounds.expandedRect
+          elementData.elementBounds.expandedRect
         )
       ) {
         this.callCallback(elementData, {
@@ -661,52 +719,7 @@ export class ForesightManager {
         currentPoint: this.trajectoryPositions.currentPoint,
         predictedPoint: this.predictedScrollPoint,
       })
-    } else {
-      if (
-        isPointInRectangle(
-          this.trajectoryPositions.currentPoint,
-          elementData.elementBounds.expandedRect
-        )
-      ) {
-        this.callCallback(elementData, {
-          kind: "mouse",
-          subType: "hover",
-        })
-      }
     }
-  }
-
-  private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
-      if (!elementData) {
-        continue
-      }
-      let updatedProps: UpdatedDataPropertyNames[] = []
-      const wasPreviouslyIntersecting = elementData.isIntersectingWithViewport
-      const isNowIntersecting = entry.isIntersecting
-      elementData.isIntersectingWithViewport = isNowIntersecting
-
-      if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        updatedProps.push("visibility")
-      }
-      if (isNowIntersecting) {
-        updatedProps.push("bounds")
-        this.updateElementBounds(entry.boundingClientRect, elementData)
-        this.handleScrollPrefetch(elementData, entry.boundingClientRect)
-      }
-      if (updatedProps.length) {
-        this.emit({
-          type: "elementDataUpdated",
-          elementData,
-          timestamp: Date.now(),
-          updatedProps: updatedProps,
-        })
-      }
-    }
-
-    this.scrollDirection = null
-    this.predictedScrollPoint = null
   }
 
   private initializeGlobalListeners() {
