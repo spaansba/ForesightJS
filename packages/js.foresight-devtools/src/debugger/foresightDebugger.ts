@@ -200,16 +200,18 @@ export class ForesightDebugger {
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
-    switch (e.updatedProp) {
-      case "bounds":
-        this.createOrUpdateElementOverlay(e.elementData)
-        break
-      case "visibility":
-        if (!e.elementData.isIntersectingWithViewport) {
-          this.removeElementOverlay(e.elementData)
-        }
-        this.controlPanel?.updateElementVisibilityStatus(e.elementData)
-        break
+    // Check if 'bounds' is included in the updatedProps array
+    if (e.updatedProps.includes("bounds")) {
+      this.createOrUpdateElementOverlay(e.elementData)
+    }
+
+    // Check if 'visibility' is included in the updatedProps array
+    if (e.updatedProps.includes("visibility")) {
+      console.log(e)
+      if (!e.elementData.isIntersectingWithViewport) {
+        this.removeElementOverlay(e.elementData)
+      }
+      this.controlPanel?.updateElementVisibilityStatus(e.elementData)
     }
   }
 
@@ -223,6 +225,7 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
+    console.log(e.unregisterReason)
     this.controlPanel?.removeElementFromListContainer(e.elementData)
     this.controlPanel?.updateMinimizedElementCount()
     this.removeElementOverlay(e.elementData)

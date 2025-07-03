@@ -19,6 +19,7 @@ import type {
   TrajectoryPositions,
   UpdateForsightManagerSettings,
   ForesightEventListener,
+  UpdatedDataPropertyNames,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -258,9 +259,9 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? element.id ?? "",
-      isIntersectingWithViewport: initialIntersectionState, // Set to undefined so in handlePositionChange we can check if its the first time its position is being handled
+      isIntersectingWithViewport: initialIntersectionState,
     }
-    console.log(elementData.name, elementData.isIntersectingWithViewport)
+
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)
@@ -601,7 +602,6 @@ export class ForesightManager {
       hitType: callbackHitType,
       managerData: this.getManagerData,
     })
-
     this.unregister(elementData.element, "callbackHit")
   }
 
@@ -628,7 +628,7 @@ export class ForesightManager {
         type: "elementDataUpdated",
         timestamp: Date.now(),
         elementData: updatedElementData,
-        updatedProp: "bounds",
+        updatedProps: ["bounds"],
       })
     }
   }
@@ -643,13 +643,6 @@ export class ForesightManager {
       },
     }
     this.elements.set(elementData.element, updatedElementData)
-
-    this.emit({
-      type: "elementDataUpdated",
-      timestamp: Date.now(),
-      elementData: updatedElementData,
-      updatedProp: "bounds",
-    })
   }
 
   private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
@@ -660,7 +653,6 @@ export class ForesightManager {
       if (this.scrollDirection === "none") {
         return
       }
-
       // ONCE per animation frame we decide the predicted scroll point
       this.predictedScrollPoint =
         this.predictedScrollPoint ??
@@ -706,23 +698,29 @@ export class ForesightManager {
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
-      if (!elementData) continue
+      if (!elementData) {
+        continue
+      }
+      let updatedProps: UpdatedDataPropertyNames[] = []
       const wasPreviouslyIntersecting = elementData.isIntersectingWithViewport
       const isNowIntersecting = entry.isIntersecting
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        console.log("hjere")
+        updatedProps.push("visibility")
+      }
+      if (isNowIntersecting) {
+        updatedProps.push("bounds")
+        this.updateElementBounds(entry.boundingClientRect, elementData)
+        this.handleScrollPrefetch(elementData, entry.boundingClientRect)
+      }
+      if (updatedProps.length) {
         this.emit({
           type: "elementDataUpdated",
           elementData,
           timestamp: Date.now(),
-          updatedProp: "visibility",
+          updatedProps: updatedProps,
         })
-      }
-      if (isNowIntersecting) {
-        this.updateElementBounds(entry.boundingClientRect, elementData)
-        this.handleScrollPrefetch(elementData, entry.boundingClientRect)
       }
     }
 

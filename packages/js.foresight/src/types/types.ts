@@ -304,8 +304,10 @@ export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCal
 export interface ElementDataUpdatedEvent extends ForesightBaseEvent {
   type: "elementDataUpdated"
   elementData: ForesightElementData
-  updatedProp: "bounds" | "visibility"
+  updatedProps: UpdatedDataPropertyNames[]
 }
+
+export type UpdatedDataPropertyNames = "bounds" | "visibility"
 
 export interface CallbackFiredEvent extends ForesightBaseEvent {
   type: "callbackFired"
