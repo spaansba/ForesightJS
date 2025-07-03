@@ -233,7 +233,6 @@ export class ForesightDebugger {
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
-    console.log(e)
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel?.updateMinimizedElementCount()
     this.controlPanel.addElementToList(e.elementData)

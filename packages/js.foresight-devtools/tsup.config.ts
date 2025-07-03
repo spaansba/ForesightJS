@@ -14,9 +14,4 @@ export default defineConfig({
   minify: true,
   external: ["js.foresight"],
   outDir: "dist",
-  outExtension({ format }) {
-    return {
-      js: format === "cjs" ? ".js" : ".mjs",
-    }
-  },
 })

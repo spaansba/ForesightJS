@@ -700,6 +700,7 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
