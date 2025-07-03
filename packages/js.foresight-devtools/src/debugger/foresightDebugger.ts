@@ -235,6 +235,7 @@ export class ForesightDebugger {
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
+    console.log(e)
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel?.updateMinimizedElementCount()
     this.controlPanel.addElementToList(e.elementData)
@@ -319,6 +320,7 @@ export class ForesightDebugger {
     if (!overlays) {
       overlays = this.createElementOverlays(newData)
     }
+    console.log(overlays)
 
     updateElementOverlays(
       overlays,

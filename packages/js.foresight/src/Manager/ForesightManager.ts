@@ -53,6 +53,7 @@ import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
 import { getScrollDirection } from "../helpers/getScrollDirection"
 import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
+import { initialViewportState } from "js.foresight/helpers/initialViewportState"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -238,7 +239,7 @@ export class ForesightManager {
       callback,
       elementBounds: {
         originalRect: initialRect,
-        expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
+        expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
         hitSlop: normalizedHitSlop,
       },
       isHovering: false,
