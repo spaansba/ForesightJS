@@ -67,7 +67,7 @@ For accurate mouse predictions, ForesightJS captures mouse movements next to the
 
 ForesightJS predicts the mouse's future location using linear extrapolation based on its recent movement history.
 
-The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/main/src/ForesightManager/helpers/predictNextMousePosition.ts) function implements this in three main steps:
+The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/main/packages/js.foresight/src/helpers/predictNextMousePosition.ts) function implements this in three main steps:
 
 1.  **History Tracking:** The function utilizes stored past mouse positions, each with an associated timestamp.
 2.  **Velocity Calculation:** It calculates the average velocity (change in position over time) using the oldest and newest points in the recorded history.

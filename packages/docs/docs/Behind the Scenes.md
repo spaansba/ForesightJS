@@ -58,7 +58,7 @@ Mouse prediction analyzes cursor movement patterns to anticipate where users int
 
 ForesightJS predicts the mouse's future location using linear extrapolation based on its recent movement history.
 
-The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/main/src/ForesightManager/helpers/predictNextMousePosition.ts) function implements this in three main steps:
+The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/main/packages/js.foresight/src/helpers/predictNextMousePosition.ts) function implements this in three main steps:
 
 1.  **History Tracking:** The function utilizes stored past mouse positions, each with an associated timestamp.
 2.  **Velocity Calculation:** It calculates the average velocity (change in position over time) using the oldest and newest points in the recorded history.
@@ -68,7 +68,7 @@ This process yields a `predictedPoint` which allows for a line in memory between
 
 ### Trajectory Intersection Checking
 
-To determine if the predicted mouse path will intersect with a registered element, ForesightJS employs the [`lineSegmentIntersectsRect`](https://github.com/spaansba/ForesightJS/blob/main/src/ForesightManager/helpers/lineSigmentIntersectsRect.ts) function. This function implements the [**Liang-Barsky line clipping algorithm**](https://en.wikipedia.org/wiki/Liang%E2%80%93Barsky_algorithm), an efficient method for checking intersections between a line segment (the predicted mouse path) and a rectangular area (the expanded bounds of a registered element).
+To determine if the predicted mouse path will intersect with a registered element, ForesightJS employs the [`lineSegmentIntersectsRect`](https://github.com/spaansba/ForesightJS/blob/main/src/foresightManager/helpers/lineSigmentIntersectsRect.ts) function. This function implements the [**Liang-Barsky line clipping algorithm**](https://en.wikipedia.org/wiki/Liang%E2%80%93Barsky_algorithm), an efficient method for checking intersections between a line segment (the predicted mouse path) and a rectangular area (the expanded bounds of a registered element).
 
 The process involves:
 
