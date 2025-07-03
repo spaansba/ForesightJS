@@ -89,8 +89,9 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
   trajectoryHitData: TrajectoryHitData
   /**
    * Is the element intersecting with the viewport, usefull to track which element we should observe or not
+   * Can be @undefined in the split second the element is registering
    */
-  isIntersectingWithViewport: boolean
+  isIntersectingWithViewport: boolean | undefined
   /**
    * The element you registered
    */

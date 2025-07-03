@@ -1,2 +1,2 @@
-export const getIntersectingIcon = (isIntersectingWithViewport: boolean): string =>
+export const getIntersectingIcon = (isIntersectingWithViewport: boolean | undefined): string =>
   isIntersectingWithViewport ? "👁️" : "🚫"

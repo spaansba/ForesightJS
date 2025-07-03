@@ -168,6 +168,30 @@ export class DebuggerControlPanel {
     }
   }
 
+  public updateMinimizedElementCount() {
+    if (!this.minimizedElementCount) return
+    const registeredElements = Array.from(
+      this.foresightManagerInstance.registeredElements.entries()
+    )
+    const total = registeredElements.length
+    const isIntersecting = registeredElements.filter(
+      ([_, elementData]) => elementData.isIntersectingWithViewport
+    ).length
+
+    const visibleTitle = [
+      "Element Visibility Status",
+      "-----------------------------------------------------",
+      `Visible in Viewport: ${isIntersecting}`,
+      `Not in Viewport: ${total - isIntersecting}`,
+      `Total Registered Elements: ${total}`,
+      "",
+      "Note: Only elements visible in the viewport",
+      "are actively tracked by intersection observers.",
+    ]
+    this.minimizedElementCount.textContent = `${isIntersecting}/${total}`
+    this.minimizedElementCount.title = visibleTitle.join("\n")
+  }
+
   private queryDOMElements() {
     this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector("#trajectory-enabled")
     this.tabEnabledCheckbox = this.controlsContainer.querySelector("#tab-enabled")
@@ -452,16 +476,6 @@ export class DebuggerControlPanel {
     }
   }
 
-  // TODO only refresh it instead of readding
-  private updateElementCountsDisplay() {
-    this.elementListManager.updateElementCountsDisplay()
-    this.elementListManager.updateMinimizedElementCount(this.minimizedElementCount)
-  }
-
-  private updateCallbackCountsDisplay() {
-    this.elementListManager.updateCallbackCountsDisplay()
-  }
-
   public removeElementFromListContainer(elementData: ForesightElementData) {
     this.elementListManager.removeElementFromListContainer(elementData)
   }
@@ -470,8 +484,8 @@ export class DebuggerControlPanel {
     this.elementListManager.updateElementVisibilityStatus(elementData)
   }
 
-  public addElementToList(elementData: ForesightElementData, sort: boolean = true) {
-    this.elementListManager.addElementToList(elementData, sort)
+  public addElementToList(elementData: ForesightElementData) {
+    this.elementListManager.addElementToList(elementData)
   }
   /**
    * The cleanup method is updated to be more thorough, nullifying all

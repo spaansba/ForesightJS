@@ -2,7 +2,6 @@ import PositionObserver from "@thednp/position-observer"
 import type {
   callbackAnimation,
   DebuggerSettings,
-  ElementCount,
   ElementOverlays,
   ForesightDebuggerData,
 } from "../types/types"
@@ -31,6 +30,11 @@ import {
 import { evaluateRegistrationConditions } from "../helpers/evaluateRegistrationConditions"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 
+export type ElementCount = {
+  total: number
+  isIntersecting: number
+}
+
 export class ForesightDebugger {
   private static debuggerInstance: ForesightDebugger
   private callbackAnimations: Map<Element, callbackAnimation> = new Map()
@@ -57,15 +61,9 @@ export class ForesightDebugger {
   }
   private animationPositionObserver: PositionObserver | null = null
 
-  private _elementCount: ElementCount = {
-    total: 0,
-    isIntersecting: 0,
-  }
-
   public get getDebuggerData(): Readonly<ForesightDebuggerData> {
     return {
       settings: this._debuggerSettings,
-      elementCount: this._elementCount,
     }
   }
 
@@ -211,11 +209,6 @@ export class ForesightDebugger {
           this.removeElementOverlay(e.elementData)
         }
         this.controlPanel?.updateElementVisibilityStatus(e.elementData)
-        if (e.elementData.isIntersectingWithViewport) {
-          this._elementCount.isIntersecting++
-        } else {
-          this._elementCount.isIntersecting--
-        }
         break
     }
   }
@@ -230,11 +223,8 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
-    this._elementCount.total--
-    if (e.elementData.isIntersectingWithViewport) {
-      this._elementCount.isIntersecting--
-    }
     this.controlPanel?.removeElementFromListContainer(e.elementData)
+    this.controlPanel?.updateMinimizedElementCount()
     this.removeElementOverlay(e.elementData)
   }
 
@@ -243,11 +233,9 @@ export class ForesightDebugger {
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
-    this._elementCount.total++
-    if (e.elementData.isIntersectingWithViewport) {
-      this._elementCount.isIntersecting++
-    }
+    console.log(e)
     this.createOrUpdateElementOverlay(e.elementData)
+    this.controlPanel?.updateMinimizedElementCount()
     this.controlPanel.addElementToList(e.elementData)
   }
 

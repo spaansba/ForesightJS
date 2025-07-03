@@ -114,6 +114,11 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
 
+  // private _elementCount: ElementCount = {
+  //   total: 0,
+  //   isIntersecting: 0,
+  // }
+
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
 
@@ -245,7 +250,7 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? element.id ?? "",
-      isIntersectingWithViewport: true,
+      isIntersectingWithViewport: undefined, // Set to undefined so in handlePositionChange we can check if its the first time its position is being handled
     }
 
     this.elements.set(element, elementData)
@@ -703,13 +708,16 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        // TODO check if visibility status is changing
-        this.emit({
-          type: "elementDataUpdated",
-          elementData,
-          timestamp: Date.now(),
-          updatedProp: "visibility",
-        })
+        // On registering the element wasPreviouslyIntersecting is set to undefined
+        // Meaning it will not emit an elementDataUpdated event since the data is not updated it is just being initiated
+        if (wasPreviouslyIntersecting !== undefined) {
+          this.emit({
+            type: "elementDataUpdated",
+            elementData,
+            timestamp: Date.now(),
+            updatedProp: "visibility",
+          })
+        }
       }
       if (isNowIntersecting) {
         this.updateElementBounds(entry.boundingClientRect, elementData)

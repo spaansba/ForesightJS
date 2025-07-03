@@ -76,10 +76,16 @@ export class ControlPanelElementList {
 
   public updateElementCountsDisplay() {
     if (!this.elementCountSpan) return
-    const { isIntersecting, total } = this.debuggerInstance.getDebuggerData.elementCount
+    const registeredElements = Array.from(
+      this.foresightManagerInstance.registeredElements.entries()
+    )
+    const total = registeredElements.length
+    const isIntersecting = registeredElements.filter(
+      ([_, elementData]) => elementData.isIntersectingWithViewport
+    ).length
     const visibleTitle = [
       "Element Visibility Status",
-      "",
+      "-----------------------------------------------------",
       `Visible in Viewport: ${isIntersecting}`,
       `Not in Viewport: ${total - isIntersecting}`,
       `Total Registered Elements: ${total}`,
@@ -101,7 +107,7 @@ export class ControlPanelElementList {
     } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
     this.callbackCountSpan.title = [
       "Callback Execution Stats",
-      "",
+      "--------------------------------------------",
       "Mouse Callbacks",
       `   " Trajectory: ${mouse.trajectory}`,
       `   " Hover: ${mouse.hover}`,
@@ -154,7 +160,8 @@ export class ControlPanelElementList {
     this.reorderElementsInListContainer(this.sortElementsInListContainer())
   }
 
-  private sortElementsInListContainer(): ForesightElementData[] {
+  private sortedElementList: ForesightElementData[] = []
+  private sortElementsInListContainer(elementData?: ForesightElementData): ForesightElementData[] {
     const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
     switch (sortOrder) {
@@ -196,7 +203,7 @@ export class ControlPanelElementList {
     }
   }
 
-  public addElementToList(elementData: ForesightElementData, sort: boolean = true) {
+  public addElementToList(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
     if (this.elementListItemsContainer.innerHTML === NO_ELEMENTS_STRING) {
       this.elementListItemsContainer.innerHTML = ""
@@ -208,9 +215,6 @@ export class ControlPanelElementList {
     this.elementListItemsContainer!.appendChild(listItem)
     this.elementListItems.set(elementData.element, listItem)
     this.updateElementCountsDisplay()
-    if (sort) {
-      // this.sortAndReorderElements()
-    }
   }
 
   private updateListItemContent(listItem: HTMLElement, elementData: ForesightElementData) {
@@ -228,11 +232,11 @@ export class ControlPanelElementList {
     // Create comprehensive title with all information
     const comprehensiveTitle = [
       `${elementData.name || "Unnamed Element"}`,
-      "",
+      "------------------------------------------------------------",
       "Viewport Status:",
       elementData.isIntersectingWithViewport
-        ? "    In viewport - actively tracked by observers"
-        : "    Not in viewport - not being tracked",
+        ? "   - In viewport - actively tracked by observers"
+        : "   - Not in viewport - not being tracked",
       "",
       "Hit Slop:",
       elementData.elementBounds.hitSlop
@@ -264,30 +268,12 @@ export class ControlPanelElementList {
     })
   }
 
-  public updateMinimizedElementCount(minimizedElementCount: HTMLSpanElement | null) {
-    if (!minimizedElementCount) return
-    const { isIntersecting, total } = this.debuggerInstance.getDebuggerData.elementCount
-    const visibleTitle = [
-      "Element Visibility Status",
-      "",
-      `Visible in Viewport: ${isIntersecting}`,
-      `Not in Viewport: ${total - isIntersecting}`,
-      `Total Registered Elements: ${total}`,
-      "",
-      "Note: Only elements visible in the viewport",
-      "are actively tracked by intersection observers.",
-    ]
-    minimizedElementCount.textContent = `${isIntersecting}/${total}`
-    minimizedElementCount.title = visibleTitle.join("\n")
-  }
-
   public cleanup() {
     if (this.closeSortDropdownHandler) {
       document.removeEventListener("click", this.closeSortDropdownHandler)
       this.closeSortDropdownHandler = null
     }
 
-    // Nullify all DOM-related properties
     this.elementListItemsContainer = null
     this.elementCountSpan = null
     this.callbackCountSpan = null
