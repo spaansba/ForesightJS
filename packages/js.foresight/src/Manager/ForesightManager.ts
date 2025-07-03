@@ -227,13 +227,7 @@ export class ForesightManager {
       this.initializeGlobalListeners()
     }
 
-    // Get initial intersection state synchronously using getBoundingClientRect
-    const rect = element.getBoundingClientRect()
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-
-    const initialIntersectionState =
-      rect.top < viewportHeight && rect.bottom > 0 && rect.left < viewportWidth && rect.right > 0
+    const initialRect = element.getBoundingClientRect()
 
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop)
@@ -243,7 +237,7 @@ export class ForesightManager {
       element: element,
       callback,
       elementBounds: {
-        originalRect: rect,
+        originalRect: initialRect,
         expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
         hitSlop: normalizedHitSlop,
       },
@@ -254,7 +248,7 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? element.id ?? "",
-      isIntersectingWithViewport: initialIntersectionState,
+      isIntersectingWithViewport: initialViewportState(initialRect),
     }
 
     this.elements.set(element, elementData)
