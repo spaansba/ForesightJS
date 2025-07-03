@@ -178,8 +178,6 @@ export class DebuggerControlPanel {
       ([_, elementData]) => elementData.isIntersectingWithViewport
     ).length
 
-    console.log(isIntersecting)
-
     const visibleTitle = [
       "Element Visibility Status",
       "-----------------------------------------------------",

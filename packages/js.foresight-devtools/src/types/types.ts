@@ -1,4 +1,5 @@
 import type { HitSlop, UpdateForsightManagerSettings } from "js.foresight"
+import type { ForesightEventMap } from "js.foresight/types/types"
 
 export type DebuggerSettings = {
   /**
@@ -40,6 +41,10 @@ export type DebuggerSettings = {
    *
    */
   sortElementList: SortElementList
+
+  logging: {
+    [K in keyof ForesightEventMap]: boolean
+  }
 }
 
 export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"

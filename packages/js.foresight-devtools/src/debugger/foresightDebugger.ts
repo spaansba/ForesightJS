@@ -29,6 +29,7 @@ import {
 import { evaluateRegistrationConditions } from "../helpers/evaluateRegistrationConditions"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 import { DebuggerControlPanel } from "../control_panel/debuggerControlPanel"
+import { logEvent } from "../helpers/logEvent"
 
 export type ElementCount = {
   total: number
@@ -49,6 +50,15 @@ export class ForesightDebugger {
     isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
     showNameTags: DEFAULT_SHOW_NAME_TAGS,
     sortElementList: DEFAULT_SORT_ELEMENT_LIST,
+    logging: {
+      callbackFired: false,
+      elementDataUpdated: false,
+      elementRegistered: false,
+      elementUnregistered: false,
+      managerSettingsChanged: false,
+      mouseTrajectoryUpdate: false,
+      scrollTrajectoryUpdate: false,
+    },
   }
 
   private debugElementOverlays: Map<ForesightElement, ElementOverlays> = new Map()
@@ -178,6 +188,25 @@ export class ForesightDebugger {
         this.cleanup()
       }
     }
+
+    if (props?.logging) {
+      type LogSettingKey = keyof typeof props.logging
+
+      for (const key in props.logging) {
+        if (Object.prototype.hasOwnProperty.call(props.logging, key)) {
+          const settingKey = key as LogSettingKey
+          if (
+            shouldUpdateSetting(
+              props.logging[settingKey],
+              this._debuggerSettings.logging[settingKey]
+            )
+          ) {
+            this._debuggerSettings.logging[settingKey] = props.logging[settingKey]!
+          }
+        }
+      }
+    }
+    console.log(this._debuggerSettings)
   }
 
   private subscribeToManagerEvents() {
@@ -200,6 +229,9 @@ export class ForesightDebugger {
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
+    if (this._debuggerSettings.logging.elementDataUpdated) {
+      logEvent(e, "Element Data Updated", "purple")
+    }
     // Check if 'bounds' is included in the updatedProps array
     if (e.updatedProps.includes("bounds")) {
       this.createOrUpdateElementOverlay(e.elementData)
@@ -224,22 +256,34 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
+    if (this._debuggerSettings.logging.elementUnregistered) {
+      logEvent(e, "Element Unregistered", "red")
+    }
     this.removeElementOverlay(e.elementData)
     this.controlPanel.updateMinimizedElementCount()
     this.controlPanel.removeElementFromListContainer(e.elementData)
   }
 
   private handleCallbackFired = (e: CallbackFiredEvent) => {
+    if (this._debuggerSettings.logging.callbackFired) {
+      logEvent(e, `Callback Fired (${e.hitType.kind})`, "orange")
+    }
     this.showCallbackAnimation(e.elementData, e.hitType)
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
+    if (this._debuggerSettings.logging.elementRegistered) {
+      logEvent(e, "Element Registered", "green")
+    }
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel.addElementToList(e.elementData)
     this.controlPanel.updateMinimizedElementCount()
   }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
+    if (this._debuggerSettings.logging.mouseTrajectoryUpdate) {
+      logEvent(e, "Mouse Trajectory Update", "blue")
+    }
     if (!this.shadowRoot || !this.debugContainer) {
       return
     }
@@ -282,6 +326,9 @@ export class ForesightDebugger {
   }
 
   private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
+    if (this._debuggerSettings.logging.scrollTrajectoryUpdate) {
+      logEvent(e, "Scroll Trajectory Update", "cyan")
+    }
     if (!this.scrollTrajectoryLine) return
     const dx = e.predictedPoint.x - e.currentPoint.x
     const dy = e.predictedPoint.y - e.currentPoint.y
@@ -295,6 +342,9 @@ export class ForesightDebugger {
   }
 
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
+    if (this._debuggerSettings.logging.managerSettingsChanged) {
+      logEvent(e, "Manager Settings Changed", "grey")
+    }
     this.controlPanel?.updateControlsState(e.managerData.globalSettings, this._debuggerSettings)
   }
 

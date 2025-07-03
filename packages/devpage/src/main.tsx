@@ -25,6 +25,15 @@ ForesightDebugger.initialize(ForesightManager.instance, {
   showNameTags: true,
   isControlPanelDefaultMinimized: true,
   sortElementList: "visibility",
+  logging: {
+    callbackFired: true,
+    elementRegistered: true,
+    elementUnregistered: true,
+    elementDataUpdated: true,
+    mouseTrajectoryUpdate: false,
+    scrollTrajectoryUpdate: true,
+    managerSettingsChanged: true,
+  },
 })
 
 createRoot(document.getElementById("root")!).render(

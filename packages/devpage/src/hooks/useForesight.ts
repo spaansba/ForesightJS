@@ -17,6 +17,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
     const result = ForesightManager.instance.register({
       element: elementRef.current,
       ...options,
+      callback: () => {},
     })
 
     setRegisterResults(result)
