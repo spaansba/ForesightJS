@@ -13,10 +13,14 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "js.foresight": ["./packages/js.foresight/src/index.ts"],
+      "js.foresight/*": ["./packages/js.foresight/src/*"]
+    }
   },
   "exclude": ["node_modules", "**/node_modules/**", "dist", "**/dist/**", "build", "**/build/**"]
 }

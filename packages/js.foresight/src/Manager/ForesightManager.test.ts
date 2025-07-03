@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { ForesightManager } from "./ForesightManager"
+import { ForesightManager } from "./foresightManager"
 import type { ForesightRegisterOptions, ForesightManagerSettings } from "../types/types"
 import {
   createMockElement,

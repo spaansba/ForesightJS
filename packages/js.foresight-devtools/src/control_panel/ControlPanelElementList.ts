@@ -3,7 +3,7 @@ import type { ForesightElementData, ForesightElement } from "js.foresight"
 import type { SortElementList } from "../types/types"
 
 import { getIntersectingIcon } from "../helpers/getIntersectingIcon"
-import type { ForesightDebugger } from "../debugger/ForesightDebugger"
+import type { ForesightDebugger } from "../debugger/foresightDebugger"
 import { sortByDocumentPosition } from "../helpers/sortByDocumentPosition"
 
 const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"

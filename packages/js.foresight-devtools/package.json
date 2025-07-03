@@ -3,9 +3,8 @@
   "version": "0.0.3",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "scripts": {
-    "build": "rollup -c",
-    "rollup": "rollup -c --bundleConfigAsCjs",
-    "dev": "rollup -c --watch --bundleConfigAsCjs",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run"
@@ -48,17 +47,10 @@
     "js.foresight": "^3.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.3",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.15.30",
     "js.foresight": "workspace:*",
-    "rollup": "^4.42.0",
-    "rollup-plugin-dts": "^6.2.1",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2",
     "tslib": "^2.8.1",
+    "tsup": "^8.0.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   },
