@@ -181,6 +181,8 @@ export class ControlPanelElementList {
           return sortByDocumentPosition(a, b)
         })
         break
+      default:
+        sortOrder satisfies never
     }
     return elementsData
   }

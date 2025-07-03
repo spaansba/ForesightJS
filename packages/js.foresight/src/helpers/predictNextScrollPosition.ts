@@ -21,6 +21,10 @@ export function predictNextScrollPosition(
     case "right":
       predictedPoint.x += scrollMargin
       break
+    case "none":
+      break
+    default:
+      direction satisfies never
   }
   return predictedPoint
 }

@@ -230,7 +230,7 @@ export class ForesightDebugger {
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
     if (this._debuggerSettings.logging.elementDataUpdated) {
-      logEvent(e, "Element Data Updated", "purple")
+      logEvent(e, `Element Data Updated: ${e.elementData.name}`, "purple")
     }
     // Check if 'bounds' is included in the updatedProps array
     if (e.updatedProps.includes("bounds")) {
@@ -257,7 +257,7 @@ export class ForesightDebugger {
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
     if (this._debuggerSettings.logging.elementUnregistered) {
-      logEvent(e, "Element Unregistered", "red")
+      logEvent(e, `Element Unegistered: ${e.elementData.name}`, "red")
     }
     this.removeElementOverlay(e.elementData)
     this.controlPanel.updateMinimizedElementCount()
@@ -266,14 +266,14 @@ export class ForesightDebugger {
 
   private handleCallbackFired = (e: CallbackFiredEvent) => {
     if (this._debuggerSettings.logging.callbackFired) {
-      logEvent(e, `Callback Fired (${e.hitType.kind})`, "orange")
+      logEvent(e, `Callback Fired (${e.hitType.kind} / ${e.hitType.subType})`, "orange")
     }
     this.showCallbackAnimation(e.elementData, e.hitType)
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
     if (this._debuggerSettings.logging.elementRegistered) {
-      logEvent(e, "Element Registered", "green")
+      logEvent(e, `Element Registered: ${e.elementData.name}`, "green")
     }
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel.addElementToList(e.elementData)
@@ -432,6 +432,8 @@ export class ForesightDebugger {
       case "tab":
         animationOverlay.style.borderColor = "#f97316" // Orange
         break
+      default:
+        hitType satisfies never
     }
 
     animationOverlay.classList.add("animate")

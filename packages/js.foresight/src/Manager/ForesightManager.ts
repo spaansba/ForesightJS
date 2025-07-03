@@ -563,6 +563,8 @@ export class ForesightManager {
       case "scroll":
         this._globalCallbackHits.scroll[callbackHitType.subType]++
         break
+      default:
+        callbackHitType satisfies never
     }
     this._globalCallbackHits.total++
   }
