@@ -225,8 +225,8 @@ export class ForesightDebugger {
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
     this.removeElementOverlay(e.elementData)
-    this.controlPanel?.updateMinimizedElementCount()
-    this.controlPanel?.removeElementFromListContainer(e.elementData)
+    this.controlPanel.updateMinimizedElementCount()
+    this.controlPanel.removeElementFromListContainer(e.elementData)
   }
 
   private handleCallbackFired = (e: CallbackFiredEvent) => {
@@ -236,7 +236,7 @@ export class ForesightDebugger {
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel.addElementToList(e.elementData)
-    this.controlPanel?.updateMinimizedElementCount()
+    this.controlPanel.updateMinimizedElementCount()
   }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
@@ -318,8 +318,6 @@ export class ForesightDebugger {
     if (!overlays) {
       overlays = this.createElementOverlays(newData)
     }
-    console.log(overlays)
-
     updateElementOverlays(
       overlays,
       newData,

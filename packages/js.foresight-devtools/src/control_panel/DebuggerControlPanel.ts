@@ -170,7 +170,6 @@ export class DebuggerControlPanel {
 
   public updateMinimizedElementCount() {
     if (!this.minimizedElementCount) return
-    console.log("here")
     const registeredElements = Array.from(
       this.foresightManagerInstance.registeredElements.entries()
     )
@@ -178,6 +177,8 @@ export class DebuggerControlPanel {
     const isIntersecting = registeredElements.filter(
       ([_, elementData]) => elementData.isIntersectingWithViewport
     ).length
+
+    console.log(isIntersecting)
 
     const visibleTitle = [
       "Element Visibility Status",
@@ -483,6 +484,7 @@ export class DebuggerControlPanel {
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
     this.elementListManager.updateElementVisibilityStatus(elementData)
+    this.updateMinimizedElementCount()
   }
 
   public addElementToList(elementData: ForesightElementData) {
