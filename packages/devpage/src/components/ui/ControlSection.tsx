@@ -117,14 +117,48 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
   // Filter buttons by type
   const smallButtons = controlButtons.filter(button => button.type === "small-button")
   const linkAndResetButtons = controlButtons.filter(
-    button => button.id === "page-switch" || button.id === "page-mass" || button.id === "reset-all"
+    button => button.id === "page-switch" || button.id === "page-mass"
   )
   const mainButtons = controlButtons.filter(
-    button => button.type === "button" && button.id !== "reset-all"
+    button =>
+      button.type === "button" &&
+      !["visibility-toggle", "resize-toggle", "remove-toggle", "reset-all"].includes(button.id)
+  )
+
+  // Fixed toggle buttons including reset
+  const fixedButtons = controlButtons.filter(button =>
+    ["visibility-toggle", "resize-toggle", "remove-toggle", "reset-all"].includes(button.id)
   )
 
   return (
     <div className="shadow-sm">
+      {/* Fixed toggle buttons in top right */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {fixedButtons.map(button => (
+          <button
+            key={button.id}
+            onClick={button.onClick}
+            className={`w-32 h-10 px-2 py-1 rounded-md transition-all duration-200 text-center flex items-center justify-center shadow-lg ${
+              button.id === "reset-all"
+                ? "bg-orange-500 hover:bg-red-400 text-white"
+                : button.isActive
+                ? "bg-green-500 hover:bg-green-400 text-white"
+                : "bg-red-500 hover:bg-red-400 text-white"
+            }`}
+          >
+            <div className="font-medium text-xs truncate">
+              {button.id === "visibility-toggle"
+                ? `Visible: ${isVisible ? "ON" : "OFF"}`
+                : button.id === "resize-toggle"
+                ? `Resize: ${isResized ? "ON" : "OFF"}`
+                : button.id === "remove-toggle"
+                ? `Remove: ${isRemoved ? "ON" : "OFF"}`
+                : "RESET"}
+            </div>
+          </button>
+        ))}
+      </div>
+
       <div className="max-w-6xl mx-auto px-8 py-6">
         <h1 className="text-2xl font-bold text-slate-800 mb-6">{title}</h1>
 
@@ -171,7 +205,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
             ))}
           </div>
 
-          {/* Main control buttons */}
+          {/* Main control buttons (excluding toggle buttons) */}
           {mainButtons.map(button => (
             <div key={button.id} className="flex-1 min-w-64">
               <button

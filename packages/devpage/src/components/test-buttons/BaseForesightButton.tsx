@@ -1,4 +1,4 @@
-import type { ForesightRegisterOptionsWithoutElement } from "../../../../src/types/types"
+import type { ForesightRegisterOptionsWithoutElement } from "js.foresight"
 import useForesight from "../../hooks/useForesight"
 
 type ForesightButtonProps = {

@@ -23,7 +23,7 @@ ForesightManager.initialize({
 ForesightDebugger.initialize(ForesightManager.instance, {
   showDebugger: true,
   showNameTags: true,
-  isControlPanelDefaultMinimized: false,
+  isControlPanelDefaultMinimized: true,
   sortElementList: "visibility",
 })
 

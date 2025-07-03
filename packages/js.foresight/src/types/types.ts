@@ -47,7 +47,7 @@ export type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
   expandedRect: Rect
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
-  originalRect?: DOMRectReadOnly | undefined
+  originalRect: DOMRectReadOnly
   /** The hit slop values applied to this element. */
   hitSlop: Exclude<HitSlop, number>
 }
@@ -91,7 +91,7 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * Is the element intersecting with the viewport, usefull to track which element we should observe or not
    * Can be @undefined in the split second the element is registering
    */
-  isIntersectingWithViewport: boolean | undefined
+  isIntersectingWithViewport: boolean
   /**
    * The element you registered
    */

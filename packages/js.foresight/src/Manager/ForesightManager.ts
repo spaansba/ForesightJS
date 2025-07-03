@@ -231,6 +231,14 @@ export class ForesightManager {
       this.initializeGlobalListeners()
     }
 
+    // Get initial intersection state synchronously using getBoundingClientRect
+    const rect = element.getBoundingClientRect()
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+
+    const initialIntersectionState =
+      rect.top < viewportHeight && rect.bottom > 0 && rect.left < viewportWidth && rect.right > 0
+
     const normalizedHitSlop = hitSlop
       ? normalizeHitSlop(hitSlop)
       : this._globalSettings.defaultHitSlop
@@ -239,7 +247,7 @@ export class ForesightManager {
       element: element,
       callback,
       elementBounds: {
-        originalRect: undefined,
+        originalRect: rect,
         expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
         hitSlop: normalizedHitSlop,
       },
@@ -250,9 +258,9 @@ export class ForesightManager {
         trajectoryHitExpirationTimeoutId: undefined,
       },
       name: name ?? element.id ?? "",
-      isIntersectingWithViewport: undefined, // Set to undefined so in handlePositionChange we can check if its the first time its position is being handled
+      isIntersectingWithViewport: initialIntersectionState, // Set to undefined so in handlePositionChange we can check if its the first time its position is being handled
     }
-
+    console.log(elementData.name, elementData.isIntersectingWithViewport)
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)
@@ -646,10 +654,6 @@ export class ForesightManager {
 
   private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
     if (this._globalSettings.enableScrollPrediction) {
-      // This means the foresightmanager is initializing registered elements, we dont want to calc the scroll direction here
-      if (!elementData.elementBounds.originalRect) {
-        return
-      }
       // ONCE per animation frame we decide what the scroll direction is
       this.scrollDirection =
         this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
@@ -700,7 +704,6 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    console.log("here")
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) continue
@@ -709,16 +712,13 @@ export class ForesightManager {
       elementData.isIntersectingWithViewport = isNowIntersecting
 
       if (wasPreviouslyIntersecting !== isNowIntersecting) {
-        // On registering the element wasPreviouslyIntersecting is set to undefined
-        // Meaning it will not emit an elementDataUpdated event since the data is not updated it is just being initiated
-        if (wasPreviouslyIntersecting !== undefined) {
-          this.emit({
-            type: "elementDataUpdated",
-            elementData,
-            timestamp: Date.now(),
-            updatedProp: "visibility",
-          })
-        }
+        console.log("hjere")
+        this.emit({
+          type: "elementDataUpdated",
+          elementData,
+          timestamp: Date.now(),
+          updatedProp: "visibility",
+        })
       }
       if (isNowIntersecting) {
         this.updateElementBounds(entry.boundingClientRect, elementData)

@@ -38,14 +38,11 @@ export const Main = () => {
             <ForesightButtonRemoveable name="removeable" />
             <ForesightButtonNoName />
             <ForesightButtonVisibility name="visibility2" />
-            <ForesightButtonResizeable name="resizeable2" />
             <ForesightButtonRemoveable name="removeable2" />
             <ForesightButtonVisibility name="visibility3" />
-            <ForesightButtonResizeable name="resizeable3" />
             <ForesightButtonRemoveable name="removeable3" />
             <ForesightButtonNoName />
             <ForesightButtonVisibility name="visibility4" />
-            <ForesightButtonResizeable name="resizeable4" />
             <ForesightButtonRemoveable name="removeable4" />
             <ForesightButtonNoName />
           </div>

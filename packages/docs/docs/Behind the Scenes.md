@@ -36,12 +36,13 @@ ForesightJS utilizes both browser-native observers and a third-party observer li
 
 - **`MutationObserver`:** This browser-native observer detects when registered elements are removed from the DOM, leading to their automatic unregistration. This provides a safety net if developers forget to manually unregister elements on removal.
 
-- **[`PositionObserver`](https://github.com/Shopify/position-observer/):** Created by [Shopify](https://github.com/Shopify), this library uses browser-native observers under the hood to asynchronously monitor changes in the position of registered elements without polling. Its callback provides a list of all detected changes, allowing us to consolidate multiple observer patterns. By implementing the `PositionObserver`, we avoid the need for:
+- **[`PositionObserver`](https://github.com/Shopify/position-observer/):** Created by [Shopify](https://github.com/Shopify), this library uses browser-native observers under the hood to asynchronously monitor changes in the position of registered elements without polling.
 
-        - Window resize events
-        - Window scroll events
-        - ResizeObserver
-        - IntersectionObserver
+The `PositionObserver` works by using a layered approach to track element position changes across the page. It uses an internal `VisibilityObserver` built on the native `IntersectionObserver` to determine if target elements are visible in the viewport. This optimization means only visible targets are monitored for position changes.
+
+When a target element becomes visible, the system activates a `ResizeObserver` to track size changes of the target element itself. Next to that each target gets its own `PositionIntersectionObserverOptions` containing an internal `IntersectionObserver` with smart rootMargin calculations.
+
+This smart rootMargin transforms the observer from "observing against viewport" to "observing against the target element". By calculating the rootMargin values, the system creates target-specific observation regions. Other elements on the page are observed by these target-specific IntersectionObservers, and when any element moves and intersects or overlaps with a target, callbacks fire. This enables tracking any position changes affecting the target elements without constantly polling `getBoundingClientRect()` on every element.
 
 With the observer foundation in place, we can now examine how ForesightJS implements its three core prediction mechanisms, starting with mouse trajectory prediction.
 
