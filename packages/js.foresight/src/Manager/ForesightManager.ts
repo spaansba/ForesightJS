@@ -115,11 +115,6 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
 
-  // private _elementCount: ElementCount = {
-  //   total: 0,
-  //   isIntersecting: 0,
-  // }
-
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
 
@@ -444,35 +439,6 @@ export class ForesightManager {
       : { ...this.trajectoryPositions.currentPoint }
   }
 
-  /**
-   * This is a "fire-and-forget" handler. Its only goal is to trigger the
-   * callback once. It does so if the mouse trajectory is predicted to hit the
-   * element (if prediction is on) OR if the mouse physically hovers over it.
-   * It does not track state, as the element is immediately unregistered.
-   *
-   * @param elementData - The data object for the foresight element.
-   * @param element - The HTML element being interacted with.
-   */
-  private handleCallbackInteraction(elementData: ForesightElementData) {
-    const { expandedRect } = elementData.elementBounds
-
-    // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
-    if (!this._globalSettings.enableMousePrediction) {
-      if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
-        this.callCallback(elementData, { kind: "mouse", subType: "hover" })
-        return
-      }
-    } else if (
-      lineSegmentIntersectsRect(
-        this.trajectoryPositions.currentPoint,
-        this.trajectoryPositions.predictedPoint,
-        expandedRect
-      )
-    ) {
-      this.callCallback(elementData, { kind: "mouse", subType: "trajectory" })
-    }
-  }
-
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
 
@@ -480,8 +446,23 @@ export class ForesightManager {
       if (!currentData.isIntersectingWithViewport) {
         return
       }
+      const { expandedRect } = currentData.elementBounds
 
-      this.handleCallbackInteraction(currentData)
+      if (!this._globalSettings.enableMousePrediction) {
+        if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
+          this.callCallback(currentData, { kind: "mouse", subType: "hover" })
+          return
+        }
+        // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
+      } else if (
+        lineSegmentIntersectsRect(
+          this.trajectoryPositions.currentPoint,
+          this.trajectoryPositions.predictedPoint,
+          expandedRect
+        )
+      ) {
+        this.callCallback(currentData, { kind: "mouse", subType: "trajectory" })
+      }
     })
 
     this.emit({
