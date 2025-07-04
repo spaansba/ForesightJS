@@ -47,6 +47,8 @@ export type DebuggerSettings = {
   }
 }
 
+export type ControllerTabs = "settings" | "elements" | "logs"
+
 export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
 export type ForesightDebuggerData = {

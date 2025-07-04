@@ -5,6 +5,7 @@ import type {
 } from "js.foresight"
 import { ForesightManager } from "js.foresight"
 import type {
+  ControllerTabs,
   DebuggerBooleanSettingKeys,
   DebuggerSettings,
   ManagerBooleanSettingKeys,
@@ -60,19 +61,33 @@ export class DebuggerControlPanel {
   private showNameTagsCheckbox: HTMLInputElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
-  private allSettingsSectionsContainer: HTMLElement | null = null
-  private debuggerElementsSection: HTMLElement | null = null
   private isContainerMinimized: boolean = false
 
-  private isMouseSettingsMinimized: boolean = true
-  private isKeyboardSettingsMinimized: boolean = true
-  private isScrollSettingsMinimized: boolean = true
-  private isGeneralSettingsMinimized: boolean = true
-  private readonly SESSION_STORAGE_KEY = "jsforesightDebuggerSectionStates"
+  // Tab system
+  private tabContainer: HTMLElement | null = null
+  private settingsTab: HTMLElement | null = null
+  private elementsTab: HTMLElement | null = null
+  private logsTab: HTMLElement | null = null
+  private settingsContent: HTMLElement | null = null
+  private elementsContent: HTMLElement | null = null
+  private logsContent: HTMLElement | null = null
+  private activeTab: ControllerTabs = "elements"
 
   private copySettingsButton: HTMLButtonElement | null = null
   private minimizedElementCount: HTMLSpanElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  // Logs system
+  private logsContainer: HTMLElement | null = null
+  private logsFilterDropdown: HTMLElement | null = null
+  private logsFilterButton: HTMLButtonElement | null = null
+  private eventLogs: Array<{ type: string; timestamp: number; data: any }> = []
+  private maxLogs: number = 1000
+  private logFilters: Set<string> = new Set([
+    "elementRegistered",
+    "elementUnregistered",
+    "callbackFired",
+  ])
 
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
@@ -126,8 +141,8 @@ export class DebuggerControlPanel {
     )
     this.queryDOMElements()
     this.initializeElementListManager()
-    this.originalSectionStates()
     this.setupEventListeners()
+    this.initializeTabSystem()
     this.updateContainerVisibilityState()
     this.updateControlsState(
       this.foresightManagerInstance.getManagerData.globalSettings,
@@ -139,33 +154,363 @@ export class DebuggerControlPanel {
     return !!DebuggerControlPanel.debuggerControlPanelInstance
   }
 
-  private loadSectionStatesFromSessionStorage(): Partial<SectionStates> {
-    const storedStatesRaw = sessionStorage.getItem(this.SESSION_STORAGE_KEY)
-    let loadedStates: Partial<SectionStates> = {}
+  private switchTab(tab: ControllerTabs) {
+    this.activeTab = tab
 
-    if (storedStatesRaw) {
-      loadedStates = JSON.parse(storedStatesRaw)
-    }
+    // Update tab buttons
+    this.settingsTab?.classList.toggle("active", tab === "settings")
+    this.elementsTab?.classList.toggle("active", tab === "elements")
+    this.logsTab?.classList.toggle("active", tab === "logs")
 
-    this.isMouseSettingsMinimized = loadedStates.mouse ?? true
-    this.isKeyboardSettingsMinimized = loadedStates.keyboard ?? true
-    this.isScrollSettingsMinimized = loadedStates.scroll ?? true
-    this.isGeneralSettingsMinimized = loadedStates.general ?? true
-    return loadedStates
+    // Update content visibility
+    if (this.settingsContent)
+      this.settingsContent.style.display = tab === "settings" ? "block" : "none"
+    if (this.elementsContent)
+      this.elementsContent.style.display = tab === "elements" ? "block" : "none"
+    if (this.logsContent) this.logsContent.style.display = tab === "logs" ? "block" : "none"
+
+    // Update tab bar content
+    this.updateTabBarContent(tab)
   }
 
-  private saveSectionStatesToSessionStorage() {
-    const states: SectionStates = {
-      mouse: this.isMouseSettingsMinimized,
-      keyboard: this.isKeyboardSettingsMinimized,
-      scroll: this.isScrollSettingsMinimized,
-      general: this.isGeneralSettingsMinimized,
+  private updateTabBarContent(tab: "settings" | "elements" | "logs") {
+    const tabBar = this.controlsContainer?.querySelector(".tab-bar")
+    if (!tabBar) return
+
+    switch (tab) {
+      case "settings":
+        tabBar.innerHTML = `
+          <div class="tab-bar-info">
+            <span class="tab-info-text">Global settings for prediction behavior</span>
+          </div>
+          <div class="tab-bar-actions">
+            <button class="copy-settings-button" title="Copy Settings to Clipboard">
+              ${COPY_SVG_ICON}
+            </button>
+          </div>
+        `
+        // Re-attach copy settings event listener
+        const copyBtn = tabBar.querySelector(".copy-settings-button")
+        copyBtn?.addEventListener("click", this.handleCopySettings.bind(this))
+        break
+
+      case "elements":
+        // Get current element data
+        const registeredElements = Array.from(
+          this.foresightManagerInstance.registeredElements.entries()
+        )
+        const total = registeredElements.length
+        const isIntersecting = registeredElements.filter(
+          ([_, elementData]) => elementData.isIntersectingWithViewport
+        ).length
+        const { tab, mouse, scroll } =
+          this.foresightManagerInstance.getManagerData.globalCallbackHits
+
+        tabBar.innerHTML = `
+          <div class="tab-bar-info">
+            <span class="tab-info-text">Visible: ${isIntersecting}/${total} ~ Mouse: ${
+          mouse.hover + mouse.trajectory
+        } Tab: ${tab.forwards + tab.reverse} Scroll: ${
+          scroll.down + scroll.left + scroll.right + scroll.up
+        }</span>
+          </div>
+          <div class="tab-bar-actions">
+            <div class="sort-control-container">
+              <button class="sort-button" title="Change element list sort order">
+                ${SORT_SVG_ICON}
+              </button>
+              <div id="sort-options-popup">
+                <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
+                <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
+                <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
+              </div>
+            </div>
+          </div>
+        `
+
+        // Re-attach sort functionality
+        this.setupElementsSortListeners()
+        this.elementListManager.updateSortOptionUI(
+          this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
+        )
+        break
+
+      case "logs":
+        const filteredCount = this.eventLogs.filter(log => this.logFilters.has(log.type)).length
+        const activeFilters = Array.from(this.logFilters)
+        const filterText =
+          activeFilters.length === 7
+            ? "All events"
+            : activeFilters.length === 0
+            ? "No events"
+            : `${activeFilters.length} event types`
+
+        tabBar.innerHTML = `
+          <div class="tab-bar-info">
+            <span class="tab-info-text">Showing ${filteredCount} of ${this.eventLogs.length} events • ${filterText}</span>
+          </div>
+          <div class="tab-bar-actions">
+            <button class="logs-filter-button" title="Filter log types (${activeFilters.length}/7 active)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+            </button>
+            <div class="logs-filter-dropdown">
+              <button data-log-type="elementRegistered">Element Registered</button>
+              <button data-log-type="elementUnregistered">Element Unregistered</button>
+              <button data-log-type="elementDataUpdated">Element Data Updated</button>
+              <button data-log-type="callbackFired">Callback Fired</button>
+              <button data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
+              <button data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
+              <button data-log-type="managerSettingsChanged">Manager Settings Changed</button>
+            </div>
+          </div>
+        `
+        // Re-attach logs filter event listeners
+        this.setupLogsFilterListeners()
+        this.updateLogFilterUI()
+        break
     }
+  }
+
+  private setupElementsSortListeners() {
+    const sortButton = this.controlsContainer?.querySelector(".sort-button")
+    const sortPopup = this.controlsContainer?.querySelector("#sort-options-popup")
+
+    sortButton?.addEventListener("click", e => {
+      e.stopPropagation()
+      sortPopup?.classList.toggle("active")
+    })
+
+    sortPopup?.addEventListener("click", e => {
+      const target = e.target as HTMLElement
+      const sortBtn = target.closest("[data-sort]") as HTMLElement | null
+      if (sortBtn) {
+        const value = sortBtn.dataset.sort as any
+        this.debuggerInstance.alterDebuggerSettings({
+          sortElementList: value,
+        })
+        this.elementListManager.reorderElementsInListContainer(
+          this.elementListManager.sortElementsInListContainer()
+        )
+        this.elementListManager.updateSortOptionUI(value)
+        sortPopup.classList.remove("active")
+      }
+    })
+  }
+
+  private setupLogsFilterListeners() {
+    const filterButton = this.controlsContainer?.querySelector(".logs-filter-button")
+    const filterDropdown = this.controlsContainer?.querySelector(".logs-filter-dropdown")
+
+    filterButton?.addEventListener("click", e => {
+      e.stopPropagation()
+      filterDropdown?.classList.toggle("active")
+    })
+
+    filterDropdown?.addEventListener("click", e => {
+      const target = e.target as HTMLElement
+      const filterBtn = target.closest("[data-log-type]") as HTMLElement | null
+      if (filterBtn) {
+        const logType = filterBtn.dataset.logType!
+        this.toggleLogFilter(logType)
+      }
+    })
+  }
+
+  private addEventLog(type: string, data: any) {
+    if (!this.logFilters.has(type)) return
+
+    const logEntry = {
+      type,
+      timestamp: Date.now(),
+      data: this.safeSerializeEventData(type, data),
+    }
+
+    this.eventLogs.unshift(logEntry)
+    if (this.eventLogs.length > this.maxLogs) {
+      this.eventLogs = this.eventLogs.slice(0, this.maxLogs)
+    }
+
+    this.updateLogsDisplay()
+
+    // Update elements tab bar for relevant events
+    if (
+      this.activeTab === "elements" &&
+      (type === "elementRegistered" ||
+        type === "elementUnregistered" ||
+        type === "elementDataUpdated" ||
+        type === "callbackFired")
+    ) {
+      this.updateTabBarContent("elements")
+    }
+  }
+
+  private safeSerializeEventData(eventType: string, data: any): any {
     try {
-      sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(states))
-    } catch (e) {
-      console.error("Foresight Debugger: Could not save section states to session storage.", e)
+      // For different event types, extract only the relevant serializable data
+      switch (eventType) {
+        case "elementRegistered":
+        case "elementUnregistered":
+          return {
+            elementName: data.elementData?.name || "Unnamed Element",
+            elementTag: data.elementData?.element?.tagName || "Unknown",
+            elementId: data.elementData?.element?.id || "",
+            elementClass: data.elementData?.element?.className || "",
+            isIntersecting: data.elementData?.isIntersectingWithViewport,
+            hitSlop: data.elementData?.elementBounds?.hitSlop,
+            unregisterReason: data.unregisterReason || undefined,
+          }
+
+        case "elementDataUpdated":
+          return {
+            elementName: data.elementData?.name || "Unnamed Element",
+            elementTag: data.elementData?.element?.tagName || "Unknown",
+            updatedProps: data.updatedProps || [],
+            isIntersecting: data.elementData?.isIntersectingWithViewport,
+          }
+
+        case "callbackFired":
+          return {
+            elementName: data.elementData?.name || "Unnamed Element",
+            elementTag: data.elementData?.element?.tagName || "Unknown",
+            hitType: data.hitType,
+            predictionEnabled: data.managerData?.globalSettings?.enableMousePrediction,
+            tabPredictionEnabled: data.managerData?.globalSettings?.enableTabPrediction,
+            scrollPredictionEnabled: data.managerData?.globalSettings?.enableScrollPrediction,
+          }
+
+        case "mouseTrajectoryUpdate":
+          return {
+            currentPoint: data.trajectoryPositions?.currentPoint,
+            predictedPoint: data.trajectoryPositions?.predictedPoint,
+            positionCount: data.trajectoryPositions?.positions?.length || 0,
+            predictionEnabled: data.predictionEnabled,
+          }
+
+        case "scrollTrajectoryUpdate":
+          return {
+            currentPoint: data.currentPoint,
+            predictedPoint: data.predictedPoint,
+          }
+
+        case "managerSettingsChanged":
+          return {
+            globalSettings: data.managerData?.globalSettings || {},
+          }
+
+        default:
+          // For unknown event types, try to extract basic info
+          return {
+            eventType,
+            timestamp: data.timestamp || Date.now(),
+            message: "Event data structure not recognized",
+          }
+      }
+    } catch (error) {
+      // Fallback if serialization fails
+      return {
+        eventType,
+        error: "Failed to serialize event data",
+        errorMessage: error instanceof Error ? error.message : String(error),
+      }
     }
+  }
+
+  private updateLogsDisplay() {
+    if (!this.logsContainer) return
+
+    const filteredLogs = this.eventLogs.filter(log => this.logFilters.has(log.type))
+
+    this.logsContainer.innerHTML =
+      filteredLogs.length === 0
+        ? '<div class="no-logs">No logs to display. Check your filter settings.</div>'
+        : filteredLogs
+            .map((log, index) => {
+              const time = new Date(log.timestamp).toLocaleTimeString()
+              const logId = `log-${index}`
+              const summary = this.getLogSummary(log.type, log.data)
+
+              return `<div class="log-entry log-${log.type}" data-log-id="${logId}">
+                <div class="log-header" onclick="window.debuggerInstance?.toggleLogEntry('${logId}')">
+                  <span class="log-time">${time}</span>
+                  <span class="log-type">${log.type}</span>
+                  <span class="log-summary">${summary}</span>
+                  <span class="log-toggle">▶</span>
+                </div>
+                <div class="log-details" style="display: none;">
+                  <pre class="log-data">${JSON.stringify(log.data, null, 2)}</pre>
+                </div>
+              </div>`
+            })
+            .join("")
+
+    // Store reference for toggle functionality
+    if ((window as any).debuggerInstance !== this) {
+      ;(window as any).debuggerInstance = this
+    }
+
+    // Update tab bar if on logs tab
+    if (this.activeTab === "logs") {
+      this.updateTabBarContent("logs")
+    }
+  }
+
+  public toggleLogEntry(logId: string) {
+    const logEntry = this.logsContainer?.querySelector(`[data-log-id="${logId}"]`)
+    if (!logEntry) return
+
+    const details = logEntry.querySelector(".log-details") as HTMLElement
+    const toggle = logEntry.querySelector(".log-toggle") as HTMLElement
+
+    if (details && toggle) {
+      const isVisible = details.style.display !== "none"
+      details.style.display = isVisible ? "none" : "block"
+      toggle.textContent = isVisible ? "▶" : "▼"
+    }
+  }
+
+  private getLogSummary(eventType: string, data: any): string {
+    switch (eventType) {
+      case "elementRegistered":
+        return `${data.elementName} (${data.elementTag})`
+      case "elementUnregistered":
+        return `${data.elementName} - ${data.unregisterReason || "unknown"}`
+      case "callbackFired":
+        return `${data.elementName} - ${data.hitType}`
+      case "elementDataUpdated":
+        return `${data.elementName} - ${data.updatedProps?.join(", ") || "unknown props"}`
+      case "mouseTrajectoryUpdate":
+        return `${data.positionCount} positions`
+      case "scrollTrajectoryUpdate":
+        return `scroll prediction`
+      case "managerSettingsChanged":
+        return `settings updated`
+      default:
+        return "event data"
+    }
+  }
+
+  private toggleLogFilter(eventType: string) {
+    if (this.logFilters.has(eventType)) {
+      this.logFilters.delete(eventType)
+    } else {
+      this.logFilters.add(eventType)
+    }
+    this.updateLogsDisplay()
+    this.updateLogFilterUI()
+    // Update tab bar count if on logs tab
+    if (this.activeTab === "logs") {
+      this.updateTabBarContent("logs")
+    }
+  }
+
+  private updateLogFilterUI() {
+    const filterButtons = this.logsFilterDropdown?.querySelectorAll("[data-log-type]")
+    filterButtons?.forEach(button => {
+      const logType = (button as HTMLElement).dataset.logType!
+      button.classList.toggle("active", this.logFilters.has(logType))
+    })
   }
 
   public updateMinimizedElementCount() {
@@ -206,12 +551,22 @@ export class DebuggerControlPanel {
     this.scrollMarginValueSpan = this.controlsContainer.querySelector("#scroll-margin-value")
     this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
-    this.allSettingsSectionsContainer = this.controlsContainer.querySelector(
-      ".all-settings-sections-container"
-    )
-    this.debuggerElementsSection = this.controlsContainer.querySelector(".debugger-elements")
     this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
     this.minimizedElementCount = this.controlsContainer.querySelector(".minimized-element-count")
+
+    // Tab system
+    this.tabContainer = this.controlsContainer.querySelector(".tab-container")
+    this.settingsTab = this.controlsContainer.querySelector("[data-tab='settings']")
+    this.elementsTab = this.controlsContainer.querySelector("[data-tab='elements']")
+    this.logsTab = this.controlsContainer.querySelector("[data-tab='logs']")
+    this.settingsContent = this.controlsContainer.querySelector(".settings-content")
+    this.elementsContent = this.controlsContainer.querySelector(".elements-content")
+    this.logsContent = this.controlsContainer.querySelector(".logs-content")
+
+    // Logs system
+    this.logsContainer = this.controlsContainer.querySelector(".logs-container")
+    this.logsFilterDropdown = this.controlsContainer.querySelector(".logs-filter-dropdown")
+    this.logsFilterButton = this.controlsContainer.querySelector(".logs-filter-button")
   }
 
   private initializeElementListManager() {
@@ -302,18 +657,22 @@ export class DebuggerControlPanel {
     })
   }
 
-  private createSectionVisibilityToggleEventListener(
-    section: HTMLDivElement | null,
-    isMinimizedFlagName:
-      | "isMouseSettingsMinimized"
-      | "isKeyboardSettingsMinimized"
-      | "isScrollSettingsMinimized"
-      | "isGeneralSettingsMinimized"
-  ) {
-    const sectionHeader = section?.querySelector(".debugger-section-header")
-    sectionHeader?.addEventListener("click", e => {
-      e.stopPropagation()
-      this.toggleMinimizeSection(section, (this[isMinimizedFlagName] = !this[isMinimizedFlagName]))
+  private setupLogEventListeners() {
+    // Subscribe to ForesightManager events for logging
+    const eventTypes = [
+      "elementRegistered",
+      "elementUnregistered",
+      "elementDataUpdated",
+      "callbackFired",
+      "mouseTrajectoryUpdate",
+      "scrollTrajectoryUpdate",
+      "managerSettingsChanged",
+    ]
+
+    eventTypes.forEach(eventType => {
+      this.foresightManagerInstance.addEventListener(eventType as any, (event: any) => {
+        this.addEventLog(eventType, event)
+      })
     })
   }
 
@@ -354,71 +713,32 @@ export class DebuggerControlPanel {
       this.isContainerMinimized = !this.isContainerMinimized
       this.updateContainerVisibilityState()
     })
-    this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
 
-    this.createSectionVisibilityToggleEventListener(
-      this.controlsContainer.querySelector(".mouse-settings-section"),
-      "isMouseSettingsMinimized"
-    )
-    this.createSectionVisibilityToggleEventListener(
-      this.controlsContainer.querySelector(".keyboard-settings-section"),
-      "isKeyboardSettingsMinimized"
-    )
-    this.createSectionVisibilityToggleEventListener(
-      this.controlsContainer.querySelector(".scroll-settings-section"),
-      "isScrollSettingsMinimized"
-    )
-    this.createSectionVisibilityToggleEventListener(
-      this.controlsContainer.querySelector(".general-settings-section"),
-      "isGeneralSettingsMinimized"
-    )
-  }
+    // Tab system event listeners
+    this.settingsTab?.addEventListener("click", () => this.switchTab("settings"))
+    this.elementsTab?.addEventListener("click", () => this.switchTab("elements"))
+    this.logsTab?.addEventListener("click", () => this.switchTab("logs"))
 
-  private toggleMinimizeSection(section: HTMLDivElement | null, shouldMinimize: boolean) {
-    if (!section) {
-      return
-    }
-    const sectionContent: HTMLDivElement | null = section.querySelector(".debugger-section-content")
-    const minimizeButton: HTMLButtonElement | null = section.querySelector(
-      ".section-minimize-button"
-    )
-    if (sectionContent && minimizeButton) {
-      if (shouldMinimize) {
-        sectionContent.style.display = "none"
-        minimizeButton.textContent = "+"
-      } else {
-        sectionContent.style.display = "flex"
-        minimizeButton.textContent = "-"
+    // Close filter dropdown when clicking outside (for any tab)
+    document.addEventListener("click", e => {
+      const activeDropdown = this.controlsContainer?.querySelector(
+        ".logs-filter-dropdown.active, #sort-options-popup.active"
+      )
+      if (activeDropdown && !activeDropdown.contains(e.target as Node)) {
+        activeDropdown.classList.remove("active")
       }
-    }
-    this.saveSectionStatesToSessionStorage()
+    })
   }
 
-  private originalSectionStates() {
-    const states = this.loadSectionStatesFromSessionStorage()
-    this.toggleMinimizeSection(
-      this.controlsContainer.querySelector(".mouse-settings-section"),
-      states.mouse ?? true
-    )
-    this.toggleMinimizeSection(
-      this.controlsContainer.querySelector(".keyboard-settings-section"),
-      states.keyboard ?? true
-    )
-    this.toggleMinimizeSection(
-      this.controlsContainer.querySelector(".scroll-settings-section"),
-      states.scroll ?? true
-    )
-    this.toggleMinimizeSection(
-      this.controlsContainer.querySelector(".general-settings-section"),
-      states.general ?? true
-    )
-    // Ensure the element list is always open by default
-    const elementListContent = this.debuggerElementsSection?.querySelector(
-      ".debugger-section-content"
-    )
-    if (elementListContent) {
-      ;(elementListContent as HTMLElement).style.display = "flex"
-    }
+  private initializeTabSystem() {
+    // Initialize with settings tab active
+    this.switchTab("settings")
+
+    // Setup event logging
+    this.setupLogEventListeners()
+
+    // Initialize log filter UI
+    this.updateLogFilterUI()
   }
 
   private updateContainerVisibilityState() {
@@ -426,18 +746,15 @@ export class DebuggerControlPanel {
     if (this.isContainerMinimized) {
       this.controlsContainer.classList.add("minimized")
       this.containerMinimizeButton.textContent = "+"
-      if (this.allSettingsSectionsContainer)
-        this.allSettingsSectionsContainer.style.display = "none"
-      if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = "none"
-      if (this.copySettingsButton) this.copySettingsButton.style.display = "none"
+      if (this.tabContainer) this.tabContainer.style.display = "none"
       if (this.minimizedElementCount) this.minimizedElementCount.style.display = ""
     } else {
       this.controlsContainer.classList.remove("minimized")
       this.containerMinimizeButton.textContent = "-"
-      if (this.allSettingsSectionsContainer) this.allSettingsSectionsContainer.style.display = ""
-      if (this.debuggerElementsSection) this.debuggerElementsSection.style.display = ""
-      if (this.copySettingsButton) this.copySettingsButton.style.display = ""
+      if (this.tabContainer) this.tabContainer.style.display = ""
       if (this.minimizedElementCount) this.minimizedElementCount.style.display = "none"
+      // Show active tab content and update tab bar
+      this.switchTab(this.activeTab)
     }
   }
 
@@ -478,15 +795,27 @@ export class DebuggerControlPanel {
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
     this.elementListManager.removeElementFromListContainer(elementData)
+    // Update tab bar if on elements tab
+    if (this.activeTab === "elements") {
+      this.updateTabBarContent("elements")
+    }
   }
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
     this.elementListManager.updateElementVisibilityStatus(elementData)
     this.updateMinimizedElementCount()
+    // Update tab bar if on elements tab
+    if (this.activeTab === "elements") {
+      this.updateTabBarContent("elements")
+    }
   }
 
   public addElementToList(elementData: ForesightElementData) {
     this.elementListManager.addElementToList(elementData)
+    // Update tab bar if on elements tab
+    if (this.activeTab === "elements") {
+      this.updateTabBarContent("elements")
+    }
   }
   /**
    * The cleanup method is updated to be more thorough, nullifying all
@@ -507,8 +836,6 @@ export class DebuggerControlPanel {
     this.controlsContainer = null!
     this.controlPanelStyleElement = null!
     this.containerMinimizeButton = null
-    this.allSettingsSectionsContainer = null
-    this.debuggerElementsSection = null
     this.trajectoryEnabledCheckbox = null
     this.tabEnabledCheckbox = null
     this.scrollEnabledCheckbox = null
@@ -522,6 +849,26 @@ export class DebuggerControlPanel {
     this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
     this.copySettingsButton = null
+
+    // Tab system cleanup
+    this.tabContainer = null
+    this.settingsTab = null
+    this.elementsTab = null
+    this.logsTab = null
+    this.settingsContent = null
+    this.elementsContent = null
+    this.logsContent = null
+
+    // Logs system cleanup
+    this.logsContainer = null
+    this.logsFilterDropdown = null
+    this.logsFilterButton = null
+    this.eventLogs = []
+
+    // Clean up global reference
+    if ((window as any).debuggerInstance === this) {
+      delete (window as any).debuggerInstance
+    }
   }
 
   private createControlContainer(): HTMLElement {
@@ -543,30 +890,28 @@ export class DebuggerControlPanel {
            "To make lasting changes, update the initial",
            "values in your ForesightManager.initialize().",
            "",
-           "You can copy the current debugger settings",
-           "with the button on the right",
+           "Settings can be copied from the Settings tab",
          ].join("\n")}">i</span>
         </div>
-           <button class="copy-settings-button" title="${[
-             "Copy Settings to Clipboard",
-             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-             "Copies the current configuration as a",
-             "formatted method call that you can paste",
-             "directly into your code.",
-           ].join("\n")}">
-          ${COPY_SVG_ICON}
-        </button>
         <span class="minimized-element-count">
         </span>
       </div>
 
-      <div class="all-settings-sections-container">
-        <div class="debugger-section mouse-settings-section">
-          <div class="debugger-section-header collapsible">
-            <h3>Mouse Settings</h3>
-            <button class="section-minimize-button">-</button>
-          </div>
-          <div class="debugger-section-content mouse-settings-content">
+      <div class="tab-container">
+        <button class="tab-button active" data-tab="settings">Settings</button>
+        <button class="tab-button" data-tab="elements">Elements</button>
+        <button class="tab-button" data-tab="logs">Logs</button>
+      </div>
+
+      <div class="tab-content">
+        <div class="tab-bar">
+          <!-- Dynamic content populated by updateTabBarContent -->
+        </div>
+        
+        <div class="settings-content">
+          <div class="settings-section">
+            <div class="settings-group">
+              <h4>Mouse</h4>
             <div class="control-row">
              <label for="trajectory-enabled">
                 Enable Mouse Prediction
@@ -635,15 +980,10 @@ export class DebuggerControlPanel {
               <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
               <span id="prediction-value"></span>
             </div>
-          </div>
-        </div>
+            </div>
 
-        <div class="debugger-section keyboard-settings-section">
-          <div class="debugger-section-header collapsible">
-            <h3>Keyboard Settings</h3>
-            <button class="section-minimize-button">-</button>
-          </div>
-          <div class="debugger-section-content keyboard-settings-content">
+            <div class="settings-group">
+              <h4>Keyboard</h4>
             <div class="control-row">
              <label for="tab-enabled">
                 Enable Tab Prediction
@@ -682,15 +1022,10 @@ export class DebuggerControlPanel {
               <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
               <span id="tab-offset-value"></span>
             </div>
-          </div>
-        </div>
+            </div>
 
-        <div class="debugger-section scroll-settings-section">
-          <div class="debugger-section-header collapsible">
-            <h3>Scroll Settings</h3>
-            <button class="section-minimize-button">-</button>
-          </div>
-        <div class="debugger-section-content scroll-settings-content">
+            <div class="settings-group">
+              <h4>Scroll</h4>
           <div class="control-row">
           <label for="scroll-enabled">
               Enable Scroll Prediction
@@ -728,14 +1063,10 @@ export class DebuggerControlPanel {
             <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
             <span id="scroll-margin-value"></span>
           </div>
-        </div>
+            </div>
 
-        <div class="debugger-section general-settings-section">
-          <div class="debugger-section-header collapsible">
-            <h3>General Settings</h3>
-            <button class="section-minimize-button">-</button>
-          </div>
-          <div class="debugger-section-content general-settings-content">
+            <div class="settings-group">
+              <h4>General</h4>
            <div class="control-row">
               <label for="toggle-name-tags">
                 Show Name Tags
@@ -750,71 +1081,23 @@ export class DebuggerControlPanel {
               </label>
               <input type="checkbox" id="toggle-name-tags">
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="debugger-section debugger-elements">
-        <div class="debugger-section-header elements-list-header">
-          <h3>Elements <span id="element-count"></span> <span id="callback-count"></span></h3>
-          <div class="header-controls">
-            <div class="sort-control-container">
-              <button class="sort-button" title="Change element list sort order">
-                ${SORT_SVG_ICON}
-              </button>
-              <div id="sort-options-popup">
-              <button
-                data-sort="visibility"
-                title="${[
-                  "Sort by Visibility",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "Sorts elements by their viewport visibility",
-                  "(visible elements first), with a secondary",
-                  "sort by their order in the document.",
-                  "",
-                  "Property: debuggerSettings.sortElementList",
-                  "Value: 'visibility'",
-                ].join("\n")}">
-                  Visibility
-                </button>
-                <button
-                  data-sort="documentOrder"
-                  title="${[
-                    "Sort by Document Order",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                    "Sorts elements based on their order of",
-                    "appearance in the document's structure",
-                    "(matching the HTML source).",
-                    "",
-                    "Property: debuggerSettings.sortElementList",
-                    "Value: 'documentOrder'",
-                  ].join("\n")}"
-                >
-                  Document Order
-                </button>
-                <button
-                  data-sort="insertionOrder"
-                  title="${[
-                    "Sort by Insertion Order",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                    "Sorts elements based on the order they",
-                    "were registered with the ForesightManager.",
-                    "",
-                    "Property: debuggerSettings.sortElementList",
-                    "Value: 'insertionOrder'",
-                  ].join("\n")}"
-                >
-                  Insertion Order
-                </button>
-              </div>
             </div>
           </div>
         </div>
-        <div class="debugger-section-content element-list">
-          <div id="element-list-items-container">
+
+        <!-- <div class="elements-content">
+          <div class="element-list">
+            <div id="element-list-items-container">
+            </div>
           </div>
         </div>
-      </div>
+
+        <div class="logs-content">
+          <div class="logs-container">
+            <div class="no-logs">No logs to display. Check your filter settings.</div>
+          </div>
+        </div>
+      </div> -->
     `
     return container
   }
@@ -825,6 +1108,7 @@ export class DebuggerControlPanel {
     const elementListItemsContainerPadding = 6 // px
     const numRowsToShow = 6
     const numItemsPerRow = 1
+    const tabContentHeight = 400 // Fixed height for all tab content
 
     const rowsContentHeight =
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
@@ -867,27 +1151,44 @@ export class DebuggerControlPanel {
       .debugger-title-container {
         display: flex;
         align-items: center;
-        justify-content: space-between; 
-        padding: 0 0px; 
+        padding: 0;
       }
-      .title-group { 
-        display: flex;
-        align-items: center;
-        gap: 8px; 
-
-      }
+      
       .minimize-button {
         background: none; border: none; color: white;
         font-size: 22px; cursor: pointer;
         line-height: 1;
-        padding-inline: 0px;
+        padding: 0;
+        width: 30px;
+        flex-shrink: 0;
+      }
+      
+      .title-group { 
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        justify-content: center;
+      }
+      
+      .minimized-element-count {
+        font-size: 14px;
+        min-width: 30px;
+        text-align: right;
+        flex-shrink: 0;
       }
       .debugger-title-container h2 { margin: 0; font-size: 15px; }
 
       .copy-settings-button {
         background: none; border: none; color: white;
-        cursor: pointer; padding: 0;
+        cursor: pointer; 
         display: flex; align-items: center; justify-content: center;
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+      }
+
+      .copy-settings-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
       }
 
       .copy-settings-button svg {
@@ -895,46 +1196,159 @@ export class DebuggerControlPanel {
         stroke: white;
       }
 
-      .minimized-element-count {
-         font-size: 14px;
-         min-width: 30px;
-         text-align: right;
-      }
 
-      .all-settings-sections-container {
+      /* Tab System */
+      .tab-container {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
+        border-bottom: 2px solid #444;
+        margin-bottom: 8px;
       }
-
-      .debugger-section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 5px;
-        margin-bottom: 2px;
-        padding-bottom: 2px;
-        border-bottom: 1px solid #444;
-      }
-      .debugger-section-header.collapsible {
-        cursor: pointer;
-      }
-      .debugger-section-header h3 {
-         margin: 0;
-         font-size: 14px;
-         font-weight: bold;
-         color: #b0c4de;
-         flex-grow: 1;
-      }
-
-      .section-minimize-button {
+      
+      .tab-button {
         background: none;
         border: none;
-        color: white;
-        font-size: 18px;
+        color: #9e9e9e;
+        padding: 8px 16px;
         cursor: pointer;
-        padding: 0px;
-        line-height: 1;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s ease;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      
+      .tab-button:hover {
+        color: #b0c4de;
+        background-color: rgba(176, 196, 222, 0.1);
+      }
+      
+      .tab-button.active {
+        color: #b0c4de;
+        border-bottom-color: #b0c4de;
+      }
+      
+      .tab-content {
+        height: ${tabContentHeight}px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      #debug-controls.minimized .tab-content {
+        height: 0;
+        overflow: hidden;
+      }
+      
+      /* Unified Tab Bar */
+      .tab-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+
+        border-bottom: 1px solid #444;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        min-height: 36px;
+        backdrop-filter: none;
+      }
+      
+      .tab-bar-info {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex: 1;
+      }
+      
+      .tab-bar-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      
+      .tab-info-text {
+        font-size: 12px;
+        color: #9e9e9e;
+      }
+      
+      .settings-content,
+      .elements-content,
+      .logs-content {
+        flex: 1;
+        overflow-y: auto;
+        display: none;
+      }
+      
+      /* Universal scrollbar styling for all scrollable areas */
+      .settings-content::-webkit-scrollbar,
+      .elements-content::-webkit-scrollbar,
+      .logs-content::-webkit-scrollbar,
+      .element-list::-webkit-scrollbar,
+      .logs-container::-webkit-scrollbar { 
+        width: 8px; 
+      }
+      
+      .settings-content::-webkit-scrollbar-track,
+      .elements-content::-webkit-scrollbar-track,
+      .logs-content::-webkit-scrollbar-track,
+      .element-list::-webkit-scrollbar-track,
+      .logs-container::-webkit-scrollbar-track { 
+        background: rgba(30, 30, 30, 0.5); 
+        border-radius: 4px; 
+      }
+      
+      .settings-content::-webkit-scrollbar-thumb,
+      .elements-content::-webkit-scrollbar-thumb,
+      .logs-content::-webkit-scrollbar-thumb,
+      .element-list::-webkit-scrollbar-thumb,
+      .logs-container::-webkit-scrollbar-thumb { 
+        background-color: rgba(176, 196, 222, 0.5); 
+        border-radius: 4px; 
+        border: 2px solid rgba(0, 0, 0, 0.2); 
+      }
+      
+      .settings-content::-webkit-scrollbar-thumb:hover,
+      .elements-content::-webkit-scrollbar-thumb:hover,
+      .logs-content::-webkit-scrollbar-thumb:hover,
+      .element-list::-webkit-scrollbar-thumb:hover,
+      .logs-container::-webkit-scrollbar-thumb:hover { 
+        background-color: rgba(176, 196, 222, 0.7); 
+      }
+      
+      /* Firefox scrollbar support */
+      .settings-content,
+      .elements-content,
+      .logs-content,
+      .element-list,
+      .logs-container { 
+        scrollbar-width: thin; 
+        scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5); 
+      }
+      
+      .settings-content {
+        display: block;
+      }
+
+      /* Settings Tab Styles */
+      .settings-section {
+        padding: 0;
+      }
+      
+      .settings-group {
+        margin-bottom: 16px;
+      }
+      
+      .settings-group h4 {
+        margin: 0 0 8px 0;
+        font-size: 11px;
+        font-weight: 600;
+        color: #b0c4de;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 4px 0;
+        border-left: 3px solid #b0c4de;
+        padding-left: 8px;
+        background-color: rgba(176, 196, 222, 0.05);
       }
 
       #debug-controls .control-row {
@@ -1002,15 +1416,11 @@ export class DebuggerControlPanel {
         font-style: italic; font-weight: bold; font-family: 'Georgia', serif;
         cursor: help; user-select: none; flex-shrink: 0;
       }
-      .debugger-section {
-        display: flex; flex-direction: column; gap: 6px;
+      /* Elements Tab Styles */
+      #element-count,#callback-count {
+        font-size: 12px;
+        color: #9e9e9e;
       }
-      .debugger-section-content {
-        display: none; flex-direction: column; gap: 8px;
-      }
-
-      /* Element List Styles */
-      .elements-list-header { cursor: default; }
       .header-controls {
         display: flex;
         align-items: center;
@@ -1074,22 +1484,16 @@ export class DebuggerControlPanel {
         width: 10px;
       }
 
-      .element-list { /* Scroll container */
-        min-height: ${elementListContainerHeight}px;
-        max-height: ${elementListContainerHeight}px; 
+      .element-list {
+        flex: 1;
         overflow-y: auto;
         background-color: rgba(20, 20, 20, 0.5);
         border-radius: 3px;
         padding: 0;
         display: flex;
+        min-height: 300px;
       }
 
-      /* Modern Scrollbar Styling */
-      .element-list::-webkit-scrollbar { width: 8px; }
-      .element-list::-webkit-scrollbar-track { background: rgba(30, 30, 30, 0.5); border-radius: 4px; }
-      .element-list::-webkit-scrollbar-thumb { background-color: rgba(176, 196, 222, 0.5); border-radius: 4px; border: 2px solid rgba(0, 0, 0, 0.2); }
-      .element-list::-webkit-scrollbar-thumb:hover { background-color: rgba(176, 196, 222, 0.7); }
-      .element-list { scrollbar-width: thin; scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5); }
 
       #element-list-items-container { 
         display: flex;
@@ -1103,7 +1507,6 @@ export class DebuggerControlPanel {
       #element-list-items-container > em {
         flex-basis: 100%;
         text-align: center;
-        padding: 10px 0;
         font-style: italic;
         color: #ccc;
         font-size: 12px;
@@ -1155,6 +1558,191 @@ export class DebuggerControlPanel {
         border-radius: 3px; 
         background-color: rgba(0,0,0,0.2);
         flex-shrink: 0;
+      }
+
+      /* Logs Tab Styles */
+      .logs-filter-button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .logs-filter-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      
+      .logs-filter-button svg {
+        width: 16px;
+        height: 16px;
+        stroke: white;
+      }
+      
+      .logs-filter-dropdown {
+        position: absolute;
+        top: calc(100% + 5px);
+        right: 0;
+        z-index: 10;
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        background-color: #3a3a3a;
+        border: 1px solid #555;
+        border-radius: 4px;
+        min-width: 200px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      }
+      
+      .tab-bar-actions {
+        position: relative;
+      }
+      
+      .logs-filter-dropdown.active {
+        display: flex;
+      }
+      
+      .logs-filter-dropdown button {
+        background: none;
+        border: none;
+        color: #ccc;
+        font-size: 12px;
+        text-align: left;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+      
+      .logs-filter-dropdown button:hover {
+        background-color: #555;
+        color: white;
+      }
+      
+      .logs-filter-dropdown button.active {
+        color: #b0c4de;
+        font-weight: bold;
+        background-color: rgba(176, 196, 222, 0.1);
+      }
+      
+      .logs-filter-dropdown button.active::before {
+        content: '✓';
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #b0c4de;
+      }
+      
+      .logs-container {
+        flex: 1;
+        overflow-y: auto;
+        background-color: rgba(20, 20, 20, 0.5);
+        border-radius: 3px;
+
+        font-family: 'Courier New', monospace;
+      }
+      
+      .no-logs {
+        text-align: center;
+        color: #9e9e9e;
+        font-style: italic;
+        padding: 20px;
+      }
+      
+      .log-entry {
+        margin-bottom: 6px;
+        border-radius: 3px;
+        background-color: rgba(40, 40, 40, 0.7);
+        border-left: 3px solid #555;
+        font-size: 11px;
+        line-height: 1.4;
+        overflow: hidden;
+      }
+      
+      .log-header {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        gap: 8px;
+      }
+      
+      .log-header:hover {
+        background-color: rgba(60, 60, 60, 0.7);
+      }
+      
+      .log-details {
+        padding: 0 8px 8px 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .log-summary {
+        flex: 1;
+        color: #ccc;
+        font-size: 10px;
+        opacity: 0.8;
+      }
+      
+      .log-toggle {
+        color: #b0c4de;
+        font-size: 10px;
+        transition: transform 0.2s ease;
+        width: 12px;
+        text-align: center;
+      }
+      
+      .log-entry.log-callbackFired {
+        border-left-color: #4caf50;
+      }
+      
+      .log-entry.log-elementRegistered {
+        border-left-color: #2196f3;
+      }
+      
+      .log-entry.log-elementUnregistered {
+        border-left-color: #ff9800;
+      }
+      
+      .log-entry.log-mouseTrajectoryUpdate {
+        border-left-color: #9c27b0;
+      }
+      
+      .log-entry.log-scrollTrajectoryUpdate {
+        border-left-color: #00bcd4;
+      }
+      
+      .log-entry.log-elementDataUpdated {
+        border-left-color: #ffeb3b;
+      }
+      
+      .log-entry.log-managerSettingsChanged {
+        border-left-color: #f44336;
+      }
+      
+      .log-time {
+        color: #9e9e9e;
+        margin-right: 8px;
+        font-weight: bold;
+      }
+      
+      .log-type {
+        color: #b0c4de;
+        margin-right: 8px;
+        font-weight: bold;
+        text-transform: capitalize;
+      }
+      
+      .log-data {
+        color: #e0e0e0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
       }
     `
   }

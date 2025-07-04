@@ -98,14 +98,21 @@ export class ControlPanelElementList {
   }
 
   public updateCallbackCountsDisplay() {
-    if (!this.callbackCountSpan) return
+    // Query fresh since tab bar content is dynamically recreated
+    // Need to query within the shadow DOM, not the main document
+    const shadowRoot = (document.querySelector("#foresight-debugger") as any)?.shadowRoot
+    const callbackCountSpan = shadowRoot?.querySelector("#callback-count") as HTMLSpanElement
+    if (!callbackCountSpan) {
+      console.log("Callback count span not found in shadow DOM")
+      return
+    }
 
     const { tab, mouse, scroll, total } =
       this.foresightManagerInstance.getManagerData.globalCallbackHits
-    this.callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
+    callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
       tab.forwards + tab.reverse
     } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
-    this.callbackCountSpan.title = [
+    callbackCountSpan.title = [
       "Callback Execution Stats",
       "--------------------------------------------",
       "Mouse Callbacks",
@@ -160,8 +167,7 @@ export class ControlPanelElementList {
     this.reorderElementsInListContainer(this.sortElementsInListContainer())
   }
 
-  private sortedElementList: ForesightElementData[] = []
-  private sortElementsInListContainer(elementData?: ForesightElementData): ForesightElementData[] {
+  public sortElementsInListContainer(elementData?: ForesightElementData): ForesightElementData[] {
     const sortOrder = this.debuggerInstance.getDebuggerData.settings.sortElementList
     const elementsData = Array.from(this.foresightManagerInstance.registeredElements.values())
     switch (sortOrder) {
@@ -187,7 +193,7 @@ export class ControlPanelElementList {
     return elementsData
   }
 
-  private reorderElementsInListContainer(sortedElements: ForesightElementData[]) {
+  public reorderElementsInListContainer(sortedElements: ForesightElementData[]) {
     if (!this.elementListItemsContainer) return
 
     const fragment = document.createDocumentFragment()

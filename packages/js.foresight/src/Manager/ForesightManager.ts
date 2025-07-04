@@ -632,18 +632,18 @@ export class ForesightManager {
   ) => {
     const updatedProps: UpdatedDataPropertyNames[] = []
     const isNowIntersecting = entry.isIntersecting
-    
+
     // Create updated element data with new intersection state
     let updatedElementData = {
       ...elementData,
-      isIntersectingWithViewport: isNowIntersecting
+      isIntersectingWithViewport: isNowIntersecting,
     }
-    
+
     // Track visibility changes
     if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
       updatedProps.push("visibility")
     }
-    
+
     // Handle bounds updates for intersecting elements
     if (isNowIntersecting) {
       updatedProps.push("bounds")
@@ -653,11 +653,14 @@ export class ForesightManager {
         elementBounds: {
           hitSlop: elementData.elementBounds.hitSlop,
           originalRect: entry.boundingClientRect,
-          expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
+          expandedRect: getExpandedRect(
+            entry.boundingClientRect,
+            elementData.elementBounds.hitSlop
+          ),
         },
       }
     }
-    
+
     // Update state and emit once
     this.elements.set(elementData.element, updatedElementData)
     if (updatedProps.length) {
