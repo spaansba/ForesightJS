@@ -13,8 +13,11 @@ last_updated:
 
 # Angular
 
+
 ```bash
-npm i ngx-foresight
+npm install js.foresight js.foresight-devtools ngx-foresight
+# or
+pnpm install js.foresight js.foresight-devtools ngx-foresight
 ```
 
 After that import the `ForesightjsDirective` to the components with `href` and `routerLink`, and use the `ForesightjsStrategy` as `preloadingStrategy` in the router's configuration. For example:
