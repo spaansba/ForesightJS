@@ -27,9 +27,14 @@ import {
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../constants"
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
-import { createAndAppendStyle } from "../helpers/createAndAppend"
-import { objectToMethodCall } from "../helpers/objectToMethodCall"
+import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
+import { objectToMethodCall } from "./helpers/objectToMethodCall"
+import { safeSerializeEventData } from "./helpers/safeSerializeEventData"
 import { ControlPanelElementList } from "./ControlPanelElementList"
+import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
+
+// Type for serialized event data from safeSerializeEventData helper function
+type SerializedEventData = ReturnType<typeof safeSerializeEventData>
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
@@ -72,7 +77,7 @@ export class DebuggerControlPanel {
   private settingsContent: HTMLElement | null = null
   private elementsContent: HTMLElement | null = null
   private logsContent: HTMLElement | null = null
-  private activeTab: ControllerTabs = "elements"
+  private activeTab: ControllerTabs = "logs"
 
   private copySettingsButton: HTMLButtonElement | null = null
   private titleElementCount: HTMLSpanElement | null = null
@@ -82,7 +87,7 @@ export class DebuggerControlPanel {
   private logsContainer: HTMLElement | null = null
   private logsFilterDropdown: HTMLElement | null = null
   private logsFilterButton: HTMLButtonElement | null = null
-  private eventLogs: Array<{ type: string; timestamp: number; data: any }> = []
+  private eventLogs: Array<{ type: string; timestamp: number; data: SerializedEventData }> = []
   private maxLogs: number = 1000
   private logFilters: Set<string> = new Set([
     "elementRegistered",
@@ -266,7 +271,8 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
         break
 
       case "logs":
-        const filteredCount = this.eventLogs.filter(log => this.logFilters.has(log.type)).length
+        // Since eventLogs only contains tracked events now, just show the count
+        const loggedCount = this.eventLogs.length
         const activeFilters = Array.from(this.logFilters)
         const filterText =
           activeFilters.length === 7
@@ -285,9 +291,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
         tabBar.innerHTML = `
           <div class="tab-bar-info">
             <div class="stats-chips">
-              <span class="chip logs" title="Filtered events shown vs total events logged">${filteredCount}/${
-          this.eventLogs.length
-        } events</span>
+              <span class="chip logs" title="Number of events logged (only tracked events are logged)">${loggedCount} events</span>
               <span class="chip filter" title="Event Filter Status:
 
 Active filters:
@@ -396,12 +400,14 @@ ${
     })
   }
 
-  public addEventLog(type: string, data: any) {
+  public addEventLog<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]) {
+    // Only add events that are being tracked (in logFilters)
     if (!this.logFilters.has(type)) return
+
     const logEntry = {
       type,
       timestamp: Date.now(),
-      data: this.safeSerializeEventData(type, data),
+      data: this.safeSerializeEventData(event),
     }
 
     this.eventLogs.unshift(logEntry)
@@ -423,75 +429,8 @@ ${
     }
   }
 
-  private safeSerializeEventData(eventType: string, data: any): any {
-    try {
-      // For different event types, extract only the relevant serializable data
-      switch (eventType) {
-        case "elementRegistered":
-        case "elementUnregistered":
-          return {
-            elementName: data.elementData?.name || "Unnamed Element",
-            elementTag: data.elementData?.element?.tagName || "Unknown",
-            elementId: data.elementData?.element?.id || "",
-            elementClass: data.elementData?.element?.className || "",
-            isIntersecting: data.elementData?.isIntersectingWithViewport,
-            hitSlop: data.elementData?.elementBounds?.hitSlop,
-            unregisterReason: data.unregisterReason || undefined,
-          }
-
-        case "elementDataUpdated":
-          return {
-            elementName: data.elementData?.name || "Unnamed Element",
-            elementTag: data.elementData?.element?.tagName || "Unknown",
-            updatedProps: data.updatedProps || [],
-            isIntersecting: data.elementData?.isIntersectingWithViewport,
-          }
-
-        case "callbackFired":
-          return {
-            elementName: data.elementData?.name || "Unnamed Element",
-            elementTag: data.elementData?.element?.tagName || "Unknown",
-            hitType: data.hitType,
-            predictionEnabled: data.managerData?.globalSettings?.enableMousePrediction,
-            tabPredictionEnabled: data.managerData?.globalSettings?.enableTabPrediction,
-            scrollPredictionEnabled: data.managerData?.globalSettings?.enableScrollPrediction,
-          }
-
-        case "mouseTrajectoryUpdate":
-          return {
-            currentPoint: data.trajectoryPositions?.currentPoint,
-            predictedPoint: data.trajectoryPositions?.predictedPoint,
-            positionCount: data.trajectoryPositions?.positions?.length || 0,
-            predictionEnabled: data.predictionEnabled,
-          }
-
-        case "scrollTrajectoryUpdate":
-          return {
-            currentPoint: data.currentPoint,
-            predictedPoint: data.predictedPoint,
-          }
-
-        case "managerSettingsChanged":
-          return {
-            globalSettings: data.managerData?.globalSettings || {},
-          }
-
-        default:
-          // For unknown event types, try to extract basic info
-          return {
-            eventType,
-            timestamp: data.timestamp || Date.now(),
-            message: "Event data structure not recognized",
-          }
-      }
-    } catch (error) {
-      // Fallback if serialization fails
-      return {
-        eventType,
-        error: "Failed to serialize event data",
-        errorMessage: error instanceof Error ? error.message : String(error),
-      }
-    }
+  private safeSerializeEventData<K extends ForesightEvent>(event: ForesightEventMap[K]) {
+    return safeSerializeEventData(event)
   }
 
   private getNoLogsMessage(): string {
@@ -527,11 +466,10 @@ ${
   private updateLogsDisplay() {
     if (!this.logsContainer) return
 
-    const filteredLogs = this.eventLogs.filter(log => this.logFilters.has(log.type))
     this.logsContainer.innerHTML =
-      filteredLogs.length === 0
+      this.eventLogs.length === 0
         ? `<div class="no-items">${this.getNoLogsMessage()}</div>`
-        : filteredLogs
+        : this.eventLogs
             .map((log, index) => {
               const time = new Date(log.timestamp).toLocaleTimeString()
               const logId = `log-${index}`
@@ -603,6 +541,10 @@ ${
     } else {
       this.logFilters.add(eventType)
     }
+
+    // Clear event logs since filter changed - only tracked events should be logged
+    this.eventLogs = []
+
     this.updateLogsDisplay()
     this.updateLogFilterUI()
     // Update tab bar count if on logs tab
@@ -1617,7 +1559,7 @@ ${
       
       .log-entry {
         margin-bottom: 6px;
-        border-radius: 3px;
+
         background-color: rgba(40, 40, 40, 0.7);
         border-left: 3px solid #555;
         font-size: 11px;

@@ -5,8 +5,8 @@ import type {
   ElementOverlays,
   ForesightDebuggerData,
 } from "../types/types"
-import { createAndAppendElement, createAndAppendStyle } from "../helpers/createAndAppend"
-import { updateElementOverlays } from "../helpers/updateElementOverlays"
+import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
+import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import type {
   CallbackFiredEvent,
   CallbackHitType,
@@ -26,8 +26,8 @@ import {
   DEFAULT_SHOW_NAME_TAGS,
   DEFAULT_SORT_ELEMENT_LIST,
 } from "../constants"
-import { evaluateRegistrationConditions } from "../helpers/evaluateRegistrationConditions"
-import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
+import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationConditions"
+import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import { DebuggerControlPanel } from "../control_panel/DebuggerControlPanel"
 import type { ForesightEvent } from "packages/js.foresight/dist"
 import type { ForesightEventMap } from "js.foresight/types/types"
@@ -53,10 +53,10 @@ export class ForesightDebugger {
     sortElementList: DEFAULT_SORT_ELEMENT_LIST,
     logging: {
       logLocation: "controlPanel",
-      logCallbackFired: false,
+      logCallbackFired: true,
       logElementDataUpdated: false,
-      logElementRegistered: false,
-      logElementUnregistered: false,
+      logElementRegistered: true,
+      logElementUnregistered: true,
       logManagerSettingsChanged: false,
       logMouseTrajectoryUpdate: false,
       logScrollTrajectoryUpdate: false,
@@ -79,11 +79,15 @@ export class ForesightDebugger {
         console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
         break
       case "controlPanel":
-        this.controlPanel.addEventLog(event.type, event)
+        if (this.controlPanel) {
+          this.controlPanel.addEventLog(event.type, event)
+        }
         break
       case "both": // dont add fall-through
         console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
-        this.controlPanel.addEventLog(event.type, event)
+        if (this.controlPanel) {
+          this.controlPanel.addEventLog(event.type, event)
+        }
         break
     }
   }
@@ -200,27 +204,85 @@ export class ForesightDebugger {
     }
 
     // Handle simple property updates
-    const simpleUpdates: (keyof DebuggerSettings)[] = [
-      "isControlPanelDefaultMinimized",
-      "sortElementList",
-    ]
-
-    for (const key of simpleUpdates) {
-      if (shouldUpdateSetting(props[key], this._debuggerSettings[key])) {
-        ;(this._debuggerSettings as any)[key] = props[key]
-      }
+    if (
+      shouldUpdateSetting(
+        props.isControlPanelDefaultMinimized,
+        this._debuggerSettings.isControlPanelDefaultMinimized
+      )
+    ) {
+      this._debuggerSettings.isControlPanelDefaultMinimized = props.isControlPanelDefaultMinimized!
+    }
+    if (shouldUpdateSetting(props.sortElementList, this._debuggerSettings.sortElementList)) {
+      this._debuggerSettings.sortElementList = props.sortElementList!
     }
 
     // Handle logging settings
     if (props.logging) {
-      const loggingKeys = Object.keys(props.logging) as (keyof typeof props.logging)[]
-      for (const key of loggingKeys) {
-        if (shouldUpdateSetting(props.logging[key], this._debuggerSettings.logging[key])) {
-          if (key === "logLocation") {
-            // this.controlPanel.resetLogs()
-          }
-          ;(this._debuggerSettings.logging as any)[key] = props.logging[key]
-        }
+      if (
+        shouldUpdateSetting(props.logging.logLocation, this._debuggerSettings.logging.logLocation)
+      ) {
+        this._debuggerSettings.logging.logLocation = props.logging.logLocation!
+        // this.controlPanel.resetLogs()
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logCallbackFired,
+          this._debuggerSettings.logging.logCallbackFired
+        )
+      ) {
+        this._debuggerSettings.logging.logCallbackFired = props.logging.logCallbackFired!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logElementDataUpdated,
+          this._debuggerSettings.logging.logElementDataUpdated
+        )
+      ) {
+        this._debuggerSettings.logging.logElementDataUpdated = props.logging.logElementDataUpdated!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logElementRegistered,
+          this._debuggerSettings.logging.logElementRegistered
+        )
+      ) {
+        this._debuggerSettings.logging.logElementRegistered = props.logging.logElementRegistered!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logElementUnregistered,
+          this._debuggerSettings.logging.logElementUnregistered
+        )
+      ) {
+        this._debuggerSettings.logging.logElementUnregistered =
+          props.logging.logElementUnregistered!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logManagerSettingsChanged,
+          this._debuggerSettings.logging.logManagerSettingsChanged
+        )
+      ) {
+        this._debuggerSettings.logging.logManagerSettingsChanged =
+          props.logging.logManagerSettingsChanged!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logMouseTrajectoryUpdate,
+          this._debuggerSettings.logging.logMouseTrajectoryUpdate
+        )
+      ) {
+        this._debuggerSettings.logging.logMouseTrajectoryUpdate =
+          props.logging.logMouseTrajectoryUpdate!
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.logScrollTrajectoryUpdate,
+          this._debuggerSettings.logging.logScrollTrajectoryUpdate
+        )
+      ) {
+        this._debuggerSettings.logging.logScrollTrajectoryUpdate =
+          props.logging.logScrollTrajectoryUpdate!
       }
     }
   }

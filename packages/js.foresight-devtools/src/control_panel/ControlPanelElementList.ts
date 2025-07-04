@@ -2,9 +2,9 @@ import { ForesightManager } from "js.foresight"
 import type { ForesightElementData, ForesightElement } from "js.foresight"
 import type { SortElementList } from "../types/types"
 
-import { getIntersectingIcon } from "../helpers/getIntersectingIcon"
+import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
-import { sortByDocumentPosition } from "../helpers/sortByDocumentPosition"
+import { sortByDocumentPosition } from "./helpers/sortByDocumentPosition"
 
 export class ControlPanelElementList {
   private foresightManagerInstance: ForesightManager
