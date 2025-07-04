@@ -47,13 +47,7 @@ Event listeners support [AbortController signals](https://developer.mozilla.org/
 ```typescript
 const controller = new AbortController()
 
-manager.addEventListener(
-  "callbackFired",
-  event => {
-    // Handle event (this allows for a)
-  },
-  { signal: controller.signal }
-)
+manager.addEventListener("callbackFired", handleCallbackFired, { signal: controller.signal })
 
 // Later, remove all listeners added with this signal
 controller.abort()
@@ -107,11 +101,11 @@ type ElementDataUpdatedEvent = {
   type: "elementDataUpdated"
   timestamp: number
   elementData: ForesightElementData
-  updatedProp: "bounds" | "visibility"
+  updatedProps: "bounds" | "visibility"[]
 }
 ```
 
-**updatedProp** values:
+**updatedProps** values:
 
 - `bounds`: Element's position or size changed (detected via ResizeObserver and MutationObserver)
 - `visibility`: Element's viewport intersection status changed. We track visibility for performance gains by only observing elements that are actually visible to the user, reducing unnecessary calculations for off-screen elements
@@ -175,6 +169,7 @@ type ScrollTrajectoryUpdateEvent = {
   timestamp: number
   currentPoint: { x: number; y: number }
   predictedPoint: { x: number; y: number }
+  scrollDirection: "down" | "up" | "left" | "right"
 }
 ```
 
@@ -190,8 +185,11 @@ Fired when global ForesightManager settings are updated.
 type ManagerSettingsChangedEvent = {
   type: "managerSettingsChanged"
   timestamp: number
-  newSettings: ForesightManagerSettings
+  managerData: Readonly<ForesightManagerData>
 }
 ```
+
+**managerData**
+see [getManagerData](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata)
 
 ---

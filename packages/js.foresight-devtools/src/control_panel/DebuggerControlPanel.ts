@@ -35,6 +35,7 @@ const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
 const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
+const LOCATION_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>`
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -274,6 +275,13 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
             ? "No events"
             : `${activeFilters.length} event types`
 
+        const logLocation = this.debuggerInstance.getDebuggerData.settings.logging.logLocation
+        const locationLabels = {
+          controlPanel: "Panel",
+          console: "Console",
+          both: "Both",
+        }
+
         tabBar.innerHTML = `
           <div class="tab-bar-info">
             <div class="stats-chips">
@@ -304,9 +312,15 @@ ${
     .map(filter => "  • " + filter)
     .join("\n") || "  • None"
 }">⚬ ${filterText.toLowerCase()}</span>
+              <span class="chip location" title="Log output location: ${logLocation}">📍 ${
+          locationLabels[logLocation as keyof typeof locationLabels]
+        }</span>
             </div>
           </div>
           <div class="tab-bar-actions">
+            <button id="toggle-log-location-button" class="tab-bar-extra-button" title="Toggle log output location: ${logLocation}">
+              ${LOCATION_SVG_ICON}
+            </button>
             <div class="dropdown-container">
               <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types (${
                 activeFilters.length
@@ -314,13 +328,13 @@ ${
                 ${FILTER_SVG_ICON}
               </button>
               <div class="dropdown-menu" id="logs-filter-dropdown">
-                <button data-log-type="elementRegistered">Element Registered</button>
-                <button data-log-type="elementUnregistered">Element Unregistered</button>
-                <button data-log-type="elementDataUpdated">Element Data Updated</button>
-                <button data-log-type="callbackFired">Callback Fired</button>
-                <button data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
-                <button data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
-                <button data-log-type="managerSettingsChanged">Manager Settings Changed</button>
+                <button title="logs whenever an element is registered to the manager" data-log-type="elementRegistered">Element Registered</button>
+                <button title="logs whenever an element is unregistered from the manager" data-log-type="elementUnregistered">Element Unregistered</button>
+                <button title="logs whenever an element's data is updated in the manager" data-log-type="elementDataUpdated">Element Data Updated</button>
+                <button title="logs whenever an element's callback is hit" data-log-type="callbackFired">Callback Fired</button>
+                <button title="logs all mouse trajectory updates" data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
+                <button title="logs scroll trajectory updates" data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
+                <button title="logs whenever settings changed in the manager" data-log-type="managerSettingsChanged">Manager Settings Changed</button>
               </div>
             </div>
           </div>
@@ -608,7 +622,6 @@ ${
     // Update filter button appearance
     const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
     const activeFilters = Array.from(this.logFilters)
-    filterButton?.classList.toggle("active", activeFilters.length > 0 && activeFilters.length < 7)
   }
 
   private updateSortOptionUI() {
@@ -1149,7 +1162,7 @@ ${
       .tab-bar-extra-button {
         background: none; border: none; color: white; cursor: pointer;
         padding: 6px; display: flex; align-items: center; justify-content: center;
-        border-radius: 4px; transition: all 0.2s ease;
+        transition: all 0.2s ease;
       }
 
        .tab-bar-extra-button svg {
@@ -1310,7 +1323,7 @@ ${
 
       /* Settings Tab Styles */
       .settings-section {
-        padding: 8px;
+        
       }
       
       .settings-group {
@@ -1379,7 +1392,7 @@ ${
       #debug-controls input[type="checkbox"] {
         appearance: none; -webkit-appearance: none; -moz-appearance: none;
         position: relative; width: 44px; height: 22px;
-        background-color: #444; border-radius: 11px; cursor: pointer;
+        background-color: #444; cursor: pointer;
         outline: none; transition: all 0.3s ease;
         vertical-align: middle; flex-shrink: 0; margin: 0;
         border: 2px solid #555;
@@ -1387,7 +1400,7 @@ ${
       
       #debug-controls input[type="checkbox"]::before {
         content: ""; position: absolute; width: 16px; height: 16px;
-        border-radius: 50%; background-color: white; top: 1px; left: 1px;
+        background-color: white; top: 1px; left: 1px;
         transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       }
       
@@ -1468,10 +1481,8 @@ ${
         z-index: 10;
         display: none;
         flex-direction: column;
-        gap: 2px;
         background-color: #3a3a3a;
         border: 1px solid #555;
-        padding: 4px;
         min-width: 200px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       }

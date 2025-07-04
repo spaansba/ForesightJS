@@ -724,6 +724,7 @@ export class ForesightManager {
         timestamp: Date.now(),
         currentPoint: this.trajectoryPositions.currentPoint,
         predictedPoint: this.predictedScrollPoint,
+        scrollDirection: this.scrollDirection,
       })
     }
   }

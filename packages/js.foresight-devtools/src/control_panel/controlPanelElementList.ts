@@ -74,7 +74,7 @@ export class ControlPanelElementList {
     if (!this.elementCountSpan) return
     const registeredElements = Array.from(
       this.foresightManagerInstance.registeredElements.entries()
-    )
+    ) as [ForesightElement, ForesightElementData][]
     const total = registeredElements.length
     const isIntersecting = registeredElements.filter(
       ([_, elementData]) => elementData.isIntersectingWithViewport
@@ -141,7 +141,7 @@ export class ControlPanelElementList {
         break
       case "visibility":
         // based on if the element is visible or not (visible at the top)
-        elementsData.sort((a, b) => {
+        elementsData.sort((a: ForesightElementData, b: ForesightElementData) => {
           if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
             return a.isIntersectingWithViewport ? -1 : 1
           }
@@ -149,7 +149,8 @@ export class ControlPanelElementList {
         })
         break
       default:
-        sortOrder satisfies never
+        const _exhaustiveCheck: never = sortOrder
+        throw new Error(`Unhandled sort order: ${_exhaustiveCheck}`)
     }
     return elementsData
   }

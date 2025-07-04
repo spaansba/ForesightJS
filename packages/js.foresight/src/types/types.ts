@@ -326,6 +326,7 @@ export interface ScrollTrajectoryUpdateEvent extends ForesightBaseEvent {
   type: "scrollTrajectoryUpdate"
   currentPoint: Point
   predictedPoint: Point
+  scrollDirection: ScrollDirection
 }
 
 export interface ManagerSettingsChangedEvent extends ForesightBaseEvent {

@@ -217,7 +217,7 @@ export class ForesightDebugger {
       for (const key of loggingKeys) {
         if (shouldUpdateSetting(props.logging[key], this._debuggerSettings.logging[key])) {
           if (key === "logLocation") {
-            this.controlPanel.resetLogs()
+            // this.controlPanel.resetLogs()
           }
           ;(this._debuggerSettings.logging as any)[key] = props.logging[key]
         }
