@@ -206,7 +206,6 @@ export class ForesightDebugger {
         }
       }
     }
-    console.log(this._debuggerSettings)
   }
 
   private subscribeToManagerEvents() {
@@ -438,13 +437,11 @@ export class ForesightDebugger {
 
     animationOverlay.classList.add("animate")
 
-    const animationDuration = 500
-
     const timeoutId = setTimeout(() => {
       animationOverlay.remove()
       this.callbackAnimations.delete(element)
       this.animationPositionObserver?.unobserve(element)
-    }, animationDuration)
+    }, 500)
 
     this.callbackAnimations.set(element, {
       hitSlop: elementData.elementBounds.hitSlop,

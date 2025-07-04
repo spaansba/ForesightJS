@@ -610,24 +610,13 @@ export class ForesightManager {
     }
   }
 
-  private updateElementBounds(newRect: DOMRect, elementData: ForesightElementData) {
-    const updatedElementData = {
-      ...elementData,
-      elementBounds: {
-        ...elementData.elementBounds,
-        originalRect: newRect,
-        expandedRect: getExpandedRect(newRect, elementData.elementBounds.hitSlop),
-      },
-    }
-    this.elements.set(elementData.element, updatedElementData)
-  }
-
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) {
         continue
       }
+
       // Always call handlePositionChangeDataUpdates before handleScrollPrefetch
       this.handlePositionChangeDataUpdates(elementData, entry)
       this.handleScrollPrefetch(elementData, entry.boundingClientRect)
@@ -641,24 +630,42 @@ export class ForesightManager {
     elementData: ForesightElementData,
     entry: PositionObserverEntry
   ) => {
-    let updatedProps: UpdatedDataPropertyNames[] = []
-    const wasPreviouslyIntersecting = elementData.isIntersectingWithViewport
+    const updatedProps: UpdatedDataPropertyNames[] = []
     const isNowIntersecting = entry.isIntersecting
-    elementData.isIntersectingWithViewport = isNowIntersecting
-    if (wasPreviouslyIntersecting !== isNowIntersecting) {
+    
+    // Create updated element data with new intersection state
+    let updatedElementData = {
+      ...elementData,
+      isIntersectingWithViewport: isNowIntersecting
+    }
+    
+    // Track visibility changes
+    if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
       updatedProps.push("visibility")
     }
+    
+    // Handle bounds updates for intersecting elements
     if (isNowIntersecting) {
       updatedProps.push("bounds")
-      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
-      this.updateElementBounds(entry.boundingClientRect, elementData)
+      this.handleScrollPrefetch(updatedElementData, entry.boundingClientRect)
+      updatedElementData = {
+        ...updatedElementData,
+        elementBounds: {
+          hitSlop: elementData.elementBounds.hitSlop,
+          originalRect: entry.boundingClientRect,
+          expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
+        },
+      }
     }
+    
+    // Update state and emit once
+    this.elements.set(elementData.element, updatedElementData)
     if (updatedProps.length) {
       this.emit({
         type: "elementDataUpdated",
-        elementData,
+        elementData: updatedElementData,
         timestamp: Date.now(),
-        updatedProps: updatedProps,
+        updatedProps,
       })
     }
   }
