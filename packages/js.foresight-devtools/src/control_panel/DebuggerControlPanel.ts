@@ -10,7 +10,6 @@ import type {
   DebuggerSettings,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
-  SectionStates,
 } from "../types/types"
 
 import {
@@ -34,7 +33,8 @@ import { ControlPanelElementList } from "./controlPanelElementList"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
+const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4-4 4 4M7 13V3M17 15l4-4 4 4M21 11v3M12 15l4 4 4-4M16 19v-9"></path></svg>`
+const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -74,7 +74,7 @@ export class DebuggerControlPanel {
   private activeTab: ControllerTabs = "elements"
 
   private copySettingsButton: HTMLButtonElement | null = null
-  private minimizedElementCount: HTMLSpanElement | null = null
+  private titleElementCount: HTMLSpanElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   // Logs system
@@ -117,6 +117,10 @@ export class DebuggerControlPanel {
     instance._setupDOMAndListeners(shadowRoot, debuggerSettings)
 
     return instance
+  }
+
+  public resetLogs() {
+    this.eventLogs = []
   }
 
   /**
@@ -173,7 +177,7 @@ export class DebuggerControlPanel {
     this.updateTabBarContent(tab)
   }
 
-  private updateTabBarContent(tab: "settings" | "elements" | "logs") {
+  private updateTabBarContent(tab: ControllerTabs) {
     const tabBar = this.controlsContainer?.querySelector(".tab-bar")
     if (!tabBar) return
 
@@ -181,17 +185,15 @@ export class DebuggerControlPanel {
       case "settings":
         tabBar.innerHTML = `
           <div class="tab-bar-info">
-            <span class="tab-info-text">Global settings for prediction behavior</span>
+            <span class="tab-info-text">Change Foresight Settings in real-time</span>
           </div>
           <div class="tab-bar-actions">
-            <button class="copy-settings-button" title="Copy Settings to Clipboard">
+            <button id="copy-settings" class="tab-bar-extra-button" title="Copy Settings to Clipboard">
               ${COPY_SVG_ICON}
             </button>
           </div>
         `
-        // Re-attach copy settings event listener
-        const copyBtn = tabBar.querySelector(".copy-settings-button")
-        copyBtn?.addEventListener("click", this.handleCopySettings.bind(this))
+        this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
         break
 
       case "elements":
@@ -216,7 +218,7 @@ export class DebuggerControlPanel {
           </div>
           <div class="tab-bar-actions">
             <div class="sort-control-container">
-              <button class="sort-button" title="Change element list sort order">
+              <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
                 ${SORT_SVG_ICON}
               </button>
               <div id="sort-options-popup">
@@ -250,10 +252,8 @@ export class DebuggerControlPanel {
             <span class="tab-info-text">Showing ${filteredCount} of ${this.eventLogs.length} events • ${filterText}</span>
           </div>
           <div class="tab-bar-actions">
-            <button class="logs-filter-button" title="Filter log types (${activeFilters.length}/7 active)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-              </svg>
+            <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types (${activeFilters.length}/7 active)">
+              ${FILTER_SVG_ICON}
             </button>
             <div class="logs-filter-dropdown">
               <button data-log-type="elementRegistered">Element Registered</button>
@@ -274,7 +274,7 @@ export class DebuggerControlPanel {
   }
 
   private setupElementsSortListeners() {
-    const sortButton = this.controlsContainer?.querySelector(".sort-button")
+    const sortButton = this.controlsContainer?.querySelector("#sort-elements-button")
     const sortPopup = this.controlsContainer?.querySelector("#sort-options-popup")
 
     sortButton?.addEventListener("click", e => {
@@ -300,7 +300,7 @@ export class DebuggerControlPanel {
   }
 
   private setupLogsFilterListeners() {
-    const filterButton = this.controlsContainer?.querySelector(".logs-filter-button")
+    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
     const filterDropdown = this.controlsContainer?.querySelector(".logs-filter-dropdown")
 
     filterButton?.addEventListener("click", e => {
@@ -318,7 +318,7 @@ export class DebuggerControlPanel {
     })
   }
 
-  private addEventLog(type: string, data: any) {
+  public addEventLog(type: string, data: any) {
     if (!this.logFilters.has(type)) return
 
     const logEntry = {
@@ -417,14 +417,46 @@ export class DebuggerControlPanel {
     }
   }
 
+  private getNoLogsMessage(): string {
+    console.log("here")
+    const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
+    const logging = debuggerSettings.logging
+
+    // If we have logs but they're filtered out, show filter message
+    if (this.eventLogs.length > 0) {
+      return "No logs to display. Check your filter settings."
+    }
+
+    // Check if all logging options are disabled
+    const allLoggingDisabled =
+      !logging.logCallbackFired &&
+      !logging.logElementDataUpdated &&
+      !logging.logElementRegistered &&
+      !logging.logElementUnregistered &&
+      !logging.logManagerSettingsChanged &&
+      !logging.logMouseTrajectoryUpdate &&
+      !logging.logScrollTrajectoryUpdate
+
+    if (allLoggingDisabled) {
+      return "No logs to display. Enable logging options above to see events."
+    }
+
+    if (logging.logLocation === "console") {
+      return "No logs to display. Logging is set to console - check browser console for events."
+    }
+
+    return "No logs to display. Interact with elements to generate events."
+  }
+
   private updateLogsDisplay() {
     if (!this.logsContainer) return
 
     const filteredLogs = this.eventLogs.filter(log => this.logFilters.has(log.type))
-
+    console.log(filteredLogs.length === 0)
     this.logsContainer.innerHTML =
-      filteredLogs.length === 0
-        ? '<div class="no-logs">No logs to display. Check your filter settings.</div>'
+      filteredLogs.length === 0 ||
+      this.debuggerInstance.getDebuggerData.settings.logging.logLocation === "console"
+        ? `<div class="no-logs">${this.getNoLogsMessage()}</div>`
         : filteredLogs
             .map((log, index) => {
               const time = new Date(log.timestamp).toLocaleTimeString()
@@ -513,8 +545,8 @@ export class DebuggerControlPanel {
     })
   }
 
-  public updateMinimizedElementCount() {
-    if (!this.minimizedElementCount) return
+  public updateTitleElementCount() {
+    if (!this.titleElementCount) return
     const registeredElements = Array.from(
       this.foresightManagerInstance.registeredElements.entries()
     )
@@ -533,8 +565,8 @@ export class DebuggerControlPanel {
       "Note: Only elements visible in the viewport",
       "are actively tracked by intersection observers.",
     ]
-    this.minimizedElementCount.textContent = `${isIntersecting}/${total}`
-    this.minimizedElementCount.title = visibleTitle.join("\n")
+    this.titleElementCount.textContent = `${isIntersecting}/${total}`
+    this.titleElementCount.title = visibleTitle.join("\n")
   }
 
   private queryDOMElements() {
@@ -551,8 +583,8 @@ export class DebuggerControlPanel {
     this.scrollMarginValueSpan = this.controlsContainer.querySelector("#scroll-margin-value")
     this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
-    this.copySettingsButton = this.controlsContainer.querySelector(".copy-settings-button")
-    this.minimizedElementCount = this.controlsContainer.querySelector(".minimized-element-count")
+    this.copySettingsButton = this.controlsContainer.querySelector("#copy-settings")
+    this.titleElementCount = this.controlsContainer.querySelector(".title-element-count")
 
     // Tab system
     this.tabContainer = this.controlsContainer.querySelector(".tab-container")
@@ -566,7 +598,7 @@ export class DebuggerControlPanel {
     // Logs system
     this.logsContainer = this.controlsContainer.querySelector(".logs-container")
     this.logsFilterDropdown = this.controlsContainer.querySelector(".logs-filter-dropdown")
-    this.logsFilterButton = this.controlsContainer.querySelector(".logs-filter-button")
+    this.logsFilterButton = this.controlsContainer.querySelector("#filter-logs-button")
   }
 
   private initializeElementListManager() {
@@ -599,7 +631,7 @@ export class DebuggerControlPanel {
         }, 3000)
       })
       .catch(err => {
-        console.error("Foresight Debugger: Could not copy settings to clipboard", err)
+        console.error("Foresight Debugger: Could not copy manager settings to clipboard", err)
       })
   }
 
@@ -654,25 +686,6 @@ export class DebuggerControlPanel {
           [setting]: isChecked,
         } as Partial<UpdateForsightManagerSettings>)
       }
-    })
-  }
-
-  private setupLogEventListeners() {
-    // Subscribe to ForesightManager events for logging
-    const eventTypes = [
-      "elementRegistered",
-      "elementUnregistered",
-      "elementDataUpdated",
-      "callbackFired",
-      "mouseTrajectoryUpdate",
-      "scrollTrajectoryUpdate",
-      "managerSettingsChanged",
-    ]
-
-    eventTypes.forEach(eventType => {
-      this.foresightManagerInstance.addEventListener(eventType as any, (event: any) => {
-        this.addEventLog(eventType, event)
-      })
     })
   }
 
@@ -731,13 +744,7 @@ export class DebuggerControlPanel {
   }
 
   private initializeTabSystem() {
-    // Initialize with settings tab active
-    this.switchTab("settings")
-
-    // Setup event logging
-    this.setupLogEventListeners()
-
-    // Initialize log filter UI
+    this.switchTab(this.activeTab)
     this.updateLogFilterUI()
   }
 
@@ -747,12 +754,10 @@ export class DebuggerControlPanel {
       this.controlsContainer.classList.add("minimized")
       this.containerMinimizeButton.textContent = "+"
       if (this.tabContainer) this.tabContainer.style.display = "none"
-      if (this.minimizedElementCount) this.minimizedElementCount.style.display = ""
     } else {
       this.controlsContainer.classList.remove("minimized")
       this.containerMinimizeButton.textContent = "-"
       if (this.tabContainer) this.tabContainer.style.display = ""
-      if (this.minimizedElementCount) this.minimizedElementCount.style.display = "none"
       // Show active tab content and update tab bar
       this.switchTab(this.activeTab)
     }
@@ -796,6 +801,7 @@ export class DebuggerControlPanel {
   public removeElementFromListContainer(elementData: ForesightElementData) {
     this.elementListManager.removeElementFromListContainer(elementData)
     // Update tab bar if on elements tab
+    this.updateTitleElementCount()
     if (this.activeTab === "elements") {
       this.updateTabBarContent("elements")
     }
@@ -803,7 +809,6 @@ export class DebuggerControlPanel {
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
     this.elementListManager.updateElementVisibilityStatus(elementData)
-    this.updateMinimizedElementCount()
     // Update tab bar if on elements tab
     if (this.activeTab === "elements") {
       this.updateTabBarContent("elements")
@@ -877,23 +882,9 @@ export class DebuggerControlPanel {
     container.innerHTML = /* html */ `
       <div class="debugger-title-container">
         <button class="minimize-button">-</button>
-        <div class="title-group">
-          <h2>Foresight Debugger</h2>
-         <span class="info-icon" title="${[
-           "Foresight Debugger Information",
-           "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-           "Session-Only Changes:",
-           "All adjustments made here apply only to the",
-           "current browser session and won't persist.",
-           "",
-           "Permanent Configuration:",
-           "To make lasting changes, update the initial",
-           "values in your ForesightManager.initialize().",
-           "",
-           "Settings can be copied from the Settings tab",
-         ].join("\n")}">i</span>
-        </div>
-        <span class="minimized-element-count">
+        <h1>Foresight DevTools</h1>
+        <span class="title-element-count">
+
         </span>
       </div>
 
@@ -1066,7 +1057,7 @@ export class DebuggerControlPanel {
             </div>
 
             <div class="settings-group">
-              <h4>General</h4>
+              <h4>DevTools</h4>
            <div class="control-row">
               <label for="toggle-name-tags">
                 Show Name Tags
@@ -1085,19 +1076,19 @@ export class DebuggerControlPanel {
           </div>
         </div>
 
-        <!-- <div class="elements-content">
-          <div class="element-list">
+        <div class="elements-content">
+    
             <div id="element-list-items-container">
             </div>
-          </div>
+         
         </div>
 
         <div class="logs-content">
           <div class="logs-container">
-            <div class="no-logs">No logs to display. Check your filter settings.</div>
+            <div class="no-logs"></div>
           </div>
         </div>
-      </div> -->
+      </div>
     `
     return container
   }
@@ -1112,35 +1103,21 @@ export class DebuggerControlPanel {
 
     const rowsContentHeight =
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
-    const elementListContainerHeight = rowsContentHeight + elementListItemsContainerPadding * 2
 
     return /* css */ `
       #debug-controls {
         position: fixed; bottom: 10px; right: 10px;
         background-color: rgba(0, 0, 0, 0.90); color: white; padding: 12px;
-        border-radius: 5px; font-family: Arial, sans-serif; font-size: 13px;
-        z-index: 10001; pointer-events: auto; display: flex; flex-direction: column; gap: 8px;
+        font-family: Arial, sans-serif; font-size: 13px;
+        z-index: 10001; pointer-events: auto; display: flex; flex-direction: column;
         width: 400px;
         transition: width 0.3s ease, height 0.3s ease;
       }
       #debug-controls.minimized {
         width: 250px;
         overflow: hidden;
-        padding: 12px 0; 
-      }
-      #debug-controls.minimized .debugger-title-container {
-        padding-left: 10px; 
-        padding-right: 10px;
-        gap: 10px; 
-      }
-      #debug-controls.minimized .debugger-title-container h2 {
-        display: inline;
-        font-size: 14px;
-        margin: 0;
-        white-space: nowrap;
-      }
-      #debug-controls.minimized .info-icon {
-        display: none;
+        padding: 12px; 
+        gap: 0px;
       }
 
       #element-count,#callback-count {
@@ -1150,7 +1127,7 @@ export class DebuggerControlPanel {
 
       .debugger-title-container {
         display: flex;
-        align-items: center;
+        justify-content: space-between ;
         padding: 0;
       }
       
@@ -1159,8 +1136,7 @@ export class DebuggerControlPanel {
         font-size: 22px; cursor: pointer;
         line-height: 1;
         padding: 0;
-        width: 30px;
-        flex-shrink: 0;
+        
       }
       
       .title-group { 
@@ -1171,44 +1147,37 @@ export class DebuggerControlPanel {
         justify-content: center;
       }
       
-      .minimized-element-count {
+      .title-element-count {
         font-size: 14px;
-        min-width: 30px;
         text-align: right;
-        flex-shrink: 0;
       }
-      .debugger-title-container h2 { margin: 0; font-size: 15px; }
-
-      .copy-settings-button {
-        background: none; border: none; color: white;
-        cursor: pointer; 
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 3px;
-        transition: background-color 0.2s ease;
-      }
-
-      .copy-settings-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .copy-settings-button svg {
-        width: 16px; height: 16px;
-        stroke: white;
-      }
-
+      .debugger-title-container h1 { margin: 0; font-size: 15px; }
 
       /* Tab System */
       .tab-container {
         display: flex;
+        justify-content: space-evenly;
         border-bottom: 2px solid #444;
-        margin-bottom: 8px;
+        margin-top: 12px;
       }
       
+      .tab-bar-extra-button {
+        background: none; border: none; color: white; cursor: pointer;
+        padding: 0; display: flex; align-items: center; justify-content: center;
+      }
+
+       .tab-bar-extra-button svg {
+        width: 16px; height: 16px; stroke: white; transition: stroke 0.2s;
+
+       }
+      .tab-bar-extra-button:hover svg { stroke: white; }
+
       .tab-button {
         background: none;
         border: none;
         color: #9e9e9e;
-        padding: 8px 16px;
+        width: 100%;
+        padding: 8px;
         cursor: pointer;
         border-bottom: 2px solid transparent;
         transition: all 0.2s ease;
@@ -1242,9 +1211,8 @@ export class DebuggerControlPanel {
       .tab-bar {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding-bottom: 8px;
 
+        padding: 4px 0 4px 0;
         border-bottom: 1px solid #444;
         position: sticky;
         top: 0;
@@ -1276,7 +1244,6 @@ export class DebuggerControlPanel {
       .logs-content {
         flex: 1;
         overflow-y: auto;
-        display: none;
       }
       
       /* Universal scrollbar styling for all scrollable areas */
@@ -1339,16 +1306,11 @@ export class DebuggerControlPanel {
       }
       
       .settings-group h4 {
-        margin: 0 0 8px 0;
-        font-size: 11px;
+        margin: 8px 0 4px 0;
+        font-size: 13px;
         font-weight: 600;
         color: #b0c4de;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 4px 0;
-        border-left: 3px solid #b0c4de;
-        padding-left: 8px;
-        background-color: rgba(176, 196, 222, 0.05);
       }
 
       #debug-controls .control-row {
@@ -1429,14 +1391,6 @@ export class DebuggerControlPanel {
       .sort-control-container {
         position: relative;
       }
-      .sort-button {
-        background: none; border: none; color: white; cursor: pointer;
-        padding: 0; display: flex; align-items: center; justify-content: center;
-      }
-      .sort-button svg {
-        width: 16px; height: 16px; stroke: white; transition: stroke 0.2s;
-      }
-      .sort-button:hover svg { stroke: white; }
       
       #sort-options-popup {
         position: absolute;
@@ -1498,8 +1452,7 @@ export class DebuggerControlPanel {
       #element-list-items-container { 
         display: flex;
         flex-wrap: wrap;
-        gap: ${elementListGap}px;
-        padding: ${elementListItemsContainerPadding}px;
+        
         min-height: ${rowsContentHeight}px;
         box-sizing: border-box;
         align-content: flex-start;
@@ -1519,8 +1472,7 @@ export class DebuggerControlPanel {
         flex-shrink: 0;
         height: ${elementItemHeight}px;
         box-sizing: border-box;
-        padding: 3px 5px;
-        border-radius: 2px;
+        padding: 5px;
         display: flex;
         align-items: center;
         gap: 5px;
@@ -1558,29 +1510,6 @@ export class DebuggerControlPanel {
         border-radius: 3px; 
         background-color: rgba(0,0,0,0.2);
         flex-shrink: 0;
-      }
-
-      /* Logs Tab Styles */
-      .logs-filter-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        border-radius: 3px;
-        transition: background-color 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .logs-filter-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-      
-      .logs-filter-button svg {
-        width: 16px;
-        height: 16px;
-        stroke: white;
       }
       
       .logs-filter-dropdown {
@@ -1643,8 +1572,6 @@ export class DebuggerControlPanel {
         flex: 1;
         overflow-y: auto;
         background-color: rgba(20, 20, 20, 0.5);
-        border-radius: 3px;
-
         font-family: 'Courier New', monospace;
       }
       

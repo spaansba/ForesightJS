@@ -43,9 +43,18 @@ export type DebuggerSettings = {
   sortElementList: SortElementList
 
   logging: {
-    [K in keyof ForesightEventMap]: boolean
+    logLocation?: LoggingLocations
+    logElementRegistered?: boolean
+    logElementUnregistered?: boolean
+    logElementDataUpdated?: boolean
+    logCallbackFired?: boolean
+    logMouseTrajectoryUpdate?: boolean
+    logScrollTrajectoryUpdate?: boolean
+    logManagerSettingsChanged?: boolean
   }
 }
+
+export type LoggingLocations = "controlPanel" | "console"
 
 export type ControllerTabs = "settings" | "elements" | "logs"
 
