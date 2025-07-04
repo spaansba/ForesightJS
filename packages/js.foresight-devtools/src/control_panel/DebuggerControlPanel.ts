@@ -8,6 +8,7 @@ import type {
   ControllerTabs,
   DebuggerBooleanSettingKeys,
   DebuggerSettings,
+  LoggingLocations,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
 } from "../types/types"
@@ -41,6 +42,7 @@ const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
 const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
 const LOCATION_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>`
+const CLEAR_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -129,6 +131,15 @@ export class DebuggerControlPanel {
     this.eventLogs = []
   }
 
+  private clearLogs() {
+    this.resetLogs()
+    this.updateLogsDisplay()
+    // Update tab bar if on logs tab to refresh the count
+    if (this.activeTab === "logs") {
+      this.updateLogsTabBarContent()
+    }
+  }
+
   /**
    * All DOM creation and event listener setup logic is moved here.
    * This method can be called to "revive" a cleaned-up instance.
@@ -183,56 +194,165 @@ export class DebuggerControlPanel {
     this.updateTabBarContent(tab)
   }
 
-  private updateTabBarContent(tab: ControllerTabs) {
+  private createSettingsTabBarTemplate(): string {
+    return `
+      <div class="tab-bar-info">
+        <span class="tab-info-text">Change Foresight Settings in real-time</span>
+      </div>
+      <div class="tab-bar-actions">
+        <button id="copy-settings" class="tab-bar-extra-button" title="Copy Settings to Clipboard">
+          ${COPY_SVG_ICON}
+        </button>
+      </div>
+    `
+  }
+
+  private createElementsTabBarTemplate(): string {
+    return `
+      <div class="tab-bar-info">
+        <div class="stats-chips">
+          <span class="chip visible" data-dynamic="elements-visible">0/0 visible</span>
+          <span class="chip hits" data-dynamic="elements-hits">0 hits</span>
+          <span class="chip sort" data-dynamic="elements-sort">▼ visibility</span>
+        </div>
+      </div>
+      <div class="tab-bar-actions">
+        <div class="dropdown-container">
+          <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
+            ${SORT_SVG_ICON}
+          </button>
+          <div class="dropdown-menu" id="sort-options-dropdown">
+            <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
+            <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
+            <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  private createLogsTabBarTemplate(): string {
+    return `
+      <div class="tab-bar-info">
+        <div class="stats-chips">
+          <span class="chip logs" data-dynamic="logs-count">0 events</span>
+          <span class="chip filter" data-dynamic="logs-filter">⚬ all events</span>
+          <span class="chip location" data-dynamic="logs-location">📍 panel</span>
+        </div>
+      </div>
+      <div class="tab-bar-actions">
+        <button id="clear-logs-button" class="tab-bar-extra-button" title="Clear all logs">
+          ${CLEAR_SVG_ICON}
+        </button>
+        <div class="dropdown-container">
+          <button class="tab-bar-extra-button" id="log-location-button" title="Change log output location">
+            ${LOCATION_SVG_ICON}
+          </button>
+          <div class="dropdown-menu" id="log-location-dropdown">
+            <button data-log-location="controlPanel" title="Log to control panel">Control Panel</button>
+            <button data-log-location="console" title="Log to browser console">Console</button>
+            <button data-log-location="both" title="Log to both control panel and console">Both</button>
+          </div>
+        </div>
+        <div class="dropdown-container">
+          <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types">
+            ${FILTER_SVG_ICON}
+          </button>
+          <div class="dropdown-menu" id="logs-filter-dropdown">
+            <button title="logs whenever an element is registered to the manager" data-log-type="elementRegistered">Element Registered</button>
+            <button title="logs whenever an element is unregistered from the manager" data-log-type="elementUnregistered">Element Unregistered</button>
+            <button title="logs whenever an element's data is updated in the manager" data-log-type="elementDataUpdated">Element Data Updated</button>
+            <button title="logs whenever an element's callback is hit" data-log-type="callbackFired">Callback Fired</button>
+            <button title="logs all mouse trajectory updates" data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
+            <button title="logs scroll trajectory updates" data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
+            <button title="logs whenever settings changed in the manager" data-log-type="managerSettingsChanged">Manager Settings Changed</button>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  private initializeTabBarContent(tab: ControllerTabs) {
     const tabBar = this.controlsContainer?.querySelector(".tab-bar")
     if (!tabBar) return
 
     switch (tab) {
       case "settings":
-        tabBar.innerHTML = `
-          <div class="tab-bar-info">
-            <span class="tab-info-text">Change Foresight Settings in real-time</span>
-          </div>
-          <div class="tab-bar-actions">
-            <button id="copy-settings" class="tab-bar-extra-button" title="Copy Settings to Clipboard">
-              ${COPY_SVG_ICON}
-            </button>
-          </div>
-        `
-        // Re-query and re-attach the copy button after DOM update
-        this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings")
-        this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
+        tabBar.innerHTML = this.createSettingsTabBarTemplate()
+        this.attachSettingsTabBarListeners()
         break
-
       case "elements":
-        // Get current element data (reuse calculation from updateTitleElementCount)
-        const registeredElements = Array.from(
-          this.foresightManagerInstance.registeredElements.entries()
-        )
-        const total = registeredElements.length
-        const isIntersecting = registeredElements.filter(
-          ([_, elementData]) => elementData.isIntersectingWithViewport
-        ).length
-        const {
-          tab,
-          mouse,
-          scroll,
-          total: totalHits,
-        } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+        tabBar.innerHTML = this.createElementsTabBarTemplate()
+        this.attachElementsTabBarListeners()
+        this.updateElementsTabBarContent()
+        break
+      case "logs":
+        tabBar.innerHTML = this.createLogsTabBarTemplate()
+        this.attachLogsTabBarListeners()
+        this.updateLogsTabBarContent()
+        break
+    }
+  }
 
-        const currentSort =
-          this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
-        const sortLabels = {
-          visibility: "Visibility",
-          documentOrder: "Document Order",
-          insertionOrder: "Insertion Order",
-        }
+  private updateTabBarContent(tab: ControllerTabs) {
+    // Always initialize the tab bar content for the current tab
+    // This ensures the correct template is loaded when switching tabs
+    this.initializeTabBarContent(tab)
+  }
 
-        tabBar.innerHTML = `
-          <div class="tab-bar-info">
-            <div class="stats-chips">
-              <span class="chip visible" title="Elements visible in viewport vs total registered elements">${isIntersecting}/${total} visible</span>
-              <span class="chip hits" title="Total callback hits breakdown:
+  // These methods update only dynamic content without reinitializing
+  public updateCurrentTabBarContent() {
+    switch (this.activeTab) {
+      case "settings":
+        // Settings tab has no dynamic content
+        break
+      case "elements":
+        this.updateElementsTabBarContent()
+        break
+      case "logs":
+        this.updateLogsTabBarContent()
+        break
+    }
+  }
+
+  // Dynamic content update methods
+  private updateElementsTabBarContent() {
+    const registeredElements = Array.from(
+      this.foresightManagerInstance.registeredElements.entries()
+    )
+    const total = registeredElements.length
+    const isIntersecting = registeredElements.filter(
+      ([_, elementData]) => elementData.isIntersectingWithViewport
+    ).length
+    const {
+      tab,
+      mouse,
+      scroll,
+      total: totalHits,
+    } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+
+    const currentSort =
+      this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
+    const sortLabels = {
+      visibility: "Visibility",
+      documentOrder: "Document Order",
+      insertionOrder: "Insertion Order",
+    }
+
+    // Update visible count
+    const visibleChip = this.controlsContainer?.querySelector('[data-dynamic="elements-visible"]')
+    if (visibleChip) {
+      visibleChip.textContent = `${isIntersecting}/${total} visible`
+      visibleChip.setAttribute("title", "Elements visible in viewport vs total registered elements")
+    }
+
+    // Update hits count
+    const hitsChip = this.controlsContainer?.querySelector('[data-dynamic="elements-hits"]')
+    if (hitsChip) {
+      hitsChip.textContent = `${totalHits} hits`
+      hitsChip.setAttribute(
+        "title",
+        `Total callback hits breakdown:
 
 Mouse: ${mouse.hover + mouse.trajectory}
   • hover: ${mouse.hover}
@@ -246,53 +366,53 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
   • down: ${scroll.down}
   • up: ${scroll.up}
   • left: ${scroll.left}
-  • right: ${scroll.right}">${totalHits} hits </span>
-              <span class="chip sort" title="Current element sorting method">▼ ${sortLabels[
-                currentSort as keyof typeof sortLabels
-              ].toLowerCase()}</span>
-            </div>
-          </div>
-          <div class="tab-bar-actions">
-            <div class="dropdown-container">
-              <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
-                ${SORT_SVG_ICON}
-              </button>
-              <div class="dropdown-menu" id="sort-options-dropdown">
-                <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
-                <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
-                <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
-              </div>
-            </div>
-          </div>
-        `
+  • right: ${scroll.right}`
+      )
+    }
 
-        // Re-attach sort functionality
-        this.setupElementsSortListeners()
-        break
+    // Update sort method
+    const sortChip = this.controlsContainer?.querySelector('[data-dynamic="elements-sort"]')
+    if (sortChip) {
+      sortChip.textContent = `▼ ${sortLabels[currentSort as keyof typeof sortLabels].toLowerCase()}`
+      sortChip.setAttribute("title", "Current element sorting method")
+    }
 
-      case "logs":
-        // Since eventLogs only contains tracked events now, just show the count
-        const loggedCount = this.eventLogs.length
-        const activeFilters = Array.from(this.logFilters)
-        const filterText =
-          activeFilters.length === 7
-            ? "All events"
-            : activeFilters.length === 0
-            ? "No events"
-            : `${activeFilters.length} event types`
+    // Update sort option UI
+    this.updateSortOptionUI()
+  }
 
-        const logLocation = this.debuggerInstance.getDebuggerData.settings.logging.logLocation
-        const locationLabels = {
-          controlPanel: "Panel",
-          console: "Console",
-          both: "Both",
-        }
+  private updateLogsTabBarContent() {
+    const loggedCount = this.eventLogs.length
+    const activeFilters = Array.from(this.logFilters)
+    const filterText =
+      activeFilters.length === 7
+        ? "All events"
+        : activeFilters.length === 0
+        ? "No events"
+        : `${activeFilters.length} event types`
 
-        tabBar.innerHTML = `
-          <div class="tab-bar-info">
-            <div class="stats-chips">
-              <span class="chip logs" title="Number of events logged (only tracked events are logged)">${loggedCount} events</span>
-              <span class="chip filter" title="Event Filter Status:
+    const logLocation =
+      this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
+    const locationLabels = {
+      controlPanel: "Panel",
+      console: "Console",
+      both: "Both",
+    }
+
+    // Update logs count
+    const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
+    if (logsChip) {
+      logsChip.textContent = `${loggedCount} events`
+      logsChip.setAttribute("title", "Number of events logged (only tracked events are logged)")
+    }
+
+    // Update filter status
+    const filterChip = this.controlsContainer?.querySelector('[data-dynamic="logs-filter"]')
+    if (filterChip) {
+      filterChip.textContent = `⚬ ${filterText.toLowerCase()}`
+      filterChip.setAttribute(
+        "title",
+        `Event Filter Status:
 
 Active filters:
 ${
@@ -315,39 +435,40 @@ ${
     .filter(type => !this.logFilters.has(type))
     .map(filter => "  • " + filter)
     .join("\n") || "  • None"
-}">⚬ ${filterText.toLowerCase()}</span>
-              <span class="chip location" title="Log output location: ${logLocation}">📍 ${
-          locationLabels[logLocation as keyof typeof locationLabels]
-        }</span>
-            </div>
-          </div>
-          <div class="tab-bar-actions">
-            <button id="toggle-log-location-button" class="tab-bar-extra-button" title="Toggle log output location: ${logLocation}">
-              ${LOCATION_SVG_ICON}
-            </button>
-            <div class="dropdown-container">
-              <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types (${
-                activeFilters.length
-              }/7 active)">
-                ${FILTER_SVG_ICON}
-              </button>
-              <div class="dropdown-menu" id="logs-filter-dropdown">
-                <button title="logs whenever an element is registered to the manager" data-log-type="elementRegistered">Element Registered</button>
-                <button title="logs whenever an element is unregistered from the manager" data-log-type="elementUnregistered">Element Unregistered</button>
-                <button title="logs whenever an element's data is updated in the manager" data-log-type="elementDataUpdated">Element Data Updated</button>
-                <button title="logs whenever an element's callback is hit" data-log-type="callbackFired">Callback Fired</button>
-                <button title="logs all mouse trajectory updates" data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
-                <button title="logs scroll trajectory updates" data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
-                <button title="logs whenever settings changed in the manager" data-log-type="managerSettingsChanged">Manager Settings Changed</button>
-              </div>
-            </div>
-          </div>
-        `
-        // Re-attach logs filter event listeners
-        this.setupLogsFilterListeners()
-        this.updateLogFilterUI()
-        break
+}`
+      )
     }
+
+    // Update location
+    const locationChip = this.controlsContainer?.querySelector('[data-dynamic="logs-location"]')
+    if (locationChip) {
+      locationChip.textContent = `📍 ${locationLabels[logLocation as keyof typeof locationLabels]}`
+      locationChip.setAttribute("title", `Log output location: ${logLocation}`)
+    }
+
+    // Update filter button title
+    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
+    if (filterButton) {
+      filterButton.setAttribute("title", `Filter log types (${activeFilters.length}/7 active)`)
+    }
+
+    // Update UI states
+    this.updateLogFilterUI()
+    this.updateLogLocationUI()
+  }
+
+  // Event listener attachment methods
+  private attachSettingsTabBarListeners() {
+    this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings")
+    this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
+  }
+
+  private attachElementsTabBarListeners() {
+    this.setupElementsSortListeners()
+  }
+
+  private attachLogsTabBarListeners() {
+    this.setupLogsFilterListeners()
   }
 
   private setupElementsSortListeners() {
@@ -371,19 +492,21 @@ ${
         this.elementListManager.reorderElementsInListContainer(
           this.elementListManager.sortElementsInListContainer()
         )
-        // Update the tab bar to show new sort method
-        this.updateTabBarContent("elements")
+        // Update only the dynamic content
+        if (this.activeTab === "elements") {
+          this.updateElementsTabBarContent()
+        }
         sortDropdown.classList.remove("active")
       }
     })
-
-    // Update sort option UI
-    this.updateSortOptionUI()
   }
 
   private setupLogsFilterListeners() {
     const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
     const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
+    const logLocationButton = this.controlsContainer?.querySelector("#log-location-button")
+    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
+    const clearLogsButton = this.controlsContainer?.querySelector("#clear-logs-button")
 
     filterButton?.addEventListener("click", e => {
       e.stopPropagation()
@@ -397,6 +520,30 @@ ${
         const logType = filterBtn.dataset.logType!
         this.toggleLogFilter(logType)
       }
+    })
+
+    logLocationButton?.addEventListener("click", e => {
+      e.stopPropagation()
+      logLocationDropdown?.classList.toggle("active")
+    })
+
+    logLocationDropdown?.addEventListener("click", e => {
+      const target = e.target as HTMLElement
+      const locationBtn = target.closest("[data-log-location]") as HTMLElement | null
+      if (locationBtn) {
+        const location = locationBtn.dataset.logLocation as LoggingLocations
+        this.setLogLocation(location)
+        // Update the tab bar to show new location
+        if (this.activeTab === "logs") {
+          this.updateLogsTabBarContent()
+        }
+        logLocationDropdown.classList.remove("active")
+      }
+    })
+
+    clearLogsButton?.addEventListener("click", e => {
+      e.stopPropagation()
+      this.clearLogs()
     })
   }
 
@@ -425,7 +572,7 @@ ${
         type === "elementDataUpdated" ||
         type === "callbackFired")
     ) {
-      this.updateTabBarContent("elements")
+      this.updateElementsTabBarContent()
     }
   }
 
@@ -496,7 +643,7 @@ ${
 
     // Update tab bar if on logs tab
     if (this.activeTab === "logs") {
-      this.updateTabBarContent("logs")
+      this.updateLogsTabBarContent()
     }
   }
 
@@ -549,8 +696,17 @@ ${
     this.updateLogFilterUI()
     // Update tab bar count if on logs tab
     if (this.activeTab === "logs") {
-      this.updateTabBarContent("logs")
+      this.updateLogsTabBarContent()
     }
+  }
+
+  private setLogLocation(location: LoggingLocations) {
+    this.debuggerInstance.alterDebuggerSettings({
+      logging: {
+        ...this.debuggerInstance.getDebuggerData.settings.logging,
+        logLocation: location,
+      },
+    })
   }
 
   private updateLogFilterUI() {
@@ -564,6 +720,18 @@ ${
     // Update filter button appearance
     const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
     const activeFilters = Array.from(this.logFilters)
+  }
+
+  private updateLogLocationUI() {
+    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
+    const logLocationButtons = logLocationDropdown?.querySelectorAll("[data-log-location]")
+    const currentLocation =
+      this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
+
+    logLocationButtons?.forEach(button => {
+      const location = (button as HTMLElement).dataset.logLocation!
+      button.classList.toggle("active", location === currentLocation)
+    })
   }
 
   private updateSortOptionUI() {
@@ -593,7 +761,7 @@ ${
 
     // Update elements tab bar if currently active
     if (this.activeTab === "elements") {
-      this.updateTabBarContent("elements")
+      this.updateElementsTabBarContent()
     }
   }
 
@@ -833,7 +1001,7 @@ ${
     // Update tab bar if on elements tab
     this.updateTitleElementCount()
     if (this.activeTab === "elements") {
-      this.updateTabBarContent("elements")
+      this.updateElementsTabBarContent()
     }
   }
 
@@ -841,7 +1009,7 @@ ${
     this.elementListManager.updateElementVisibilityStatus(elementData)
     // Update tab bar if on elements tab
     if (this.activeTab === "elements") {
-      this.updateTabBarContent("elements")
+      this.updateElementsTabBarContent()
     }
   }
 
@@ -849,7 +1017,7 @@ ${
     this.elementListManager.addElementToList(elementData)
     // Update tab bar if on elements tab
     if (this.activeTab === "elements") {
-      this.updateTabBarContent("elements")
+      this.updateElementsTabBarContent()
     }
   }
   /**
@@ -926,7 +1094,7 @@ ${
 
       <div class="tab-content">
         <div class="tab-bar">
-          <!-- Dynamic content populated by updateTabBarContent -->
+          <!-- Dynamic content populated by tab-specific update methods -->
         </div>
         
         <div class="settings-content">
