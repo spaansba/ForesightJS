@@ -28,7 +28,7 @@ import {
 } from "../constants"
 import { evaluateRegistrationConditions } from "../helpers/evaluateRegistrationConditions"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
-import { DebuggerControlPanel } from "../control_panel/debuggerControlPanel"
+import { DebuggerControlPanel } from "../control_panel/DebuggerControlPanel"
 import type { ForesightEvent } from "packages/js.foresight/dist"
 import type { ForesightEventMap } from "js.foresight/types/types"
 
@@ -52,7 +52,7 @@ export class ForesightDebugger {
     showNameTags: DEFAULT_SHOW_NAME_TAGS,
     sortElementList: DEFAULT_SORT_ELEMENT_LIST,
     logging: {
-      logLocation: "console",
+      logLocation: "controlPanel",
       logCallbackFired: false,
       logElementDataUpdated: false,
       logElementRegistered: false,
@@ -74,10 +74,17 @@ export class ForesightDebugger {
   private animationPositionObserver: PositionObserver | null = null
 
   private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {
-    if (this._debuggerSettings.logging.logLocation === "controlPanel" && this.controlPanel) {
-      this.controlPanel.addEventLog(event.type, event)
-    } else if (this._debuggerSettings.logging.logLocation === "console") {
-      console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
+    switch (this._debuggerSettings.logging.logLocation) {
+      case "console":
+        console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
+        break
+      case "controlPanel":
+        this.controlPanel.addEventLog(event.type, event)
+        break
+      case "both": // dont add fall-through
+        console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
+        this.controlPanel.addEventLog(event.type, event)
+        break
     }
   }
 

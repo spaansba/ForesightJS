@@ -3,10 +3,8 @@ import type { ForesightElementData, ForesightElement } from "js.foresight"
 import type { SortElementList } from "../types/types"
 
 import { getIntersectingIcon } from "../helpers/getIntersectingIcon"
-import type { ForesightDebugger } from "../debugger/foresightDebugger"
+import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { sortByDocumentPosition } from "../helpers/sortByDocumentPosition"
-
-const NO_ELEMENTS_STRING = "<em>No elements registered.</em>"
 
 export class ControlPanelElementList {
   private foresightManagerInstance: ForesightManager
@@ -15,7 +13,6 @@ export class ControlPanelElementList {
   // DOM Elements
   private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
-  private callbackCountSpan: HTMLSpanElement | null = null
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
   private sortOptionsPopup: HTMLDivElement | null = null
   private sortButton: HTMLButtonElement | null = null
@@ -38,7 +35,6 @@ export class ControlPanelElementList {
       "#element-list-items-container"
     )
     this.elementCountSpan = controlsContainer.querySelector("#element-count")
-    this.callbackCountSpan = controlsContainer.querySelector("#callback-count")
     this.sortOptionsPopup = controlsContainer.querySelector("#sort-options-popup")
     this.sortButton = controlsContainer.querySelector(".sort-button")
   }
@@ -97,43 +93,6 @@ export class ControlPanelElementList {
     this.elementCountSpan.title = visibleTitle.join("\n")
   }
 
-  public updateCallbackCountsDisplay() {
-    // Query fresh since tab bar content is dynamically recreated
-    // Need to query within the shadow DOM, not the main document
-    const shadowRoot = (document.querySelector("#foresight-debugger") as any)?.shadowRoot
-    const callbackCountSpan = shadowRoot?.querySelector("#callback-count") as HTMLSpanElement
-    if (!callbackCountSpan) {
-      console.log("Callback count span not found in shadow DOM")
-      return
-    }
-
-    const { tab, mouse, scroll, total } =
-      this.foresightManagerInstance.getManagerData.globalCallbackHits
-    callbackCountSpan.textContent = `Mouse: ${mouse.hover + mouse.trajectory} Tab: ${
-      tab.forwards + tab.reverse
-    } Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}`
-    callbackCountSpan.title = [
-      "Callback Execution Stats",
-      "--------------------------------------------",
-      "Mouse Callbacks",
-      `   " Trajectory: ${mouse.trajectory}`,
-      `   " Hover: ${mouse.hover}`,
-      `   " Subtotal: ${mouse.hover + mouse.trajectory}`,
-      "",
-      "Keyboard Callbacks:",
-      `   " Tab Forward: ${tab.forwards}`,
-      `   " Tab Reverse: ${tab.reverse}`,
-      `   " Subtotal: ${tab.forwards + tab.reverse}`,
-      "",
-      "Scroll Callbacks:",
-      `   " Up: ${scroll.up} | Down: ${scroll.down}`,
-      `   " Left: ${scroll.left} | Right: ${scroll.right}`,
-      `   " Subtotal: ${scroll.up + scroll.down + scroll.left + scroll.right}`,
-      "",
-      "Total Callbacks: " + total,
-    ].join("\n")
-  }
-
   public removeElementFromListContainer(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
     const listItem = this.elementListItems.get(elementData.element)
@@ -143,9 +102,11 @@ export class ControlPanelElementList {
     listItem.remove()
     this.elementListItems.delete(elementData.element)
     this.updateElementCountsDisplay()
-    this.updateCallbackCountsDisplay()
     if (this.elementListItems.size === 0) {
-      this.elementListItemsContainer.innerHTML = NO_ELEMENTS_STRING
+      this.elementListItemsContainer.innerHTML = ""
+      this.elementListItemsContainer.classList.add("no-items")
+      this.elementListItemsContainer.textContent =
+        "No elements registered, all callbacks have been hit."
     }
   }
 
@@ -207,14 +168,16 @@ export class ControlPanelElementList {
         }
       })
       this.elementListItemsContainer.innerHTML = ""
+
       this.elementListItemsContainer.appendChild(fragment)
     }
   }
 
   public addElementToList(elementData: ForesightElementData) {
     if (!this.elementListItemsContainer) return
-    if (this.elementListItemsContainer.innerHTML === NO_ELEMENTS_STRING) {
+    if (this.elementListItemsContainer.classList.contains("no-items")) {
       this.elementListItemsContainer.innerHTML = ""
+      this.elementListItemsContainer.classList.remove("no-items")
     }
     if (this.elementListItems.has(elementData.element)) return
     const listItem = document.createElement("div")
@@ -236,6 +199,27 @@ export class ControlPanelElementList {
       const { top, right, bottom, left } = elementData.elementBounds.hitSlop
       hitSlopText = `T:${top} R:${right} B:${bottom} L:${left}`
     }
+
+    // Create comprehensive title with all information
+    const comprehensiveTitle = [
+      `${elementData.name || "Unnamed Element"}`,
+      "------------------------------------------------------------",
+      "Viewport Status:",
+      elementData.isIntersectingWithViewport
+        ? "   - In viewport - actively tracked by observers"
+        : "   - Not in viewport - not being tracked",
+      "",
+      "Hit Slop:",
+      elementData.elementBounds.hitSlop
+        ? [
+            `     Top: ${elementData.elementBounds.hitSlop.top}px, Bottom: ${elementData.elementBounds.hitSlop.bottom}px `,
+            `     Right: ${elementData.elementBounds.hitSlop.right}px, Left: ${elementData.elementBounds.hitSlop.left}px`,
+          ].join("\n")
+        : "   • Not defined - using element's natural boundaries",
+      "",
+    ].join("\n")
+
+    listItem.title = comprehensiveTitle
 
     listItem.innerHTML = `
     <span class="intersecting-indicator">${intersectingIcon}</span>
@@ -263,7 +247,6 @@ export class ControlPanelElementList {
 
     this.elementListItemsContainer = null
     this.elementCountSpan = null
-    this.callbackCountSpan = null
     this.elementListItems.clear()
     this.sortOptionsPopup = null
     this.sortButton = null

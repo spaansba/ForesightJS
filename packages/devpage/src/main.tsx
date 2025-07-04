@@ -26,11 +26,10 @@ ForesightDebugger.initialize(ForesightManager.instance, {
   isControlPanelDefaultMinimized: false,
   sortElementList: "visibility",
   logging: {
-    logLocation: "console",
-    logCallbackFired: true,
-    logElementRegistered: false,
-    logElementUnregistered: false,
-    logElementDataUpdated: false,
+    // logCallbackFired: true,
+    // logElementRegistered: false,
+    // logElementUnregistered: false,
+    // logElementDataUpdated: false,
   },
 })
 

@@ -54,7 +54,7 @@ export type DebuggerSettings = {
   }
 }
 
-export type LoggingLocations = "controlPanel" | "console"
+export type LoggingLocations = "controlPanel" | "console" | "both"
 
 export type ControllerTabs = "settings" | "elements" | "logs"
 

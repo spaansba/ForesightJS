@@ -26,14 +26,14 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../constants"
-import type { ForesightDebugger } from "../debugger/foresightDebugger"
+import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../helpers/createAndAppend"
 import { objectToMethodCall } from "../helpers/objectToMethodCall"
-import { ControlPanelElementList } from "./controlPanelElementList"
+import { ControlPanelElementList } from "./ControlPanelElementList"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4-4 4 4M7 13V3M17 15l4-4 4 4M21 11v3M12 15l4 4 4-4M16 19v-9"></path></svg>`
+const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
 const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
 
 export class DebuggerControlPanel {
@@ -193,11 +193,13 @@ export class DebuggerControlPanel {
             </button>
           </div>
         `
+        // Re-query and re-attach the copy button after DOM update
+        this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings")
         this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
         break
 
       case "elements":
-        // Get current element data
+        // Get current element data (reuse calculation from updateTitleElementCount)
         const registeredElements = Array.from(
           this.foresightManagerInstance.registeredElements.entries()
         )
@@ -205,23 +207,51 @@ export class DebuggerControlPanel {
         const isIntersecting = registeredElements.filter(
           ([_, elementData]) => elementData.isIntersectingWithViewport
         ).length
-        const { tab, mouse, scroll } =
-          this.foresightManagerInstance.getManagerData.globalCallbackHits
+        const {
+          tab,
+          mouse,
+          scroll,
+          total: totalHits,
+        } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+
+        const currentSort =
+          this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
+        const sortLabels = {
+          visibility: "Visibility",
+          documentOrder: "Document Order",
+          insertionOrder: "Insertion Order",
+        }
 
         tabBar.innerHTML = `
           <div class="tab-bar-info">
-            <span class="tab-info-text">Visible: ${isIntersecting}/${total} ~ Mouse: ${
-          mouse.hover + mouse.trajectory
-        } Tab: ${tab.forwards + tab.reverse} Scroll: ${
-          scroll.down + scroll.left + scroll.right + scroll.up
-        }</span>
+            <div class="stats-chips">
+              <span class="chip visible" title="Elements visible in viewport vs total registered elements">${isIntersecting}/${total} visible</span>
+              <span class="chip hits" title="Total callback hits breakdown:
+
+Mouse: ${mouse.hover + mouse.trajectory}
+  • hover: ${mouse.hover}
+  • trajectory: ${mouse.trajectory}
+
+Tab: ${tab.forwards + tab.reverse}
+  • forwards: ${tab.forwards}
+  • reverse: ${tab.reverse}
+
+Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
+  • down: ${scroll.down}
+  • up: ${scroll.up}
+  • left: ${scroll.left}
+  • right: ${scroll.right}">${totalHits} hits </span>
+              <span class="chip sort" title="Current element sorting method">▼ ${sortLabels[
+                currentSort as keyof typeof sortLabels
+              ].toLowerCase()}</span>
+            </div>
           </div>
           <div class="tab-bar-actions">
-            <div class="sort-control-container">
+            <div class="dropdown-container">
               <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
                 ${SORT_SVG_ICON}
               </button>
-              <div id="sort-options-popup">
+              <div class="dropdown-menu" id="sort-options-dropdown">
                 <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
                 <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
                 <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
@@ -232,9 +262,6 @@ export class DebuggerControlPanel {
 
         // Re-attach sort functionality
         this.setupElementsSortListeners()
-        this.elementListManager.updateSortOptionUI(
-          this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
-        )
         break
 
       case "logs":
@@ -249,20 +276,52 @@ export class DebuggerControlPanel {
 
         tabBar.innerHTML = `
           <div class="tab-bar-info">
-            <span class="tab-info-text">Showing ${filteredCount} of ${this.eventLogs.length} events • ${filterText}</span>
+            <div class="stats-chips">
+              <span class="chip logs" title="Filtered events shown vs total events logged">${filteredCount}/${
+          this.eventLogs.length
+        } events</span>
+              <span class="chip filter" title="Event Filter Status:
+
+Active filters:
+${
+  Array.from(this.logFilters)
+    .map(filter => "  • " + filter)
+    .join("\n") || "  • None"
+}
+
+Filtered out:
+${
+  [
+    "elementRegistered",
+    "elementUnregistered",
+    "elementDataUpdated",
+    "callbackFired",
+    "mouseTrajectoryUpdate",
+    "scrollTrajectoryUpdate",
+    "managerSettingsChanged",
+  ]
+    .filter(type => !this.logFilters.has(type))
+    .map(filter => "  • " + filter)
+    .join("\n") || "  • None"
+}">⚬ ${filterText.toLowerCase()}</span>
+            </div>
           </div>
           <div class="tab-bar-actions">
-            <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types (${activeFilters.length}/7 active)">
-              ${FILTER_SVG_ICON}
-            </button>
-            <div class="logs-filter-dropdown">
-              <button data-log-type="elementRegistered">Element Registered</button>
-              <button data-log-type="elementUnregistered">Element Unregistered</button>
-              <button data-log-type="elementDataUpdated">Element Data Updated</button>
-              <button data-log-type="callbackFired">Callback Fired</button>
-              <button data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
-              <button data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
-              <button data-log-type="managerSettingsChanged">Manager Settings Changed</button>
+            <div class="dropdown-container">
+              <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types (${
+                activeFilters.length
+              }/7 active)">
+                ${FILTER_SVG_ICON}
+              </button>
+              <div class="dropdown-menu" id="logs-filter-dropdown">
+                <button data-log-type="elementRegistered">Element Registered</button>
+                <button data-log-type="elementUnregistered">Element Unregistered</button>
+                <button data-log-type="elementDataUpdated">Element Data Updated</button>
+                <button data-log-type="callbackFired">Callback Fired</button>
+                <button data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
+                <button data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
+                <button data-log-type="managerSettingsChanged">Manager Settings Changed</button>
+              </div>
             </div>
           </div>
         `
@@ -275,14 +334,14 @@ export class DebuggerControlPanel {
 
   private setupElementsSortListeners() {
     const sortButton = this.controlsContainer?.querySelector("#sort-elements-button")
-    const sortPopup = this.controlsContainer?.querySelector("#sort-options-popup")
+    const sortDropdown = this.controlsContainer?.querySelector("#sort-options-dropdown")
 
     sortButton?.addEventListener("click", e => {
       e.stopPropagation()
-      sortPopup?.classList.toggle("active")
+      sortDropdown?.classList.toggle("active")
     })
 
-    sortPopup?.addEventListener("click", e => {
+    sortDropdown?.addEventListener("click", e => {
       const target = e.target as HTMLElement
       const sortBtn = target.closest("[data-sort]") as HTMLElement | null
       if (sortBtn) {
@@ -290,18 +349,23 @@ export class DebuggerControlPanel {
         this.debuggerInstance.alterDebuggerSettings({
           sortElementList: value,
         })
+        // Immediately re-sort and update the list
         this.elementListManager.reorderElementsInListContainer(
           this.elementListManager.sortElementsInListContainer()
         )
-        this.elementListManager.updateSortOptionUI(value)
-        sortPopup.classList.remove("active")
+        // Update the tab bar to show new sort method
+        this.updateTabBarContent("elements")
+        sortDropdown.classList.remove("active")
       }
     })
+
+    // Update sort option UI
+    this.updateSortOptionUI()
   }
 
   private setupLogsFilterListeners() {
     const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
-    const filterDropdown = this.controlsContainer?.querySelector(".logs-filter-dropdown")
+    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
 
     filterButton?.addEventListener("click", e => {
       e.stopPropagation()
@@ -320,7 +384,6 @@ export class DebuggerControlPanel {
 
   public addEventLog(type: string, data: any) {
     if (!this.logFilters.has(type)) return
-
     const logEntry = {
       type,
       timestamp: Date.now(),
@@ -418,7 +481,6 @@ export class DebuggerControlPanel {
   }
 
   private getNoLogsMessage(): string {
-    console.log("here")
     const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
     const logging = debuggerSettings.logging
 
@@ -452,11 +514,9 @@ export class DebuggerControlPanel {
     if (!this.logsContainer) return
 
     const filteredLogs = this.eventLogs.filter(log => this.logFilters.has(log.type))
-    console.log(filteredLogs.length === 0)
     this.logsContainer.innerHTML =
-      filteredLogs.length === 0 ||
-      this.debuggerInstance.getDebuggerData.settings.logging.logLocation === "console"
-        ? `<div class="no-logs">${this.getNoLogsMessage()}</div>`
+      filteredLogs.length === 0
+        ? `<div class="no-items">${this.getNoLogsMessage()}</div>`
         : filteredLogs
             .map((log, index) => {
               const time = new Date(log.timestamp).toLocaleTimeString()
@@ -538,10 +598,28 @@ export class DebuggerControlPanel {
   }
 
   private updateLogFilterUI() {
-    const filterButtons = this.logsFilterDropdown?.querySelectorAll("[data-log-type]")
+    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
+    const filterButtons = filterDropdown?.querySelectorAll("[data-log-type]")
     filterButtons?.forEach(button => {
       const logType = (button as HTMLElement).dataset.logType!
       button.classList.toggle("active", this.logFilters.has(logType))
+    })
+
+    // Update filter button appearance
+    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
+    const activeFilters = Array.from(this.logFilters)
+    filterButton?.classList.toggle("active", activeFilters.length > 0 && activeFilters.length < 7)
+  }
+
+  private updateSortOptionUI() {
+    const sortDropdown = this.controlsContainer?.querySelector("#sort-options-dropdown")
+    const sortButtons = sortDropdown?.querySelectorAll("[data-sort]")
+    const currentSort =
+      this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
+
+    sortButtons?.forEach(button => {
+      const sortValue = (button as HTMLElement).dataset.sort!
+      button.classList.toggle("active", sortValue === currentSort)
     })
   }
 
@@ -555,18 +633,13 @@ export class DebuggerControlPanel {
       ([_, elementData]) => elementData.isIntersectingWithViewport
     ).length
 
-    const visibleTitle = [
-      "Element Visibility Status",
-      "-----------------------------------------------------",
-      `Visible in Viewport: ${isIntersecting}`,
-      `Not in Viewport: ${total - isIntersecting}`,
-      `Total Registered Elements: ${total}`,
-      "",
-      "Note: Only elements visible in the viewport",
-      "are actively tracked by intersection observers.",
-    ]
     this.titleElementCount.textContent = `${isIntersecting}/${total}`
-    this.titleElementCount.title = visibleTitle.join("\n")
+    this.titleElementCount.title = `Elements visible in viewport vs total registered elements`
+
+    // Update elements tab bar if currently active
+    if (this.activeTab === "elements") {
+      this.updateTabBarContent("elements")
+    }
   }
 
   private queryDOMElements() {
@@ -628,7 +701,7 @@ export class DebuggerControlPanel {
             this.copySettingsButton.innerHTML = COPY_SVG_ICON
           }
           this.copyTimeoutId = null
-        }, 3000)
+        }, 500)
       })
       .catch(err => {
         console.error("Foresight Debugger: Could not copy manager settings to clipboard", err)
@@ -732,12 +805,13 @@ export class DebuggerControlPanel {
     this.elementsTab?.addEventListener("click", () => this.switchTab("elements"))
     this.logsTab?.addEventListener("click", () => this.switchTab("logs"))
 
-    // Close filter dropdown when clicking outside (for any tab)
+    // Close dropdowns when clicking outside
     document.addEventListener("click", e => {
-      const activeDropdown = this.controlsContainer?.querySelector(
-        ".logs-filter-dropdown.active, #sort-options-popup.active"
-      )
-      if (activeDropdown && !activeDropdown.contains(e.target as Node)) {
+      const activeDropdown = this.controlsContainer?.querySelector(".dropdown-menu.active")
+      if (
+        activeDropdown &&
+        !activeDropdown.closest(".dropdown-container")?.contains(e.target as Node)
+      ) {
         activeDropdown.classList.remove("active")
       }
     })
@@ -746,6 +820,7 @@ export class DebuggerControlPanel {
   private initializeTabSystem() {
     this.switchTab(this.activeTab)
     this.updateLogFilterUI()
+    this.updateLogsDisplay()
   }
 
   private updateContainerVisibilityState() {
@@ -902,176 +977,87 @@ export class DebuggerControlPanel {
         <div class="settings-content">
           <div class="settings-section">
             <div class="settings-group">
-              <h4>Mouse</h4>
-            <div class="control-row">
-             <label for="trajectory-enabled">
-                Enable Mouse Prediction
-                <span class="info-icon" title="${[
-                  "Mouse Prediction Control",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "When enabled: Predicts mouse movement",
-                  "trajectory and triggers callbacks before",
-                  "the cursor reaches the target element.",
-                  "",
-                  "When disabled: Only direct hover events",
-                  "trigger actions (next to tab/scroll).",
-                  "",
-                  "Property: enableMousePrediction",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="checkbox" id="trajectory-enabled">
-            </div>
-            <div class="control-row">
-             <label for="history-size">
-                History Size
-                <span class="info-icon" title="${[
-                  "Position History",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "Controls how many past mouse positions",
-                  "are stored for velocity calculations.",
-                  "",
-                  "Higher values:",
-                  "   • More accurate trajectory predictions",
-                  "   • Smoother movement detection",
-                  "   • Slightly increased processing overhead",
-                  "",
-                  "Lower values:",
-                  "   • Faster response to direction changes",
-                  "   • Less memory usage",
-                  "   • May be less accurate for fast movements",
-                  "",
-                  "Property: positionHistorySize",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="range" id="history-size" min="${MIN_POSITION_HISTORY_SIZE}" max="${MAX_POSITION_HISTORY_SIZE}">
-              <span id="history-value"></span>
-            </div>
-            <div class="control-row">
-            <label for="prediction-time">
-                Prediction Time
-                <span class="info-icon" title="${[
-                  "Trajectory Prediction Time",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  `How far into the future (in ${TRAJECTORY_PREDICTION_TIME_UNIT})`,
-                  "to calculate the mouse trajectory path.",
-                  "",
-                  "Larger values:",
-                  "   • Elements are detected sooner",
-                  "   • More time for preloading/preparation",
-                  "   • May trigger false positives for curved paths",
-                  "",
-                  "Smaller values:",
-                  "   • More precise targeting",
-                  "   • Reduced false positive rate",
-                  "   • Less time for preparation",
-                  "",
-                  "Property: trajectoryPredictionTime",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
-              <span id="prediction-value"></span>
-            </div>
+              <h4>Mouse Prediction</h4>
+              <div class="setting-item">
+                <label for="trajectory-enabled">Enable Mouse Prediction
+                  <span class="setting-description">Predict mouse movement trajectory and trigger callbacks before cursor reaches target</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="checkbox" id="trajectory-enabled">
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="history-size">Position History
+                  <span class="setting-description">Number of past mouse positions stored for velocity calculations</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="range" id="history-size" min="${MIN_POSITION_HISTORY_SIZE}" max="${MAX_POSITION_HISTORY_SIZE}">
+                  <span id="history-value" class="setting-value"></span>
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="prediction-time">Prediction Time
+                  <span class="setting-description">How far into the future to calculate mouse trajectory path</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="range" id="prediction-time" min="${MIN_TRAJECTORY_PREDICTION_TIME}" max="${MAX_TRAJECTORY_PREDICTION_TIME}" step="10">
+                  <span id="prediction-value" class="setting-value"></span>
+                </div>
+              </div>
             </div>
 
             <div class="settings-group">
-              <h4>Keyboard</h4>
-            <div class="control-row">
-             <label for="tab-enabled">
-                Enable Tab Prediction
-                <span class="info-icon" title="${[
-                  "Tab Navigation Prediction",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "When enabled: Callbacks are executed when",
-                  `the user is ${this.foresightManagerInstance.getManagerData.globalSettings.tabOffset} (tabOffset) ${TAB_OFFSET_UNIT} away from`,
-                  "a registered element during tab navigation.",
-                  "",
-                  "(works with Shift+Tab too).",
-                  "",
-                  "Property: enableTabPrediction",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="checkbox" id="tab-enabled">
-            </div>
-            <div class="control-row">
-               <label for="tab-offset">
-                Tab Offset
-                <span class="info-icon" title="${[
-                  "Tab Offset",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "Number of tabbable elements to look ahead",
-                  "when predicting tab navigation targets.",
-                  "",
-                  "How it works:",
-                  "   • Tracks the current focused element",
-                  "   • Looks ahead by the specified offset",
-                  "   • Triggers callbacks for registered elements",
-                  "     within that range",
-                  "",
-                  "Property: tabOffset",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
-              <span id="tab-offset-value"></span>
-            </div>
+              <h4>Keyboard Navigation</h4>
+              <div class="setting-item">
+                <label for="tab-enabled">Enable Tab Prediction
+                  <span class="setting-description">Execute callbacks when user is within tab offset of registered elements</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="checkbox" id="tab-enabled">
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="tab-offset">Tab Offset
+                  <span class="setting-description">Number of tabbable elements to look ahead when predicting navigation</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="range" id="tab-offset" min="${MIN_TAB_OFFSET}" max="${MAX_TAB_OFFSET}" step="1">
+                  <span id="tab-offset-value" class="setting-value"></span>
+                </div>
+              </div>
             </div>
 
             <div class="settings-group">
-              <h4>Scroll</h4>
-          <div class="control-row">
-          <label for="scroll-enabled">
-              Enable Scroll Prediction
-              <span class="info-icon" title="${[
-                "Scroll Prediction",
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                "Enables predictive scrolling based on mouse",
-                "position and scroll direction.",
-                "",
-                "When enabled, calculates scroll direction from",
-                "mouse movement and triggers callbacks for",
-                "elements that intersect the predicted path.",
-                "",
-                "Property: enableScrollPrediction",
-              ].join("\n")}">i</span>
-            </label>
-            <input type="checkbox" id="scroll-enabled">
-          </div>
-          <div class="control-row">
-            <label for="scroll-margin">
-              Scroll Margin
-              <span class="info-icon" title="${[
-                "Scroll Margin",
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                "Sets the pixel distance to check from the",
-                "mouse position in the scroll direction.",
-                "",
-                "Higher values check further ahead, allowing",
-                "earlier detection of elements that will come",
-                "into view during scrolling.",
-                "",
-                "Property: scrollMargin",
-              ].join("\n")}">i</span>
-            </label>
-            <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
-            <span id="scroll-margin-value"></span>
-          </div>
+              <h4>Scroll Prediction</h4>
+              <div class="setting-item">
+                <label for="scroll-enabled">Enable Scroll Prediction
+                  <span class="setting-description">Predict scroll direction and trigger callbacks for elements in path</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="checkbox" id="scroll-enabled">
+                </div>
+              </div>
+              <div class="setting-item">
+                <label for="scroll-margin">Scroll Margin
+                  <span class="setting-description">Pixel distance to check from mouse position in scroll direction</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="range" id="scroll-margin" min="${MIN_SCROLL_MARGIN}" max="${MAX_SCROLL_MARGIN}" step="10">
+                  <span id="scroll-margin-value" class="setting-value"></span>
+                </div>
+              </div>
             </div>
 
             <div class="settings-group">
-              <h4>DevTools</h4>
-           <div class="control-row">
-              <label for="toggle-name-tags">
-                Show Name Tags
-                <span class="info-icon" title="${[
-                  "Visual Debug Name Tags",
-                  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                  "When enabled: Displays name tags over",
-                  "each registered element in debug mode.",
-                  "",
-                  "Property: debuggerSettings.showNameTags",
-                ].join("\n")}">i</span>
-              </label>
-              <input type="checkbox" id="toggle-name-tags">
-            </div>
+              <h4>Developer Tools</h4>
+              <div class="setting-item">
+                <label for="toggle-name-tags">Show Name Tags
+                  <span class="setting-description">Display name tags over each registered element in debug mode</span>
+                </label>
+                <div class="setting-controls">
+                  <input type="checkbox" id="toggle-name-tags">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1085,7 +1071,7 @@ export class DebuggerControlPanel {
 
         <div class="logs-content">
           <div class="logs-container">
-            <div class="no-logs"></div>
+            <div class="no-items"></div>
           </div>
         </div>
       </div>
@@ -1096,10 +1082,9 @@ export class DebuggerControlPanel {
   private getStyles(): string {
     const elementItemHeight = 35 // px
     const elementListGap = 3 // px
-    const elementListItemsContainerPadding = 6 // px
     const numRowsToShow = 6
     const numItemsPerRow = 1
-    const tabContentHeight = 400 // Fixed height for all tab content
+    const tabContentHeight = 330 // Fixed height for all tab content
 
     const rowsContentHeight =
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
@@ -1163,14 +1148,29 @@ export class DebuggerControlPanel {
       
       .tab-bar-extra-button {
         background: none; border: none; color: white; cursor: pointer;
-        padding: 0; display: flex; align-items: center; justify-content: center;
+        padding: 6px; display: flex; align-items: center; justify-content: center;
+        border-radius: 4px; transition: all 0.2s ease;
       }
 
        .tab-bar-extra-button svg {
         width: 16px; height: 16px; stroke: white; transition: stroke 0.2s;
-
        }
-      .tab-bar-extra-button:hover svg { stroke: white; }
+      
+      .tab-bar-extra-button:hover {
+        background-color: rgba(176, 196, 222, 0.1);
+      }
+      
+      .tab-bar-extra-button:hover svg { 
+        stroke: #b0c4de; 
+      }
+      
+      .tab-bar-extra-button.active {
+        background-color: rgba(176, 196, 222, 0.2);
+      }
+      
+      .tab-bar-extra-button.active svg {
+        stroke: #b0c4de;
+      }
 
       .tab-button {
         background: none;
@@ -1234,9 +1234,21 @@ export class DebuggerControlPanel {
         align-items: center;
       }
       
-      .tab-info-text {
-        font-size: 12px;
-        color: #9e9e9e;
+      .stats-chips {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      
+      .chip {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border: 1px solid #555;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+        background: rgba(40, 40, 40, 0.7);
+        color: #b0c4de;
       }
       
       .settings-content,
@@ -1261,7 +1273,7 @@ export class DebuggerControlPanel {
       .element-list::-webkit-scrollbar-track,
       .logs-container::-webkit-scrollbar-track { 
         background: rgba(30, 30, 30, 0.5); 
-        border-radius: 4px; 
+
       }
       
       .settings-content::-webkit-scrollbar-thumb,
@@ -1270,7 +1282,7 @@ export class DebuggerControlPanel {
       .element-list::-webkit-scrollbar-thumb,
       .logs-container::-webkit-scrollbar-thumb { 
         background-color: rgba(176, 196, 222, 0.5); 
-        border-radius: 4px; 
+       
         border: 2px solid rgba(0, 0, 0, 0.2); 
       }
       
@@ -1298,85 +1310,141 @@ export class DebuggerControlPanel {
 
       /* Settings Tab Styles */
       .settings-section {
-        padding: 0;
+        padding: 8px;
       }
       
       .settings-group {
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+        background: rgba(30, 30, 30, 0.6);
+        padding: 16px;
+        border: 1px solid rgba(176, 196, 222, 0.1);
       }
       
       .settings-group h4 {
-        margin: 8px 0 4px 0;
-        font-size: 13px;
+        margin: 0 0 12px 0;
+        font-size: 14px;
         font-weight: 600;
         color: #b0c4de;
-        text-transform: uppercase;
+        border-bottom: 1px solid rgba(176, 196, 222, 0.2);
+        padding-bottom: 8px;
+      }
+      
+      .setting-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(80, 80, 80, 0.2);
+      }
+      
+      .setting-item:last-child {
+        border-bottom: none;
+      }
+      
+      .setting-item label {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-weight: 500;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+        min-width: 180px;
+      }
+      
+      .setting-description {
+        font-size: 11px;
+        color: #9e9e9e;
+        line-height: 1.3;
+        font-weight: normal;
+      }
+      
+      .setting-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      
+      .setting-value {
+        font-size: 12px;
+        color: #b0c4de;
+        font-weight: 500;
+        min-width: 45px;
+        text-align: right;
       }
 
-      #debug-controls .control-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      #debug-controls label {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-      }
-      #debug-controls .control-row:has(input[type="checkbox"]) label {
-        flex-grow: 1;
-      }
-      #debug-controls .control-row input[type="checkbox"] {
+      /* Modern Toggle Switches */
+      #debug-controls input[type="checkbox"] {
         appearance: none; -webkit-appearance: none; -moz-appearance: none;
-        position: relative; width: 40px; height: 18px;
-        background-color: #555; border-radius: 10px; cursor: pointer;
-        outline: none; transition: background-color 0.2s ease;
+        position: relative; width: 44px; height: 22px;
+        background-color: #444; border-radius: 11px; cursor: pointer;
+        outline: none; transition: all 0.3s ease;
         vertical-align: middle; flex-shrink: 0; margin: 0;
+        border: 2px solid #555;
       }
-      #debug-controls .control-row input[type="checkbox"]::before {
-        content: ""; position: absolute; width: 14px; height: 14px;
-        border-radius: 50%; background-color: white; top: 2px; left: 2px;
-        transition: transform 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      
+      #debug-controls input[type="checkbox"]::before {
+        content: ""; position: absolute; width: 16px; height: 16px;
+        border-radius: 50%; background-color: white; top: 1px; left: 1px;
+        transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       }
-      #debug-controls .control-row input[type="checkbox"]:checked {
+      
+      #debug-controls input[type="checkbox"]:checked {
         background-color: #b0c4de;
+        border-color: #b0c4de;
       }
-      #debug-controls .control-row input[type="checkbox"]:checked::before {
+      
+      #debug-controls input[type="checkbox"]:checked::before {
         transform: translateX(22px);
+        background-color: white;
       }
-      #debug-controls .control-row:has(input[type="range"]) label {
-        flex-basis: 170px; flex-shrink: 0;
+      
+      #debug-controls input[type="checkbox"]:hover {
+        box-shadow: 0 0 0 3px rgba(176, 196, 222, 0.1);
       }
+
+      /* Modern Range Sliders */
       #debug-controls input[type="range"] {
-        flex-grow: 1; margin: 0; cursor: pointer; -webkit-appearance: none;
-        appearance: none; background: transparent; height: 18px; vertical-align: middle;
+        margin: 0; cursor: pointer; -webkit-appearance: none;
+        appearance: none; background: transparent; height: 22px; vertical-align: middle;
+        width: 100px;
       }
+      
       #debug-controls input[type="range"]::-webkit-slider-runnable-track {
-        height: 6px; background: #555; border-radius: 3px;
+        height: 6px; background: #444; border-radius: 3px;
+        border: 1px solid #555;
       }
+      
       #debug-controls input[type="range"]::-moz-range-track {
-        height: 6px; background: #555; border-radius: 3px;
+        height: 6px; background: #444; border-radius: 3px;
+        border: 1px solid #555;
       }
+      
       #debug-controls input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none; appearance: none; margin-top: -5px;
-        background: #b0c4de; height: 16px; width: 16px;
-        border-radius: 50%; border: 1px solid #333;
+        -webkit-appearance: none; appearance: none; margin-top: -7px;
+        background: #b0c4de; height: 20px; width: 20px;
+        border-radius: 50%; border: 2px solid #333;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
       }
+      
       #debug-controls input[type="range"]::-moz-range-thumb {
-        background: #b0c4de; height: 16px; width: 16px;
-        border-radius: 50%; border: 1px solid #333; border: none;
+        background: #b0c4de; height: 20px; width: 20px;
+        border-radius: 50%; border: 2px solid #333;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
       }
-      #debug-controls .control-row:has(input[type="range"]) span:not(.info-icon) {
-        width: 55px; min-width: 55px; text-align: right; flex-shrink: 0;
+      
+      #debug-controls input[type="range"]:hover::-webkit-slider-thumb {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
       }
-      .info-icon {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 16px; height: 16px; border-radius: 50%;
-        background-color: #555; color: white; font-size: 10px;
-        font-style: italic; font-weight: bold; font-family: 'Georgia', serif;
-        cursor: help; user-select: none; flex-shrink: 0;
+      
+      #debug-controls input[type="range"]:hover::-moz-range-thumb {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
       }
       /* Elements Tab Styles */
       #element-count,#callback-count {
@@ -1388,54 +1456,50 @@ export class DebuggerControlPanel {
         align-items: center;
         gap: 8px;
       }
-      .sort-control-container {
+      /* Unified Dropdown Styles */
+      .dropdown-container {
         position: relative;
       }
       
-      #sort-options-popup {
+      .dropdown-menu {
         position: absolute;
-        bottom: calc(100% + 5px);
-        right: -5px;
+        top: calc(100% + 5px);
+        right: 0;
         z-index: 10;
         display: none;
         flex-direction: column;
-        gap: 4px;
+        gap: 2px;
         background-color: #3a3a3a;
         border: 1px solid #555;
-        border-radius: 4px;
-        padding: 3px;
-        width: 200px;
+        padding: 4px;
+        min-width: 200px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       }
-      #sort-options-popup.active {
+      
+      .dropdown-menu.active {
         display: flex;
       }
-      #sort-options-popup button {
+      
+      .dropdown-menu button {
         background: none; border: none; color: #ccc;
-        font-size: 12px; text-align: left; padding: 5px 8px;
-        cursor: pointer; border-radius: 3px;
-        transition: background-color 0.2s, color 0.2s;
-        display: flex;
-        align-items: center;
-        height: 26px;
+        font-size: 12px; text-align: left; padding: 8px 12px;
+        cursor: pointer; transition: all 0.2s ease;
+        display: flex; align-items: center; position: relative;
       }
-      #sort-options-popup button:hover {
-        background-color: #555;
-        color: white;
+      
+      .dropdown-menu button:hover {
+        background-color: #555; color: white;
       }
-      #sort-options-popup button.active-sort-option {
-        color: #b0c4de;
+      
+      .dropdown-menu button.active {
+        color: #b0c4de; font-weight: bold;
+        background-color: rgba(176, 196, 222, 0.1);
+      }
+      
+      .dropdown-menu button.active::after {
+        content: '✓'; position: absolute; right: 8px;
+        top: 50%; transform: translateY(-50%); color: #b0c4de;
         font-weight: bold;
-      }
-      #sort-options-popup button.active-sort-option::before {
-        content: '✓';
-        margin-right: 6px;
-        width: 10px;
-      }
-      #sort-options-popup button::before {
-        content: '';
-        margin-right: 6px;
-        width: 10px;
       }
 
       .element-list {
@@ -1459,10 +1523,15 @@ export class DebuggerControlPanel {
       }
       #element-list-items-container > em {
         flex-basis: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
         text-align: center;
         font-style: italic;
-        color: #ccc;
+        color: #9e9e9e;
         font-size: 12px;
+        background: none;
       }
       .element-list-item {
         flex-basis: calc((100% - (${
@@ -1512,74 +1581,27 @@ export class DebuggerControlPanel {
         flex-shrink: 0;
       }
       
-      .logs-filter-dropdown {
-        position: absolute;
-        top: calc(100% + 5px);
-        right: 0;
-        z-index: 10;
-        display: none;
-        flex-direction: column;
-        gap: 2px;
-        background-color: #3a3a3a;
-        border: 1px solid #555;
-        border-radius: 4px;
-        min-width: 200px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      }
-      
       .tab-bar-actions {
         position: relative;
-      }
-      
-      .logs-filter-dropdown.active {
-        display: flex;
-      }
-      
-      .logs-filter-dropdown button {
-        background: none;
-        border: none;
-        color: #ccc;
-        font-size: 12px;
-        text-align: left;
-        padding: 8px 12px;
-        cursor: pointer;
-        border-radius: 3px;
-        transition: all 0.2s ease;
-        position: relative;
-      }
-      
-      .logs-filter-dropdown button:hover {
-        background-color: #555;
-        color: white;
-      }
-      
-      .logs-filter-dropdown button.active {
-        color: #b0c4de;
-        font-weight: bold;
-        background-color: rgba(176, 196, 222, 0.1);
-      }
-      
-      .logs-filter-dropdown button.active::before {
-        content: '✓';
-        position: absolute;
-        left: -6px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #b0c4de;
       }
       
       .logs-container {
         flex: 1;
         overflow-y: auto;
-        background-color: rgba(20, 20, 20, 0.5);
+        /* background-color: rgba(20, 20, 20, 0.5); */
         font-family: 'Courier New', monospace;
       }
       
-      .no-logs {
+      .no-items {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
         text-align: center;
-        color: #9e9e9e;
+        font-family: 'Courier New', monospace;
         font-style: italic;
         padding: 20px;
+    
       }
       
       .log-entry {
