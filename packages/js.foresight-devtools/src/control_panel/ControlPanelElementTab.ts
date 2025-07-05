@@ -5,11 +5,11 @@ import type { SortElementList } from "../types/types"
 import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { sortByDocumentPosition } from "./helpers/sortByDocumentPosition"
+import { BaseTab } from "./BaseTab"
 
-export class ControlPanelElementList {
-  private foresightManagerInstance: ForesightManager
-  private debuggerInstance: ForesightDebugger
+const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
 
+export class ControlPanelElementTab extends BaseTab {
   // DOM Elements
   private elementListItemsContainer: HTMLElement | null = null
   private elementCountSpan: HTMLSpanElement | null = null
@@ -20,17 +20,13 @@ export class ControlPanelElementList {
   // Event handler references for cleanup
   private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
 
-  constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
-    this.foresightManagerInstance = foresightManager
-    this.debuggerInstance = debuggerInstance
-  }
-
   public initialize(controlsContainer: HTMLElement) {
     this.queryDOMElements(controlsContainer)
     this.setupEventListeners()
   }
 
-  private queryDOMElements(controlsContainer: HTMLElement) {
+
+  protected queryDOMElements(controlsContainer: HTMLElement) {
     this.elementListItemsContainer = controlsContainer.querySelector(
       "#element-list-items-container"
     )
@@ -39,7 +35,7 @@ export class ControlPanelElementList {
     this.sortButton = controlsContainer.querySelector(".sort-button")
   }
 
-  private setupEventListeners() {
+  protected setupEventListeners() {
     this.sortButton?.addEventListener("click", e => {
       e.stopPropagation()
       this.sortOptionsPopup?.classList.toggle("active")

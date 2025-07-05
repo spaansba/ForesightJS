@@ -30,81 +30,25 @@ import {
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
-import { safeSerializeEventData, type ControlPanelLogEntry } from "./helpers/safeSerializeEventData"
-import { ControlPanelElementList } from "./ControlPanelElementList"
-import { type ForesightEvent, type ForesightEventMap } from "js.foresight/types/types"
-
-// Type for serialized event data from safeSerializeEventData helper function
-type SerializedEventData = ReturnType<typeof safeSerializeEventData>
+import { ControlPanelElementTab } from "./ControlPanelElementTab"
+import { ControlPanelLogTab } from "./ControlPanelLogTab"
+import { ControlPanelSettingsTab } from "./ControlPanelSettingsTab"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
-const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
-const LOCATION_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>`
-const CLEAR_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`
-
-type LogConfig = {
-  label: string
-  title: string
-}
-
-// The single source of truth for all loggable events.
-// It's typed with Record<ForesightEvent, ...> for full type safety.
-const LOGGABLE_EVENTS_CONFIG: Record<ForesightEvent, LogConfig> = {
-  callbackFired: {
-    label: "Callback Fired",
-    title: "Logs whenever an element's callback is hit.",
-  },
-  elementRegistered: {
-    label: "Element Registered",
-    title: "Logs whenever an element is registered to the manager.",
-  },
-  elementUnregistered: {
-    label: "Element Unregistered",
-    title: "Logs whenever an element is unregistered from the manager.",
-  },
-  elementDataUpdated: {
-    label: "Element Data Updated",
-    title: "Logs when element data like visibility changes.",
-  },
-  mouseTrajectoryUpdate: {
-    label: "Mouse Trajectory",
-    title: "Logs all mouse trajectory updates.",
-  },
-  scrollTrajectoryUpdate: {
-    label: "Scroll Trajectory",
-    title: "Logs scroll trajectory updates.",
-  },
-  managerSettingsChanged: {
-    label: "Settings Changed",
-    title: "Logs whenever manager settings are changed.",
-  },
-}
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
   private debuggerInstance: ForesightDebugger
   private static debuggerControlPanelInstance: DebuggerControlPanel
-  private elementListManager!: ControlPanelElementList
+  private elementTabManager!: ControlPanelElementTab
+  private logTabManager!: ControlPanelLogTab
+  private settingsTabManager!: ControlPanelSettingsTab
 
   // These properties will be assigned in _setupDOMAndListeners
   private shadowRoot!: ShadowRoot
   private controlsContainer!: HTMLElement
   private controlPanelStyleElement!: HTMLStyleElement
-
-  private trajectoryEnabledCheckbox: HTMLInputElement | null = null
-  private tabEnabledCheckbox: HTMLInputElement | null = null
-  private scrollEnabledCheckbox: HTMLInputElement | null = null
-  private historySizeSlider: HTMLInputElement | null = null
-  private historyValueSpan: HTMLSpanElement | null = null
-  private predictionTimeSlider: HTMLInputElement | null = null
-  private predictionValueSpan: HTMLSpanElement | null = null
-  private tabOffsetSlider: HTMLInputElement | null = null
-  private tabOffsetValueSpan: HTMLSpanElement | null = null
-  private scrollMarginSlider: HTMLInputElement | null = null
-  private scrollMarginValueSpan: HTMLSpanElement | null = null
-  private showNameTagsCheckbox: HTMLInputElement | null = null
 
   private containerMinimizeButton: HTMLButtonElement | null = null
   private isContainerMinimized: boolean = false
@@ -119,14 +63,7 @@ export class DebuggerControlPanel {
   private logsContent: HTMLElement | null = null
   private activeTab: ControllerTabs = "logs"
 
-  private copySettingsButton: HTMLButtonElement | null = null
   private titleElementCount: HTMLSpanElement | null = null
-  private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
-
-  // Logs system
-  private logsContainer: HTMLElement | null = null
-  private eventLogs: Array<{ type: string; data: SerializedEventData }> = []
-  private maxLogs: number = 1000
 
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
@@ -159,16 +96,13 @@ export class DebuggerControlPanel {
   }
 
   public resetLogs() {
-    this.eventLogs = []
+    this.logTabManager.resetLogs()
   }
 
   private clearLogs() {
-    this.resetLogs()
-    this.updateLogsDisplay()
-    // Update tab bar if on logs tab to refresh the count
-    if (this.activeTab === "logs") {
-      this.updateLogsTabBarContent()
-    }
+    this.logTabManager.clearLogs()
+    // Always update log tab bar to refresh the count
+    this.logTabManager.updateTabBarContent()
   }
 
   /**
@@ -193,7 +127,9 @@ export class DebuggerControlPanel {
     )
     this.queryDOMElements()
 
-    this.initializeElementListManager()
+    this.initializeElementTabManager()
+    this.initializeLogTabManager()
+    this.initializeSettingsTabManager()
     this.setupEventListeners()
     this.initializeTabSystem()
     this.updateContainerVisibilityState()
@@ -201,32 +137,10 @@ export class DebuggerControlPanel {
       this.foresightManagerInstance.getManagerData.globalSettings,
       debuggerSettings
     )
-    Object.entries(this.debuggerInstance.getDebuggerData.settings.logging)
   }
 
   private static get isInitiated(): boolean {
     return !!DebuggerControlPanel.debuggerControlPanelInstance
-  }
-  private populateLogFilterDropdown() {
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
-    if (!filterDropdown) return
-
-    // Clear any existing content to be safe
-    filterDropdown.innerHTML = ""
-
-    // Iterate over our type-safe config object
-    for (const key in LOGGABLE_EVENTS_CONFIG) {
-      // TypeScript knows `key` is of type `ForesightEvent` here
-      const eventType = key as ForesightEvent
-      const config = LOGGABLE_EVENTS_CONFIG[eventType]
-
-      const button = document.createElement("button")
-      button.textContent = config.label
-      button.title = config.title
-      // Use a data-attribute to identify the button's purpose
-      button.dataset.logType = eventType
-      filterDropdown.appendChild(button)
-    }
   }
   private switchTab(tab: ControllerTabs) {
     this.activeTab = tab
@@ -243,108 +157,25 @@ export class DebuggerControlPanel {
       this.elementsContent.style.display = tab === "elements" ? "block" : "none"
     if (this.logsContent) this.logsContent.style.display = tab === "logs" ? "block" : "none"
 
-    // Update tab bar content
+    // Update tab bar content visibility and refresh counters
     this.updateTabBarContent(tab)
   }
 
-  private createSettingsTabBarTemplate(): string {
-    return /* html */ `
-      <div class="tab-bar-info">
-        <span class="tab-info-text">Change Foresight Settings in real-time</span>
-      </div>
-      <div class="tab-bar-actions">
-        <button id="copy-settings" class="tab-bar-extra-button" title="Copy Settings to Clipboard">
-          ${COPY_SVG_ICON}
-        </button>
-      </div>
-    `
-  }
+  private updateTabBarVisibility(tab: ControllerTabs) {
+    const settingsTabBar = this.controlsContainer?.querySelector(".tab-bar-settings") as HTMLElement
+    const elementsTabBar = this.controlsContainer?.querySelector(".tab-bar-elements") as HTMLElement
+    const logsTabBar = this.controlsContainer?.querySelector(".tab-bar-logs") as HTMLElement
 
-  private createElementsTabBarTemplate(): string {
-    return /* html */ `
-      <div class="tab-bar-info">
-        <div class="stats-chips">
-          <span class="chip visible" data-dynamic="elements-visible">0/0 visible</span>
-          <span class="chip hits" data-dynamic="elements-hits">0 hits</span>
-          <span class="chip sort" data-dynamic="elements-sort">▼ visibility</span>
-        </div>
-      </div>
-      <div class="tab-bar-actions">
-        <div class="dropdown-container">
-          <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
-            ${SORT_SVG_ICON}
-          </button>
-          <div class="dropdown-menu" id="sort-options-dropdown">
-            <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
-            <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
-            <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
-          </div>
-        </div>
-      </div>
-    `
-  }
-
-  private createLogsTabBarTemplate(): string {
-    return /* html */ `
-      <div class="tab-bar-info">
-        <div class="stats-chips">
-          <span class="chip logs" data-dynamic="logs-count">0 events</span>
-          <span class="chip filter" data-dynamic="logs-filter">⚬ all events</span>
-          <span class="chip location" data-dynamic="logs-location">📍 panel</span>
-        </div>
-      </div>
-      <div class="tab-bar-actions">
-        <button id="clear-logs-button" class="tab-bar-extra-button" title="Clear all logs">
-          ${CLEAR_SVG_ICON}
-        </button>
-        <div class="dropdown-container">
-          <button class="tab-bar-extra-button" id="log-location-button" title="Change log output location">
-            ${LOCATION_SVG_ICON}
-          </button>
-          <div class="dropdown-menu" id="log-location-dropdown">
-            <button data-log-location="controlPanel" title="Log to control panel">Control Panel</button>
-            <button data-log-location="console" title="Log to browser console">Console</button>
-            <button data-log-location="both" title="Log to both control panel and console">Both</button>
-          </div>
-        </div>
-        <div class="dropdown-container">
-          <button id="filter-logs-button" class="tab-bar-extra-button" title="Filter log types">
-            ${FILTER_SVG_ICON}
-          </button>
-          <div class="dropdown-menu" id="logs-filter-dropdown">
-          </div>
-        </div>
-      </div>
-    `
-  }
-
-  private initializeTabBarContent(tab: ControllerTabs) {
-    const tabBar = this.controlsContainer?.querySelector(".tab-bar")
-    if (!tabBar) return
-
-    switch (tab) {
-      case "settings":
-        tabBar.innerHTML = this.createSettingsTabBarTemplate()
-        this.attachSettingsTabBarListeners()
-        break
-      case "elements":
-        tabBar.innerHTML = this.createElementsTabBarTemplate()
-        this.attachElementsTabBarListeners()
-        this.updateElementsTabBarContent()
-        break
-      case "logs":
-        tabBar.innerHTML = this.createLogsTabBarTemplate()
-        this.populateLogFilterDropdown()
-        this.attachLogsTabBarListeners()
-        this.updateLogsTabBarContent()
-        break
-    }
+    if (settingsTabBar) settingsTabBar.style.display = tab === "settings" ? "flex" : "none"
+    if (elementsTabBar) elementsTabBar.style.display = tab === "elements" ? "flex" : "none"
+    if (logsTabBar) logsTabBar.style.display = tab === "logs" ? "flex" : "none"
   }
 
   private updateTabBarContent(tab: ControllerTabs) {
-    // Always initialize the tab bar content for the current tab
-    // This ensures the correct template is loaded when switching tabs
-    this.initializeTabBarContent(tab)
+    // Update tab bar visibility
+    this.updateTabBarVisibility(tab)
+    // Update dynamic content for the current tab
+    this.updateCurrentTabBarContent()
   }
 
   // These methods update only dynamic content without reinitializing
@@ -357,7 +188,7 @@ export class DebuggerControlPanel {
         this.updateElementsTabBarContent()
         break
       case "logs":
-        this.updateLogsTabBarContent()
+        this.logTabManager.updateTabBarContent()
         break
     }
   }
@@ -428,65 +259,10 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.updateSortOptionUI()
   }
 
-  private updateLogsTabBarContent() {
-    const loggedCount = this.eventLogs.length
-
-    const activeFilterCount = Object.values(
-      this.debuggerInstance.getDebuggerData.settings.logging
-    ).filter(value => value === true).length
-
-    const filterText =
-      activeFilterCount === 7
-        ? "All events"
-        : activeFilterCount === 0
-        ? "No events"
-        : `${activeFilterCount} event types`
-
-    const logLocation =
-      this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
-    const locationLabels = {
-      controlPanel: "Panel",
-      console: "Console",
-      both: "Both",
-    }
-
-    // Update logs count
-    const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
-    if (logsChip) {
-      logsChip.textContent = `${loggedCount} events`
-      logsChip.setAttribute("title", "Number of events logged (only tracked events are logged)")
-    }
-
-    // Update filter status
-    const filterChip = this.controlsContainer?.querySelector('[data-dynamic="logs-filter"]')
-    if (filterChip) {
-      filterChip.textContent = `⚬ ${filterText.toLowerCase()}`
-    }
-
-    // Update location
-    const locationChip = this.controlsContainer?.querySelector('[data-dynamic="logs-location"]')
-    if (locationChip) {
-      locationChip.textContent = `📍 ${locationLabels[logLocation as keyof typeof locationLabels]}`
-      locationChip.setAttribute("title", `Log output location: ${logLocation}`)
-    }
-
-    // Update UI states
-    this.updateLogFilterUI()
-    this.updateLogLocationUI()
-  }
-
   // Event listener attachment methods
-  private attachSettingsTabBarListeners() {
-    this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings")
-    this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
-  }
 
   private attachElementsTabBarListeners() {
     this.setupElementsSortListeners()
-  }
-
-  private attachLogsTabBarListeners() {
-    this.setupLogsFilterListeners()
   }
 
   private setupElementsSortListeners() {
@@ -507,8 +283,8 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
           sortElementList: value,
         })
         // Immediately re-sort and update the list
-        this.elementListManager.reorderElementsInListContainer(
-          this.elementListManager.sortElementsInListContainer()
+        this.elementTabManager.reorderElementsInListContainer(
+          this.elementTabManager.sortElementsInListContainer()
         )
         // Update only the dynamic content
         if (this.activeTab === "elements") {
@@ -519,240 +295,21 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     })
   }
 
-  private setupLogsFilterListeners() {
-    const filterButton = this.controlsContainer.querySelector("#filter-logs-button")
-    const filterDropdown = this.controlsContainer.querySelector("#logs-filter-dropdown")
-    const logLocationButton = this.controlsContainer.querySelector("#log-location-button")
-    const logLocationDropdown = this.controlsContainer.querySelector("#log-location-dropdown")
-    const clearLogsButton = this.controlsContainer.querySelector("#clear-logs-button")
+  public addEventLog(type: any, event: any) {
+    this.logTabManager.addEventLog(type, event)
 
-    // This listener ONLY toggles visibility. No more button creation here.
-    filterButton?.addEventListener("click", e => {
-      e.stopPropagation()
-      filterDropdown?.classList.toggle("active")
-    })
-
-    // Use EVENT DELEGATION for efficiency. One listener on the parent.
-    filterDropdown?.addEventListener("click", e => {
-      const target = e.target as HTMLElement
-      // Find the button that was clicked, if any
-      const filterBtn = target.closest("[data-log-type]") as HTMLElement | null
-      if (filterBtn && filterBtn.dataset.logType) {
-        // We can safely cast here because we set it from our typed config
-        const eventType = filterBtn.dataset.logType as ForesightEvent
-        this.toggleLogFilter(eventType)
-      }
-    })
-
-    logLocationButton?.addEventListener("click", e => {
-      e.stopPropagation()
-      logLocationDropdown?.classList.toggle("active")
-    })
-
-    logLocationDropdown?.addEventListener("click", e => {
-      const target = e.target as HTMLElement
-      const locationBtn = target.closest("[data-log-location]") as HTMLElement | null
-      if (locationBtn) {
-        const location = locationBtn.dataset.logLocation as LoggingLocations
-        this.setLogLocation(location)
-        if (this.activeTab === "logs") {
-          this.updateLogsTabBarContent()
-        }
-        logLocationDropdown.classList.remove("active")
-      }
-    })
-
-    clearLogsButton?.addEventListener("click", e => {
-      e.stopPropagation()
-      this.clearLogs()
-    })
-  }
-
-  public addEventLog<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]) {
-    const logData = this.safeSerializeEventData(event)
-    if (logData.type === "serializationError") {
-      console.error(logData.error, logData.errorMessage)
-      return
-    }
-
-    const logEntry: ControlPanelLogEntry = {
-      type,
-      data: logData,
-    }
-
-    this.eventLogs.unshift(logEntry)
-    if (this.eventLogs.length > this.maxLogs) {
-      this.eventLogs = this.eventLogs.slice(0, this.maxLogs)
-    }
-
-    this.updateLogsDisplay()
+    // Always update log tab bar counter
+    this.logTabManager.updateTabBarContent()
 
     // Update elements tab bar for relevant events
     if (
-      this.activeTab === "elements" &&
-      (type === "elementRegistered" ||
-        type === "elementUnregistered" ||
-        type === "elementDataUpdated" ||
-        type === "callbackFired")
+      type === "elementRegistered" ||
+      type === "elementUnregistered" ||
+      type === "elementDataUpdated" ||
+      type === "callbackFired"
     ) {
       this.updateElementsTabBarContent()
     }
-  }
-
-  private safeSerializeEventData<K extends ForesightEvent>(event: ForesightEventMap[K]) {
-    return safeSerializeEventData(event)
-  }
-
-  private getNoLogsMessage(): string {
-    const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
-    const logging = debuggerSettings.logging
-
-    // If we have logs but they're filtered out, show filter message
-    if (this.eventLogs.length > 0) {
-      return "No logs to display. Check your filter settings."
-    }
-
-    // Check if all logging options are disabled
-    const allLoggingDisabled =
-      !logging.callbackFired &&
-      !logging.elementDataUpdated &&
-      !logging.elementRegistered &&
-      !logging.elementUnregistered &&
-      !logging.managerSettingsChanged &&
-      !logging.mouseTrajectoryUpdate &&
-      !logging.scrollTrajectoryUpdate
-
-    if (allLoggingDisabled) {
-      return "No logs to display. Enable logging options above to see events."
-    }
-
-    if (logging.logLocation === "console") {
-      return "No logs to display. Logging is set to console - check browser console for events."
-    }
-
-    return "No logs to display. Interact with elements to generate events."
-  }
-
-  private updateLogsDisplay() {
-    if (!this.logsContainer) return
-
-    this.logsContainer.innerHTML =
-      this.eventLogs.length === 0
-        ? `<div class="no-items">${this.getNoLogsMessage()}</div>`
-        : this.eventLogs
-            .map((log, index) => {
-              const logId = `log-${index}`
-              const summary = this.getLogSummary(log.data)
-
-              return `<div class="log-entry log-${log.type}" data-log-id="${logId}">
-                <div class="log-header" onclick="window.debuggerInstance?.toggleLogEntry('${logId}')">
-                  <span class="log-time">${log.data.localizedTimestamp}</span>
-                  <span class="log-type">${log.type}</span>
-                  <span class="log-summary">${summary}</span>
-                  <span class="log-toggle">▶</span>
-                </div>
-                <div class="log-details" style="display: none;">
-                  <pre class="log-data">${JSON.stringify(log.data, null, 2)}</pre>
-                </div>
-              </div>`
-            })
-            .join("")
-
-    // Store reference for toggle functionality
-    if ((window as any).debuggerInstance !== this) {
-      ;(window as any).debuggerInstance = this
-    }
-
-    // Update tab bar if on logs tab
-    if (this.activeTab === "logs") {
-      this.updateLogsTabBarContent()
-    }
-  }
-
-  public toggleLogEntry(logId: string) {
-    const logEntry = this.logsContainer?.querySelector(`[data-log-id="${logId}"]`)
-    if (!logEntry) return
-
-    const details = logEntry.querySelector(".log-details") as HTMLElement
-    const toggle = logEntry.querySelector(".log-toggle") as HTMLElement
-
-    if (details && toggle) {
-      const isVisible = details.style.display !== "none"
-      details.style.display = isVisible ? "none" : "block"
-      toggle.textContent = isVisible ? "▶" : "▼"
-    }
-  }
-
-  // The small summary you see in the right of the event
-  private getLogSummary(event: SerializedEventData): string {
-    switch (event.type) {
-      case "elementRegistered":
-        return `${event.name}`
-      case "elementUnregistered":
-        return `${event.name} - ${event.unregisterReason}`
-      case "callbackFired":
-        return `${event.name} - ${event.hitType}`
-      case "elementDataUpdated":
-        return `${event.name} - ${event.updatedProps?.join(", ") || "unknown props"}`
-      case "mouseTrajectoryUpdate":
-        return `${event.positionCount} positions`
-      case "scrollTrajectoryUpdate":
-        return `scroll prediction`
-      case "managerSettingsChanged":
-        return `settings updated`
-      default:
-        return "event data"
-    }
-  }
-
-  private toggleLogFilter(eventType: ForesightEvent) {
-    const currentSetting = this.debuggerInstance.getDebuggerData.settings.logging[eventType]
-
-    this.debuggerInstance.alterDebuggerSettings({
-      logging: {
-        [eventType]: !currentSetting,
-      },
-    })
-    // After altering the setting, we must update the UI to reflect the change.
-    this.updateLogFilterUI()
-    this.updateLogsTabBarContent()
-  }
-
-  private setLogLocation(location: LoggingLocations) {
-    this.debuggerInstance.alterDebuggerSettings({
-      logging: {
-        ...this.debuggerInstance.getDebuggerData.settings.logging,
-        logLocation: location,
-      },
-    })
-  }
-
-  public updateLogFilterUI() {
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
-    if (!filterDropdown) return
-
-    const filterButtons = filterDropdown.querySelectorAll("[data-log-type]")
-    const currentSettings = this.debuggerInstance.getDebuggerData.settings.logging
-
-    filterButtons.forEach(button => {
-      const btn = button as HTMLElement
-      const logType = btn.dataset.logType as ForesightEvent
-      if (logType) {
-        button.classList.toggle("active", !!currentSettings[logType])
-      }
-    })
-  }
-
-  private updateLogLocationUI() {
-    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
-    const logLocationButtons = logLocationDropdown?.querySelectorAll("[data-log-location]")
-    const currentLocation =
-      this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
-
-    logLocationButtons?.forEach(button => {
-      const location = (button as HTMLElement).dataset.logLocation!
-      button.classList.toggle("active", location === currentLocation)
-    })
   }
 
   private updateSortOptionUI() {
@@ -787,20 +344,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
   }
 
   private queryDOMElements() {
-    this.trajectoryEnabledCheckbox = this.controlsContainer.querySelector("#trajectory-enabled")
-    this.tabEnabledCheckbox = this.controlsContainer.querySelector("#tab-enabled")
-    this.scrollEnabledCheckbox = this.controlsContainer.querySelector("#scroll-enabled")
-    this.historySizeSlider = this.controlsContainer.querySelector("#history-size")
-    this.historyValueSpan = this.controlsContainer.querySelector("#history-value")
-    this.predictionTimeSlider = this.controlsContainer.querySelector("#prediction-time")
-    this.predictionValueSpan = this.controlsContainer.querySelector("#prediction-value")
-    this.tabOffsetSlider = this.controlsContainer.querySelector("#tab-offset")
-    this.tabOffsetValueSpan = this.controlsContainer.querySelector("#tab-offset-value")
-    this.scrollMarginSlider = this.controlsContainer.querySelector("#scroll-margin")
-    this.scrollMarginValueSpan = this.controlsContainer.querySelector("#scroll-margin-value")
-    this.showNameTagsCheckbox = this.controlsContainer.querySelector("#toggle-name-tags")
     this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
-    this.copySettingsButton = this.controlsContainer.querySelector("#copy-settings")
     this.titleElementCount = this.controlsContainer.querySelector(".title-element-count")
 
     // Tab system
@@ -811,132 +355,33 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.settingsContent = this.controlsContainer.querySelector(".settings-content")
     this.elementsContent = this.controlsContainer.querySelector(".elements-content")
     this.logsContent = this.controlsContainer.querySelector(".logs-content")
-
-    // Logs system
-    this.logsContainer = this.controlsContainer.querySelector(".logs-container")
   }
 
-  private initializeElementListManager() {
-    this.elementListManager = new ControlPanelElementList(
+  private initializeElementTabManager() {
+    this.elementTabManager = new ControlPanelElementTab(
       this.foresightManagerInstance,
       this.debuggerInstance
     )
-    this.elementListManager.initialize(this.controlsContainer)
+    this.elementTabManager.initialize(this.controlsContainer)
   }
 
-  private handleCopySettings() {
-    if (!this.copySettingsButton) return
-    navigator.clipboard
-      .writeText(
-        objectToMethodCall(
-          this.foresightManagerInstance.getManagerData.globalSettings,
-          "ForesightManager.initialize"
-        )
-      )
-      .then(() => {
-        this.copySettingsButton!.innerHTML = TICK_SVG_ICON
-        if (this.copyTimeoutId) {
-          clearTimeout(this.copyTimeoutId)
-        }
-        this.copyTimeoutId = setTimeout(() => {
-          if (this.copySettingsButton) {
-            this.copySettingsButton.innerHTML = COPY_SVG_ICON
-          }
-          this.copyTimeoutId = null
-        }, 500)
-      })
-      .catch(err => {
-        console.error("Foresight Debugger: Could not copy manager settings to clipboard", err)
-      })
+  private initializeLogTabManager() {
+    this.logTabManager = new ControlPanelLogTab(
+      this.foresightManagerInstance,
+      this.debuggerInstance
+    )
+    this.logTabManager.initialize(this.controlsContainer, this.shadowRoot)
   }
 
-  private createInputEventListener(
-    element: HTMLInputElement | null,
-    spanElement: HTMLSpanElement | null,
-    unit: string,
-    setting: NumericSettingKeys
-  ) {
-    if (!element || !spanElement) {
-      return
-    }
-    element.addEventListener("input", e => {
-      const value = parseInt((e.target as HTMLInputElement).value, 10)
-      spanElement.textContent = `${value} ${unit}`
-      this.foresightManagerInstance.alterGlobalSettings({
-        [setting]: value,
-      })
-    })
-  }
-
-  private createChangeEventListener(
-    element: HTMLElement | null,
-    setting: ManagerBooleanSettingKeys | DebuggerBooleanSettingKeys
-  ) {
-    if (!element) {
-      return
-    }
-
-    // This is the crucial part. We get an object representing the debugger's
-    // settings so we can check against it at runtime.
-    // Replace `this.debuggerInstance.settings` with however you access
-    // the settings object on your instance.
-    const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
-
-    element.addEventListener("change", e => {
-      const isChecked = (e.target as HTMLInputElement).checked
-
-      // The `in` operator checks if the key (e.g., "showOverlay") exists on the
-      // debuggerSettings object. This is a true runtime check.
-      if (setting in debuggerSettings) {
-        // Although we've confirmed the key belongs to the debugger, TypeScript's
-        // control flow analysis doesn't automatically narrow the type of the
-        // `setting` variable itself here.
-        // So, we use a type assertion to satisfy the compiler.
-        this.debuggerInstance.alterDebuggerSettings({
-          [setting]: isChecked,
-        } as Partial<DebuggerSettings>)
-      } else {
-        // If the key is not in debuggerSettings, it must be a manager setting.
-        this.foresightManagerInstance.alterGlobalSettings({
-          [setting]: isChecked,
-        } as Partial<UpdateForsightManagerSettings>)
-      }
-    })
+  private initializeSettingsTabManager() {
+    this.settingsTabManager = new ControlPanelSettingsTab(
+      this.foresightManagerInstance,
+      this.debuggerInstance
+    )
+    this.settingsTabManager.initialize(this.controlsContainer, this.shadowRoot)
   }
 
   private setupEventListeners() {
-    this.createChangeEventListener(this.trajectoryEnabledCheckbox, "enableMousePrediction")
-    this.createChangeEventListener(this.tabEnabledCheckbox, "enableTabPrediction")
-    this.createChangeEventListener(this.scrollEnabledCheckbox, "enableScrollPrediction")
-    this.createChangeEventListener(this.showNameTagsCheckbox, "showNameTags")
-    this.createInputEventListener(
-      this.historySizeSlider,
-      this.historyValueSpan,
-      POSITION_HISTORY_SIZE_UNIT,
-      "positionHistorySize"
-    )
-
-    this.createInputEventListener(
-      this.predictionTimeSlider,
-      this.predictionValueSpan,
-      TRAJECTORY_PREDICTION_TIME_UNIT,
-      "trajectoryPredictionTime"
-    )
-
-    this.createInputEventListener(
-      this.tabOffsetSlider,
-      this.tabOffsetValueSpan,
-      TAB_OFFSET_UNIT,
-      "tabOffset"
-    )
-
-    this.createInputEventListener(
-      this.scrollMarginSlider,
-      this.scrollMarginValueSpan,
-      SCROLL_MARGIN_UNIT,
-      "scrollMargin"
-    )
-
     this.containerMinimizeButton?.addEventListener("click", () => {
       this.isContainerMinimized = !this.isContainerMinimized
       this.updateContainerVisibilityState()
@@ -960,10 +405,25 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     })
   }
 
+  private setupTabBarEventListeners() {
+    // Settings tab bar listeners
+    this.settingsTabManager.attachEventListeners()
+
+    // Elements tab bar listeners
+    this.attachElementsTabBarListeners()
+
+    // Logs tab bar listeners - populate filter dropdown and attach event listeners
+    this.logTabManager.initializeTabBar()
+    this.logTabManager.attachEventListeners()
+
+    // Initialize dynamic content for all tabs
+    this.updateElementsTabBarContent()
+    this.logTabManager.updateTabBarContent()
+  }
+
   private initializeTabSystem() {
+    this.setupTabBarEventListeners()
     this.switchTab(this.activeTab)
-    this.updateLogFilterUI()
-    this.updateLogsDisplay()
   }
 
   private updateContainerVisibilityState() {
@@ -978,6 +438,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
       if (this.tabContainer) this.tabContainer.style.display = ""
       // Show active tab content and update tab bar
       this.switchTab(this.activeTab)
+      this.updateCurrentTabBarContent()
     }
   }
 
@@ -985,60 +446,27 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     managerSettings: ForesightManagerSettings,
     debuggerSettings: DebuggerSettings
   ) {
-    if (this.trajectoryEnabledCheckbox) {
-      this.trajectoryEnabledCheckbox.checked = managerSettings.enableMousePrediction
-    }
-    if (this.tabEnabledCheckbox) {
-      this.tabEnabledCheckbox.checked = managerSettings.enableTabPrediction
-    }
-    if (this.scrollEnabledCheckbox) {
-      this.scrollEnabledCheckbox.checked = managerSettings.enableScrollPrediction
-    }
-    if (this.showNameTagsCheckbox) {
-      this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags
-    }
-    this.elementListManager.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
-    if (this.historySizeSlider && this.historyValueSpan) {
-      this.historySizeSlider.value = managerSettings.positionHistorySize.toString()
-      this.historyValueSpan.textContent = `${managerSettings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}`
-    }
-    if (this.predictionTimeSlider && this.predictionValueSpan) {
-      this.predictionTimeSlider.value = managerSettings.trajectoryPredictionTime.toString()
-      this.predictionValueSpan.textContent = `${managerSettings.trajectoryPredictionTime} ${TRAJECTORY_PREDICTION_TIME_UNIT}`
-    }
-    if (this.tabOffsetSlider && this.tabOffsetValueSpan) {
-      this.tabOffsetSlider.value = managerSettings.tabOffset.toString()
-      this.tabOffsetValueSpan.textContent = `${managerSettings.tabOffset} ${TAB_OFFSET_UNIT}`
-    }
-    if (this.scrollMarginSlider && this.scrollMarginValueSpan) {
-      this.scrollMarginSlider.value = managerSettings.scrollMargin.toString()
-      this.scrollMarginValueSpan.textContent = `${managerSettings.scrollMargin} ${SCROLL_MARGIN_UNIT}`
-    }
+    this.settingsTabManager.updateControlsState(managerSettings, debuggerSettings)
+    this.elementTabManager.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
   }
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
-    this.elementListManager.removeElementFromListContainer(elementData)
-    // Update tab bar if on elements tab
+    this.elementTabManager.removeElementFromListContainer(elementData)
+    // Always update counters regardless of active tab
     this.updateTitleElementCount()
-    if (this.activeTab === "elements") {
-      this.updateElementsTabBarContent()
-    }
+    this.updateElementsTabBarContent()
   }
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
-    this.elementListManager.updateElementVisibilityStatus(elementData)
-    // Update tab bar if on elements tab
-    if (this.activeTab === "elements") {
-      this.updateElementsTabBarContent()
-    }
+    this.elementTabManager.updateElementVisibilityStatus(elementData)
+    // Always update counters regardless of active tab
+    this.updateElementsTabBarContent()
   }
 
   public addElementToList(elementData: ForesightElementData) {
-    this.elementListManager.addElementToList(elementData)
-    // Update tab bar if on elements tab
-    if (this.activeTab === "elements") {
-      this.updateElementsTabBarContent()
-    }
+    this.elementTabManager.addElementToList(elementData)
+    // Always update counters regardless of active tab
+    this.updateElementsTabBarContent()
   }
   /**
    * The cleanup method is updated to be more thorough, nullifying all
@@ -1048,30 +476,14 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.controlsContainer?.remove()
     this.controlPanelStyleElement?.remove()
 
-    if (this.copyTimeoutId) {
-      clearTimeout(this.copyTimeoutId)
-      this.copyTimeoutId = null
-    }
-
-    this.elementListManager.cleanup()
+    this.elementTabManager.cleanup()
+    this.logTabManager.cleanup()
+    this.settingsTabManager.cleanup()
 
     // Nullify all DOM-related properties to signal it's "cleaned up"
     this.controlsContainer = null!
     this.controlPanelStyleElement = null!
     this.containerMinimizeButton = null
-    this.trajectoryEnabledCheckbox = null
-    this.tabEnabledCheckbox = null
-    this.scrollEnabledCheckbox = null
-    this.historySizeSlider = null
-    this.historyValueSpan = null
-    this.predictionTimeSlider = null
-    this.predictionValueSpan = null
-    this.tabOffsetSlider = null
-    this.tabOffsetValueSpan = null
-    this.scrollMarginSlider = null
-    this.scrollMarginValueSpan = null
-    this.showNameTagsCheckbox = null
-    this.copySettingsButton = null
 
     // Tab system cleanup
     this.tabContainer = null
@@ -1081,15 +493,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.settingsContent = null
     this.elementsContent = null
     this.logsContent = null
-
-    // Logs system cleanup
-    this.logsContainer = null
-    this.eventLogs = []
-
-    // Clean up global reference
-    if ((window as any).debuggerInstance === this) {
-      delete (window as any).debuggerInstance
-    }
   }
 
   private createControlContainer(): HTMLElement {
@@ -1111,8 +514,76 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
       </div>
 
       <div class="tab-content">
-        <div class="tab-bar">
-          <!-- Dynamic content populated by tab-specific update methods -->
+        <div class="tab-bar-settings" style="display: none;">
+          <div class="tab-bar-info">
+            <span class="tab-info-text">Change Foresight Settings in real-time</span>
+          </div>
+          <div class="tab-bar-actions">
+            <button id="copy-settings" class="tab-bar-extra-button" title="Copy Settings to Clipboard">
+              ${COPY_SVG_ICON}
+            </button>
+          </div>
+        </div>
+        
+        <div class="tab-bar-elements" style="display: none;">
+          <div class="tab-bar-info">
+            <div class="stats-chips">
+              <span class="chip visible" data-dynamic="elements-visible">0/0 visible</span>
+              <span class="chip hits" data-dynamic="elements-hits">0 hits</span>
+              <span class="chip sort" data-dynamic="elements-sort">▼ visibility</span>
+            </div>
+          </div>
+          <div class="tab-bar-actions">
+            <div class="dropdown-container">
+              <button class="tab-bar-extra-button" id="sort-elements-button" title="Change element list sort order">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+              </button>
+              <div class="dropdown-menu" id="sort-options-dropdown">
+                <button data-sort="visibility" title="Sort by Visibility">Visibility</button>
+                <button data-sort="documentOrder" title="Sort by Document Order">Document Order</button>
+                <button data-sort="insertionOrder" title="Sort by Insertion Order">Insertion Order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-bar-logs" style="display: none;">
+          <div class="tab-bar-info">
+            <div class="stats-chips">
+              <span class="chip logs" data-dynamic="logs-count">0 events</span>
+              <span class="chip filter" data-dynamic="logs-filter">✓ all events</span>
+              <span class="chip location" data-dynamic="logs-location">=▣ panel</span>
+            </div>
+          </div>
+          <div class="tab-bar-actions">
+            <button id="clear-logs-button" class="tab-bar-extra-button" title="Clear All Logs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+            </button>
+            <div class="dropdown-container">
+              <button class="tab-bar-extra-button" id="filter-logs-button" title="Filter Log Events">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              </button>
+              <div class="dropdown-menu" id="logs-filter-dropdown">
+                <button data-log-type="callbackFired" title="Logs whenever an element's callback is hit.">Callback Fired</button>
+                <button data-log-type="elementRegistered" title="Logs whenever an element is registered to the manager.">Element Registered</button>
+                <button data-log-type="elementUnregistered" title="Logs whenever an element is unregistered from the manager.">Element Unregistered</button>
+                <button data-log-type="elementDataUpdated" title="Logs when element data like visibility changes.">Element Data Updated</button>
+                <button data-log-type="mouseTrajectoryUpdate" title="Logs all mouse trajectory updates.">Mouse Trajectory</button>
+                <button data-log-type="scrollTrajectoryUpdate" title="Logs scroll trajectory updates.">Scroll Trajectory</button>
+                <button data-log-type="managerSettingsChanged" title="Logs whenever manager settings are changed.">Settings Changed</button>
+              </div>
+            </div>
+            <div class="dropdown-container">
+              <button class="tab-bar-extra-button" id="log-location-button" title="Change Log Output Location">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>
+              </button>
+              <div class="dropdown-menu" id="log-location-dropdown">
+                <button data-log-location="controlPanel" title="Show logs in this panel only">Panel Only</button>
+                <button data-log-location="console" title="Show logs in browser console only">Console Only</button>
+                <button data-log-location="both" title="Show logs in both panel and console">Both Panel & Console</button>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div class="settings-content">
@@ -1349,10 +820,11 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
       }
       
       /* Unified Tab Bar */
-      .tab-bar {
+      .tab-bar-settings,
+      .tab-bar-elements,
+      .tab-bar-logs {
         display: flex;
         justify-content: space-between;
-
         padding: 4px 0 4px 0;
         border-bottom: 1px solid #444;
         position: sticky;
@@ -1444,149 +916,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
         scrollbar-width: thin; 
         scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5); 
       }
-      
-      .settings-content {
-        display: block;
-      }
 
-      /* Settings Tab Styles */
-      .settings-section {
-        
-      }
-      
-      .settings-group {
-        margin-bottom: 20px;
-        background: rgba(30, 30, 30, 0.6);
-        padding: 16px;
-        border: 1px solid rgba(176, 196, 222, 0.1);
-      }
-      
-      .settings-group h4 {
-        margin: 0 0 12px 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: #b0c4de;
-        border-bottom: 1px solid rgba(176, 196, 222, 0.2);
-        padding-bottom: 8px;
-      }
-      
-      .setting-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(80, 80, 80, 0.2);
-      }
-      
-      .setting-item:last-child {
-        border-bottom: none;
-      }
-      
-      .setting-item label {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-weight: 500;
-        color: #fff;
-        font-size: 13px;
-        cursor: pointer;
-        min-width: 180px;
-      }
-      
-      .setting-description {
-        font-size: 11px;
-        color: #9e9e9e;
-        line-height: 1.3;
-        font-weight: normal;
-      }
-      
-      .setting-controls {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-      }
-      
-      .setting-value {
-        font-size: 12px;
-        color: #b0c4de;
-        font-weight: 500;
-        min-width: 45px;
-        text-align: right;
-      }
-
-      /* Modern Toggle Switches */
-      #debug-controls input[type="checkbox"] {
-        appearance: none; -webkit-appearance: none; -moz-appearance: none;
-        position: relative; width: 44px; height: 22px;
-        background-color: #444; cursor: pointer;
-        outline: none; transition: all 0.3s ease;
-        vertical-align: middle; flex-shrink: 0; margin: 0;
-        border: 2px solid #555;
-      }
-      
-      #debug-controls input[type="checkbox"]::before {
-        content: ""; position: absolute; width: 16px; height: 16px;
-        background-color: white; top: 1px; left: 1px;
-        transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      }
-      
-      #debug-controls input[type="checkbox"]:checked {
-        background-color: #b0c4de;
-        border-color: #b0c4de;
-      }
-      
-      #debug-controls input[type="checkbox"]:checked::before {
-        transform: translateX(22px);
-        background-color: white;
-      }
-      
-      #debug-controls input[type="checkbox"]:hover {
-        box-shadow: 0 0 0 3px rgba(176, 196, 222, 0.1);
-      }
-
-      /* Modern Range Sliders */
-      #debug-controls input[type="range"] {
-        margin: 0; cursor: pointer; -webkit-appearance: none;
-        appearance: none; background: transparent; height: 22px; vertical-align: middle;
-        width: 100px;
-      }
-      
-      #debug-controls input[type="range"]::-webkit-slider-runnable-track {
-        height: 6px; background: #444; border-radius: 3px;
-        border: 1px solid #555;
-      }
-      
-      #debug-controls input[type="range"]::-moz-range-track {
-        height: 6px; background: #444; border-radius: 3px;
-        border: 1px solid #555;
-      }
-      
-      #debug-controls input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none; appearance: none; margin-top: -7px;
-        background: #b0c4de; height: 20px; width: 20px;
-        border-radius: 50%; border: 2px solid #333;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: all 0.2s ease;
-      }
-      
-      #debug-controls input[type="range"]::-moz-range-thumb {
-        background: #b0c4de; height: 20px; width: 20px;
-        border-radius: 50%; border: 2px solid #333;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: all 0.2s ease;
-      }
-      
-      #debug-controls input[type="range"]:hover::-webkit-slider-thumb {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
-      }
-      
-      #debug-controls input[type="range"]:hover::-moz-range-thumb {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
-      }
       /* Elements Tab Styles */
       #element-count,#callback-count {
         font-size: 12px;
@@ -1724,113 +1054,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
         position: relative;
       }
       
-      .logs-container {
-        flex: 1;
-        overflow-y: auto;
-        /* background-color: rgba(20, 20, 20, 0.5); */
-        font-family: 'Courier New', monospace;
-      }
-      
-      .no-items {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        font-family: 'Courier New', monospace;
-        font-style: italic;
-        padding: 20px;
-    
-      }
-      
-      .log-entry {
-        margin-bottom: 6px;
-
-        background-color: rgba(40, 40, 40, 0.7);
-        border-left: 3px solid #555;
-        font-size: 11px;
-        line-height: 1.4;
-        overflow: hidden;
-      }
-      
-      .log-header {
-        display: flex;
-        align-items: center;
-        padding: 6px 8px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        gap: 8px;
-      }
-      
-      .log-header:hover {
-        background-color: rgba(60, 60, 60, 0.7);
-      }
-      
-      .log-details {
-        padding: 0 8px 8px 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      
-      .log-summary {
-        flex: 1;
-        color: #ccc;
-        font-size: 10px;
-        opacity: 0.8;
-      }
-      
-      .log-toggle {
-        color: #b0c4de;
-        font-size: 10px;
-        transition: transform 0.2s ease;
-        width: 12px;
-        text-align: center;
-      }
-      
-      .log-entry.log-callbackFired {
-        border-left-color: #4caf50;
-      }
-      
-      .log-entry.log-elementRegistered {
-        border-left-color: #2196f3;
-      }
-      
-      .log-entry.log-elementUnregistered {
-        border-left-color: #ff9800;
-      }
-      
-      .log-entry.log-mouseTrajectoryUpdate {
-        border-left-color: #9c27b0;
-      }
-      
-      .log-entry.log-scrollTrajectoryUpdate {
-        border-left-color: #00bcd4;
-      }
-      
-      .log-entry.log-elementDataUpdated {
-        border-left-color: #ffeb3b;
-      }
-      
-      .log-entry.log-managerSettingsChanged {
-        border-left-color: #f44336;
-      }
-      
-      .log-time {
-        color: #9e9e9e;
-        margin-right: 8px;
-        font-weight: bold;
-      }
-      
-      .log-type {
-        color: #b0c4de;
-        margin-right: 8px;
-        font-weight: bold;
-      }
-      
-      .log-data {
-        color: #e0e0e0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
+      /* Log styles will be included by LogTab component */
     `
   }
 }
