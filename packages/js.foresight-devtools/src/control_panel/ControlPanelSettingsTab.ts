@@ -1,17 +1,13 @@
 import type { ForesightManagerSettings, UpdateForsightManagerSettings } from "js.foresight"
 import { ForesightManager } from "js.foresight"
-import type {
-  DebuggerBooleanSettingKeys,
-  DebuggerSettings,
-  ManagerBooleanSettingKeys,
-  NumericSettingKeys,
-} from "../types/types"
 
+import type { DebuggerBooleanSettingKeys, DebuggerSettings } from "../types/types"
+import type { ManagerBooleanSettingKeys, NumericSettingKeys } from "js.foresight/types/types"
 import {
   POSITION_HISTORY_SIZE_UNIT,
-  SCROLL_MARGIN_UNIT,
-  TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
+  TAB_OFFSET_UNIT,
+  SCROLL_MARGIN_UNIT,
 } from "../constants"
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
@@ -70,7 +66,6 @@ export class ControlPanelSettingsTab extends BaseTab {
     this.queryDOMElements(controlsContainer)
     this.setupEventListeners()
   }
-
 
   public cleanup(): void {
     this.settingsStyleElement?.remove()

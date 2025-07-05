@@ -9,12 +9,6 @@ import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
 // Type for serialized event data from safeSerializeEventData helper function
 type SerializedEventData = ReturnType<typeof safeSerializeEventData>
 
-// SVG Icons for log actions
-const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
-const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
-const LOCATION_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>`
-const CLEAR_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`
-
 type LogConfig = {
   label: string
   title: string
@@ -61,8 +55,8 @@ const LOGGABLE_EVENTS_CONFIG: Record<ForesightEvent, LogConfig> = {
 export class ControlPanelLogTab extends BaseTab {
   // Log system properties
   private logsContainer: HTMLElement | null = null
-  private eventLogs: Array<{ type: string; data: SerializedEventData }> = []
-  private maxLogs: number = 1000
+  private eventLogs: Array<ControlPanelLogEntry> = []
+  private maxLogs: number = 100
 
   // Control panel container reference
   private controlsContainer: HTMLElement | null = null
@@ -88,9 +82,13 @@ export class ControlPanelLogTab extends BaseTab {
 
     this.queryDOMElements(controlsContainer)
     this.setupEventListeners()
-    this.updateLogsDisplay()
-  }
+    this.forceResetLogsListDisplay() // Initial render
 
+    // Store reference for toggle functionality
+    if ((window as any).debuggerInstance !== this) {
+      ;(window as any).debuggerInstance = this
+    }
+  }
 
   public cleanup(): void {
     this.logStyleElement?.remove()
@@ -114,18 +112,21 @@ export class ControlPanelLogTab extends BaseTab {
     // Event listeners will be set up when tab bar is created
   }
 
-  // Public methods for external access
-  public resetLogs(): void {
-    this.eventLogs = []
-  }
-
   public clearLogs(): void {
-    this.resetLogs()
-    this.updateLogsDisplay()
+    this.eventLogs = []
+    this.setLogsCountChip()
+    // Perform a full refresh to show the "no logs" message
+    this.forceResetLogsListDisplay()
   }
 
+  /**
+   * Adds a new log entry to the top of the display efficiently.
+   */
   public addEventLog<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]): void {
-    const logData = this.safeSerializeEventData(event)
+    if (!this.logsContainer) return
+
+    const logData = safeSerializeEventData(event)
+
     if (logData.type === "serializationError") {
       console.error(logData.error, logData.errorMessage)
       return
@@ -136,17 +137,42 @@ export class ControlPanelLogTab extends BaseTab {
       data: logData,
     }
 
-    this.eventLogs.unshift(logEntry)
-    if (this.eventLogs.length > this.maxLogs) {
-      this.eventLogs = this.eventLogs.slice(0, this.maxLogs)
+    const logCount = this.eventLogs.length
+
+    // If this is the first log, clear the "no logs" message
+    if (logCount === 0) {
+      this.logsContainer.innerHTML = ""
     }
 
-    this.updateLogsDisplay()
+    if (logCount > this.maxLogs) {
+      this.eventLogs.pop()
+      this.logsContainer.lastElementChild?.remove()
+    }
+
+    this.eventLogs.unshift(logEntry)
+    const logElementHTML = this.createSingleLogElementHTML(logEntry, 0)
+    this.logsContainer.insertAdjacentHTML("afterbegin", logElementHTML)
+
+    this.setLogsCountChip()
+  }
+
+  private setLogsCountChip() {
+    const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
+    if (!logsChip) {
+      return
+    }
+    const logCount = this.eventLogs.length
+
+    logsChip.textContent = `${logCount > this.maxLogs - 1 ? `${this.maxLogs}+` : logCount} events`
+    logsChip.setAttribute(
+      "title",
+      `Number of events logged (only tracked events are logged)
+        
+Max ${this.maxLogs} events are shown at ones`
+    )
   }
 
   public updateTabBarContent(): void {
-    const loggedCount = this.eventLogs.length
-
     const activeFilterCount = Object.values(
       this.debuggerInstance.getDebuggerData.settings.logging
     ).filter(value => value === true).length
@@ -160,29 +186,19 @@ export class ControlPanelLogTab extends BaseTab {
 
     const logLocation =
       this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
-    const locationLabels = {
-      controlPanel: "Panel",
-      console: "Console",
-      both: "Both",
-    }
 
-    // Update logs count
-    const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
-    if (logsChip) {
-      logsChip.textContent = `${loggedCount} events`
-      logsChip.setAttribute("title", "Number of events logged (only tracked events are logged)")
-    }
+    this.setLogsCountChip()
 
     // Update filter status
     const filterChip = this.controlsContainer?.querySelector('[data-dynamic="logs-filter"]')
     if (filterChip) {
-      filterChip.textContent = `� ${filterText.toLowerCase()}`
+      filterChip.textContent = `${filterText.toLowerCase()}`
     }
 
     // Update location
     const locationChip = this.controlsContainer?.querySelector('[data-dynamic="logs-location"]')
     if (locationChip) {
-      locationChip.textContent = `=� ${locationLabels[logLocation as keyof typeof locationLabels]}`
+      locationChip.textContent = logLocation
       locationChip.setAttribute("title", `Log output location: ${logLocation}`)
     }
 
@@ -195,11 +211,7 @@ export class ControlPanelLogTab extends BaseTab {
     this.setupLogsFilterListeners()
   }
 
-  private safeSerializeEventData<K extends ForesightEvent>(event: ForesightEventMap[K]) {
-    return safeSerializeEventData(event)
-  }
-
-  private getNoLogsMessage(): string {
+  private getReasonForNoLogs(): string {
     const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
     const logging = debuggerSettings.logging
 
@@ -229,37 +241,42 @@ export class ControlPanelLogTab extends BaseTab {
     return "No logs to display. Interact with elements to generate events."
   }
 
-  private updateLogsDisplay(): void {
+  /**
+   * Creates the HTML string for a single log entry.
+   */
+  private createSingleLogElementHTML(log: ControlPanelLogEntry, index: number): string {
+    const logId = `log-${index}` // Note: index is only for initial render
+    const summary = this.getLogSummary(log.data)
+
+    return `<div class="log-entry log-${log.type}" data-log-id="${logId}">
+      <div class="log-header" onclick="window.debuggerInstance?.toggleLogEntry('${logId}')">
+        <span class="log-time">${log.data.localizedTimestamp}</span>
+        <span class="log-type">${log.type}</span>
+        <span class="log-summary">${summary}</span>
+        <span class="log-toggle">▶</span>
+      </div>
+      <div class="log-details" style="display: none;">
+        <pre class="log-data">${JSON.stringify(log.data, null, 2)}</pre>
+      </div>
+    </div>`
+  }
+
+  /**
+   * Used ONLY for initialization and after clearing logs.
+   */
+  private forceResetLogsListDisplay(): void {
     if (!this.logsContainer) return
 
-    this.logsContainer.innerHTML =
-      this.eventLogs.length === 0
-        ? `<div class="no-items">${this.getNoLogsMessage()}</div>`
-        : this.eventLogs
-            .map((log, index) => {
-              const logId = `log-${index}`
-              const summary = this.getLogSummary(log.data)
-
-              return `<div class="log-entry log-${log.type}" data-log-id="${logId}">
-                <div class="log-header" onclick="window.debuggerInstance?.toggleLogEntry('${logId}')">
-                  <span class="log-time">${log.data.localizedTimestamp}</span>
-                  <span class="log-type">${log.type}</span>
-                  <span class="log-summary">${summary}</span>
-                  <span class="log-toggle">�</span>
-                </div>
-                <div class="log-details" style="display: none;">
-                  <pre class="log-data">${JSON.stringify(log.data, null, 2)}</pre>
-                </div>
-              </div>`
-            })
-            .join("")
-
-    // Store reference for toggle functionality
-    if ((window as any).debuggerInstance !== this) {
-      ;(window as any).debuggerInstance = this
+    if (this.eventLogs.length === 0) {
+      this.logsContainer.innerHTML = `<div class="no-items">${this.getReasonForNoLogs()}</div>`
+    } else {
+      this.logsContainer.innerHTML = this.eventLogs
+        .map((log, index) => this.createSingleLogElementHTML(log, index))
+        .join("")
     }
   }
 
+  // TODO logs details are not showing in the correct spot
   public toggleLogEntry(logId: string): void {
     const logEntry = this.logsContainer?.querySelector(`[data-log-id="${logId}"]`)
     if (!logEntry) return
@@ -270,7 +287,7 @@ export class ControlPanelLogTab extends BaseTab {
     if (details && toggle) {
       const isVisible = details.style.display !== "none"
       details.style.display = isVisible ? "none" : "block"
-      toggle.textContent = isVisible ? "�" : "�"
+      toggle.textContent = isVisible ? "▶" : "▼"
     }
   }
 

@@ -26,9 +26,7 @@ ForesightDebugger.initialize(ForesightManager.instance, {
   isControlPanelDefaultMinimized: false,
   sortElementList: "visibility",
   logging: {
-    logLocation: "both",
-    logScrollTrajectoryUpdate: true,
-    // logCallbackFired: true,
+    // logScrollTrajectoryUpdate: true,
     // logElementRegistered: false,
     // logElementUnregistered: false,
     // logElementDataUpdated: false,

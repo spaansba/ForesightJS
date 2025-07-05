@@ -75,12 +75,6 @@ export type callbackAnimation = {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
-export type NumericSettingKeys = keyof {
-  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends number
-    ? K
-    : never
-}
-
 export type ManagerBooleanSettingKeys = keyof {
   [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
     ? K

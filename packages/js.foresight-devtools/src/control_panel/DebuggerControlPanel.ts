@@ -1,17 +1,6 @@
-import type {
-  ForesightElementData,
-  ForesightManagerSettings,
-  UpdateForsightManagerSettings,
-} from "js.foresight"
+import type { ForesightElementData, ForesightManagerSettings } from "js.foresight"
 import { ForesightManager } from "js.foresight"
-import type {
-  ControllerTabs,
-  DebuggerBooleanSettingKeys,
-  DebuggerSettings,
-  LoggingLocations,
-  ManagerBooleanSettingKeys,
-  NumericSettingKeys,
-} from "../types/types"
+import type { ControllerTabs, DebuggerSettings } from "../types/types"
 
 import {
   MAX_POSITION_HISTORY_SIZE,
@@ -22,20 +11,14 @@ import {
   MIN_SCROLL_MARGIN,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
-  POSITION_HISTORY_SIZE_UNIT,
-  SCROLL_MARGIN_UNIT,
-  TAB_OFFSET_UNIT,
-  TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../constants"
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
-import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import { ControlPanelElementTab } from "./ControlPanelElementTab"
 import { ControlPanelLogTab } from "./ControlPanelLogTab"
 import { ControlPanelSettingsTab } from "./ControlPanelSettingsTab"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
-const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -95,16 +78,6 @@ export class DebuggerControlPanel {
     return instance
   }
 
-  public resetLogs() {
-    this.logTabManager.resetLogs()
-  }
-
-  private clearLogs() {
-    this.logTabManager.clearLogs()
-    // Always update log tab bar to refresh the count
-    this.logTabManager.updateTabBarContent()
-  }
-
   /**
    * All DOM creation and event listener setup logic is moved here.
    * This method can be called to "revive" a cleaned-up instance.
@@ -142,6 +115,7 @@ export class DebuggerControlPanel {
   private static get isInitiated(): boolean {
     return !!DebuggerControlPanel.debuggerControlPanelInstance
   }
+
   private switchTab(tab: ControllerTabs) {
     this.activeTab = tab
 
@@ -157,11 +131,6 @@ export class DebuggerControlPanel {
       this.elementsContent.style.display = tab === "elements" ? "block" : "none"
     if (this.logsContent) this.logsContent.style.display = tab === "logs" ? "block" : "none"
 
-    // Update tab bar content visibility and refresh counters
-    this.updateTabBarContent(tab)
-  }
-
-  private updateTabBarVisibility(tab: ControllerTabs) {
     const settingsTabBar = this.controlsContainer?.querySelector(".tab-bar-settings") as HTMLElement
     const elementsTabBar = this.controlsContainer?.querySelector(".tab-bar-elements") as HTMLElement
     const logsTabBar = this.controlsContainer?.querySelector(".tab-bar-logs") as HTMLElement
@@ -169,12 +138,7 @@ export class DebuggerControlPanel {
     if (settingsTabBar) settingsTabBar.style.display = tab === "settings" ? "flex" : "none"
     if (elementsTabBar) elementsTabBar.style.display = tab === "elements" ? "flex" : "none"
     if (logsTabBar) logsTabBar.style.display = tab === "logs" ? "flex" : "none"
-  }
 
-  private updateTabBarContent(tab: ControllerTabs) {
-    // Update tab bar visibility
-    this.updateTabBarVisibility(tab)
-    // Update dynamic content for the current tab
     this.updateCurrentTabBarContent()
   }
 
@@ -297,19 +261,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
 
   public addEventLog(type: any, event: any) {
     this.logTabManager.addEventLog(type, event)
-
-    // Always update log tab bar counter
-    this.logTabManager.updateTabBarContent()
-
-    // Update elements tab bar for relevant events
-    if (
-      type === "elementRegistered" ||
-      type === "elementUnregistered" ||
-      type === "elementDataUpdated" ||
-      type === "callbackFired"
-    ) {
-      this.updateElementsTabBarContent()
-    }
   }
 
   private updateSortOptionUI() {

@@ -25,7 +25,6 @@ export class ControlPanelElementTab extends BaseTab {
     this.setupEventListeners()
   }
 
-
   protected queryDOMElements(controlsContainer: HTMLElement) {
     this.elementListItemsContainer = controlsContainer.querySelector(
       "#element-list-items-container"
