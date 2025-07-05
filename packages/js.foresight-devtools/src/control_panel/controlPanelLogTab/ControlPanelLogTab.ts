@@ -1,13 +1,15 @@
 import type { ForesightManager } from "js.foresight"
-import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
-import type { LoggingLocations } from "../types/types"
-import { BaseTab } from "./BaseTab"
-import { safeSerializeEventData, type ControlPanelLogEntry } from "./helpers/safeSerializeEventData"
-import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
 
-// Type for serialized event data from safeSerializeEventData helper function
-type SerializedEventData = ReturnType<typeof safeSerializeEventData>
+import { BaseTab } from "../baseTab/BaseTab"
+import type { ForesightDebugger } from "../../debugger/ForesightDebugger"
+import { createAndAppendStyle } from "../../debugger/helpers/createAndAppend"
+import type { LoggingLocations } from "../../types/types"
+import {
+  ControlPanelLogEntry,
+  safeSerializeEventData,
+  type SerializedEventData,
+} from "./helpers/safeSerializeEventData"
 
 type LogConfig = {
   label: string

@@ -1,5 +1,5 @@
 import type { ForesightManager } from "js.foresight"
-import type { ForesightDebugger } from "../debugger/ForesightDebugger"
+import type { ForesightDebugger } from "../../debugger/ForesightDebugger"
 
 /**
  * @abstract
@@ -45,7 +45,6 @@ export abstract class BaseTab {
    * like `queryDOMElements` and `setupEventListeners`.
    */
   public abstract initialize(controlsContainer: HTMLElement): void
-
 
   /**
    * Cleans up all resources used by the tab to prevent memory leaks.

@@ -75,12 +75,6 @@ export type callbackAnimation = {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
-export type ManagerBooleanSettingKeys = keyof {
-  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
-    ? K
-    : never
-}
-
 export type SectionStates = {
   mouse: boolean
   keyboard: boolean
