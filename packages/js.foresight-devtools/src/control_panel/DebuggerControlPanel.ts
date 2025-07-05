@@ -30,9 +30,9 @@ import {
 import type { ForesightDebugger } from "../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
-import { safeSerializeEventData } from "./helpers/safeSerializeEventData"
+import { safeSerializeEventData, type ControlPanelLogEntry } from "./helpers/safeSerializeEventData"
 import { ControlPanelElementList } from "./ControlPanelElementList"
-import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
+import { type ForesightEvent, type ForesightEventMap } from "js.foresight/types/types"
 
 // Type for serialized event data from safeSerializeEventData helper function
 type SerializedEventData = ReturnType<typeof safeSerializeEventData>
@@ -43,6 +43,44 @@ const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const FILTER_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`
 const LOCATION_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="m14 12 2 2 4-4"></path></svg>`
 const CLEAR_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`
+
+type LogConfig = {
+  label: string
+  title: string
+}
+
+// The single source of truth for all loggable events.
+// It's typed with Record<ForesightEvent, ...> for full type safety.
+const LOGGABLE_EVENTS_CONFIG: Record<ForesightEvent, LogConfig> = {
+  callbackFired: {
+    label: "Callback Fired",
+    title: "Logs whenever an element's callback is hit.",
+  },
+  elementRegistered: {
+    label: "Element Registered",
+    title: "Logs whenever an element is registered to the manager.",
+  },
+  elementUnregistered: {
+    label: "Element Unregistered",
+    title: "Logs whenever an element is unregistered from the manager.",
+  },
+  elementDataUpdated: {
+    label: "Element Data Updated",
+    title: "Logs when element data like visibility changes.",
+  },
+  mouseTrajectoryUpdate: {
+    label: "Mouse Trajectory",
+    title: "Logs all mouse trajectory updates.",
+  },
+  scrollTrajectoryUpdate: {
+    label: "Scroll Trajectory",
+    title: "Logs scroll trajectory updates.",
+  },
+  managerSettingsChanged: {
+    label: "Settings Changed",
+    title: "Logs whenever manager settings are changed.",
+  },
+}
 
 export class DebuggerControlPanel {
   private foresightManagerInstance: ForesightManager
@@ -87,15 +125,8 @@ export class DebuggerControlPanel {
 
   // Logs system
   private logsContainer: HTMLElement | null = null
-  private logsFilterDropdown: HTMLElement | null = null
-  private logsFilterButton: HTMLButtonElement | null = null
-  private eventLogs: Array<{ type: string; timestamp: number; data: SerializedEventData }> = []
+  private eventLogs: Array<{ type: string; data: SerializedEventData }> = []
   private maxLogs: number = 1000
-  private logFilters: Set<string> = new Set([
-    "elementRegistered",
-    "elementUnregistered",
-    "callbackFired",
-  ])
 
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
@@ -161,6 +192,7 @@ export class DebuggerControlPanel {
       "debug-control-panel"
     )
     this.queryDOMElements()
+
     this.initializeElementListManager()
     this.setupEventListeners()
     this.initializeTabSystem()
@@ -169,12 +201,33 @@ export class DebuggerControlPanel {
       this.foresightManagerInstance.getManagerData.globalSettings,
       debuggerSettings
     )
+    Object.entries(this.debuggerInstance.getDebuggerData.settings.logging)
   }
 
   private static get isInitiated(): boolean {
     return !!DebuggerControlPanel.debuggerControlPanelInstance
   }
+  private populateLogFilterDropdown() {
+    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
+    if (!filterDropdown) return
 
+    // Clear any existing content to be safe
+    filterDropdown.innerHTML = ""
+
+    // Iterate over our type-safe config object
+    for (const key in LOGGABLE_EVENTS_CONFIG) {
+      // TypeScript knows `key` is of type `ForesightEvent` here
+      const eventType = key as ForesightEvent
+      const config = LOGGABLE_EVENTS_CONFIG[eventType]
+
+      const button = document.createElement("button")
+      button.textContent = config.label
+      button.title = config.title
+      // Use a data-attribute to identify the button's purpose
+      button.dataset.logType = eventType
+      filterDropdown.appendChild(button)
+    }
+  }
   private switchTab(tab: ControllerTabs) {
     this.activeTab = tab
 
@@ -195,7 +248,7 @@ export class DebuggerControlPanel {
   }
 
   private createSettingsTabBarTemplate(): string {
-    return `
+    return /* html */ `
       <div class="tab-bar-info">
         <span class="tab-info-text">Change Foresight Settings in real-time</span>
       </div>
@@ -208,7 +261,7 @@ export class DebuggerControlPanel {
   }
 
   private createElementsTabBarTemplate(): string {
-    return `
+    return /* html */ `
       <div class="tab-bar-info">
         <div class="stats-chips">
           <span class="chip visible" data-dynamic="elements-visible">0/0 visible</span>
@@ -232,7 +285,7 @@ export class DebuggerControlPanel {
   }
 
   private createLogsTabBarTemplate(): string {
-    return `
+    return /* html */ `
       <div class="tab-bar-info">
         <div class="stats-chips">
           <span class="chip logs" data-dynamic="logs-count">0 events</span>
@@ -259,13 +312,6 @@ export class DebuggerControlPanel {
             ${FILTER_SVG_ICON}
           </button>
           <div class="dropdown-menu" id="logs-filter-dropdown">
-            <button title="logs whenever an element is registered to the manager" data-log-type="elementRegistered">Element Registered</button>
-            <button title="logs whenever an element is unregistered from the manager" data-log-type="elementUnregistered">Element Unregistered</button>
-            <button title="logs whenever an element's data is updated in the manager" data-log-type="elementDataUpdated">Element Data Updated</button>
-            <button title="logs whenever an element's callback is hit" data-log-type="callbackFired">Callback Fired</button>
-            <button title="logs all mouse trajectory updates" data-log-type="mouseTrajectoryUpdate">Mouse Trajectory Update</button>
-            <button title="logs scroll trajectory updates" data-log-type="scrollTrajectoryUpdate">Scroll Trajectory Update</button>
-            <button title="logs whenever settings changed in the manager" data-log-type="managerSettingsChanged">Manager Settings Changed</button>
           </div>
         </div>
       </div>
@@ -288,6 +334,7 @@ export class DebuggerControlPanel {
         break
       case "logs":
         tabBar.innerHTML = this.createLogsTabBarTemplate()
+        this.populateLogFilterDropdown()
         this.attachLogsTabBarListeners()
         this.updateLogsTabBarContent()
         break
@@ -383,13 +430,17 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
 
   private updateLogsTabBarContent() {
     const loggedCount = this.eventLogs.length
-    const activeFilters = Array.from(this.logFilters)
+
+    const activeFilterCount = Object.values(
+      this.debuggerInstance.getDebuggerData.settings.logging
+    ).filter(value => value === true).length
+
     const filterText =
-      activeFilters.length === 7
+      activeFilterCount === 7
         ? "All events"
-        : activeFilters.length === 0
+        : activeFilterCount === 0
         ? "No events"
-        : `${activeFilters.length} event types`
+        : `${activeFilterCount} event types`
 
     const logLocation =
       this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
@@ -410,33 +461,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     const filterChip = this.controlsContainer?.querySelector('[data-dynamic="logs-filter"]')
     if (filterChip) {
       filterChip.textContent = `⚬ ${filterText.toLowerCase()}`
-      filterChip.setAttribute(
-        "title",
-        `Event Filter Status:
-
-Active filters:
-${
-  Array.from(this.logFilters)
-    .map(filter => "  • " + filter)
-    .join("\n") || "  • None"
-}
-
-Filtered out:
-${
-  [
-    "elementRegistered",
-    "elementUnregistered",
-    "elementDataUpdated",
-    "callbackFired",
-    "mouseTrajectoryUpdate",
-    "scrollTrajectoryUpdate",
-    "managerSettingsChanged",
-  ]
-    .filter(type => !this.logFilters.has(type))
-    .map(filter => "  • " + filter)
-    .join("\n") || "  • None"
-}`
-      )
     }
 
     // Update location
@@ -444,12 +468,6 @@ ${
     if (locationChip) {
       locationChip.textContent = `📍 ${locationLabels[logLocation as keyof typeof locationLabels]}`
       locationChip.setAttribute("title", `Log output location: ${logLocation}`)
-    }
-
-    // Update filter button title
-    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
-    if (filterButton) {
-      filterButton.setAttribute("title", `Filter log types (${activeFilters.length}/7 active)`)
     }
 
     // Update UI states
@@ -502,23 +520,27 @@ ${
   }
 
   private setupLogsFilterListeners() {
-    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
-    const logLocationButton = this.controlsContainer?.querySelector("#log-location-button")
-    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
-    const clearLogsButton = this.controlsContainer?.querySelector("#clear-logs-button")
+    const filterButton = this.controlsContainer.querySelector("#filter-logs-button")
+    const filterDropdown = this.controlsContainer.querySelector("#logs-filter-dropdown")
+    const logLocationButton = this.controlsContainer.querySelector("#log-location-button")
+    const logLocationDropdown = this.controlsContainer.querySelector("#log-location-dropdown")
+    const clearLogsButton = this.controlsContainer.querySelector("#clear-logs-button")
 
+    // This listener ONLY toggles visibility. No more button creation here.
     filterButton?.addEventListener("click", e => {
       e.stopPropagation()
       filterDropdown?.classList.toggle("active")
     })
 
+    // Use EVENT DELEGATION for efficiency. One listener on the parent.
     filterDropdown?.addEventListener("click", e => {
       const target = e.target as HTMLElement
+      // Find the button that was clicked, if any
       const filterBtn = target.closest("[data-log-type]") as HTMLElement | null
-      if (filterBtn) {
-        const logType = filterBtn.dataset.logType!
-        this.toggleLogFilter(logType)
+      if (filterBtn && filterBtn.dataset.logType) {
+        // We can safely cast here because we set it from our typed config
+        const eventType = filterBtn.dataset.logType as ForesightEvent
+        this.toggleLogFilter(eventType)
       }
     })
 
@@ -533,7 +555,6 @@ ${
       if (locationBtn) {
         const location = locationBtn.dataset.logLocation as LoggingLocations
         this.setLogLocation(location)
-        // Update the tab bar to show new location
         if (this.activeTab === "logs") {
           this.updateLogsTabBarContent()
         }
@@ -548,13 +569,15 @@ ${
   }
 
   public addEventLog<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]) {
-    // Only add events that are being tracked (in logFilters)
-    if (!this.logFilters.has(type)) return
+    const logData = this.safeSerializeEventData(event)
+    if (logData.type === "serializationError") {
+      console.error(logData.error, logData.errorMessage)
+      return
+    }
 
-    const logEntry = {
+    const logEntry: ControlPanelLogEntry = {
       type,
-      timestamp: Date.now(),
-      data: this.safeSerializeEventData(event),
+      data: logData,
     }
 
     this.eventLogs.unshift(logEntry)
@@ -591,13 +614,13 @@ ${
 
     // Check if all logging options are disabled
     const allLoggingDisabled =
-      !logging.logCallbackFired &&
-      !logging.logElementDataUpdated &&
-      !logging.logElementRegistered &&
-      !logging.logElementUnregistered &&
-      !logging.logManagerSettingsChanged &&
-      !logging.logMouseTrajectoryUpdate &&
-      !logging.logScrollTrajectoryUpdate
+      !logging.callbackFired &&
+      !logging.elementDataUpdated &&
+      !logging.elementRegistered &&
+      !logging.elementUnregistered &&
+      !logging.managerSettingsChanged &&
+      !logging.mouseTrajectoryUpdate &&
+      !logging.scrollTrajectoryUpdate
 
     if (allLoggingDisabled) {
       return "No logs to display. Enable logging options above to see events."
@@ -618,13 +641,12 @@ ${
         ? `<div class="no-items">${this.getNoLogsMessage()}</div>`
         : this.eventLogs
             .map((log, index) => {
-              const time = new Date(log.timestamp).toLocaleTimeString()
               const logId = `log-${index}`
-              const summary = this.getLogSummary(log.type, log.data)
+              const summary = this.getLogSummary(log.data)
 
               return `<div class="log-entry log-${log.type}" data-log-id="${logId}">
                 <div class="log-header" onclick="window.debuggerInstance?.toggleLogEntry('${logId}')">
-                  <span class="log-time">${time}</span>
+                  <span class="log-time">${log.data.localizedTimestamp}</span>
                   <span class="log-type">${log.type}</span>
                   <span class="log-summary">${summary}</span>
                   <span class="log-toggle">▶</span>
@@ -661,18 +683,19 @@ ${
     }
   }
 
-  private getLogSummary(eventType: string, data: any): string {
-    switch (eventType) {
+  // The small summary you see in the right of the event
+  private getLogSummary(event: SerializedEventData): string {
+    switch (event.type) {
       case "elementRegistered":
-        return `${data.elementName} (${data.elementTag})`
+        return `${event.name}`
       case "elementUnregistered":
-        return `${data.elementName} - ${data.unregisterReason || "unknown"}`
+        return `${event.name} - ${event.unregisterReason}`
       case "callbackFired":
-        return `${data.elementName} - ${data.hitType}`
+        return `${event.name} - ${event.hitType}`
       case "elementDataUpdated":
-        return `${data.elementName} - ${data.updatedProps?.join(", ") || "unknown props"}`
+        return `${event.name} - ${event.updatedProps?.join(", ") || "unknown props"}`
       case "mouseTrajectoryUpdate":
-        return `${data.positionCount} positions`
+        return `${event.positionCount} positions`
       case "scrollTrajectoryUpdate":
         return `scroll prediction`
       case "managerSettingsChanged":
@@ -682,22 +705,17 @@ ${
     }
   }
 
-  private toggleLogFilter(eventType: string) {
-    if (this.logFilters.has(eventType)) {
-      this.logFilters.delete(eventType)
-    } else {
-      this.logFilters.add(eventType)
-    }
+  private toggleLogFilter(eventType: ForesightEvent) {
+    const currentSetting = this.debuggerInstance.getDebuggerData.settings.logging[eventType]
 
-    // Clear event logs since filter changed - only tracked events should be logged
-    this.eventLogs = []
-
-    this.updateLogsDisplay()
+    this.debuggerInstance.alterDebuggerSettings({
+      logging: {
+        [eventType]: !currentSetting,
+      },
+    })
+    // After altering the setting, we must update the UI to reflect the change.
     this.updateLogFilterUI()
-    // Update tab bar count if on logs tab
-    if (this.activeTab === "logs") {
-      this.updateLogsTabBarContent()
-    }
+    this.updateLogsTabBarContent()
   }
 
   private setLogLocation(location: LoggingLocations) {
@@ -709,17 +727,20 @@ ${
     })
   }
 
-  private updateLogFilterUI() {
+  public updateLogFilterUI() {
     const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
-    const filterButtons = filterDropdown?.querySelectorAll("[data-log-type]")
-    filterButtons?.forEach(button => {
-      const logType = (button as HTMLElement).dataset.logType!
-      button.classList.toggle("active", this.logFilters.has(logType))
-    })
+    if (!filterDropdown) return
 
-    // Update filter button appearance
-    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
-    const activeFilters = Array.from(this.logFilters)
+    const filterButtons = filterDropdown.querySelectorAll("[data-log-type]")
+    const currentSettings = this.debuggerInstance.getDebuggerData.settings.logging
+
+    filterButtons.forEach(button => {
+      const btn = button as HTMLElement
+      const logType = btn.dataset.logType as ForesightEvent
+      if (logType) {
+        button.classList.toggle("active", !!currentSettings[logType])
+      }
+    })
   }
 
   private updateLogLocationUI() {
@@ -793,8 +814,6 @@ ${
 
     // Logs system
     this.logsContainer = this.controlsContainer.querySelector(".logs-container")
-    this.logsFilterDropdown = this.controlsContainer.querySelector(".logs-filter-dropdown")
-    this.logsFilterButton = this.controlsContainer.querySelector("#filter-logs-button")
   }
 
   private initializeElementListManager() {
@@ -929,6 +948,7 @@ ${
     this.logsTab?.addEventListener("click", () => this.switchTab("logs"))
 
     // Close dropdowns when clicking outside
+    // TODO fix
     document.addEventListener("click", e => {
       const activeDropdown = this.controlsContainer?.querySelector(".dropdown-menu.active")
       if (
@@ -1064,8 +1084,6 @@ ${
 
     // Logs system cleanup
     this.logsContainer = null
-    this.logsFilterDropdown = null
-    this.logsFilterButton = null
     this.eventLogs = []
 
     // Clean up global reference
@@ -1806,7 +1824,6 @@ ${
         color: #b0c4de;
         margin-right: 8px;
         font-weight: bold;
-        text-transform: capitalize;
       }
       
       .log-data {

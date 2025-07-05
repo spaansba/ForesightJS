@@ -222,6 +222,7 @@ export class ForesightManager {
         unregister: () => {},
       }
     }
+    const elementWasAlreadyRegistered = this.registeredElements.has(element)
 
     // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
     if (!this.isSetup) {
@@ -260,6 +261,7 @@ export class ForesightManager {
       type: "elementRegistered",
       timestamp: Date.now(),
       elementData,
+      elementWasAlreadyRegistered,
     })
 
     return {

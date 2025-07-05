@@ -1,5 +1,5 @@
 import type { HitSlop, UpdateForsightManagerSettings } from "js.foresight"
-import type { ForesightEventMap } from "js.foresight/types/types"
+import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
 
 export type DebuggerSettings = {
   /**
@@ -43,14 +43,10 @@ export type DebuggerSettings = {
   sortElementList: SortElementList
 
   logging: {
+    // Create a log event for every ForesightEvent
+    [K in ForesightEvent]?: boolean
+  } & {
     logLocation?: LoggingLocations
-    logElementRegistered?: boolean
-    logElementUnregistered?: boolean
-    logElementDataUpdated?: boolean
-    logCallbackFired?: boolean
-    logMouseTrajectoryUpdate?: boolean
-    logScrollTrajectoryUpdate?: boolean
-    logManagerSettingsChanged?: boolean
   }
 }
 

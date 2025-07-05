@@ -203,7 +203,7 @@ export class ControlPanelElementList {
 
     // Create comprehensive title with all information
     const comprehensiveTitle = [
-      `${elementData.name || "Unnamed Element"}`,
+      `${elementData.name || "Unnamed"}`,
       "------------------------------------------------------------",
       "Viewport Status:",
       elementData.isIntersectingWithViewport
@@ -224,7 +224,7 @@ export class ControlPanelElementList {
 
     listItem.innerHTML = `
     <span class="intersecting-indicator">${intersectingIcon}</span>
-    <span class="element-name">${elementData.name || "Unnamed Element"}</span>
+    <span class="element-name">${elementData.name || "Unnamed"}</span>
     <span class="hit-slop">${hitSlopText}</span>
   `
   }

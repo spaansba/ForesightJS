@@ -30,7 +30,7 @@ import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationCo
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
 import { DebuggerControlPanel } from "../control_panel/DebuggerControlPanel"
 import type { ForesightEvent } from "packages/js.foresight/dist"
-import type { ForesightEventMap } from "js.foresight/types/types"
+import { type ForesightEventMap } from "js.foresight/types/types"
 
 export type ElementCount = {
   total: number
@@ -53,13 +53,13 @@ export class ForesightDebugger {
     sortElementList: DEFAULT_SORT_ELEMENT_LIST,
     logging: {
       logLocation: "controlPanel",
-      logCallbackFired: true,
-      logElementDataUpdated: false,
-      logElementRegistered: true,
-      logElementUnregistered: true,
-      logManagerSettingsChanged: false,
-      logMouseTrajectoryUpdate: false,
-      logScrollTrajectoryUpdate: false,
+      callbackFired: true,
+      elementDataUpdated: false,
+      elementRegistered: true,
+      elementUnregistered: true,
+      managerSettingsChanged: false,
+      mouseTrajectoryUpdate: false,
+      scrollTrajectoryUpdate: false,
     },
   }
 
@@ -76,7 +76,11 @@ export class ForesightDebugger {
   private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {
     switch (this._debuggerSettings.logging.logLocation) {
       case "console":
-        console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
+        console.log(
+          `%c ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`,
+          `color: ${color}`,
+          event
+        )
         break
       case "controlPanel":
         if (this.controlPanel) {
@@ -84,7 +88,11 @@ export class ForesightDebugger {
         }
         break
       case "both": // dont add fall-through
-        console.log(`%c EventListener: ${event.type}`, `color: ${color}`, event)
+        console.log(
+          `%c ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`,
+          `color: ${color}`,
+          event
+        )
         if (this.controlPanel) {
           this.controlPanel.addEventLog(event.type, event)
         }
@@ -221,68 +229,63 @@ export class ForesightDebugger {
       if (
         shouldUpdateSetting(props.logging.logLocation, this._debuggerSettings.logging.logLocation)
       ) {
-        this._debuggerSettings.logging.logLocation = props.logging.logLocation!
-        // this.controlPanel.resetLogs()
+        this._debuggerSettings.logging.logLocation = props.logging.logLocation
       }
       if (
         shouldUpdateSetting(
-          props.logging.logCallbackFired,
-          this._debuggerSettings.logging.logCallbackFired
+          props.logging.callbackFired,
+          this._debuggerSettings.logging.callbackFired
         )
       ) {
-        this._debuggerSettings.logging.logCallbackFired = props.logging.logCallbackFired!
+        this._debuggerSettings.logging.callbackFired = props.logging.callbackFired
       }
       if (
         shouldUpdateSetting(
-          props.logging.logElementDataUpdated,
-          this._debuggerSettings.logging.logElementDataUpdated
+          props.logging.elementDataUpdated,
+          this._debuggerSettings.logging.elementDataUpdated
         )
       ) {
-        this._debuggerSettings.logging.logElementDataUpdated = props.logging.logElementDataUpdated!
+        this._debuggerSettings.logging.elementDataUpdated = props.logging.elementDataUpdated
       }
       if (
         shouldUpdateSetting(
-          props.logging.logElementRegistered,
-          this._debuggerSettings.logging.logElementRegistered
+          props.logging.elementRegistered,
+          this._debuggerSettings.logging.elementRegistered
         )
       ) {
-        this._debuggerSettings.logging.logElementRegistered = props.logging.logElementRegistered!
+        this._debuggerSettings.logging.elementRegistered = props.logging.elementRegistered
       }
       if (
         shouldUpdateSetting(
-          props.logging.logElementUnregistered,
-          this._debuggerSettings.logging.logElementUnregistered
+          props.logging.elementUnregistered,
+          this._debuggerSettings.logging.elementUnregistered
         )
       ) {
-        this._debuggerSettings.logging.logElementUnregistered =
-          props.logging.logElementUnregistered!
+        this._debuggerSettings.logging.elementUnregistered = props.logging.elementUnregistered
       }
       if (
         shouldUpdateSetting(
-          props.logging.logManagerSettingsChanged,
-          this._debuggerSettings.logging.logManagerSettingsChanged
+          props.logging.managerSettingsChanged,
+          this._debuggerSettings.logging.managerSettingsChanged
         )
       ) {
-        this._debuggerSettings.logging.logManagerSettingsChanged =
-          props.logging.logManagerSettingsChanged!
+        this._debuggerSettings.logging.managerSettingsChanged = props.logging.managerSettingsChanged
       }
       if (
         shouldUpdateSetting(
-          props.logging.logMouseTrajectoryUpdate,
-          this._debuggerSettings.logging.logMouseTrajectoryUpdate
+          props.logging.mouseTrajectoryUpdate,
+          this._debuggerSettings.logging.mouseTrajectoryUpdate
         )
       ) {
-        this._debuggerSettings.logging.logMouseTrajectoryUpdate =
-          props.logging.logMouseTrajectoryUpdate!
+        this._debuggerSettings.logging.mouseTrajectoryUpdate = props.logging.mouseTrajectoryUpdate
       }
       if (
         shouldUpdateSetting(
-          props.logging.logScrollTrajectoryUpdate,
-          this._debuggerSettings.logging.logScrollTrajectoryUpdate
+          props.logging.scrollTrajectoryUpdate,
+          this._debuggerSettings.logging.scrollTrajectoryUpdate
         )
       ) {
-        this._debuggerSettings.logging.logScrollTrajectoryUpdate =
-          props.logging.logScrollTrajectoryUpdate!
+        this._debuggerSettings.logging.scrollTrajectoryUpdate = props.logging.scrollTrajectoryUpdate
       }
     }
   }
@@ -291,7 +294,6 @@ export class ForesightDebugger {
     this.managerSubscriptionsController = new AbortController()
     const signal = this.managerSubscriptionsController.signal
     const manager = this.foresightManagerInstance
-
     manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
     manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
     manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
@@ -304,7 +306,7 @@ export class ForesightDebugger {
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
-    this._debuggerSettings.logging.logElementDataUpdated && this.logEvent(e, "purple")
+    this._debuggerSettings.logging.elementDataUpdated && this.logEvent(e, "purple")
 
     // Check if 'bounds' is included in the updatedProps array
     if (e.updatedProps.includes("bounds")) {
@@ -330,7 +332,7 @@ export class ForesightDebugger {
    * @param element - The ForesightElement to remove from debugging visualization
    */
   private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
-    this._debuggerSettings.logging.logElementUnregistered && this.logEvent(e, "red")
+    this._debuggerSettings.logging.elementUnregistered && this.logEvent(e, "red")
 
     this.removeElementOverlay(e.elementData)
     this.controlPanel.updateTitleElementCount()
@@ -338,12 +340,12 @@ export class ForesightDebugger {
   }
 
   private handleCallbackFired = (e: CallbackFiredEvent) => {
-    this._debuggerSettings.logging.logCallbackFired && this.logEvent(e, "orange")
+    this._debuggerSettings.logging.callbackFired && this.logEvent(e, "orange")
     this.showCallbackAnimation(e.elementData, e.hitType)
   }
 
   private handleRegisterElement = (e: ElementRegisteredEvent) => {
-    this._debuggerSettings.logging.logElementRegistered && this.logEvent(e, "green")
+    this._debuggerSettings.logging.elementRegistered && this.logEvent(e, "green")
 
     this.createOrUpdateElementOverlay(e.elementData)
     this.controlPanel.addElementToList(e.elementData)
@@ -351,7 +353,7 @@ export class ForesightDebugger {
   }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
-    this._debuggerSettings.logging.logMouseTrajectoryUpdate && this.logEvent(e, "blue")
+    this._debuggerSettings.logging.mouseTrajectoryUpdate && this.logEvent(e, "blue")
 
     if (!this.shadowRoot || !this.debugContainer) {
       return
@@ -395,7 +397,7 @@ export class ForesightDebugger {
   }
 
   private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
-    this._debuggerSettings.logging.logScrollTrajectoryUpdate && this.logEvent(e, "cyan")
+    this._debuggerSettings.logging.scrollTrajectoryUpdate && this.logEvent(e, "cyan")
 
     if (!this.scrollTrajectoryLine) return
     const dx = e.predictedPoint.x - e.currentPoint.x
@@ -410,7 +412,7 @@ export class ForesightDebugger {
   }
 
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
-    this._debuggerSettings.logging.logManagerSettingsChanged && this.logEvent(e, "grey")
+    this._debuggerSettings.logging.managerSettingsChanged && this.logEvent(e, "grey")
 
     this.controlPanel?.updateControlsState(e.managerData.globalSettings, this._debuggerSettings)
   }

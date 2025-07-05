@@ -282,9 +282,19 @@ export interface ForesightEventMap {
   managerSettingsChanged: ManagerSettingsChangedEvent
 }
 
+export type ForesightEvent =
+  | "elementRegistered"
+  | "elementUnregistered"
+  | "elementDataUpdated"
+  | "callbackFired"
+  | "mouseTrajectoryUpdate"
+  | "scrollTrajectoryUpdate"
+  | "managerSettingsChanged"
+
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
   elementData: ForesightElementData
+  elementWasAlreadyRegistered: boolean
 }
 
 export interface ElementUnregisteredEvent extends ForesightBaseEvent {
@@ -338,9 +348,6 @@ export interface ManagerSettingsChangedEvent extends ForesightBaseEvent {
 export type ForesightEventListener<K extends ForesightEvent = ForesightEvent> = (
   event: ForesightEventMap[K]
 ) => void
-
-// Update ForesightEventType to be the keys of this map for consistency
-export type ForesightEvent = keyof ForesightEventMap
 
 // Define the event data structures
 interface ForesightBaseEvent {
