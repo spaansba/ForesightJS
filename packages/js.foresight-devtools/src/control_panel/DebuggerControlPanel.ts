@@ -17,6 +17,7 @@ import { createAndAppendStyle } from "../debugger/helpers/createAndAppend"
 import { ControlPanelElementTab } from "./controlPanelElementTab/ControlPanelElementTab"
 import { ControlPanelLogTab } from "./controlPanelLogTab/ControlPanelLogTab"
 import { ControlPanelSettingsTab } from "./controlPanelSettingsTab/ControlPanelSettingsTab"
+import { queryAndAssert } from "../debugger/helpers/queryAndAssert"
 
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 
@@ -137,9 +138,15 @@ export class DebuggerControlPanel {
       this.elementsContent.style.display = tab === "elements" ? "block" : "none"
     if (this.logsContent) this.logsContent.style.display = tab === "logs" ? "block" : "none"
 
-    const settingsTabBar = this.controlsContainer.querySelector(".tab-bar-settings") as HTMLElement
-    const elementsTabBar = this.controlsContainer.querySelector(".tab-bar-elements") as HTMLElement
-    const logsTabBar = this.controlsContainer.querySelector(".tab-bar-logs") as HTMLElement
+    const settingsTabBar = queryAndAssert(
+      ".tab-bar-settings",
+      this.controlsContainer
+    ) as HTMLElement
+    const elementsTabBar = queryAndAssert(
+      ".tab-bar-elements",
+      this.controlsContainer
+    ) as HTMLElement
+    const logsTabBar = queryAndAssert(".tab-bar-logs", this.controlsContainer) as HTMLElement
 
     if (settingsTabBar) settingsTabBar.style.display = tab === "settings" ? "flex" : "none"
     if (elementsTabBar) elementsTabBar.style.display = tab === "elements" ? "flex" : "none"
@@ -186,17 +193,16 @@ export class DebuggerControlPanel {
   }
 
   private queryDOMElements() {
-    this.containerMinimizeButton = this.controlsContainer.querySelector(".minimize-button")
-    this.titleElementCount = this.controlsContainer.querySelector(".title-element-count")
-
-    // Tab system
-    this.tabContainer = this.controlsContainer.querySelector(".tab-container")
-    this.settingsTab = this.controlsContainer.querySelector("[data-tab='settings']")
-    this.elementsTab = this.controlsContainer.querySelector("[data-tab='elements']")
-    this.logsTab = this.controlsContainer.querySelector("[data-tab='logs']")
-    this.settingsContent = this.controlsContainer.querySelector(".settings-content")
-    this.elementsContent = this.controlsContainer.querySelector(".elements-content")
-    this.logsContent = this.controlsContainer.querySelector(".logs-content")
+    const controlsContainer = this.controlsContainer
+    this.containerMinimizeButton = queryAndAssert(".minimize-button", controlsContainer)
+    this.titleElementCount = queryAndAssert(".title-element-count", this.controlsContainer)
+    this.tabContainer = queryAndAssert(".tab-container", this.controlsContainer)
+    this.settingsTab = queryAndAssert("[data-tab='settings']", this.controlsContainer)
+    this.elementsTab = queryAndAssert("[data-tab='elements']", this.controlsContainer)
+    this.logsTab = queryAndAssert("[data-tab='logs']", this.controlsContainer)
+    this.settingsContent = queryAndAssert(".settings-content", this.controlsContainer)
+    this.elementsContent = queryAndAssert(".elements-content", this.controlsContainer)
+    this.logsContent = queryAndAssert(".logs-content", this.controlsContainer)
   }
 
   private initializeElementTabManager() {
@@ -239,7 +245,7 @@ export class DebuggerControlPanel {
     // Close dropdowns when clicking outside
     // TODO fix to close previous
     document.addEventListener("click", e => {
-      const activeDropdown = this.controlsContainer?.querySelector(".dropdown-menu.active")
+      const activeDropdown = queryAndAssert(".dropdown-menu.active", this.controlsContainer)
       if (
         activeDropdown &&
         !activeDropdown.closest(".dropdown-container")?.contains(e.target as Node)

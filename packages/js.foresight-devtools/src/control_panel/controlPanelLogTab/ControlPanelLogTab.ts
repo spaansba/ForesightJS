@@ -6,6 +6,7 @@ import type { ForesightDebugger } from "../../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../../debugger/helpers/createAndAppend"
 import type { LoggingLocations } from "../../types/types"
 import { safeSerializeEventData, type SerializedEventData } from "./helpers/safeSerializeEventData"
+import { queryAllAndAssert, queryAndAssert } from "../../debugger/helpers/queryAndAssert"
 
 type LogConfig = {
   label: string
@@ -92,15 +93,15 @@ export class ControlPanelLogTab extends BaseTab {
   }
 
   protected queryDOMElements(): void {
-    this.logsContainer = this.controlsContainer.querySelector(".logs-container")
+    this.logsContainer = queryAndAssert(".logs-container", this.controlsContainer)
   }
 
   protected setupEventListeners(): void {
-    const filterButton = this.controlsContainer?.querySelector("#filter-logs-button")
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
-    const logLocationButton = this.controlsContainer?.querySelector("#log-location-button")
-    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
-    const clearLogsButton = this.controlsContainer?.querySelector("#clear-logs-button")
+    const filterButton = queryAndAssert("#filter-logs-button", this.controlsContainer)
+    const filterDropdown = queryAndAssert("#logs-filter-dropdown", this.controlsContainer)
+    const logLocationButton = queryAndAssert("#log-location-button", this.controlsContainer)
+    const logLocationDropdown = queryAndAssert("#log-location-dropdown", this.controlsContainer)
+    const clearLogsButton = queryAndAssert("#clear-logs-button", this.controlsContainer)
 
     filterButton?.addEventListener("click", e => {
       e.stopPropagation()
@@ -200,7 +201,7 @@ export class ControlPanelLogTab extends BaseTab {
     const filterText = `${activeFilterCount}/7`
 
     // Update filter status
-    const filterChip = this.controlsContainer?.querySelector('[data-dynamic="logs-filter"]')
+    const filterChip = queryAndAssert('[data-dynamic="logs-filter"]', this.controlsContainer)
     if (filterChip) {
       filterChip.textContent = `${filterText.toLowerCase()}`
       filterChip.setAttribute("title", `Logging ${filterText} of the available event types`)
@@ -208,7 +209,7 @@ export class ControlPanelLogTab extends BaseTab {
   }
 
   private refreshLogsCountChip() {
-    const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
+    const logsChip = queryAndAssert('[data-dynamic="logs-count"]', this.controlsContainer)
     if (!logsChip) {
       return
     }
@@ -227,7 +228,7 @@ Max ${this.MAX_LOGS} events are shown at ones`
     const logLocation =
       this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
     // Update location
-    const locationChip = this.controlsContainer?.querySelector('[data-dynamic="logs-location"]')
+    const locationChip = queryAndAssert('[data-dynamic="logs-location"]', this.controlsContainer)
     if (locationChip) {
       locationChip.textContent = logLocation
       locationChip.setAttribute("title", `Log output location: ${logLocation}`)
@@ -303,11 +304,11 @@ Max ${this.MAX_LOGS} events are shown at ones`
 
   // TODO logs details are not showing in the correct spot
   public toggleLogEntry(logId: string): void {
-    const logEntry = this.logsContainer?.querySelector(`[data-log-id="${logId}"]`)
+    const logEntry = queryAndAssert(`[data-log-id="${logId}"]`, this.logsContainer) as HTMLElement
     if (!logEntry) return
 
-    const details = logEntry.querySelector(".log-details") as HTMLElement
-    const toggle = logEntry.querySelector(".log-toggle") as HTMLElement
+    const details = queryAndAssert(".log-details", logEntry) as HTMLElement
+    const toggle = queryAndAssert(".log-toggle", logEntry) as HTMLElement
 
     if (details && toggle) {
       const isVisible = details.style.display !== "none"
@@ -317,7 +318,7 @@ Max ${this.MAX_LOGS} events are shown at ones`
   }
 
   private populateLogFilterDropdown(): void {
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
+    const filterDropdown = queryAndAssert("#logs-filter-dropdown", this.controlsContainer)
     if (!filterDropdown) return
 
     // Clear any existing content to be safe
@@ -339,10 +340,16 @@ Max ${this.MAX_LOGS} events are shown at ones`
   }
 
   private updateLogFilterDropdownUI(): void {
-    const filterDropdown = this.controlsContainer?.querySelector("#logs-filter-dropdown")
+    const filterDropdown = queryAndAssert(
+      "#logs-filter-dropdown",
+      this.controlsContainer
+    ) as HTMLElement
     if (!filterDropdown) return
 
-    const filterButtons = filterDropdown.querySelectorAll("[data-log-type]")
+    const filterButtons = queryAllAndAssert("[data-log-type]", filterDropdown)
+    if (!filterButtons) {
+      return
+    }
     const currentSettings = this.debuggerInstance.getDebuggerData.settings.logging
 
     filterButtons.forEach(button => {
@@ -355,8 +362,11 @@ Max ${this.MAX_LOGS} events are shown at ones`
   }
 
   private updateLogLocationDropdownUI(): void {
-    const logLocationDropdown = this.controlsContainer?.querySelector("#log-location-dropdown")
-    const logLocationButtons = logLocationDropdown?.querySelectorAll("[data-log-location]")
+    const logLocationDropdown = queryAndAssert(
+      "#log-location-dropdown",
+      this.controlsContainer
+    ) as HTMLElement
+    const logLocationButtons = queryAllAndAssert("[data-log-location]", logLocationDropdown)
     const currentLocation =
       this.debuggerInstance.getDebuggerData.settings.logging.logLocation || "controlPanel"
 

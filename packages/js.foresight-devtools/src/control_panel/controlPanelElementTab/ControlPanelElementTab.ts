@@ -99,7 +99,7 @@ export class ControlPanelElementTab extends BaseTab {
     }
 
     listItem.classList.toggle("not-in-viewport", !elementData.isIntersectingWithViewport)
-    const intersectingElement = listItem.querySelector(".intersecting-indicator")
+    const intersectingElement = queryAndAssert(".intersecting-indicator", listItem)
     if (intersectingElement) {
       const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
       intersectingElement.textContent = intersectingIcon
@@ -149,7 +149,7 @@ export class ControlPanelElementTab extends BaseTab {
       scroll,
       total: totalHits,
     } = this.foresightManagerInstance.getManagerData.globalCallbackHits
-    const hitsChip = this.controlsContainer.querySelector('[data-dynamic="elements-hits"]')
+    const hitsChip = queryAndAssert('[data-dynamic="elements-hits"]', this.controlsContainer)
     if (hitsChip) {
       hitsChip.textContent = `${totalHits} hits`
       hitsChip.setAttribute(

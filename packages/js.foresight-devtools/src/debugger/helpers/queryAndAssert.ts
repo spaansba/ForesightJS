@@ -6,8 +6,12 @@
  */
 export function queryAndAssert<T extends Element>(
   selector: string,
-  queryContainer: HTMLElement
+  queryContainer: HTMLElement | null
 ): T | null {
+  if (!queryContainer) {
+    console.error("Component warning: Query container coudn't be found")
+    return null
+  }
   const element = queryContainer.querySelector<T>(selector)
   if (!element) {
     console.error(

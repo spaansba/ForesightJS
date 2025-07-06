@@ -13,6 +13,7 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../../constants"
+import { queryAndAssert } from "../../debugger/helpers/queryAndAssert"
 const COPY_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
 const TICK_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 
@@ -87,18 +88,18 @@ export class ControlPanelSettingsTab extends BaseTab {
 
   protected queryDOMElements(): void {
     const controlsContainer = this.controlsContainer
-    this.trajectoryEnabledCheckbox = controlsContainer.querySelector("#trajectory-enabled")
-    this.tabEnabledCheckbox = controlsContainer.querySelector("#tab-enabled")
-    this.scrollEnabledCheckbox = controlsContainer.querySelector("#scroll-enabled")
-    this.historySizeSlider = controlsContainer.querySelector("#history-size")
-    this.historyValueSpan = controlsContainer.querySelector("#history-value")
-    this.predictionTimeSlider = controlsContainer.querySelector("#prediction-time")
-    this.predictionValueSpan = controlsContainer.querySelector("#prediction-value")
-    this.tabOffsetSlider = controlsContainer.querySelector("#tab-offset")
-    this.tabOffsetValueSpan = controlsContainer.querySelector("#tab-offset-value")
-    this.scrollMarginSlider = controlsContainer.querySelector("#scroll-margin")
-    this.scrollMarginValueSpan = controlsContainer.querySelector("#scroll-margin-value")
-    this.showNameTagsCheckbox = controlsContainer.querySelector("#toggle-name-tags")
+    this.trajectoryEnabledCheckbox = queryAndAssert("#trajectory-enabled", controlsContainer)
+    this.tabEnabledCheckbox = queryAndAssert("#tab-enabled", controlsContainer)
+    this.scrollEnabledCheckbox = queryAndAssert("#scroll-enabled", controlsContainer)
+    this.historySizeSlider = queryAndAssert("#history-size", controlsContainer)
+    this.historyValueSpan = queryAndAssert("#history-value", controlsContainer)
+    this.predictionTimeSlider = queryAndAssert("#prediction-time", controlsContainer)
+    this.predictionValueSpan = queryAndAssert("#prediction-value", controlsContainer)
+    this.tabOffsetSlider = queryAndAssert("#tab-offset", controlsContainer)
+    this.tabOffsetValueSpan = queryAndAssert("#tab-offset-value", controlsContainer)
+    this.scrollMarginSlider = queryAndAssert("#scroll-margin", controlsContainer)
+    this.scrollMarginValueSpan = queryAndAssert("#scroll-margin-value", controlsContainer)
+    this.showNameTagsCheckbox = queryAndAssert("#toggle-name-tags", controlsContainer)
   }
 
   protected setupEventListeners(): void {
@@ -135,7 +136,7 @@ export class ControlPanelSettingsTab extends BaseTab {
       "scrollMargin"
     )
 
-    this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings") || null
+    this.copySettingsButton = queryAndAssert("#copy-settings", this.controlsContainer)
     this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
   }
 
