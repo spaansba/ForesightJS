@@ -7,6 +7,7 @@ import { createAndAppendStyle } from "../../debugger/helpers/createAndAppend"
 import type { LoggingLocations } from "../../types/types"
 import { safeSerializeEventData, type SerializedEventData } from "./helpers/safeSerializeEventData"
 import { queryAllAndAssert, queryAndAssert } from "../../debugger/helpers/queryAndAssert"
+import { formatToSpacedWords } from "../../debugger/helpers/formatToSpacedWords"
 
 type LogConfig = {
   label: string
@@ -142,7 +143,6 @@ export class ControlPanelLogTab extends BaseTab {
         })
         this.setLocationChip()
         this.updateLogLocationDropdownUI()
-        logLocationDropdown.classList.remove("active")
       }
     })
 
@@ -230,18 +230,10 @@ Max ${this.MAX_LOGS} events are shown at ones`
     // Update location
     const locationChip = queryAndAssert('[data-dynamic="logs-location"]', this.controlsContainer)
     if (locationChip) {
-      locationChip.textContent = logLocation
-      locationChip.setAttribute("title", `Log output location: ${logLocation}`)
+      const formattedLocation = formatToSpacedWords(logLocation)
+      locationChip.textContent = formattedLocation
+      locationChip.setAttribute("title", `Log output location: ${formattedLocation}`)
     }
-  }
-
-  public refreshFullTabBarContent(): void {
-    this.refreshEventCountChip()
-    this.refreshLogsCountChip()
-    this.setLocationChip()
-    this.updateLogFilterDropdownUI()
-    this.updateLogLocationDropdownUI()
-    this.populateLogFilterDropdown()
   }
 
   private getReasonForNoLogs(): string {
@@ -355,8 +347,10 @@ Max ${this.MAX_LOGS} events are shown at ones`
     filterButtons.forEach(button => {
       const btn = button as HTMLElement
       const logType = btn.dataset.logType as ForesightEvent
+
       if (logType) {
         button.classList.toggle("active", !!currentSettings[logType])
+        console.log(!!currentSettings[logType])
       }
     })
   }
@@ -377,7 +371,12 @@ Max ${this.MAX_LOGS} events are shown at ones`
   }
 
   public initializeTabBar(): void {
-    this.refreshFullTabBarContent()
+    this.refreshEventCountChip()
+    this.refreshLogsCountChip()
+    this.setLocationChip()
+    this.updateLogFilterDropdownUI()
+    this.updateLogLocationDropdownUI()
+    this.populateLogFilterDropdown()
   }
 
   public getLogStyles(): string {

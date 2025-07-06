@@ -165,7 +165,7 @@ export class DebuggerControlPanel {
         this.elementTabManager.refreshHitsChip()
         break
       case "logs":
-        this.logTabManager.refreshFullTabBarContent()
+        this.logTabManager.initializeTabBar()
         break
     }
   }
@@ -245,7 +245,7 @@ export class DebuggerControlPanel {
     // Close dropdowns when clicking outside
     // TODO fix to close previous
     document.addEventListener("click", e => {
-      const activeDropdown = queryAndAssert(".dropdown-menu.active", this.controlsContainer)
+      const activeDropdown = this.controlsContainer.querySelector(".dropdown-menu.active") // Dont assert this as we are not sure if there are any
       if (
         activeDropdown &&
         !activeDropdown.closest(".dropdown-container")?.contains(e.target as Node)

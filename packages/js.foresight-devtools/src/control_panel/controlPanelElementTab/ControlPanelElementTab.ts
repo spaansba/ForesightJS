@@ -242,11 +242,9 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     // Update sort method
     const sortChip = queryAndAssert('[data-dynamic="elements-sort"]', this.controlsContainer)
     if (sortChip) {
-      sortChip.textContent = `▼ ${formatToSpacedWords(currentSort)}`
-      sortChip.setAttribute(
-        "title",
-        `Current element sorting method: ${formatToSpacedWords(currentSort)}`
-      )
+      const formattedSort = formatToSpacedWords(currentSort)
+      sortChip.textContent = `▼ ${formattedSort}`
+      sortChip.setAttribute("title", `Current element sorting method: ${formattedSort}`)
     }
   }
 
