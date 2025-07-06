@@ -45,7 +45,13 @@ export class DebuggerControlPanel {
   private elementsContent: HTMLElement | null = null
   private logsContent: HTMLElement | null = null
   private activeTab: ControllerTabs = "elements"
-
+  public elementCount: {
+    total: number
+    intersecting: number
+  } = {
+    total: 0,
+    intersecting: 0,
+  }
   private titleElementCount: HTMLSpanElement | null = null
 
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
@@ -149,59 +155,11 @@ export class DebuggerControlPanel {
         // Settings tab has no dynamic content
         break
       case "elements":
-        this.updateElementsTabBarContent()
+        this.elementTabManager.refreshHitsChip()
         break
       case "logs":
         this.logTabManager.refreshFullTabBarContent()
         break
-    }
-  }
-
-  // Dynamic content update methods
-  private updateElementsTabBarContent() {
-    const registeredElements = Array.from(
-      this.foresightManagerInstance.registeredElements.entries()
-    )
-    const total = registeredElements.length
-    const isIntersecting = registeredElements.filter(
-      ([_, elementData]) => elementData.isIntersectingWithViewport
-    ).length
-    const {
-      tab,
-      mouse,
-      scroll,
-      total: totalHits,
-    } = this.foresightManagerInstance.getManagerData.globalCallbackHits
-
-    // Update visible count
-    const visibleChip = this.controlsContainer.querySelector('[data-dynamic="elements-visible"]')
-    if (visibleChip) {
-      visibleChip.textContent = `${isIntersecting}/${total} visible`
-      visibleChip.setAttribute("title", "Elements visible in viewport vs total registered elements")
-    }
-
-    // Update hits count
-    const hitsChip = this.controlsContainer.querySelector('[data-dynamic="elements-hits"]')
-    if (hitsChip) {
-      hitsChip.textContent = `${totalHits} hits`
-      hitsChip.setAttribute(
-        "title",
-        `Total callback hits breakdown:
-
-Mouse: ${mouse.hover + mouse.trajectory}
-  • hover: ${mouse.hover}
-  • trajectory: ${mouse.trajectory}
-
-Tab: ${tab.forwards + tab.reverse}
-  • forwards: ${tab.forwards}
-  • reverse: ${tab.reverse}
-
-Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
-  • down: ${scroll.down}
-  • up: ${scroll.up}
-  • left: ${scroll.left}
-  • right: ${scroll.right}`
-      )
     }
   }
 
@@ -215,17 +173,16 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
       this.foresightManagerInstance.registeredElements.entries()
     )
     const total = registeredElements.length
-    const isIntersecting = registeredElements.filter(
+    const intersecting = registeredElements.filter(
       ([_, elementData]) => elementData.isIntersectingWithViewport
     ).length
-
-    this.titleElementCount.textContent = `${isIntersecting}/${total}`
-    this.titleElementCount.title = `Elements visible in viewport vs total registered elements`
-
-    // Update elements tab bar if currently active
-    if (this.activeTab === "elements") {
-      this.updateElementsTabBarContent()
+    this.elementCount = {
+      total,
+      intersecting,
     }
+    this.titleElementCount.textContent = `${intersecting}/${total}`
+    this.titleElementCount.title = `Elements visible in viewport vs total registered elements`
+    this.elementTabManager.setVisibilityChip(total, intersecting)
   }
 
   private queryDOMElements() {
@@ -280,7 +237,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.logsTab?.addEventListener("click", () => this.switchTab("logs"))
 
     // Close dropdowns when clicking outside
-    // TODO fix
+    // TODO fix to close previous
     document.addEventListener("click", e => {
       const activeDropdown = this.controlsContainer?.querySelector(".dropdown-menu.active")
       if (
@@ -302,9 +259,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
       this.controlsContainer.classList.remove("minimized")
       this.containerMinimizeButton.textContent = "-"
       if (this.tabContainer) this.tabContainer.style.display = ""
-      // Show active tab content and update tab bar
-      this.switchTab(this.activeTab)
-      this.updateCurrentTabBarContent()
     }
   }
 

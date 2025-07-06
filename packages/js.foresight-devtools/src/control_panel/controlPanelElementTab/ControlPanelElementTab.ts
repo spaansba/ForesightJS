@@ -134,6 +134,59 @@ export class ControlPanelElementTab extends BaseTab {
     return elementsData
   }
 
+  public setVisibilityChip(total: number, intersecting: number) {
+    const visibleChip = queryAndAssert('[data-dynamic="elements-visible"]', this.controlsContainer)
+    if (visibleChip) {
+      visibleChip.textContent = `${intersecting}/${total} visible`
+      visibleChip.setAttribute("title", "Elements visible in viewport vs total registered elements")
+    }
+  }
+
+  public refreshHitsChip() {
+    const {
+      tab,
+      mouse,
+      scroll,
+      total: totalHits,
+    } = this.foresightManagerInstance.getManagerData.globalCallbackHits
+    // Update hits count
+    const hitsChip = this.controlsContainer.querySelector('[data-dynamic="elements-hits"]')
+    if (hitsChip) {
+      hitsChip.textContent = `${totalHits} hits`
+      hitsChip.setAttribute(
+        "title",
+        `Total callback hits breakdown:
+
+Mouse: ${mouse.hover + mouse.trajectory}
+  • hover: ${mouse.hover}
+  • trajectory: ${mouse.trajectory}
+
+Tab: ${tab.forwards + tab.reverse}
+  • forwards: ${tab.forwards}
+  • reverse: ${tab.reverse}
+
+Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
+  • down: ${scroll.down}
+  • up: ${scroll.up}
+  • left: ${scroll.left}
+  • right: ${scroll.right}`
+      )
+    }
+  }
+
+  // Dynamic content update methods
+  public updateElementsTabBarContent() {
+    const registeredElements = Array.from(
+      this.foresightManagerInstance.registeredElements.entries()
+    )
+    const total = registeredElements.length
+    const isIntersecting = registeredElements.filter(
+      ([_, elementData]) => elementData.isIntersectingWithViewport
+    ).length
+    this.refreshHitsChip()
+    this.refreshVisibilityChip()
+  }
+
   public reorderElementsInListContainer(sortedElements: ForesightElementData[]) {
     if (!this.elementListItemsContainer) return
 
@@ -204,7 +257,10 @@ export class ControlPanelElementTab extends BaseTab {
     const sortChip = queryAndAssert('[data-dynamic="elements-sort"]', this.controlsContainer)
     if (sortChip) {
       sortChip.textContent = `▼ ${formatToSpacedWords(currentSort)}`
-      sortChip.setAttribute("title", "Current element sorting method")
+      sortChip.setAttribute(
+        "title",
+        `Current element sorting method: ${formatToSpacedWords(currentSort)}`
+      )
     }
   }
 
