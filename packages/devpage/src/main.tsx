@@ -2,7 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDebugger, ForesightDebuggerLit } from "js.foresight-devtools"
 import { ForesightManager } from "js.foresight"
 
 ForesightManager.initialize({
@@ -32,6 +32,8 @@ ForesightDebugger.initialize(ForesightManager.instance, {
     // logElementDataUpdated: false,
   },
 })
+
+ForesightDebuggerLit.initialize()
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
