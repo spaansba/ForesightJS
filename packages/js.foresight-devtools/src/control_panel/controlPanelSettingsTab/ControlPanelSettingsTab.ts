@@ -39,30 +39,23 @@ export class ControlPanelSettingsTab extends BaseTab {
   // Settings tab specific controls
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private shadowRoot: ShadowRoot | null = null
   private settingsStyleElement: HTMLStyleElement | null = null
 
   constructor(
     foresightManager: ForesightManager,
     debuggerInstance: ForesightDebugger,
-    controlsContainer: HTMLDivElement
+    controlsContainer: HTMLDivElement,
+    shadowRoot: ShadowRoot
   ) {
     super(foresightManager, debuggerInstance, controlsContainer)
-  }
 
-  // TODO remove init
-  public initialize(shadowRoot?: ShadowRoot): void {
-    this.shadowRoot = shadowRoot || null
-
-    // Inject settings-specific styles
-    if (this.shadowRoot) {
+    if (shadowRoot) {
       this.settingsStyleElement = createAndAppendStyle(
         this.getSettingsStyles(),
-        this.shadowRoot,
+        shadowRoot,
         "debug-control-panel-settings"
       )
     }
-
     this.queryDOMElements()
     this.setupEventListeners()
   }
@@ -89,7 +82,6 @@ export class ControlPanelSettingsTab extends BaseTab {
     this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
     this.copySettingsButton = null
-    this.shadowRoot = null
     this.settingsStyleElement = null
   }
 

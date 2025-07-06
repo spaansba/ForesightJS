@@ -56,26 +56,20 @@ export class ControlPanelLogTab extends BaseTab {
   private logIdCounter: number = 0
 
   // Control panel container reference
-
-  private shadowRoot: ShadowRoot | null = null
   private logStyleElement: HTMLStyleElement | null = null
 
   constructor(
     foresightManager: ForesightManager,
     debuggerInstance: ForesightDebugger,
-    controlsContainer: HTMLDivElement
+    controlsContainer: HTMLDivElement,
+    shadowRoot: ShadowRoot
   ) {
     super(foresightManager, debuggerInstance, controlsContainer)
-  }
-
-  public initialize(shadowRoot?: ShadowRoot): void {
-    this.shadowRoot = shadowRoot || null
-
     // Inject log-specific styles
-    if (this.shadowRoot) {
+    if (shadowRoot) {
       this.logStyleElement = createAndAppendStyle(
         this.getLogStyles(),
-        this.shadowRoot,
+        shadowRoot,
         "debug-control-panel-logs"
       )
     }
@@ -83,18 +77,12 @@ export class ControlPanelLogTab extends BaseTab {
     this.queryDOMElements()
     this.setupEventListeners()
     this.forceResetLogsListDisplay()
-
-    // Store reference for toggle functionality
-    if ((window as any).debuggerInstance !== this) {
-      ;(window as any).debuggerInstance = this
-    }
   }
 
   public cleanup(): void {
     this.logStyleElement?.remove()
     this.logsContainer = null
     this.eventLogs = []
-    this.shadowRoot = null
     this.logStyleElement = null
 
     // Clean up global reference
@@ -166,7 +154,7 @@ export class ControlPanelLogTab extends BaseTab {
   public clearLogs(): void {
     this.eventLogs = []
     this.logIdCounter = 0 // Reset counter
-    this.setLogsCountChip()
+    this.refreshLogsCountChip()
     this.forceResetLogsListDisplay()
   }
 
@@ -201,10 +189,10 @@ export class ControlPanelLogTab extends BaseTab {
     const logElementHTML = this.createSingleLogElementHTML(logData)
     this.logsContainer.insertAdjacentHTML("afterbegin", logElementHTML)
 
-    this.setLogsCountChip()
+    this.refreshLogsCountChip()
   }
 
-  private setEventCountChip() {
+  private refreshEventCountChip() {
     const activeFilterCount = Object.values(
       this.debuggerInstance.getDebuggerData.settings.logging
     ).filter(value => value === true).length
@@ -219,7 +207,7 @@ export class ControlPanelLogTab extends BaseTab {
     }
   }
 
-  private setLogsCountChip() {
+  private refreshLogsCountChip() {
     const logsChip = this.controlsContainer?.querySelector('[data-dynamic="logs-count"]')
     if (!logsChip) {
       return
@@ -247,8 +235,8 @@ Max ${this.MAX_LOGS} events are shown at ones`
   }
 
   public refreshFullTabBarContent(): void {
-    this.setEventCountChip()
-    this.setLogsCountChip()
+    this.refreshEventCountChip()
+    this.refreshLogsCountChip()
     this.setLocationChip()
     this.updateLogFilterDropdownUI()
     this.updateLogLocationDropdownUI()

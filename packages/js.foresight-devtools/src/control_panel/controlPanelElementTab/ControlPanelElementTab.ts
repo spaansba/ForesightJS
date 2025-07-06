@@ -149,7 +149,6 @@ export class ControlPanelElementTab extends BaseTab {
       scroll,
       total: totalHits,
     } = this.foresightManagerInstance.getManagerData.globalCallbackHits
-    // Update hits count
     const hitsChip = this.controlsContainer.querySelector('[data-dynamic="elements-hits"]')
     if (hitsChip) {
       hitsChip.textContent = `${totalHits} hits`
@@ -172,19 +171,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
   • right: ${scroll.right}`
       )
     }
-  }
-
-  // Dynamic content update methods
-  public updateElementsTabBarContent() {
-    const registeredElements = Array.from(
-      this.foresightManagerInstance.registeredElements.entries()
-    )
-    const total = registeredElements.length
-    const isIntersecting = registeredElements.filter(
-      ([_, elementData]) => elementData.isIntersectingWithViewport
-    ).length
-    this.refreshHitsChip()
-    this.refreshVisibilityChip()
   }
 
   public reorderElementsInListContainer(sortedElements: ForesightElementData[]) {

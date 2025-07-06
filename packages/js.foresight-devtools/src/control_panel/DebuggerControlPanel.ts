@@ -211,18 +211,18 @@ export class DebuggerControlPanel {
     this.logTabManager = new ControlPanelLogTab(
       this.foresightManagerInstance,
       this.debuggerInstance,
-      this.controlsContainer
+      this.controlsContainer,
+      this.shadowRoot
     )
-    this.logTabManager.initialize(this.shadowRoot)
   }
 
   private initializeSettingsTabManager() {
     this.settingsTabManager = new ControlPanelSettingsTab(
       this.foresightManagerInstance,
       this.debuggerInstance,
-      this.controlsContainer
+      this.controlsContainer,
+      this.shadowRoot
     )
-    this.settingsTabManager.initialize(this.shadowRoot)
   }
 
   private setupEventListeners() {
