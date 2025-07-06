@@ -1,88 +1,77 @@
-import type { ForesightElementData, ForesightElement } from "js.foresight"
+import type { ForesightElementData, ForesightElement, ForesightManager } from "js.foresight"
 import { BaseTab } from "../baseTab/BaseTab"
 import type { SortElementList } from "../../types/types"
 import { getIntersectingIcon } from "./helpers/getIntersectingIcon"
 import { sortByDocumentPosition } from "./helpers/sortByDocumentPosition"
-
-const SORT_SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>`
+import type { ForesightDebugger } from "../../debugger/ForesightDebugger"
+import { queryAllAndAssert, queryAndAssert } from "../../debugger/helpers/queryAndAssert"
+import { formatToSpacedWords } from "../../debugger/helpers/formatToSpacedWords"
 
 export class ControlPanelElementTab extends BaseTab {
   // DOM Elements
   private elementListItemsContainer: HTMLElement | null = null
-  private elementCountSpan: HTMLSpanElement | null = null
+  // private elementCountSpan: HTMLSpanElement
   private elementListItems: Map<ForesightElement, HTMLElement> = new Map()
-  private sortOptionsPopup: HTMLDivElement | null = null
   private sortButton: HTMLButtonElement | null = null
-
-  // Event handler references for cleanup
-  private closeSortDropdownHandler: ((e: MouseEvent) => void) | null = null
-
-  public initialize(controlsContainer: HTMLElement) {
-    this.queryDOMElements(controlsContainer)
+  private sortDropdown: HTMLDivElement | null = null
+  constructor(
+    foresightManager: ForesightManager,
+    debuggerInstance: ForesightDebugger,
+    controlsContainer: HTMLDivElement
+  ) {
+    super(foresightManager, debuggerInstance, controlsContainer)
+    this.queryDOMElements()
     this.setupEventListeners()
   }
 
-  protected queryDOMElements(controlsContainer: HTMLElement) {
-    this.elementListItemsContainer = controlsContainer.querySelector(
-      "#element-list-items-container"
+  protected queryDOMElements() {
+    this.sortButton = queryAndAssert<HTMLButtonElement>(
+      "#sort-elements-button",
+      this.controlsContainer
     )
-    this.elementCountSpan = controlsContainer.querySelector("#element-count")
-    this.sortOptionsPopup = controlsContainer.querySelector("#sort-options-popup")
-    this.sortButton = controlsContainer.querySelector(".sort-button")
+    this.sortDropdown = queryAndAssert<HTMLDivElement>(
+      "#sort-options-dropdown",
+      this.controlsContainer
+    )
+    this.elementListItemsContainer = queryAndAssert<HTMLButtonElement>(
+      "#element-list-items-container",
+      this.controlsContainer
+    )
   }
 
   protected setupEventListeners() {
     this.sortButton?.addEventListener("click", e => {
       e.stopPropagation()
-      this.sortOptionsPopup?.classList.toggle("active")
+      this.sortDropdown?.classList.toggle("active")
     })
 
-    this.sortOptionsPopup?.addEventListener("click", e => {
+    this.sortDropdown?.addEventListener("click", e => {
       const target = e.target as HTMLElement
-      const sortButton = target.closest("[data-sort]") as HTMLElement | null
-      if (!sortButton) return
+      const selectedSortButton = target.closest("[data-sort]") as HTMLElement | null
+      if (!selectedSortButton) return
 
-      const value = sortButton.dataset.sort as SortElementList
+      const value = selectedSortButton.dataset.sort as SortElementList
       this.debuggerInstance.alterDebuggerSettings({
         sortElementList: value,
       })
       this.reorderElementsInListContainer(this.sortElementsInListContainer())
       this.updateSortOptionUI(value)
-      this.sortOptionsPopup?.classList.remove("active")
+      this.sortDropdown?.classList.remove("active")
     })
-
-    this.closeSortDropdownHandler = (e: MouseEvent) => {
-      if (
-        this.sortOptionsPopup?.classList.contains("active") &&
-        !this.sortButton?.contains(e.target as Node)
-      ) {
-        this.sortOptionsPopup.classList.remove("active")
-      }
-    }
-    document.addEventListener("click", this.closeSortDropdownHandler)
   }
 
-  public updateElementCountsDisplay() {
-    if (!this.elementCountSpan) return
-    const registeredElements = Array.from(
-      this.foresightManagerInstance.registeredElements.entries()
-    ) as [ForesightElement, ForesightElementData][]
-    const total = registeredElements.length
-    const isIntersecting = registeredElements.filter(
-      ([_, elementData]) => elementData.isIntersectingWithViewport
-    ).length
-    const visibleTitle = [
-      "Element Visibility Status",
-      "-----------------------------------------------------",
-      `Visible in Viewport: ${isIntersecting}`,
-      `Not in Viewport: ${total - isIntersecting}`,
-      `Total Registered Elements: ${total}`,
-      "",
-      "Note: Only elements visible in the viewport",
-      "are actively tracked by intersection observers.",
-    ]
-    this.elementCountSpan.textContent = `Visible: ${isIntersecting}/${total} ~ `
-    this.elementCountSpan.title = visibleTitle.join("\n")
+  public addElementToListContainer(elementData: ForesightElementData) {
+    if (!this.elementListItemsContainer) return
+    if (this.elementListItemsContainer.classList.contains("no-items")) {
+      this.elementListItemsContainer.innerHTML = ""
+      this.elementListItemsContainer.classList.remove("no-items")
+    }
+    if (this.elementListItems.has(elementData.element)) return
+    const listItem = document.createElement("div")
+    listItem.className = "element-list-item"
+    this.updateListItemContent(listItem, elementData)
+    this.elementListItemsContainer.appendChild(listItem)
+    this.elementListItems.set(elementData.element, listItem)
   }
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
@@ -93,7 +82,6 @@ export class ControlPanelElementTab extends BaseTab {
     }
     listItem.remove()
     this.elementListItems.delete(elementData.element)
-    this.updateElementCountsDisplay()
     if (this.elementListItems.size === 0) {
       this.elementListItemsContainer.innerHTML = ""
       this.elementListItemsContainer.classList.add("no-items")
@@ -106,7 +94,7 @@ export class ControlPanelElementTab extends BaseTab {
     if (!this.elementListItemsContainer) return
     const listItem = this.elementListItems.get(elementData.element)
     if (!listItem) {
-      this.addElementToList(elementData)
+      this.addElementToListContainer(elementData)
       return
     }
 
@@ -116,7 +104,6 @@ export class ControlPanelElementTab extends BaseTab {
       const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
       intersectingElement.textContent = intersectingIcon
     }
-    this.updateElementCountsDisplay()
     this.reorderElementsInListContainer(this.sortElementsInListContainer())
   }
 
@@ -166,21 +153,6 @@ export class ControlPanelElementTab extends BaseTab {
     }
   }
 
-  public addElementToList(elementData: ForesightElementData) {
-    if (!this.elementListItemsContainer) return
-    if (this.elementListItemsContainer.classList.contains("no-items")) {
-      this.elementListItemsContainer.innerHTML = ""
-      this.elementListItemsContainer.classList.remove("no-items")
-    }
-    if (this.elementListItems.has(elementData.element)) return
-    const listItem = document.createElement("div")
-    listItem.className = "element-list-item"
-    this.updateListItemContent(listItem, elementData)
-    this.elementListItemsContainer!.appendChild(listItem)
-    this.elementListItems.set(elementData.element, listItem)
-    this.updateElementCountsDisplay()
-  }
-
   private updateListItemContent(listItem: HTMLElement, elementData: ForesightElementData) {
     // Determine the viewport icon based on current visibility status
     const intersectingIcon = getIntersectingIcon(elementData.isIntersectingWithViewport)
@@ -222,26 +194,25 @@ export class ControlPanelElementTab extends BaseTab {
   }
 
   public updateSortOptionUI(currentSort: SortElementList) {
-    this.sortOptionsPopup?.querySelectorAll("[data-sort]").forEach(button => {
-      const btn = button as HTMLElement
-      if (btn.dataset.sort === currentSort) {
-        btn.classList.add("active-sort-option")
-      } else {
-        btn.classList.remove("active-sort-option")
-      }
+    const buttons = queryAllAndAssert("[data-sort]", this.sortDropdown)
+    buttons?.forEach(button => {
+      const sortValue = (button as HTMLElement).dataset.sort!
+      button.classList.toggle("active", sortValue === currentSort)
     })
+
+    // Update sort method
+    const sortChip = queryAndAssert('[data-dynamic="elements-sort"]', this.controlsContainer)
+    if (sortChip) {
+      sortChip.textContent = `▼ ${formatToSpacedWords(currentSort)}`
+      sortChip.setAttribute("title", "Current element sorting method")
+    }
   }
 
   public cleanup() {
-    if (this.closeSortDropdownHandler) {
-      document.removeEventListener("click", this.closeSortDropdownHandler)
-      this.closeSortDropdownHandler = null
-    }
-
-    this.elementListItemsContainer = null
-    this.elementCountSpan = null
+    // this.elementListItemsContainer = null
+    // this.elementCountSpan = null
     this.elementListItems.clear()
-    this.sortOptionsPopup = null
-    this.sortButton = null
+    // this.sortDropdown = null
+    // this.sortButton = null
   }
 }

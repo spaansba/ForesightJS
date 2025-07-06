@@ -39,18 +39,19 @@ export class ControlPanelSettingsTab extends BaseTab {
   // Settings tab specific controls
   private copySettingsButton: HTMLButtonElement | null = null
   private copyTimeoutId: ReturnType<typeof setTimeout> | null = null
-
-  // Control panel container reference
-  private controlsContainer: HTMLElement | null = null
   private shadowRoot: ShadowRoot | null = null
   private settingsStyleElement: HTMLStyleElement | null = null
 
-  constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
-    super(foresightManager, debuggerInstance)
+  constructor(
+    foresightManager: ForesightManager,
+    debuggerInstance: ForesightDebugger,
+    controlsContainer: HTMLDivElement
+  ) {
+    super(foresightManager, debuggerInstance, controlsContainer)
   }
 
-  public initialize(controlsContainer: HTMLElement, shadowRoot?: ShadowRoot): void {
-    this.controlsContainer = controlsContainer
+  // TODO remove init
+  public initialize(shadowRoot?: ShadowRoot): void {
     this.shadowRoot = shadowRoot || null
 
     // Inject settings-specific styles
@@ -62,7 +63,7 @@ export class ControlPanelSettingsTab extends BaseTab {
       )
     }
 
-    this.queryDOMElements(controlsContainer)
+    this.queryDOMElements()
     this.setupEventListeners()
   }
 
@@ -88,12 +89,12 @@ export class ControlPanelSettingsTab extends BaseTab {
     this.scrollMarginValueSpan = null
     this.showNameTagsCheckbox = null
     this.copySettingsButton = null
-    this.controlsContainer = null
     this.shadowRoot = null
     this.settingsStyleElement = null
   }
 
-  protected queryDOMElements(controlsContainer: HTMLElement): void {
+  protected queryDOMElements(): void {
+    const controlsContainer = this.controlsContainer
     this.trajectoryEnabledCheckbox = controlsContainer.querySelector("#trajectory-enabled")
     this.tabEnabledCheckbox = controlsContainer.querySelector("#tab-enabled")
     this.scrollEnabledCheckbox = controlsContainer.querySelector("#scroll-enabled")
@@ -141,9 +142,7 @@ export class ControlPanelSettingsTab extends BaseTab {
       SCROLL_MARGIN_UNIT,
       "scrollMargin"
     )
-  }
 
-  public attachEventListeners(): void {
     this.copySettingsButton = this.controlsContainer?.querySelector("#copy-settings") || null
     this.copySettingsButton?.addEventListener("click", this.handleCopySettings.bind(this))
   }

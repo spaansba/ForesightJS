@@ -29,14 +29,21 @@ export abstract class BaseTab {
    */
   protected debuggerInstance: ForesightDebugger
 
+  protected controlsContainer: HTMLDivElement
+
   /**
    * Creates an instance of a BaseTab.
    * @param {ForesightManager} foresightManager The singleton instance of the ForesightManager.
    * @param {ForesightDebugger} debuggerInstance The singleton instance of the ForesightDebugger.
    */
-  constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
+  constructor(
+    foresightManager: ForesightManager,
+    debuggerInstance: ForesightDebugger,
+    controlsContainer: HTMLDivElement
+  ) {
     this.foresightManagerInstance = foresightManager
     this.debuggerInstance = debuggerInstance
+    this.controlsContainer = controlsContainer
   }
 
   /**
@@ -44,7 +51,7 @@ export abstract class BaseTab {
    * A concrete implementation should use this method to call internal setup methods
    * like `queryDOMElements` and `setupEventListeners`.
    */
-  public abstract initialize(controlsContainer: HTMLElement): void
+  // public abstract initialize(controlsContainer: HTMLElement): void
 
   /**
    * Cleans up all resources used by the tab to prevent memory leaks.
@@ -57,7 +64,7 @@ export abstract class BaseTab {
    * Queries the DOM for all necessary elements required by the tab and caches them as class properties.
    * This method is intended to be called from within the `initialize` method.
    */
-  protected abstract queryDOMElements(controlsContainer: HTMLElement): void
+  protected abstract queryDOMElements(): void
 
   /**
    * Sets up all necessary event listeners for the tab's interactive elements.

@@ -76,11 +76,7 @@ export class ForesightDebugger {
   private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {
     switch (this._debuggerSettings.logging.logLocation) {
       case "console":
-        console.log(
-          `%c ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`,
-          `color: ${color}`,
-          event
-        )
+        console.log(`%c ${event.type}`, `color: ${color}`, event)
         break
       case "controlPanel":
         if (this.controlPanel) {
@@ -88,11 +84,7 @@ export class ForesightDebugger {
         }
         break
       case "both": // dont add fall-through
-        console.log(
-          `%c ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`,
-          `color: ${color}`,
-          event
-        )
+        console.log(`%c ${event.type}`, `color: ${color}`, event)
         if (this.controlPanel) {
           this.controlPanel.addEventLog(event.type, event)
         }
@@ -348,7 +340,7 @@ export class ForesightDebugger {
     this._debuggerSettings.logging.elementRegistered && this.logEvent(e, "green")
 
     this.createOrUpdateElementOverlay(e.elementData)
-    this.controlPanel.addElementToList(e.elementData)
+    this.controlPanel.addElementToListContainer(e.elementData)
     this.controlPanel.updateTitleElementCount()
   }
 
@@ -414,7 +406,10 @@ export class ForesightDebugger {
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
     this._debuggerSettings.logging.managerSettingsChanged && this.logEvent(e, "grey")
 
-    this.controlPanel?.updateControlsState(e.managerData.globalSettings, this._debuggerSettings)
+    this.controlPanel?.updateControlsStateFromCode(
+      e.managerData.globalSettings,
+      this._debuggerSettings
+    )
   }
 
   private createElementOverlays(elementData: ForesightElementData) {

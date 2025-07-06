@@ -30,7 +30,7 @@ export class DebuggerControlPanel {
 
   // These properties will be assigned in _setupDOMAndListeners
   private shadowRoot!: ShadowRoot
-  private controlsContainer!: HTMLElement
+  private controlsContainer!: HTMLDivElement
   private controlPanelStyleElement!: HTMLStyleElement
 
   private containerMinimizeButton: HTMLButtonElement | null = null
@@ -44,7 +44,7 @@ export class DebuggerControlPanel {
   private settingsContent: HTMLElement | null = null
   private elementsContent: HTMLElement | null = null
   private logsContent: HTMLElement | null = null
-  private activeTab: ControllerTabs = "logs"
+  private activeTab: ControllerTabs = "elements"
 
   private titleElementCount: HTMLSpanElement | null = null
 
@@ -104,9 +104,9 @@ export class DebuggerControlPanel {
     this.initializeLogTabManager()
     this.initializeSettingsTabManager()
     this.setupEventListeners()
-    this.initializeTabSystem()
+    this.switchTab(this.activeTab)
     this.updateContainerVisibilityState()
-    this.updateControlsState(
+    this.updateControlsStateFromCode(
       this.foresightManagerInstance.getManagerData.globalSettings,
       debuggerSettings
     )
@@ -131,9 +131,9 @@ export class DebuggerControlPanel {
       this.elementsContent.style.display = tab === "elements" ? "block" : "none"
     if (this.logsContent) this.logsContent.style.display = tab === "logs" ? "block" : "none"
 
-    const settingsTabBar = this.controlsContainer?.querySelector(".tab-bar-settings") as HTMLElement
-    const elementsTabBar = this.controlsContainer?.querySelector(".tab-bar-elements") as HTMLElement
-    const logsTabBar = this.controlsContainer?.querySelector(".tab-bar-logs") as HTMLElement
+    const settingsTabBar = this.controlsContainer.querySelector(".tab-bar-settings") as HTMLElement
+    const elementsTabBar = this.controlsContainer.querySelector(".tab-bar-elements") as HTMLElement
+    const logsTabBar = this.controlsContainer.querySelector(".tab-bar-logs") as HTMLElement
 
     if (settingsTabBar) settingsTabBar.style.display = tab === "settings" ? "flex" : "none"
     if (elementsTabBar) elementsTabBar.style.display = tab === "elements" ? "flex" : "none"
@@ -152,7 +152,7 @@ export class DebuggerControlPanel {
         this.updateElementsTabBarContent()
         break
       case "logs":
-        this.logTabManager.updateTabBarContent()
+        this.logTabManager.refreshFullTabBarContent()
         break
     }
   }
@@ -173,23 +173,15 @@ export class DebuggerControlPanel {
       total: totalHits,
     } = this.foresightManagerInstance.getManagerData.globalCallbackHits
 
-    const currentSort =
-      this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
-    const sortLabels = {
-      visibility: "Visibility",
-      documentOrder: "Document Order",
-      insertionOrder: "Insertion Order",
-    }
-
     // Update visible count
-    const visibleChip = this.controlsContainer?.querySelector('[data-dynamic="elements-visible"]')
+    const visibleChip = this.controlsContainer.querySelector('[data-dynamic="elements-visible"]')
     if (visibleChip) {
       visibleChip.textContent = `${isIntersecting}/${total} visible`
       visibleChip.setAttribute("title", "Elements visible in viewport vs total registered elements")
     }
 
     // Update hits count
-    const hitsChip = this.controlsContainer?.querySelector('[data-dynamic="elements-hits"]')
+    const hitsChip = this.controlsContainer.querySelector('[data-dynamic="elements-hits"]')
     if (hitsChip) {
       hitsChip.textContent = `${totalHits} hits`
       hitsChip.setAttribute(
@@ -211,68 +203,10 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
   • right: ${scroll.right}`
       )
     }
-
-    // Update sort method
-    const sortChip = this.controlsContainer?.querySelector('[data-dynamic="elements-sort"]')
-    if (sortChip) {
-      sortChip.textContent = `▼ ${sortLabels[currentSort as keyof typeof sortLabels].toLowerCase()}`
-      sortChip.setAttribute("title", "Current element sorting method")
-    }
-
-    // Update sort option UI
-    this.updateSortOptionUI()
-  }
-
-  // Event listener attachment methods
-
-  private attachElementsTabBarListeners() {
-    this.setupElementsSortListeners()
-  }
-
-  private setupElementsSortListeners() {
-    const sortButton = this.controlsContainer?.querySelector("#sort-elements-button")
-    const sortDropdown = this.controlsContainer?.querySelector("#sort-options-dropdown")
-
-    sortButton?.addEventListener("click", e => {
-      e.stopPropagation()
-      sortDropdown?.classList.toggle("active")
-    })
-
-    sortDropdown?.addEventListener("click", e => {
-      const target = e.target as HTMLElement
-      const sortBtn = target.closest("[data-sort]") as HTMLElement | null
-      if (sortBtn) {
-        const value = sortBtn.dataset.sort as any
-        this.debuggerInstance.alterDebuggerSettings({
-          sortElementList: value,
-        })
-        // Immediately re-sort and update the list
-        this.elementTabManager.reorderElementsInListContainer(
-          this.elementTabManager.sortElementsInListContainer()
-        )
-        // Update only the dynamic content
-        if (this.activeTab === "elements") {
-          this.updateElementsTabBarContent()
-        }
-        sortDropdown.classList.remove("active")
-      }
-    })
   }
 
   public addEventLog(type: any, event: any) {
     this.logTabManager.addEventLog(type, event)
-  }
-
-  private updateSortOptionUI() {
-    const sortDropdown = this.controlsContainer?.querySelector("#sort-options-dropdown")
-    const sortButtons = sortDropdown?.querySelectorAll("[data-sort]")
-    const currentSort =
-      this.debuggerInstance.getDebuggerData.settings.sortElementList ?? "visibility"
-
-    sortButtons?.forEach(button => {
-      const sortValue = (button as HTMLElement).dataset.sort!
-      button.classList.toggle("active", sortValue === currentSort)
-    })
   }
 
   public updateTitleElementCount() {
@@ -311,25 +245,27 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
   private initializeElementTabManager() {
     this.elementTabManager = new ControlPanelElementTab(
       this.foresightManagerInstance,
-      this.debuggerInstance
+      this.debuggerInstance,
+      this.controlsContainer
     )
-    this.elementTabManager.initialize(this.controlsContainer)
   }
 
   private initializeLogTabManager() {
     this.logTabManager = new ControlPanelLogTab(
       this.foresightManagerInstance,
-      this.debuggerInstance
+      this.debuggerInstance,
+      this.controlsContainer
     )
-    this.logTabManager.initialize(this.controlsContainer, this.shadowRoot)
+    this.logTabManager.initialize(this.shadowRoot)
   }
 
   private initializeSettingsTabManager() {
     this.settingsTabManager = new ControlPanelSettingsTab(
       this.foresightManagerInstance,
-      this.debuggerInstance
+      this.debuggerInstance,
+      this.controlsContainer
     )
-    this.settingsTabManager.initialize(this.controlsContainer, this.shadowRoot)
+    this.settingsTabManager.initialize(this.shadowRoot)
   }
 
   private setupEventListeners() {
@@ -356,27 +292,6 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     })
   }
 
-  private setupTabBarEventListeners() {
-    // Settings tab bar listeners
-    this.settingsTabManager.attachEventListeners()
-
-    // Elements tab bar listeners
-    this.attachElementsTabBarListeners()
-
-    // Logs tab bar listeners - populate filter dropdown and attach event listeners
-    this.logTabManager.initializeTabBar()
-    this.logTabManager.attachEventListeners()
-
-    // Initialize dynamic content for all tabs
-    this.updateElementsTabBarContent()
-    this.logTabManager.updateTabBarContent()
-  }
-
-  private initializeTabSystem() {
-    this.setupTabBarEventListeners()
-    this.switchTab(this.activeTab)
-  }
-
   private updateContainerVisibilityState() {
     if (!this.containerMinimizeButton) return
     if (this.isContainerMinimized) {
@@ -393,7 +308,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     }
   }
 
-  public updateControlsState(
+  public updateControlsStateFromCode(
     managerSettings: ForesightManagerSettings,
     debuggerSettings: DebuggerSettings
   ) {
@@ -403,21 +318,14 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
 
   public removeElementFromListContainer(elementData: ForesightElementData) {
     this.elementTabManager.removeElementFromListContainer(elementData)
-    // Always update counters regardless of active tab
-    this.updateTitleElementCount()
-    this.updateElementsTabBarContent()
   }
 
   public updateElementVisibilityStatus(elementData: ForesightElementData) {
     this.elementTabManager.updateElementVisibilityStatus(elementData)
-    // Always update counters regardless of active tab
-    this.updateElementsTabBarContent()
   }
 
-  public addElementToList(elementData: ForesightElementData) {
-    this.elementTabManager.addElementToList(elementData)
-    // Always update counters regardless of active tab
-    this.updateElementsTabBarContent()
+  public addElementToListContainer(elementData: ForesightElementData) {
+    this.elementTabManager.addElementToListContainer(elementData)
   }
   /**
    * The cleanup method is updated to be more thorough, nullifying all
@@ -446,7 +354,7 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
     this.logsContent = null
   }
 
-  private createControlContainer(): HTMLElement {
+  private createControlContainer(): HTMLDivElement {
     const container = document.createElement("div")
     container.id = "debug-controls"
     container.innerHTML = /* html */ `
@@ -626,10 +534,8 @@ Scroll: ${scroll.down + scroll.left + scroll.right + scroll.up}
         </div>
 
         <div class="elements-content">
-    
             <div id="element-list-items-container">
             </div>
-         
         </div>
 
         <div class="logs-content">

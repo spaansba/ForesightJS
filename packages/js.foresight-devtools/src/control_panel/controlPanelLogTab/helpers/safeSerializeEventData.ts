@@ -4,6 +4,7 @@ import type {
   ForesightEventMap,
   ForesightManagerSettings,
   Point,
+  ScrollDirection,
   UpdatedDataPropertyNames,
 } from "js.foresight/types/types"
 import type { HitSlop } from "packages/js.foresight/dist"
@@ -11,56 +12,47 @@ import type { HitSlop } from "packages/js.foresight/dist"
 type SerializedEventType = ForesightEvent | "serializationError"
 
 export type ControlPanelLogEntry = {
-  type: ForesightEvent
-  data: SerializedEventData
+  eventData: SerializedEventData
 }
 
 interface PayloadBase {
   type: SerializedEventType
   localizedTimestamp: string
+  summary: string // The text / data you see as preview on the right of the event (keep this short)
 }
 
 interface ElementRegisteredPayload extends PayloadBase {
   type: "elementRegistered"
   name: string
-  wasAlreadyRegistered: boolean
   id: string
+  wasAlreadyRegistered: boolean
   hitslop: HitSlop
 }
 
-// For the "elementUnregistered" case
 interface ElementUnregisteredPayload extends PayloadBase {
   type: "elementUnregistered"
   name: string
-  elementTag: string
-  elementId: string
-  elementClass: string
-  isIntersecting: boolean
-  hitSlop: HitSlop
+  id: string
   unregisterReason: string
 }
-
-// For the "elementDataUpdated" case
 interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
   name: string
   elementTag: string
-  updatedProps: UpdatedDataPropertyNames[] // Or string[] if that's more accurate
+  updatedProps: UpdatedDataPropertyNames[]
   isIntersecting: boolean
 }
 
-// For the "callbackFired" case
 interface CallbackFiredPayload extends PayloadBase {
   type: "callbackFired"
   name: string
   elementTag: string
-  hitType: CallbackHitType // Consider using a more specific type
+  hitType: CallbackHitType
   predictionEnabled: boolean
   tabPredictionEnabled: boolean
   scrollPredictionEnabled: boolean
 }
 
-// For the "mouseTrajectoryUpdate" case
 interface MouseTrajectoryUpdatePayload extends PayloadBase {
   type: "mouseTrajectoryUpdate"
   currentPoint: Point
@@ -69,14 +61,13 @@ interface MouseTrajectoryUpdatePayload extends PayloadBase {
   predictionEnabled: boolean
 }
 
-// For the "scrollTrajectoryUpdate" case
 interface ScrollTrajectoryUpdatePayload extends PayloadBase {
   type: "scrollTrajectoryUpdate"
   currentPoint: Point
   predictedPoint: Point
+  scrollDirection: ScrollDirection
 }
 
-// For the "managerSettingsChanged" case
 interface ManagerSettingsChangedPayload extends PayloadBase {
   type: "managerSettingsChanged"
   globalSettings: ForesightManagerSettings
@@ -115,42 +106,42 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
         return {
           type: "elementRegistered",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          name: event.elementData?.name || "Unnamed",
+          name: event.elementData.name,
           wasAlreadyRegistered: event.elementWasAlreadyRegistered,
           id: event.elementData?.element?.id || "",
           hitslop: event.elementData.elementBounds.hitSlop,
+          summary: event.elementData.name,
         }
       case "elementUnregistered":
         return {
           type: "elementUnregistered",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          name: event.elementData?.name || "Unnamed",
-          elementTag: event.elementData?.element?.tagName || "Unknown",
-          elementId: event.elementData?.element?.id || "",
-          elementClass: event.elementData?.element?.className || "",
-          isIntersecting: event.elementData?.isIntersectingWithViewport,
-          hitSlop: event.elementData?.elementBounds?.hitSlop,
-          unregisterReason: event.unregisterReason || undefined,
+          name: event.elementData.name,
+          id: event.elementData?.element?.id || "",
+          unregisterReason: event.unregisterReason,
+          summary: event.unregisterReason,
         }
       case "elementDataUpdated":
         return {
           type: "elementDataUpdated",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          name: event.elementData?.name || "Unnamed",
+          name: event.elementData.name,
           elementTag: event.elementData?.element?.tagName || "Unknown",
           updatedProps: event.updatedProps || [],
           isIntersecting: event.elementData?.isIntersectingWithViewport,
+          summary: event.updatedProps.toString(),
         }
       case "callbackFired":
         return {
           type: "callbackFired",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          name: event.elementData?.name || "Unnamed",
+          name: event.elementData.name,
           elementTag: event.elementData?.element?.tagName || "Unknown",
           hitType: event.hitType,
           predictionEnabled: event.managerData?.globalSettings?.enableMousePrediction,
           tabPredictionEnabled: event.managerData?.globalSettings?.enableTabPrediction,
           scrollPredictionEnabled: event.managerData?.globalSettings?.enableScrollPrediction,
+          summary: event.hitType.kind,
         }
       case "mouseTrajectoryUpdate":
         return {
@@ -160,6 +151,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           predictedPoint: event.trajectoryPositions?.predictedPoint,
           positionCount: event.trajectoryPositions?.positions?.length || 0,
           predictionEnabled: event.predictionEnabled,
+          summary: "",
         }
       case "scrollTrajectoryUpdate":
         return {
@@ -167,12 +159,15 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           currentPoint: event.currentPoint,
           predictedPoint: event.predictedPoint,
+          scrollDirection: event.scrollDirection,
+          summary: event.scrollDirection,
         }
       case "managerSettingsChanged":
         return {
           type: "managerSettingsChanged",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           globalSettings: event.managerData?.globalSettings || {},
+          summary: "",
         }
       default:
         const _exhaustiveCheck: never = event
@@ -181,6 +176,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date().toLocaleTimeString(),
           error: "Failed to serialize event data",
           errorMessage: JSON.stringify(_exhaustiveCheck),
+          summary: "",
         }
     }
   } catch (error) {
@@ -190,6 +186,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       error: "Failed to serialize event data",
       localizedTimestamp: new Date().toLocaleTimeString(),
       errorMessage: error instanceof Error ? error.message : String(error),
+      summary: "",
     }
   }
 }
