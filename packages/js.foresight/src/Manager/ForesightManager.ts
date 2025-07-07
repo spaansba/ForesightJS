@@ -571,15 +571,84 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
-  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
+  private callCallback(
+    elementData: ForesightElementData,
+    callbackHitType: CallbackHitType
+  ): void | Promise<unknown> {
     this.updateHitCounters(callbackHitType)
-    elementData.callback()
+    const startTime = performance.now()
     this.emit({
-      type: "callbackFired",
+      type: "callbackInvoked",
       timestamp: Date.now(),
-      elementData: elementData,
+      elementData,
       hitType: callbackHitType,
       managerData: this.getManagerData,
+    })
+
+    let result: unknown
+    try {
+      result = elementData.callback()
+    } catch (syncErr) {
+      const elapsed = performance.now() - startTime
+      // 5a) Emit callbackEnd on sync error
+      this.emit({
+        type: "callbackCompleted",
+        timestamp: Date.now(),
+        elementData,
+        hitType: callbackHitType,
+        managerData: this.getManagerData,
+        elapsed,
+        error: syncErr,
+      })
+      this.unregister(elementData.element, "callbackHit")
+      throw syncErr
+    }
+
+    // 6) If it returned a promise, await it
+    if (result != null && typeof (result as Promise<unknown>).then === "function") {
+      return (result as Promise<unknown>)
+        .then(res => {
+          const elapsed = performance.now() - startTime
+          // 5b) Emit callbackEnd on async success
+          this.emit({
+            type: "callbackCompleted",
+            timestamp: Date.now(),
+            elementData,
+            hitType: callbackHitType,
+            managerData: this.getManagerData,
+            elapsed,
+            result: res,
+          })
+          this.unregister(elementData.element, "callbackHit")
+          return res
+        })
+        .catch(asyncErr => {
+          const elapsed = performance.now() - startTime
+          // 5c) Emit callbackEnd on async error
+          this.emit({
+            type: "callbackCompleted",
+            timestamp: Date.now(),
+            elementData,
+            hitType: callbackHitType,
+            managerData: this.getManagerData,
+            elapsed,
+            error: asyncErr,
+          })
+          this.unregister(elementData.element, "callbackHit")
+          throw asyncErr
+        })
+    }
+
+    // 7) Synchronous success path
+    const elapsed = performance.now() - startTime
+    this.emit({
+      type: "callbackCompleted",
+      timestamp: Date.now(),
+      elementData,
+      hitType: callbackHitType,
+      managerData: this.getManagerData,
+      elapsed,
+      result,
     })
     this.unregister(elementData.element, "callbackHit")
   }

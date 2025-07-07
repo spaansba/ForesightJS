@@ -4,7 +4,7 @@ import { BaseTab } from "../baseTab/BaseTab"
 import type { ForesightDebugger } from "../../debugger/ForesightDebugger"
 import { createAndAppendStyle } from "../../debugger/helpers/createAndAppend"
 
-import type { DebuggerBooleanSettingKeys, DebuggerSettings } from "../../types/types"
+import type { DebuggerBooleanSettingKeys, DevtoolsSettings } from "../../types/types"
 import type { ManagerBooleanSettingKeys, NumericSettingKeys } from "js.foresight/types/types"
 import { objectToMethodCall } from "./helpers/objectToMethodCall"
 import {
@@ -142,7 +142,7 @@ export class ControlPanelSettingsTab extends BaseTab {
 
   public updateControlsState(
     managerSettings: ForesightManagerSettings,
-    debuggerSettings: DebuggerSettings
+    devtoolsSettings: DevtoolsSettings
   ): void {
     if (this.trajectoryEnabledCheckbox) {
       this.trajectoryEnabledCheckbox.checked = managerSettings.enableMousePrediction
@@ -154,7 +154,7 @@ export class ControlPanelSettingsTab extends BaseTab {
       this.scrollEnabledCheckbox.checked = managerSettings.enableScrollPrediction
     }
     if (this.showNameTagsCheckbox) {
-      this.showNameTagsCheckbox.checked = debuggerSettings.showNameTags
+      this.showNameTagsCheckbox.checked = devtoolsSettings.showNameTags
     }
     if (this.historySizeSlider && this.historyValueSpan) {
       this.historySizeSlider.value = managerSettings.positionHistorySize.toString()
@@ -226,15 +226,15 @@ export class ControlPanelSettingsTab extends BaseTab {
       return
     }
 
-    const debuggerSettings = this.debuggerInstance.getDebuggerData.settings
+    const devtoolsSettings = this.debuggerInstance.getDebuggerData.settings
 
     element.addEventListener("change", e => {
       const isChecked = (e.target as HTMLInputElement).checked
 
-      if (setting in debuggerSettings) {
+      if (setting in devtoolsSettings) {
         this.debuggerInstance.alterDebuggerSettings({
           [setting]: isChecked,
-        } as Partial<DebuggerSettings>)
+        } as Partial<DevtoolsSettings>)
       } else {
         this.foresightManagerInstance.alterGlobalSettings({
           [setting]: isChecked,

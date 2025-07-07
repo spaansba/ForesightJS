@@ -1,6 +1,6 @@
 import type { ForesightElementData, ForesightManagerSettings } from "js.foresight"
 import { ForesightManager } from "js.foresight"
-import type { ControllerTabs, DebuggerSettings } from "../types/types"
+import type { ControllerTabs, DevtoolsSettings } from "../types/types"
 
 import {
   MAX_POSITION_HISTORY_SIZE,
@@ -58,6 +58,7 @@ export class DebuggerControlPanel {
   private constructor(foresightManager: ForesightManager, debuggerInstance: ForesightDebugger) {
     this.foresightManagerInstance = foresightManager
     this.debuggerInstance = debuggerInstance
+    console.log("log2")
   }
 
   /**
@@ -68,7 +69,7 @@ export class DebuggerControlPanel {
     foresightManager: ForesightManager,
     debuggerInstance: ForesightDebugger,
     shadowRoot: ShadowRoot,
-    debuggerSettings: DebuggerSettings
+    debuggerSettings: DevtoolsSettings
   ): DebuggerControlPanel {
     if (!DebuggerControlPanel.isInitiated) {
       DebuggerControlPanel.debuggerControlPanelInstance = new DebuggerControlPanel(
@@ -89,7 +90,7 @@ export class DebuggerControlPanel {
    * All DOM creation and event listener setup logic is moved here.
    * This method can be called to "revive" a cleaned-up instance.
    */
-  private _setupDOMAndListeners(shadowRoot: ShadowRoot, debuggerSettings: DebuggerSettings) {
+  private _setupDOMAndListeners(shadowRoot: ShadowRoot, debuggerSettings: DevtoolsSettings) {
     // Guard clause to prevent re-running if the UI is already active.
     if (this.controlsContainer) {
       return
@@ -242,17 +243,7 @@ export class DebuggerControlPanel {
     this.elementsTab?.addEventListener("click", () => this.switchTab("elements"))
     this.logsTab?.addEventListener("click", () => this.switchTab("logs"))
 
-    // Close dropdowns when clicking outside
-    // TODO fix to close previous
-    document.addEventListener("click", e => {
-      const activeDropdown = this.controlsContainer.querySelector(".dropdown-menu.active") // Dont assert this as we are not sure if there are any
-      if (
-        activeDropdown &&
-        !activeDropdown.closest(".dropdown-container")?.contains(e.target as Node)
-      ) {
-        activeDropdown.classList.remove("active")
-      }
-    })
+    // Dropdown closing is now handled by the individual Lit dropdown components
   }
 
   private updateContainerVisibilityState() {
@@ -270,7 +261,7 @@ export class DebuggerControlPanel {
 
   public updateControlsStateFromCode(
     managerSettings: ForesightManagerSettings,
-    debuggerSettings: DebuggerSettings
+    debuggerSettings: DevtoolsSettings
   ) {
     this.settingsTabManager.updateControlsState(managerSettings, debuggerSettings)
     this.elementTabManager.updateSortOptionUI(debuggerSettings.sortElementList ?? "visibility")
@@ -347,9 +338,9 @@ export class DebuggerControlPanel {
         <div class="tab-bar-elements" style="display: none;">
           <div class="tab-bar-info">
             <div class="stats-chips">
-              <span class="chip visible" data-dynamic="elements-visible">0/0 visible</span>
-              <span class="chip hits" data-dynamic="elements-hits">0 hits</span>
-              <span class="chip sort" data-dynamic="elements-sort">▼ visibility</span>
+              <span class="chip" data-dynamic="elements-visible">0/0 visible</span>
+              <span class="chip" data-dynamic="elements-hits">0 hits</span>
+              <span class="chip" data-dynamic="elements-sort">▼ visibility</span>
             </div>
           </div>
           <div class="tab-bar-actions">
@@ -517,7 +508,7 @@ export class DebuggerControlPanel {
 
     const rowsContentHeight =
       elementItemHeight * numRowsToShow + elementListGap * (numRowsToShow - 1)
-
+    console.log(rowsContentHeight)
     return /* css */ `
       #debug-controls {
         position: fixed; bottom: 10px; right: 10px;
@@ -703,7 +694,6 @@ export class DebuggerControlPanel {
       .element-list::-webkit-scrollbar-track,
       .logs-container::-webkit-scrollbar-track { 
         background: rgba(30, 30, 30, 0.5); 
-
       }
       
       .settings-content::-webkit-scrollbar-thumb,
@@ -807,18 +797,7 @@ export class DebuggerControlPanel {
         box-sizing: border-box;
         align-content: flex-start;
       }
-      #element-list-items-container > em {
-        flex-basis: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        font-style: italic;
-        color: #9e9e9e;
-        font-size: 12px;
-        background: none;
-      }
+
       .element-list-item {
         flex-basis: calc((100% - (${
           numItemsPerRow - 1
@@ -866,12 +845,14 @@ export class DebuggerControlPanel {
         background-color: rgba(0,0,0,0.2);
         flex-shrink: 0;
       }
-      
+
       .tab-bar-actions {
-        position: relative;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+         position: relative;
       }
-      
-      /* Log styles will be included by LogTab component */
+
     `
   }
 }

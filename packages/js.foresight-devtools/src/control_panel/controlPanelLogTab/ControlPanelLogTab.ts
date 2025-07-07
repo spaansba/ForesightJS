@@ -160,10 +160,45 @@ export class ControlPanelLogTab extends BaseTab {
   }
 
   /**
+   * Gets the color for a specific event type (matching control panel colors)
+   */
+  private getEventColor(eventType: ForesightEvent): string {
+    const colorMap: Record<ForesightEvent, string> = {
+      callbackFired: "#4caf50",           // Green
+      elementRegistered: "#2196f3",       // Blue
+      elementUnregistered: "#ff9800",     // Orange
+      mouseTrajectoryUpdate: "#9c27b0",   // Purple
+      scrollTrajectoryUpdate: "#00bcd4",  // Cyan
+      elementDataUpdated: "#ffeb3b",      // Yellow
+      managerSettingsChanged: "#f44336",  // Red
+    }
+    return colorMap[eventType] || "#ffffff"
+  }
+
+  /**
+   * Logs event to console with color coding if console logging is enabled
+   */
+  private logToConsole<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]): void {
+    const logLocation = this.debuggerInstance.getDebuggerData.settings.logging.logLocation
+    
+    if (logLocation === "console" || logLocation === "both") {
+      const color = this.getEventColor(type)
+      console.log(
+        `%c[ForesightJS] ${type}:`,
+        `color: ${color}; font-weight: bold;`,
+        event
+      )
+    }
+  }
+
+  /**
    * Adds a new log entry to the top of the display efficiently.
    */
   public addEventLog<K extends ForesightEvent>(type: K, event: ForesightEventMap[K]): void {
     if (!this.logsContainer) return
+
+    // Log to console with color coding if enabled
+    this.logToConsole(type, event)
 
     const logData = safeSerializeEventData(event)
 

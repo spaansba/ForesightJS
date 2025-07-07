@@ -1,5 +1,6 @@
 import { css, html, LitElement } from "lit"
-import { customElement } from "lit/decorators.js"
+import { customElement, property } from "lit/decorators.js"
+import type { ControllerTabs } from "../../types/types"
 
 @customElement("tab-selector")
 export class TabSelector extends LitElement {
@@ -36,12 +37,36 @@ export class TabSelector extends LitElement {
     }
   `
 
+  @property({ type: String })
+  activeTab: ControllerTabs = "settings"
+
+  // Define the available tabs programmatically
+  private tabs: ControllerTabs[] = ["settings", "elements", "logs"]
+
+  private _handleTabClick(selectedTab: ControllerTabs) {
+    this.dispatchEvent(
+      new CustomEvent("tab-change", {
+        detail: { tab: selectedTab }, // Pass the selected tab in the detail object
+        bubbles: true,
+        composed: true,
+      })
+    )
+  }
+
   protected render() {
     return html`
       <div class="tab-selector-wrapper">
-        <button class="tab-button active" data-tab="settings">Settings</button>
-        <button class="tab-button" data-tab="elements">Elements</button>
-        <button class="tab-button" data-tab="logs">Logs</button>
+        ${this.tabs.map(
+          tab => html`
+            <button
+              class="tab-button ${this.activeTab === tab ? "active" : ""}"
+              @click="${() => this._handleTabClick(tab)}"
+              data-tab="${tab}"
+            >
+              ${tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          `
+        )}
       </div>
     `
   }

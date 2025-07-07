@@ -1,7 +1,7 @@
 import type { HitSlop, UpdateForsightManagerSettings } from "js.foresight"
 import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
 
-export type DebuggerSettings = {
+export type DevtoolsSettings = {
   /**
    * Whether to show visual debugging information on the screen.
    * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
@@ -42,12 +42,13 @@ export type DebuggerSettings = {
    */
   sortElementList: SortElementList
 
-  logging: {
-    // Create a log event for every ForesightEvent
-    [K in ForesightEvent]?: boolean
-  } & {
-    logLocation?: LoggingLocations
+  logging: LogEvents & {
+    logLocation: LoggingLocations
   }
+}
+
+export type LogEvents = {
+  [K in ForesightEvent]: boolean
 }
 
 export type LoggingLocations = "controlPanel" | "console" | "both"
@@ -57,12 +58,12 @@ export type ControllerTabs = "settings" | "elements" | "logs"
 export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
 export type ForesightDebuggerData = {
-  settings: Readonly<DebuggerSettings>
+  settings: Readonly<DevtoolsSettings>
 }
 
 export type DebuggerBooleanSettingKeys = {
-  [K in keyof DebuggerSettings]: Required<DebuggerSettings>[K] extends boolean ? K : never
-}[keyof DebuggerSettings]
+  [K in keyof DevtoolsSettings]: Required<DevtoolsSettings>[K] extends boolean ? K : never
+}[keyof DevtoolsSettings]
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement

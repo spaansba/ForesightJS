@@ -3,11 +3,11 @@ import type {
   ForesightEvent,
   ForesightEventMap,
   ForesightManagerSettings,
+  HitSlop,
   Point,
   ScrollDirection,
   UpdatedDataPropertyNames,
 } from "js.foresight/types/types"
-import type { HitSlop } from "packages/js.foresight/dist"
 
 type SerializedEventType = ForesightEvent | "serializationError"
 
@@ -43,10 +43,21 @@ interface ElementDataUpdatedPayload extends PayloadBase {
   isIntersecting: boolean
 }
 
-interface CallbackFiredPayload extends PayloadBase {
-  type: "callbackFired"
+interface CallbackInvokedPayload extends PayloadBase {
+  type: "callbackInvoked"
   name: string
   elementTag: string
+  hitType: CallbackHitType
+  predictionEnabled: boolean
+  tabPredictionEnabled: boolean
+  scrollPredictionEnabled: boolean
+}
+
+interface CallbackCompletedPayload extends PayloadBase {
+  type: "callbackCompleted"
+  name: string
+  elementTag: string
+  callbackRunTime: number
   hitType: CallbackHitType
   predictionEnabled: boolean
   tabPredictionEnabled: boolean
@@ -83,7 +94,8 @@ export type SerializedEventData =
   | ElementRegisteredPayload
   | ElementUnregisteredPayload
   | ElementDataUpdatedPayload
-  | CallbackFiredPayload
+  | CallbackInvokedPayload
+  | CallbackCompletedPayload
   | MouseTrajectoryUpdatePayload
   | ScrollTrajectoryUpdatePayload
   | ManagerSettingsChangedPayload
@@ -131,9 +143,9 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           isIntersecting: event.elementData?.isIntersectingWithViewport,
           summary: event.updatedProps.toString(),
         }
-      case "callbackFired":
+      case "callbackInvoked":
         return {
-          type: "callbackFired",
+          type: "callbackInvoked",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           elementTag: event.elementData?.element?.tagName || "Unknown",
@@ -141,6 +153,19 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           predictionEnabled: event.managerData?.globalSettings?.enableMousePrediction,
           tabPredictionEnabled: event.managerData?.globalSettings?.enableTabPrediction,
           scrollPredictionEnabled: event.managerData?.globalSettings?.enableScrollPrediction,
+          summary: event.hitType.kind,
+        }
+      case "callbackCompleted":
+        return {
+          type: "callbackCompleted",
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          name: event.elementData.name,
+          elementTag: event.elementData?.element?.tagName || "Unknown",
+          hitType: event.hitType,
+          predictionEnabled: event.managerData?.globalSettings?.enableMousePrediction,
+          tabPredictionEnabled: event.managerData?.globalSettings?.enableTabPrediction,
+          scrollPredictionEnabled: event.managerData?.globalSettings?.enableScrollPrediction,
+          callbackRunTime: event.elapsed,
           summary: event.hitType.kind,
         }
       case "mouseTrajectoryUpdate":

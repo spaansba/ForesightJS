@@ -128,8 +128,6 @@ export class ControlPanelElementTab extends BaseTab {
         })
         break
       default:
-        const _exhaustiveCheck: never = sortOrder
-        throw new Error(`Unhandled sort order: ${_exhaustiveCheck}`)
     }
     return elementsData
   }

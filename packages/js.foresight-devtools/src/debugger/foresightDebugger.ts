@@ -1,7 +1,7 @@
 import PositionObserver from "@thednp/position-observer"
 import type {
   callbackAnimation,
-  DebuggerSettings,
+  DevtoolsSettings,
   ElementOverlays,
   ForesightDebuggerData,
 } from "../types/types"
@@ -46,7 +46,7 @@ export class ForesightDebugger {
   private debugContainer!: HTMLElement
   private controlPanel!: DebuggerControlPanel
 
-  private _debuggerSettings: Required<DebuggerSettings> = {
+  private _debuggerSettings: Required<DevtoolsSettings> = {
     showDebugger: DEFAULT_SHOW_DEBUGGER,
     isControlPanelDefaultMinimized: DEFAULT_IS_DEBUGGER_MINIMIZED,
     showNameTags: DEFAULT_SHOW_NAME_TAGS,
@@ -100,7 +100,7 @@ export class ForesightDebugger {
 
   public static initialize(
     foresightManager: ForesightManager,
-    props?: Partial<DebuggerSettings>
+    props?: Partial<DevtoolsSettings>
   ): ForesightDebugger | null {
     if (typeof window === "undefined" || !evaluateRegistrationConditions().shouldRegister) {
       return null
@@ -185,7 +185,7 @@ export class ForesightDebugger {
     return !!ForesightDebugger.debuggerInstance
   }
 
-  public alterDebuggerSettings(props?: Partial<DebuggerSettings>) {
+  public alterDebuggerSettings(props?: Partial<DevtoolsSettings>) {
     if (!props) return
 
     // Handle special cases with side effects

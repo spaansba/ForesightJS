@@ -26,14 +26,14 @@ ForesightDebugger.initialize(ForesightManager.instance, {
   isControlPanelDefaultMinimized: false,
   sortElementList: "visibility",
   logging: {
-    // logScrollTrajectoryUpdate: true,
+    logScrollTrajectoryUpdate: true,
     // logElementRegistered: false,
     // logElementUnregistered: false,
     // logElementDataUpdated: false,
   },
 })
 
-ForesightDebuggerLit.initialize()
+ForesightDebuggerLit.initialize(ForesightManager.instance)
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

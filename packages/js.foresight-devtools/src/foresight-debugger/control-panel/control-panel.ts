@@ -1,9 +1,10 @@
-import { LitElement, html, css, nothing } from "lit"
-import { customElement, property, state } from "lit/decorators.js"
-import type { ControllerTabs } from "../types/types"
+import { LitElement, css, html, nothing } from "lit"
+import { customElement, state } from "lit/decorators.js"
+import type { ControllerTabs } from "../../types/types"
 
-import "./TabSelector"
-
+import "./element-tab/element-tab"
+import "./tab-selector"
+import "./log-tab/log-tab"
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
   static styles = css`
@@ -61,8 +62,12 @@ export class ControlPanel extends LitElement {
       padding: 0;
     }
   `
-  @state() private currentTab: ControllerTabs = "elements"
+  @state() private activeTab: ControllerTabs = "logs"
   @state() private isMinimized: boolean = false
+
+  private _handleTabChange(event: CustomEvent) {
+    this.activeTab = event.detail.tab
+  }
 
   protected render() {
     return html`
@@ -74,7 +79,20 @@ export class ControlPanel extends LitElement {
           <h1>Foresight DevTools</h1>
           <span class="title-element-count">0/0</span>
         </div>
-        ${this.isMinimized ? nothing : html` <tab-selector>hello</tab-selector> `}
+        ${this.isMinimized
+          ? nothing
+          : html`
+              <tab-selector
+                .activeTab="${this.activeTab}"
+                @tab-change="${this._handleTabChange}"
+              ></tab-selector>
+              <div class="tab-content">
+                <!-- Content based on currentTab can go here -->
+                ${this.activeTab === "elements" ? html`<element-tab></element-tab>` : nothing}
+                ${this.activeTab === "settings" ? html`<p>Settings Content</p>` : nothing}
+                ${this.activeTab === "logs" ? html`<log-tab></log-tab>` : nothing}
+              </div>
+            `}
       </div>
     `
   }

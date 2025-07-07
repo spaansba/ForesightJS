@@ -5,9 +5,9 @@
     "target": "es2020",
     "declaration": true,
     "declarationMap": true,
-    "useDefineForClassFields": false, // Recommended for Lit and modern JS class fields
-    "experimentalDecorators": true, // Essential for decorators
-    "emitDecoratorMetadata": true, // Often needed with experimentalDecorators, especially for some libraries (though less critical for Lit's @property itself)
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "sourceMap": true,
     "composite": true,
     "jsx": "react-jsx"
