@@ -1,6 +1,6 @@
-import { html } from "lit"
+import { svg } from "lit"
 
-export const CONTROL_PANEL_SVG = html`
+export const CONTROL_PANEL_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -19,7 +19,7 @@ export const CONTROL_PANEL_SVG = html`
   </svg>
 `
 
-export const CONSOLE_SVG = html`
+export const CONSOLE_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -36,7 +36,7 @@ export const CONSOLE_SVG = html`
   </svg>
 `
 
-export const BOTH_SVG = html`
+export const BOTH_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -57,7 +57,7 @@ export const BOTH_SVG = html`
 `
 
 // Keep the existing SVGs that were not requested to be changed
-export const VISIBILITY_SVG = html`
+export const VISIBILITY_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -73,7 +73,7 @@ export const VISIBILITY_SVG = html`
     <circle cx="12" cy="12" r="3" />
   </svg>
 `
-export const DOCUMENT_SVG = html`
+export const DOCUMENT_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -93,7 +93,7 @@ export const DOCUMENT_SVG = html`
   </svg>
 `
 
-export const INSERTION_SVG = html`
+export const INSERTION_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -109,7 +109,7 @@ export const INSERTION_SVG = html`
   </svg>
 `
 
-export const FILTER_SVG = html`
+export const FILTER_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -125,7 +125,7 @@ export const FILTER_SVG = html`
   </svg>
 `
 
-export const CLEAR_SVG = html`
+export const CLEAR_SVG = svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -139,5 +139,38 @@ export const CLEAR_SVG = html`
   >
     <circle cx="12" cy="12" r="10" />
     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+  </svg>
+`
+
+export const COPY_SVG = svg`
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+`
+
+export const TICK_SVG = svg`
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 `

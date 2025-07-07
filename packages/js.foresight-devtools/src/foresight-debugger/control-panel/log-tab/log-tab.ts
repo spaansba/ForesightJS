@@ -21,6 +21,7 @@ import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../tab-content"
 import "../tab-header"
+import "../copy-icon/copy-icon"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {
@@ -113,7 +114,8 @@ export class LogTab extends LitElement {
       }
 
       .log-details {
-        padding: 0 8px 8px 8px;
+        position: relative; /* Positioning context for the copy button */
+        padding: 8px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         max-height: 200px;
         overflow-y: auto;
@@ -124,6 +126,9 @@ export class LogTab extends LitElement {
         color: #ccc;
         font-size: 11px;
         opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .log-toggle {
@@ -135,31 +140,29 @@ export class LogTab extends LitElement {
         user-select: none;
       }
 
-      /* --- Event Color Mapping --- */
       .log-entry.log-elementRegistered {
-        border-left-color: #2196f3; /* Blue */
+        border-left-color: #2196f3;
       }
       .log-entry.log-callbackInvoked {
-        border-left-color: #4caf50; /* Green */
+        border-left-color: #4caf50;
       }
       .log-entry.log-callbackCompleted {
-        border-left-color: #00bcd4; /* Cyan */
+        border-left-color: #00bcd4;
       }
       .log-entry.log-elementDataUpdated {
-        border-left-color: #ffc107; /* Amber */
+        border-left-color: #ffc107;
       }
       .log-entry.log-elementUnregistered {
-        border-left-color: #ff9800; /* Orange */
+        border-left-color: #ff9800;
       }
       .log-entry.log-managerSettingsChanged {
-        border-left-color: #f44336; /* Red */
+        border-left-color: #f44336;
       }
-      /* Muted colors for noisy events */
       .log-entry.log-mouseTrajectoryUpdate {
-        border-left-color: #78909c; /* Blue Grey */
+        border-left-color: #78909c;
       }
       .log-entry.log-scrollTrajectoryUpdate {
-        border-left-color: #607d8b; /* Darker Blue Grey */
+        border-left-color: #607d8b;
       }
 
       .log-time {
@@ -170,7 +173,6 @@ export class LogTab extends LitElement {
       }
 
       .log-type {
-        /* Base color is overridden by inline style */
         color: #b0c4de;
         margin-right: 8px;
         font-weight: bold;
@@ -182,7 +184,7 @@ export class LogTab extends LitElement {
         white-space: pre-wrap;
         word-wrap: break-word;
         font-size: 11px;
-        margin: 4px 0 0 0;
+        margin: 0;
       }
     `,
   ]
@@ -193,6 +195,9 @@ export class LogTab extends LitElement {
   @state() private logs: Array<SerializedEventData> = []
   @state() private expandedLogs: Set<string> = new Set()
   private MAX_LOGS: number = 100
+
+  // This state property is essential to track WHICH log item was copied.
+  @state() private copiedLogId: string | null = null
 
   @state() private eventsEnabled: LogEvents = {
     elementRegistered: false,
@@ -290,13 +295,10 @@ export class LogTab extends LitElement {
   }
 
   private handleFilterChange = (changedEventType: string, isEnabled: boolean): void => {
-    // Update just the changed event in the state
     this.eventsEnabled = {
       ...this.eventsEnabled,
       [changedEventType]: isEnabled,
     }
-
-    // Add or remove the specific event listener
     if (isEnabled) {
       this.addForesightEventListener(changedEventType as ForesightEvent)
     } else {
@@ -310,39 +312,30 @@ export class LogTab extends LitElement {
       .map(([eventType, _]) => eventType)
   }
 
-  /**
-   * Toggles the expanded state of a log entry
-   */
   private toggleLogEntry(logId: string): void {
-    if (this.expandedLogs.has(logId)) {
-      this.expandedLogs.delete(logId)
+    const newSet = new Set(this.expandedLogs)
+    if (newSet.has(logId)) {
+      newSet.delete(logId)
     } else {
-      this.expandedLogs.add(logId)
+      newSet.add(logId)
     }
-    this.requestUpdate()
+    this.expandedLogs = newSet
   }
 
-  /**
-   * Gets the message to display when no logs are available
-   */
   private getNoLogsMessage(): string {
     const enabledCount = Object.values(this.eventsEnabled).filter(Boolean).length
-
     if (enabledCount === 0) {
       return "Enable logging options above to see events."
     }
-
     if (this.logLocation === "console") {
       return "No logs to display. Logging is set to console - check browser console for events."
     }
-
     return "Interact with Foresight to generate events."
   }
 
   private clearLogs(): void {
     this.logs = []
     this.expandedLogs.clear()
-    this.requestUpdate()
     this.noContentMessage = "Logs cleared"
   }
 
@@ -351,14 +344,9 @@ export class LogTab extends LitElement {
     const {
       logging: { logLocation, ...eventFlags },
     } = ForesightDebuggerLit.instance.devtoolsSettings
-
     this.eventsEnabled = eventFlags
-    console.log(this.eventsEnabled)
     this.logLocation = logLocation
-
     this._abortController = new AbortController()
-
-    // Set up event listeners for enabled events
     this.setupDynamicEventListeners()
   }
 
@@ -368,9 +356,6 @@ export class LogTab extends LitElement {
     this.removeAllEventListeners()
   }
 
-  /**
-   * Sets up event listeners for all enabled events
-   */
   private setupDynamicEventListeners(): void {
     Object.entries(this.eventsEnabled).forEach(([eventType, enabled]) => {
       if (enabled) {
@@ -379,30 +364,17 @@ export class LogTab extends LitElement {
     })
   }
 
-  /**
-   * Adds an event listener for a specific event type
-   */
   private addForesightEventListener(eventType: ForesightEvent): void {
-    if (this._eventListeners.has(eventType)) {
-      return
-    }
-
+    if (this._eventListeners.has(eventType)) return
     const handler = (event: ForesightEventMap[typeof eventType]) => {
       this.handleEvent(eventType, event)
     }
-
-    // Store the handler for later removal
     this._eventListeners.set(eventType, handler)
-
-    // Add the listener to ForesightManager
     ForesightManager.instance.addEventListener(eventType, handler, {
       signal: this._abortController?.signal,
     })
   }
 
-  /**
-   * Removes an event listener for a specific event type
-   */
   private removeForesightEventListener(eventType: ForesightEvent): void {
     const handler = this._eventListeners.get(eventType)
     if (handler) {
@@ -411,9 +383,6 @@ export class LogTab extends LitElement {
     }
   }
 
-  /**
-   * Removes all event listeners
-   */
   private removeAllEventListeners(): void {
     this._eventListeners.forEach((handler, eventType) => {
       ForesightManager.instance.removeEventListener(eventType, handler)
@@ -421,70 +390,68 @@ export class LogTab extends LitElement {
     this._eventListeners.clear()
   }
 
-  /**
-   * Gets the color for a specific event type for console logging.
-   * This now matches the updated CSS colors for consistency.
-   */
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
-      // Core, positive events with pleasant colors
-      elementRegistered: "#2196f3", // Blue
-      callbackInvoked: "#4caf50", // Green
-      callbackCompleted: "#00bcd4", // Cyan
-      elementDataUpdated: "#ffc107", // Amber
-
-      // Destructive or warning events
-      elementUnregistered: "#ff9800", // Orange
-      managerSettingsChanged: "#f44336", // Red
-
-      // Muted colors for high-frequency "noisy" events
-      mouseTrajectoryUpdate: "#78909c", // Blue Grey
-      scrollTrajectoryUpdate: "#607d8b", // Darker Blue Grey
+      elementRegistered: "#2196f3",
+      callbackInvoked: "#4caf50",
+      callbackCompleted: "#00bcd4",
+      elementDataUpdated: "#ffc107",
+      elementUnregistered: "#ff9800",
+      managerSettingsChanged: "#f44336",
+      mouseTrajectoryUpdate: "#78909c",
+      scrollTrajectoryUpdate: "#607d8b",
     }
-    return colorMap[eventType] || "#ffffff" // Default to white
+    return colorMap[eventType] || "#ffffff"
   }
 
-  /**
-   * Handles incoming events and logs them appropriately
-   */
   private handleEvent<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
-    const logLocation = this.logLocation
-
-    if (logLocation === "console" || logLocation === "both") {
+    if (this.logLocation === "console" || this.logLocation === "both") {
       const color = this.getEventColor(eventType)
       console.log(`%c[ForesightJS] ${eventType}:`, `color: ${color}; font-weight: bold;`, event)
     }
-
-    // Add to control panel logs if enabled
-    if (logLocation === "controlPanel" || logLocation === "both") {
+    if (this.logLocation === "controlPanel" || this.logLocation === "both") {
       this.addEventLog(eventType, event)
     }
   }
 
-  /**
-   * Adds an event log to the control panel. The color is applied via CSS classes.
-   */
   private addEventLog<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
     const logData = safeSerializeEventData(event)
-
     if (logData.type === "serializationError") {
       console.error(logData.error, logData.errorMessage)
       return
     }
-
-    // Manage MAX_LOGS: if the limit is reached, remove the oldest log
-    if (this.logs.length >= this.MAX_LOGS) {
-      this.logs.pop() // Remove from the end (oldest)
+    const newLogs = [logData, ...this.logs]
+    if (newLogs.length > this.MAX_LOGS) {
+      newLogs.pop()
     }
-
-    // Add the new log to the beginning (most recent)
-    this.logs.unshift(logData)
-    this.requestUpdate()
+    this.logs = newLogs
   }
 
   private serializeLogDataWithoutSummary(log: SerializedEventData): string {
     const { summary, ...rest } = log
     return JSON.stringify(rest, null, 2)
+  }
+
+  private async handleCopy(
+    event: MouseEvent,
+    log: SerializedEventData,
+    logId: string
+  ): Promise<void> {
+    event.stopPropagation()
+    if (this.copiedLogId === logId) return
+
+    const jsonString = this.serializeLogDataWithoutSummary(log)
+    try {
+      await navigator.clipboard.writeText(jsonString)
+      this.copiedLogId = logId
+      setTimeout(() => {
+        if (this.copiedLogId === logId) {
+          this.copiedLogId = null
+        }
+      }, 500)
+    } catch (err) {
+      console.error("Failed to copy JSON to clipboard:", err)
+    }
   }
 
   render() {
@@ -523,6 +490,7 @@ export class LogTab extends LitElement {
             : map(this.logs, (log, index) => {
                 const logId = `log-${index}-${log.type}-${log.localizedTimestamp}`
                 const isExpanded = this.expandedLogs.has(logId)
+                const isCopied = this.copiedLogId === logId
                 const eventColor = this.getEventColor(log.type as ForesightEvent)
 
                 return html`
@@ -536,6 +504,11 @@ export class LogTab extends LitElement {
                     ${isExpanded
                       ? html`
                           <div class="log-details">
+                            <copy-icon
+                              positioned
+                              title="Copy JSON"
+                              .onCopy=${(e: MouseEvent) => this.handleCopy(e, log, logId)}
+                            ></copy-icon>
                             <pre class="log-data">${this.serializeLogDataWithoutSummary(log)}</pre>
                           </div>
                         `

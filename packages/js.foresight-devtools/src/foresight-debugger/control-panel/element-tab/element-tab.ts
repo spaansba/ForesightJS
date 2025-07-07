@@ -31,7 +31,6 @@ export class ElementTab extends LitElement {
     .element-list {
       flex: 1;
       overflow-y: auto;
-      padding: 8px;
     }
 
     .element-list-item {
@@ -42,10 +41,8 @@ export class ElementTab extends LitElement {
       padding: 5px;
       display: flex;
       align-items: center;
-      gap: 5px;
       background-color: rgba(50, 50, 50, 0.7);
-      border-radius: 4px;
-      margin-bottom: 8px;
+
       transition: background-color 0.2s ease, opacity 0.2s ease;
       font-size: 11px;
       overflow: hidden;

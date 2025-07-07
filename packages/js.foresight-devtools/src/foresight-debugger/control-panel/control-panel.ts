@@ -5,6 +5,7 @@ import type { ControllerTabs } from "../../types/types"
 import "./element-tab/element-tab"
 import "./tab-selector"
 import "./log-tab/log-tab"
+import "./settings-tab/settings-tab"
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
   static styles = css`
@@ -89,7 +90,7 @@ export class ControlPanel extends LitElement {
               <div class="tab-content">
                 <!-- Content based on currentTab can go here -->
                 ${this.activeTab === "elements" ? html`<element-tab></element-tab>` : nothing}
-                ${this.activeTab === "settings" ? html`<p>Settings Content</p>` : nothing}
+                ${this.activeTab === "settings" ? html`<settings-tab></settings-tab>` : nothing}
                 ${this.activeTab === "logs" ? html`<log-tab></log-tab>` : nothing}
               </div>
             `}
