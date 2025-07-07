@@ -135,32 +135,31 @@ export class LogTab extends LitElement {
         user-select: none;
       }
 
-      .log-entry.log-callbackFired {
-        border-left-color: #4caf50;
-      }
-
+      /* --- Event Color Mapping --- */
       .log-entry.log-elementRegistered {
-        border-left-color: #2196f3;
+        border-left-color: #2196f3; /* Blue */
       }
-
-      .log-entry.log-elementUnregistered {
-        border-left-color: #ff9800;
+      .log-entry.log-callbackInvoked {
+        border-left-color: #4caf50; /* Green */
       }
-
-      .log-entry.log-mouseTrajectoryUpdate {
-        border-left-color: #9c27b0;
+      .log-entry.log-callbackCompleted {
+        border-left-color: #00bcd4; /* Cyan */
       }
-
-      .log-entry.log-scrollTrajectoryUpdate {
-        border-left-color: #00bcd4;
-      }
-
       .log-entry.log-elementDataUpdated {
-        border-left-color: #ffeb3b;
+        border-left-color: #ffc107; /* Amber */
       }
-
+      .log-entry.log-elementUnregistered {
+        border-left-color: #ff9800; /* Orange */
+      }
       .log-entry.log-managerSettingsChanged {
-        border-left-color: #f44336;
+        border-left-color: #f44336; /* Red */
+      }
+      /* Muted colors for noisy events */
+      .log-entry.log-mouseTrajectoryUpdate {
+        border-left-color: #78909c; /* Blue Grey */
+      }
+      .log-entry.log-scrollTrajectoryUpdate {
+        border-left-color: #607d8b; /* Darker Blue Grey */
       }
 
       .log-time {
@@ -171,6 +170,7 @@ export class LogTab extends LitElement {
       }
 
       .log-type {
+        /* Base color is overridden by inline style */
         color: #b0c4de;
         margin-right: 8px;
         font-weight: bold;
@@ -198,8 +198,8 @@ export class LogTab extends LitElement {
     elementRegistered: false,
     elementUnregistered: false,
     elementDataUpdated: false,
-    callbackInvoked: true,
-    callbackCompleted: true,
+    callbackInvoked: false,
+    callbackCompleted: false,
     mouseTrajectoryUpdate: false,
     scrollTrajectoryUpdate: false,
     managerSettingsChanged: false,
@@ -353,6 +353,7 @@ export class LogTab extends LitElement {
     } = ForesightDebuggerLit.instance.devtoolsSettings
 
     this.eventsEnabled = eventFlags
+    console.log(this.eventsEnabled)
     this.logLocation = logLocation
 
     this._abortController = new AbortController()
@@ -421,20 +422,26 @@ export class LogTab extends LitElement {
   }
 
   /**
-   * Gets the color for a specific event type (matching control panel colors)
+   * Gets the color for a specific event type for console logging.
+   * This now matches the updated CSS colors for consistency.
    */
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
-      callbackCompleted: "#4caf50", // Green
-      callbackInvoked: "#2cd466", // Green
+      // Core, positive events with pleasant colors
       elementRegistered: "#2196f3", // Blue
+      callbackInvoked: "#4caf50", // Green
+      callbackCompleted: "#00bcd4", // Cyan
+      elementDataUpdated: "#ffc107", // Amber
+
+      // Destructive or warning events
       elementUnregistered: "#ff9800", // Orange
-      mouseTrajectoryUpdate: "#9c27b0", // Purple
-      scrollTrajectoryUpdate: "#00bcd4", // Cyan
-      elementDataUpdated: "#ffeb3b", // Yellow
       managerSettingsChanged: "#f44336", // Red
+
+      // Muted colors for high-frequency "noisy" events
+      mouseTrajectoryUpdate: "#78909c", // Blue Grey
+      scrollTrajectoryUpdate: "#607d8b", // Darker Blue Grey
     }
-    return colorMap[eventType] || "#ffffff"
+    return colorMap[eventType] || "#ffffff" // Default to white
   }
 
   /**
@@ -455,7 +462,7 @@ export class LogTab extends LitElement {
   }
 
   /**
-   * Adds an event log to the control panel (based on original implementation)
+   * Adds an event log to the control panel. The color is applied via CSS classes.
    */
   private addEventLog<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
     const logData = safeSerializeEventData(event)
@@ -516,12 +523,13 @@ export class LogTab extends LitElement {
             : map(this.logs, (log, index) => {
                 const logId = `log-${index}-${log.type}-${log.localizedTimestamp}`
                 const isExpanded = this.expandedLogs.has(logId)
+                const eventColor = this.getEventColor(log.type as ForesightEvent)
 
                 return html`
                   <div class="log-entry log-${log.type}">
                     <div class="log-header" @click="${() => this.toggleLogEntry(logId)}">
                       <span class="log-time">${log.localizedTimestamp}</span>
-                      <span class="log-type">${log.type}</span>
+                      <span class="log-type" style="color: ${eventColor}">${log.type}</span>
                       <span class="log-summary">${log.summary}</span>
                       <span class="log-toggle">${isExpanded ? "▼" : "▶"}</span>
                     </div>

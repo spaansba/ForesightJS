@@ -1,4 +1,5 @@
 import type {
+  CallbackHits,
   CallbackHitType,
   ForesightEvent,
   ForesightEventMap,
@@ -25,7 +26,7 @@ interface ElementRegisteredPayload extends PayloadBase {
   type: "elementRegistered"
   name: string
   id: string
-  wasAlreadyRegistered: boolean
+  registerCount: number
   hitslop: HitSlop
 }
 
@@ -33,6 +34,7 @@ interface ElementUnregisteredPayload extends PayloadBase {
   type: "elementUnregistered"
   name: string
   id: string
+  registerCount: number
   unregisterReason: string
 }
 interface ElementDataUpdatedPayload extends PayloadBase {
@@ -111,8 +113,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "elementRegistered",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
-          wasAlreadyRegistered: event.elementWasAlreadyRegistered,
-          id: event.elementData?.element?.id || "",
+          id: event.elementData.element.id || "",
+          registerCount: event.elementData.registerCount,
           hitslop: event.elementData.elementBounds.hitSlop,
           summary: event.elementData.name,
         }
@@ -121,7 +123,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "elementUnregistered",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
-          id: event.elementData?.element?.id || "",
+          id: event.elementData.element.id || "",
+          registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
           summary: event.unregisterReason,
         }

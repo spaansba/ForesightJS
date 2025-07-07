@@ -1,7 +1,5 @@
 import type {
-  CallbackFiredEvent,
   ElementDataUpdatedEvent,
-  ElementRegisteredEvent,
   ElementUnregisteredEvent,
   ForesightEvent,
   ForesightManager,
@@ -36,7 +34,7 @@ export class ForesightDebuggerLit {
       callbackCompleted: true,
       callbackInvoked: true,
       elementDataUpdated: false,
-      elementRegistered: false,
+      elementRegistered: true,
       elementUnregistered: false,
       managerSettingsChanged: false,
       mouseTrajectoryUpdate: false,
