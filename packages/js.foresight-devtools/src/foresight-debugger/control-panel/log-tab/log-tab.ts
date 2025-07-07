@@ -475,11 +475,18 @@ export class LogTab extends LitElement {
     this.requestUpdate()
   }
 
+  private serializeLogDataWithoutSummary(log: SerializedEventData): string {
+    const { summary, ...rest } = log
+    return JSON.stringify(rest, null, 2)
+  }
+
   render() {
     return html`
       <tab-header>
         <div slot="chips">
-          <chip-element title="Number of logged events"> ${this.logs.length} events </chip-element>
+          <chip-element title="Number of logged events (Max ${this.MAX_LOGS})">
+            ${this.logs.length} events
+          </chip-element>
         </div>
         <div slot="actions">
           <single-select-dropdown
@@ -521,7 +528,7 @@ export class LogTab extends LitElement {
                     ${isExpanded
                       ? html`
                           <div class="log-details">
-                            <pre class="log-data">${JSON.stringify(log, null, 2)}</pre>
+                            <pre class="log-data">${this.serializeLogDataWithoutSummary(log)}</pre>
                           </div>
                         `
                       : ""}

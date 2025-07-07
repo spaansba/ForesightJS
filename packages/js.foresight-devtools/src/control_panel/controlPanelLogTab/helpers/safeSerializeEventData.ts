@@ -38,7 +38,6 @@ interface ElementUnregisteredPayload extends PayloadBase {
 interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
   name: string
-  elementTag: string
   updatedProps: UpdatedDataPropertyNames[]
   isIntersecting: boolean
 }
@@ -46,22 +45,15 @@ interface ElementDataUpdatedPayload extends PayloadBase {
 interface CallbackInvokedPayload extends PayloadBase {
   type: "callbackInvoked"
   name: string
-  elementTag: string
   hitType: CallbackHitType
-  predictionEnabled: boolean
-  tabPredictionEnabled: boolean
-  scrollPredictionEnabled: boolean
 }
 
 interface CallbackCompletedPayload extends PayloadBase {
   type: "callbackCompleted"
   name: string
-  elementTag: string
-  callbackRunTime: number
+  callbackRunTimeFormatted: string
+  callbackRunTimeRaw: number
   hitType: CallbackHitType
-  predictionEnabled: boolean
-  tabPredictionEnabled: boolean
-  scrollPredictionEnabled: boolean
 }
 
 interface MouseTrajectoryUpdatePayload extends PayloadBase {
@@ -69,7 +61,7 @@ interface MouseTrajectoryUpdatePayload extends PayloadBase {
   currentPoint: Point
   predictedPoint: Point
   positionCount: number
-  predictionEnabled: boolean
+  mousePredictionEnabled: boolean
 }
 
 interface ScrollTrajectoryUpdatePayload extends PayloadBase {
@@ -138,7 +130,6 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "elementDataUpdated",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
-          elementTag: event.elementData?.element?.tagName || "Unknown",
           updatedProps: event.updatedProps || [],
           isIntersecting: event.elementData?.isIntersectingWithViewport,
           summary: event.updatedProps.toString(),
@@ -148,25 +139,19 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "callbackInvoked",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
-          elementTag: event.elementData?.element?.tagName || "Unknown",
           hitType: event.hitType,
-          predictionEnabled: event.managerData?.globalSettings?.enableMousePrediction,
-          tabPredictionEnabled: event.managerData?.globalSettings?.enableTabPrediction,
-          scrollPredictionEnabled: event.managerData?.globalSettings?.enableScrollPrediction,
           summary: event.hitType.kind,
         }
       case "callbackCompleted":
+        const elapsed = formatElapsed(event.elapsed)
         return {
           type: "callbackCompleted",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
-          elementTag: event.elementData?.element?.tagName || "Unknown",
           hitType: event.hitType,
-          predictionEnabled: event.managerData?.globalSettings?.enableMousePrediction,
-          tabPredictionEnabled: event.managerData?.globalSettings?.enableTabPrediction,
-          scrollPredictionEnabled: event.managerData?.globalSettings?.enableScrollPrediction,
-          callbackRunTime: event.elapsed,
-          summary: event.hitType.kind,
+          callbackRunTimeFormatted: elapsed,
+          callbackRunTimeRaw: event.elapsed,
+          summary: elapsed,
         }
       case "mouseTrajectoryUpdate":
         return {
@@ -175,7 +160,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           currentPoint: event.trajectoryPositions?.currentPoint,
           predictedPoint: event.trajectoryPositions?.predictedPoint,
           positionCount: event.trajectoryPositions?.positions?.length || 0,
-          predictionEnabled: event.predictionEnabled,
+          mousePredictionEnabled: event.predictionEnabled,
           summary: "",
         }
       case "scrollTrajectoryUpdate":
@@ -214,4 +199,14 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       summary: "",
     }
   }
+}
+
+/**
+ * Formats a duration in milliseconds into seconds.
+ *
+ * @param {number} ms  Duration in milliseconds
+ * @returns {string}   Duration in seconds, e.g. “0.50 s” or “1.23 s”
+ */
+function formatElapsed(ms: number): string {
+  return `${(ms / 1000).toFixed(4)} s`
 }

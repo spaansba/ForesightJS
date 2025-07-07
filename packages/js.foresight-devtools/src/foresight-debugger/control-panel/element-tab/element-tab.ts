@@ -198,7 +198,7 @@ export class ElementTab extends LitElement {
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.elementData.element, e.elementData)
-        this.updateVisibilityCounts()
+        this.updateVisibilityCounts() // Update counts
       },
       { signal }
     )
@@ -233,7 +233,7 @@ export class ElementTab extends LitElement {
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
         this.activeCallbacks.add(e.elementData.element)
-        // this.requestUpdate()
+        this.requestUpdate()
       },
       { signal }
     )
