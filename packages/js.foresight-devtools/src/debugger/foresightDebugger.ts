@@ -446,59 +446,50 @@ export class ForesightDebugger {
   }
 
   private showCallbackAnimation(elementData: ForesightElementData, hitType: CallbackHitType) {
-    const { element, elementBounds } = elementData
-    const existingAnimation = this.callbackAnimations.get(element)
-
-    // If an animation is already running for this element, reset it
-    if (existingAnimation) {
-      clearTimeout(existingAnimation.timeoutId)
-      existingAnimation.overlay.remove()
-      this.animationPositionObserver?.unobserve(element)
-      this.callbackAnimations.delete(element)
-    }
-
-    const animationOverlay = createAndAppendElement("div", this.debugContainer, {
-      className: "jsforesight-callback-indicator",
-    })
-
-    const { left, top, right, bottom } = elementBounds.expandedRect
-    const width = right - left
-    const height = bottom - top
-
-    animationOverlay.style.display = "block"
-    animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
-    animationOverlay.style.width = `${width}px`
-    animationOverlay.style.height = `${height}px`
-
-    switch (hitType.kind) {
-      case "mouse":
-        animationOverlay.style.borderColor = "#3b82f6" // Blue - matches trajectory line
-        break
-      case "scroll":
-        animationOverlay.style.borderColor = "#22c55e" // Green - matches scroll trajectory line
-        break
-      case "tab":
-        animationOverlay.style.borderColor = "#f97316" // Orange
-        break
-      default:
-        hitType satisfies never
-    }
-
-    animationOverlay.classList.add("animate")
-
-    const timeoutId = setTimeout(() => {
-      animationOverlay.remove()
-      this.callbackAnimations.delete(element)
-      this.animationPositionObserver?.unobserve(element)
-    }, 500)
-
-    this.callbackAnimations.set(element, {
-      hitSlop: elementData.elementBounds.hitSlop,
-      overlay: animationOverlay,
-      timeoutId: timeoutId,
-    })
-
-    this.animationPositionObserver?.observe(element)
+    // const { element, elementBounds } = elementData
+    // const existingAnimation = this.callbackAnimations.get(element)
+    // // If an animation is already running for this element, reset it
+    // if (existingAnimation) {
+    //   clearTimeout(existingAnimation.timeoutId)
+    //   existingAnimation.overlay.remove()
+    //   this.animationPositionObserver?.unobserve(element)
+    //   this.callbackAnimations.delete(element)
+    // }
+    // const animationOverlay = createAndAppendElement("div", this.debugContainer, {
+    //   className: "jsforesight-callback-indicator",
+    // })
+    // const { left, top, right, bottom } = elementBounds.expandedRect
+    // const width = right - left
+    // const height = bottom - top
+    // animationOverlay.style.display = "block"
+    // animationOverlay.style.transform = `translate3d(${left}px, ${top}px, 0)`
+    // animationOverlay.style.width = `${width}px`
+    // animationOverlay.style.height = `${height}px`
+    // switch (hitType.kind) {
+    //   case "mouse":
+    //     animationOverlay.style.borderColor = "#3b82f6" // Blue - matches trajectory line
+    //     break
+    //   case "scroll":
+    //     animationOverlay.style.borderColor = "#22c55e" // Green - matches scroll trajectory line
+    //     break
+    //   case "tab":
+    //     animationOverlay.style.borderColor = "#f97316" // Orange
+    //     break
+    //   default:
+    //     hitType satisfies never
+    // }
+    // animationOverlay.classList.add("animate")
+    // const timeoutId = setTimeout(() => {
+    //   animationOverlay.remove()
+    //   this.callbackAnimations.delete(element)
+    //   this.animationPositionObserver?.unobserve(element)
+    // }, 500)
+    // this.callbackAnimations.set(element, {
+    //   hitSlop: elementData.elementBounds.hitSlop,
+    //   overlay: animationOverlay,
+    //   timeoutId: timeoutId,
+    // })
+    // this.animationPositionObserver?.observe(element)
   }
 
   public cleanup() {

@@ -20,7 +20,8 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       callback: async () => {
         // Add artificial delay to test timing measurement
         const start = Date.now()
-        await new Promise(resolve => setTimeout(resolve, 20)) // 100ms delay
+        const randomTimeout = Math.floor(Math.random() * 1000) // 0 to 500 ms
+        await new Promise(resolve => setTimeout(resolve, randomTimeout))
         const end = Date.now()
         console.log(`Custom callback took ${end - start}ms total`)
       },

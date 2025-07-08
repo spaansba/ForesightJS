@@ -1,5 +1,6 @@
 import type {
   ElementDataUpdatedEvent,
+  ElementRegisteredEvent,
   ElementUnregisteredEvent,
   ForesightManager,
   ManagerSettingsChangedEvent,
@@ -75,6 +76,7 @@ export class ForesightDebuggerLit {
     this.managerSubscriptionsController = new AbortController()
     const signal = this.managerSubscriptionsController.signal
     const manager = this.foresightManagerInstance
+    manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
     manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
     manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, { signal })
     manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
@@ -85,12 +87,33 @@ export class ForesightDebuggerLit {
     manager.addEventListener("callbackInvoked", this.handleCallbackInvoked, { signal })
     manager.addEventListener("callbackCompleted", this.handleCallbackCompleted, { signal })
   }
-  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
-    this.removeElementOverlay(e.elementData)
+
+  private handleRegisterElement = (e: ElementRegisteredEvent) => {
+    if (this.debugOverlay) {
+      this.debugOverlay.createOrUpdateElementOverlay(
+        e.elementData,
+        this.devtoolsSettings.showNameTags
+      )
+    }
   }
 
-  private handleCallbackInvoked = (e: CallbackInvokedEvent) => {}
-  private handleCallbackCompleted = (e: CallbackCompletedEvent) => {}
+  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
+    if (this.debugOverlay) {
+      this.debugOverlay.removeElementOverlay(e.elementData)
+    }
+  }
+
+  private handleCallbackInvoked = (e: CallbackInvokedEvent) => {
+    if (this.debugOverlay) {
+      this.debugOverlay.handleCallbackInvoked(e)
+    }
+  }
+
+  private handleCallbackCompleted = (e: CallbackCompletedEvent) => {
+    if (this.debugOverlay) {
+      this.debugOverlay.handleCallbackCompleted(e)
+    }
+  }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
     if (this.debugOverlay) {
@@ -114,13 +137,20 @@ export class ForesightDebuggerLit {
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
     // Check if 'bounds' is included in the updatedProps array
     if (e.updatedProps.includes("bounds")) {
-      // this.createOrUpdateElementOverlay(e.elementData)
+      if (this.debugOverlay) {
+        this.debugOverlay.createOrUpdateElementOverlay(
+          e.elementData,
+          this.devtoolsSettings.showNameTags
+        )
+      }
     }
 
     // Check if 'visibility' is included in the updatedProps array
     if (e.updatedProps.includes("visibility")) {
       if (!e.elementData.isIntersectingWithViewport) {
-        this.removeElementOverlay(e.elementData)
+        if (this.debugOverlay) {
+          this.debugOverlay.removeElementOverlay(e.elementData)
+        }
       }
       // this.controlPanel?.updateElementVisibilityStatus(e.elementData)
     }
@@ -132,7 +162,9 @@ export class ForesightDebuggerLit {
     // Handle special cases with side effects
     if (shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {
       this.devtoolsSettings.showNameTags = props.showNameTags!
-      // this.toggleNameTagVisibility()
+      if (this.debugOverlay) {
+        this.debugOverlay.updateNameTagVisibility(this.devtoolsSettings.showNameTags)
+      }
     }
 
     if (shouldUpdateSetting(props.showDebugger, this.devtoolsSettings.showDebugger)) {
@@ -230,15 +262,6 @@ export class ForesightDebuggerLit {
       }
     }
     console.log(this.foresightManagerInstance.getManagerData)
-  }
-
-  private removeElementOverlay(elementData: ForesightElementData) {
-    // const overlays = this.debugElementOverlays.get(elementData.element)
-    // if (overlays) {
-    //   overlays.expandedOverlay.remove()
-    //   overlays.nameLabel.remove()
-    //   this.debugElementOverlays.delete(elementData.element)
-    // }
   }
 
   private showCallbackAnimation(elementData: ForesightElementData, hitType: CallbackHitType) {

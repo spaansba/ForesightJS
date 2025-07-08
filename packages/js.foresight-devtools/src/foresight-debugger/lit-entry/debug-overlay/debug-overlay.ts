@@ -2,12 +2,19 @@ import { LitElement, html, css } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import "./mouse-trajectory"
 import "./scroll-trajectory"
-import type { MouseTrajectoryUpdateEvent, ScrollTrajectoryUpdateEvent } from "js.foresight"
+import "./element-overlays"
+import type {
+  MouseTrajectoryUpdateEvent,
+  ScrollTrajectoryUpdateEvent,
+  ForesightElementData,
+} from "js.foresight"
+import type { CallbackInvokedEvent, CallbackCompletedEvent } from "packages/js.foresight/dist"
 
 @customElement("debug-overlay")
 export class DebugOverlay extends LitElement {
   @state() private mouseTrajectoryRef!: any
   @state() private scrollTrajectoryRef!: any
+  @state() private elementOverlaysRef!: any
 
   static styles = [
     css`
@@ -29,6 +36,7 @@ export class DebugOverlay extends LitElement {
   firstUpdated() {
     this.mouseTrajectoryRef = this.shadowRoot!.querySelector("mouse-trajectory")
     this.scrollTrajectoryRef = this.shadowRoot!.querySelector("scroll-trajectory")
+    this.elementOverlaysRef = this.shadowRoot!.querySelector("element-overlays")
   }
 
   public handleMouseTrajectoryUpdate(event: MouseTrajectoryUpdateEvent) {
@@ -47,11 +55,45 @@ export class DebugOverlay extends LitElement {
     }
   }
 
+  public createOrUpdateElementOverlay(
+    elementData: ForesightElementData,
+    showNameTags: boolean = true
+  ) {
+    if (this.elementOverlaysRef) {
+      this.elementOverlaysRef.createOrUpdateElementOverlay(elementData, showNameTags)
+    }
+  }
+
+  public removeElementOverlay(elementData: ForesightElementData) {
+    if (this.elementOverlaysRef) {
+      this.elementOverlaysRef.removeElementOverlay(elementData)
+    }
+  }
+
+  public handleCallbackInvoked(event: CallbackInvokedEvent) {
+    if (this.elementOverlaysRef) {
+      this.elementOverlaysRef.highlightElementCallback(event.elementData, event.hitType)
+    }
+  }
+
+  public handleCallbackCompleted(event: CallbackCompletedEvent) {
+    if (this.elementOverlaysRef) {
+      this.elementOverlaysRef.unhighlightElementCallback(event.elementData)
+    }
+  }
+
+  public updateNameTagVisibility(showNameTags: boolean) {
+    if (this.elementOverlaysRef) {
+      this.elementOverlaysRef.updateNameTagVisibility(showNameTags)
+    }
+  }
+
   render() {
     return html`
       <div id="overlay-container">
         <mouse-trajectory></mouse-trajectory>
         <scroll-trajectory></scroll-trajectory>
+        <element-overlays></element-overlays>
       </div>
     `
   }
