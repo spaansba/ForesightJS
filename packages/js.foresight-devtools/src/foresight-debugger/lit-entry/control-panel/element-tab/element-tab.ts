@@ -6,6 +6,7 @@ import "../base-tab/tab-header"
 import "../base-tab/tab-content"
 import "../dropdown/single-select-dropdown"
 import "../base-tab/chip"
+import "../element-tab/single-element"
 import type { SortElementList } from "packages/js.foresight-devtools/src/types/types"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import { ForesightManager, type ForesightElement, type ForesightElementData } from "js.foresight"
@@ -17,6 +18,7 @@ import type {
   ElementUnregisteredEvent,
 } from "packages/js.foresight/dist"
 import type { CallbackHits, CallbackHitType } from "js.foresight/types/types"
+
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 
 @customElement("element-tab")
@@ -31,27 +33,36 @@ export class ElementTab extends LitElement {
     .element-list {
       flex: 1;
       overflow-y: auto;
+      padding: 4px;
     }
 
-    .element-list-item {
-      flex-grow: 0;
-      flex-shrink: 0;
-      height: 35px;
-      box-sizing: border-box;
-      padding: 5px;
+    .element-content {
       display: flex;
       align-items: center;
-      background-color: rgba(50, 50, 50, 0.7);
-
-      transition: background-color 0.2s ease, opacity 0.2s ease;
-      font-size: 11px;
-      overflow: hidden;
-      color: var(--lumo-text-color, #fff);
+      gap: 8px;
+      flex: 1;
     }
 
-    .element-list-item.not-in-viewport {
-      opacity: 0.4;
-      background-color: rgba(70, 70, 70, 0.7);
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .status-indicator.visible {
+      background-color: #4caf50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+    }
+
+    .status-indicator.hidden {
+      background-color: #666;
+      box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
+    }
+
+    .status-indicator.prefetching {
+      background-color: #ffeb3b;
+      box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
     }
 
     .element-name {
@@ -59,43 +70,14 @@ export class ElementTab extends LitElement {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .intersecting-indicator {
-      font-size: 12px;
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #e8e8e8;
     }
 
-    .hit-slop {
-      font-size: 10px;
-      color: #b0b0b0;
-      padding: 2px 5px;
-      border-radius: 3px;
-      background-color: rgba(0, 0, 0, 0.2);
-      flex-shrink: 0;
-    }
-
-    .callback-active {
-      background-color: rgba(100, 200, 100, 0.2) !important;
-      transition: background-color 0.3s ease;
-    }
-
-    .callback-indicator {
-      font-size: 12px;
-      color: #4caf50;
-      flex-shrink: 0;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .callback-indicator.active {
-      opacity: 1;
+    .element-name.callback-active {
+      color: #fff;
+      font-weight: 600;
     }
   `
 
@@ -346,30 +328,10 @@ export class ElementTab extends LitElement {
           ${map(
             this.getSortedElements(),
             elementData => html`
-              <div
-                class="element-list-item ${elementData.isIntersectingWithViewport
-                  ? "in-viewport"
-                  : "not-in-viewport"} ${this.activeCallbacks.has(elementData.element)
-                  ? "callback-active"
-                  : ""}"
-              >
-                <span class="intersecting-indicator">
-                  ${elementData.isIntersectingWithViewport ? "👁️" : "🚫"}
-                </span>
-                <span
-                  class="callback-indicator ${this.activeCallbacks.has(elementData.element)
-                    ? "active"
-                    : ""}"
-                >
-                  ⚡
-                </span>
-                <span class="element-name">
-                  ${elementData.name || elementData.element.tagName.toLowerCase()}
-                </span>
-                <span class="hit-slop"
-                  >${`T:${elementData.elementBounds.hitSlop.top} R:${elementData.elementBounds.hitSlop.right} B:${elementData.elementBounds.hitSlop.bottom} L:${elementData.elementBounds.hitSlop.left}`}</span
-                >
-              </div>
+              <single-element 
+                .elementData=${elementData}
+                .isActive=${this.activeCallbacks.has(elementData.element)}
+              ></single-element>
             `
           )}
         </div>

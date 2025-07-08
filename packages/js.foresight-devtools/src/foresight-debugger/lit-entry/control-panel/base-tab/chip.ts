@@ -10,14 +10,25 @@ export class ChipElement extends LitElement {
       }
 
       .chip {
-        font-size: 11px;
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #e8e8e8;
+        border-radius: 4px;
+        font-size: 10px;
         font-weight: 500;
-        padding: 4px 8px;
-        border: 1px solid #555;
         white-space: nowrap;
-        letter-spacing: 0.3px;
-        background: rgba(40, 40, 40, 0.7);
-        color: #b0c4de;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+        transition: all 0.2s ease;
+      }
+
+      .chip:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
       }
     `,
   ]
