@@ -3,9 +3,9 @@ import { customElement, state } from "lit/decorators.js"
 import { ForesightManager } from "js.foresight"
 import type { ForesightManagerSettings } from "js.foresight"
 
-import "../tab-header"
-import "../tab-content"
-import "../chip"
+import "../base-tab/tab-header"
+import "../base-tab/tab-content"
+import "../base-tab/chip"
 import "../copy-icon/copy-icon"
 import { ForesightDebuggerLit } from "../../ForesightDebuggerLit"
 import type { DevtoolsSettings } from "packages/js.foresight-devtools/src/types/types"
@@ -202,7 +202,6 @@ export class SettingsTab extends LitElement {
       transform: scale(1.1);
       box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
     }
-
   `
 
   @state() private managerSettings: ForesightManagerSettings | null = null
@@ -227,9 +226,6 @@ export class SettingsTab extends LitElement {
       },
       { signal }
     )
-
-    // Note: ForesightDebuggerLit doesn't emit events for settings changes
-    // Settings will be updated directly through the alterDebuggerSettings method
   }
 
   disconnectedCallback(): void {

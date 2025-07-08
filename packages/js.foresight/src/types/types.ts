@@ -96,6 +96,14 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * The element you registered
    */
   element: ForesightElement
+  /**
+   * If the element is currently running its callback
+   */
+  isRunningCallback: boolean
+  /**
+   * For debugging, check if you are registering the same element multiple times.
+   */
+  registerCount: number
 }
 
 export type MouseCallbackCounts = {
@@ -296,7 +304,6 @@ export type ForesightEvent =
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
   elementData: ForesightElementData
-  elementWasAlreadyRegistered: boolean
 }
 
 export interface ElementUnregisteredEvent extends ForesightBaseEvent {

@@ -76,6 +76,7 @@ import { initialViewportState } from "js.foresight/helpers/initialViewportState"
 export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
+
   private isSetup: boolean = false
   private _globalCallbackHits: CallbackHits = {
     mouse: {
@@ -222,7 +223,6 @@ export class ForesightManager {
         unregister: () => {},
       }
     }
-    const elementWasAlreadyRegistered = this.registeredElements.has(element)
 
     // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
     if (!this.isSetup) {
@@ -251,8 +251,10 @@ export class ForesightManager {
       },
       name: name ?? element.id ?? "",
       isIntersectingWithViewport: initialViewportState(initialRect),
+      isRunningCallback: false,
+      registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
     }
-
+    console.log(this.elements.has(element))
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)
@@ -261,7 +263,6 @@ export class ForesightManager {
       type: "elementRegistered",
       timestamp: Date.now(),
       elementData,
-      elementWasAlreadyRegistered,
     })
 
     return {
@@ -277,11 +278,11 @@ export class ForesightManager {
       return
     }
 
-    const foresightElementData = this.elements.get(element)
+    const elementData = this.elements.get(element)
 
     // Clear any pending trajectory expiration timeout
-    if (foresightElementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-      clearTimeout(foresightElementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
 
     this.positionObserver?.unobserve(element)
@@ -290,10 +291,11 @@ export class ForesightManager {
     if (this.elements.size === 0 && this.isSetup) {
       this.removeGlobalListeners()
     }
-    if (foresightElementData) {
+
+    if (elementData) {
       this.emit({
         type: "elementUnregistered",
-        elementData: foresightElementData,
+        elementData: elementData,
         timestamp: Date.now(),
         unregisterReason: unregisterReason,
       })
@@ -554,7 +556,7 @@ export class ForesightManager {
     })
   }
 
-  private updateHitCounters(callbackHitType: CallbackHitType) {
+  private updateHitCounters(callbackHitType: CallbackHitType, elementData: ForesightElementData) {
     switch (callbackHitType.kind) {
       case "mouse":
         this._globalCallbackHits.mouse[callbackHitType.subType]++
@@ -571,26 +573,25 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
-  private callCallback(
-    elementData: ForesightElementData,
-    callbackHitType: CallbackHitType
-  ): void | Promise<unknown> {
-    this.updateHitCounters(callbackHitType)
-    const startTime = performance.now()
-    this.emit({
-      type: "callbackInvoked",
-      timestamp: Date.now(),
-      elementData,
-      hitType: callbackHitType,
-      managerData: this.getManagerData,
-    })
-
-    let result: unknown
-    try {
-      result = elementData.callback()
-    } catch (syncErr) {
-      const elapsed = performance.now() - startTime
-      // 5a) Emit callbackEnd on sync error
+  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
+    if (elementData.isRunningCallback) {
+      return
+    }
+    // We have this async wrapper so we can time exactly how long the callback takes
+    this.elements.set(elementData.element, { ...elementData, isRunningCallback: true })
+    const asyncCallbackWrapper = async () => {
+      this.updateHitCounters(callbackHitType, elementData)
+      const start = performance.now()
+      this.emit({
+        type: "callbackInvoked",
+        timestamp: start,
+        elementData,
+        hitType: callbackHitType,
+        managerData: this.getManagerData,
+      })
+      // DONT remove await
+      await elementData.callback()
+      const elapsed = performance.now() - start
       this.emit({
         type: "callbackCompleted",
         timestamp: Date.now(),
@@ -598,59 +599,10 @@ export class ForesightManager {
         hitType: callbackHitType,
         managerData: this.getManagerData,
         elapsed,
-        error: syncErr,
       })
       this.unregister(elementData.element, "callbackHit")
-      throw syncErr
     }
-
-    // 6) If it returned a promise, await it
-    if (result != null && typeof (result as Promise<unknown>).then === "function") {
-      return (result as Promise<unknown>)
-        .then(res => {
-          const elapsed = performance.now() - startTime
-          // 5b) Emit callbackEnd on async success
-          this.emit({
-            type: "callbackCompleted",
-            timestamp: Date.now(),
-            elementData,
-            hitType: callbackHitType,
-            managerData: this.getManagerData,
-            elapsed,
-            result: res,
-          })
-          this.unregister(elementData.element, "callbackHit")
-          return res
-        })
-        .catch(asyncErr => {
-          const elapsed = performance.now() - startTime
-          // 5c) Emit callbackEnd on async error
-          this.emit({
-            type: "callbackCompleted",
-            timestamp: Date.now(),
-            elementData,
-            hitType: callbackHitType,
-            managerData: this.getManagerData,
-            elapsed,
-            error: asyncErr,
-          })
-          this.unregister(elementData.element, "callbackHit")
-          throw asyncErr
-        })
-    }
-
-    // 7) Synchronous success path
-    const elapsed = performance.now() - startTime
-    this.emit({
-      type: "callbackCompleted",
-      timestamp: Date.now(),
-      elementData,
-      hitType: callbackHitType,
-      managerData: this.getManagerData,
-      elapsed,
-      result,
-    })
-    this.unregister(elementData.element, "callbackHit")
+    asyncCallbackWrapper()
   }
 
   /**

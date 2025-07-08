@@ -16,11 +16,11 @@ import {
   CONTROL_PANEL_SVG,
   FILTER_SVG,
 } from "../../svg/svg-icons"
-import "../chip"
+import "../base-tab/chip"
 import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
-import "../tab-content"
-import "../tab-header"
+import "../base-tab/tab-content"
+import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
 
 @customElement("log-tab")

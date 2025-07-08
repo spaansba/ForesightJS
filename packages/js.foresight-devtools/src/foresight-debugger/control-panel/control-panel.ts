@@ -3,7 +3,7 @@ import { customElement, state } from "lit/decorators.js"
 import type { ControllerTabs } from "../../types/types"
 
 import "./element-tab/element-tab"
-import "./tab-selector"
+import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
 @customElement("control-panel")
@@ -25,17 +25,8 @@ export class ControlPanel extends LitElement {
       width: 400px;
       transition: width 0.3s ease, height 0.3s ease;
     }
-
-    :host.minimized {
-      width: 250px;
-      overflow: hidden;
-      padding: 12px;
-      gap: 0px;
-    }
-
-    :host.minimized .tab-content {
-      height: 0;
-      overflow: hidden;
+    .control-wrapper.minimized {
+      width: 220px;
     }
 
     .title-wrapper {
@@ -72,7 +63,7 @@ export class ControlPanel extends LitElement {
 
   protected render() {
     return html`
-      <div class="control-wrapper">
+      <div class="control-wrapper ${this.isMinimized ? "minimized" : ""}">
         <div class="title-wrapper">
           <button @click="${() => (this.isMinimized = !this.isMinimized)}" class="minimize-button">
             -

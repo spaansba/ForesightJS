@@ -1,6 +1,6 @@
 import { css, html, LitElement } from "lit"
 import { customElement, property } from "lit/decorators.js"
-import type { ControllerTabs } from "../../types/types"
+import type { ControllerTabs } from "packages/js.foresight-devtools/src/types/types"
 
 @customElement("tab-selector")
 export class TabSelector extends LitElement {

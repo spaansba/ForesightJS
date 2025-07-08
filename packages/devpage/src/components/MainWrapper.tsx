@@ -4,21 +4,19 @@ import ForesightButtonRemoveable from "./test-buttons/ForesightButtonRemoveable"
 import ForesightButtonNoName from "./test-buttons/ForesightButtonNoName"
 import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
-import { ForesightManager, type CallbackFiredEvent } from "js.foresight"
+import { ForesightManager } from "js.foresight"
 import { useEffect } from "react"
 
 export const Main = () => {
   const resetKey = useResetKey()
 
   useEffect(() => {
-    const handleCallbackFired = (e: CallbackFiredEvent) => {
-      // console.log("✅ Callback Fired!", e)
-    }
+    const handleCallbackFired = () => {}
 
-    ForesightManager.instance.addEventListener("callbackFired", handleCallbackFired)
+    ForesightManager.instance.addEventListener("callbackCompleted", handleCallbackFired)
 
     return () => {
-      ForesightManager.instance.removeEventListener("callbackFired", handleCallbackFired)
+      ForesightManager.instance.removeEventListener("callbackCompleted", handleCallbackFired)
     }
   }, [])
   return (
