@@ -8,7 +8,6 @@ import type {
 import { createAndAppendElement, createAndAppendStyle } from "./helpers/createAndAppend"
 import { updateElementOverlays } from "./helpers/updateElementOverlays"
 import type {
-  CallbackFiredEvent,
   CallbackHitType,
   ElementDataUpdatedEvent,
   ElementRegisteredEvent,
@@ -28,8 +27,7 @@ import {
 } from "../constants"
 import { evaluateRegistrationConditions } from "./helpers/evaluateRegistrationConditions"
 import { shouldUpdateSetting } from "./helpers/shouldUpdateSetting"
-import { DebuggerControlPanel } from "../control_panel/DebuggerControlPanel"
-import type { ForesightEvent } from "packages/js.foresight/dist"
+import type { CallbackInvokedEvent, ForesightEvent } from "packages/js.foresight/dist"
 import { type ForesightEventMap } from "js.foresight/types/types"
 
 export type ElementCount = {
@@ -44,7 +42,6 @@ export class ForesightDebugger {
   private shadowHost!: HTMLElement
   private shadowRoot!: ShadowRoot
   private debugContainer!: HTMLElement
-  private controlPanel!: DebuggerControlPanel
 
   private _debuggerSettings: Required<DevtoolsSettings> = {
     showDebugger: DEFAULT_SHOW_DEBUGGER,
@@ -53,7 +50,8 @@ export class ForesightDebugger {
     sortElementList: DEFAULT_SORT_ELEMENT_LIST,
     logging: {
       logLocation: "controlPanel",
-      callbackFired: true,
+      callbackCompleted: true,
+      callbackInvoked: true,
       elementDataUpdated: false,
       elementRegistered: true,
       elementUnregistered: true,
@@ -73,24 +71,7 @@ export class ForesightDebugger {
   }
   private animationPositionObserver: PositionObserver | null = null
 
-  private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {
-    switch (this._debuggerSettings.logging.logLocation) {
-      case "console":
-        console.log(`%c ${event.type}`, `color: ${color}`, event)
-        break
-      case "controlPanel":
-        if (this.controlPanel) {
-          this.controlPanel.addEventLog(event.type, event)
-        }
-        break
-      case "both": // dont add fall-through
-        console.log(`%c ${event.type}`, `color: ${color}`, event)
-        if (this.controlPanel) {
-          this.controlPanel.addEventLog(event.type, event)
-        }
-        break
-    }
-  }
+  private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {}
 
   public get getDebuggerData(): Readonly<ForesightDebuggerData> {
     return {
@@ -130,6 +111,7 @@ export class ForesightDebugger {
   }
 
   private _setupDOM() {
+    return
     // If for some reason we call this on an already-setup instance, do nothing.
     if (this.shadowHost) {
       return
@@ -151,12 +133,6 @@ export class ForesightDebugger {
     this.scrollTrajectoryLine = createAndAppendElement("div", this.debugContainer, {
       className: "jsforesight-scroll-trajectory-line",
     })
-    this.controlPanel = DebuggerControlPanel.initialize(
-      this.foresightManagerInstance,
-      ForesightDebugger.debuggerInstance,
-      this.shadowRoot,
-      this._debuggerSettings
-    )
     createAndAppendStyle(debuggerCSS, this.shadowRoot, "screen-visuals")
 
     this.animationPositionObserver = new PositionObserver(this.handleAnimationPositionChange)
@@ -225,11 +201,19 @@ export class ForesightDebugger {
       }
       if (
         shouldUpdateSetting(
-          props.logging.callbackFired,
-          this._debuggerSettings.logging.callbackFired
+          props.logging.callbackInvoked,
+          this._debuggerSettings.logging.callbackInvoked
         )
       ) {
-        this._debuggerSettings.logging.callbackFired = props.logging.callbackFired
+        this._debuggerSettings.logging.callbackInvoked = props.logging.callbackInvoked
+      }
+      if (
+        shouldUpdateSetting(
+          props.logging.callbackCompleted,
+          this._debuggerSettings.logging.callbackCompleted
+        )
+      ) {
+        this._debuggerSettings.logging.callbackCompleted = props.logging.callbackCompleted
       }
       if (
         shouldUpdateSetting(
@@ -294,7 +278,7 @@ export class ForesightDebugger {
       signal,
     })
     manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
-    manager.addEventListener("callbackFired", this.handleCallbackFired, { signal })
+    manager.addEventListener("callbackInvoked", this.handleCallbackFired, { signal })
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
@@ -310,7 +294,7 @@ export class ForesightDebugger {
       if (!e.elementData.isIntersectingWithViewport) {
         this.removeElementOverlay(e.elementData)
       }
-      this.controlPanel?.updateElementVisibilityStatus(e.elementData)
+      // this.controlPanel?.updateElementVisibilityStatus(e.elementData)
     }
   }
 
@@ -327,12 +311,12 @@ export class ForesightDebugger {
     this._debuggerSettings.logging.elementUnregistered && this.logEvent(e, "red")
 
     this.removeElementOverlay(e.elementData)
-    this.controlPanel.updateTitleElementCount()
-    this.controlPanel.removeElementFromListContainer(e.elementData)
+    // this.controlPanel.updateTitleElementCount()
+    // this.controlPanel.removeElementFromListContainer(e.elementData)
   }
 
-  private handleCallbackFired = (e: CallbackFiredEvent) => {
-    this._debuggerSettings.logging.callbackFired && this.logEvent(e, "orange")
+  private handleCallbackFired = (e: CallbackInvokedEvent) => {
+    this._debuggerSettings.logging.callbackInvoked && this.logEvent(e, "orange")
     this.showCallbackAnimation(e.elementData, e.hitType)
   }
 
@@ -340,8 +324,8 @@ export class ForesightDebugger {
     this._debuggerSettings.logging.elementRegistered && this.logEvent(e, "green")
 
     this.createOrUpdateElementOverlay(e.elementData)
-    this.controlPanel.addElementToListContainer(e.elementData)
-    this.controlPanel.updateTitleElementCount()
+    // this.controlPanel.addElementToListContainer(e.elementData)
+    // this.controlPanel.updateTitleElementCount()
   }
 
   private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
@@ -406,10 +390,10 @@ export class ForesightDebugger {
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
     this._debuggerSettings.logging.managerSettingsChanged && this.logEvent(e, "grey")
 
-    this.controlPanel?.updateControlsStateFromCode(
-      e.managerData.globalSettings,
-      this._debuggerSettings
-    )
+    // this.controlPanel?.updateControlsStateFromCode(
+    //   e.managerData.globalSettings,
+    //   this._debuggerSettings
+    // )
   }
 
   private createElementOverlays(elementData: ForesightElementData) {
@@ -519,7 +503,7 @@ export class ForesightDebugger {
 
   public cleanup() {
     this.managerSubscriptionsController?.abort()
-    this.controlPanel?.cleanup()
+    // this.controlPanel?.cleanup()
     this.shadowHost?.remove()
     this.debugElementOverlays.clear()
     this.shadowHost = null!
@@ -528,7 +512,7 @@ export class ForesightDebugger {
     this.predictedMouseIndicator = null
     this.mouseTrajectoryLine = null
     this.scrollTrajectoryLine = null
-    this.controlPanel = null!
+    // this.controlPanel = null!
   }
 }
 

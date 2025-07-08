@@ -17,7 +17,7 @@ import type {
   ElementUnregisteredEvent,
 } from "packages/js.foresight/dist"
 import type { CallbackHits, CallbackHitType } from "js.foresight/types/types"
-import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../svg/svg-icons"
+import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -161,7 +161,7 @@ export class ElementTab extends LitElement {
     })
     this.visibleElementsCount = visibleCount
     this.totalElementsCount = totalCount
-    
+
     // Dispatch event to update control panel title
     this.dispatchEvent(
       new CustomEvent("visibility-count-updated", {
@@ -323,7 +323,7 @@ export class ElementTab extends LitElement {
     return html`
       <tab-header>
         <div slot="chips">
-          <chip-element title="Number of visible elements / total elements">
+          <chip-element title="Number of visible registered elements / total registered elements">
             ${this.visibleElementsCount}/${this.totalElementsCount} visible
           </chip-element>
           <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">

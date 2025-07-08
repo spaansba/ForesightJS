@@ -1,25 +1,23 @@
 import type {
   ElementDataUpdatedEvent,
   ElementUnregisteredEvent,
-  ForesightEvent,
   ForesightManager,
   ManagerSettingsChangedEvent,
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
 } from "js.foresight"
-import { ControlPanel } from "./control-panel/control-panel"
-import type { DevtoolsSettings } from "../types/types"
+import type { CallbackHitType, ForesightElementData } from "js.foresight/types/types"
+import type { CallbackCompletedEvent, CallbackInvokedEvent } from "packages/js.foresight/dist"
 import { shouldUpdateSetting } from "../debugger/helpers/shouldUpdateSetting"
-import type {
-  CallbackHitType,
-  ForesightElementData,
-  ForesightEventMap,
-} from "js.foresight/types/types"
+import type { DevtoolsSettings } from "../types/types"
+import { ForesightDevtools } from "./lit-entry/foresight-devtools"
 
 export class ForesightDebuggerLit {
   private managerSubscriptionsController: AbortController | null = null
   private foresightManagerInstance: ForesightManager
   private static devtools: ForesightDebuggerLit
+  private devtoolsElement: any = null
+  private debugOverlay: any = null
   private constructor(foresightManager: ForesightManager) {
     this.foresightManagerInstance = foresightManager
   }
@@ -63,114 +61,50 @@ export class ForesightDebuggerLit {
     return devtools
   }
   private lit() {
-    ControlPanel
-    const controlPanel = document.createElement("control-panel")
-    document.body.appendChild(controlPanel)
+    ForesightDevtools
+    this.devtoolsElement = document.createElement("foresight-devtools")
+    document.body.appendChild(this.devtoolsElement)
+
+    // Wait for the next frame to ensure the shadow DOM is ready
+    requestAnimationFrame(() => {
+      this.debugOverlay = this.devtoolsElement.shadowRoot?.querySelector("debug-overlay")
+    })
   }
 
   private subscribeToManagerEvents() {
     this.managerSubscriptionsController = new AbortController()
     const signal = this.managerSubscriptionsController.signal
     const manager = this.foresightManagerInstance
-    // manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
-    // manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
-    // manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
-    // manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, { signal })
-    // manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
-    //   signal,
-    // })
-    // manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
-    // manager.addEventListener("callbackFired", this.handleCallbackFired, { signal })
+    manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
+    manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, { signal })
+    manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
+      signal,
+    })
+    manager.addEventListener("managerSettingsChanged", this.handleSettingsChanged, { signal })
+    manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
+    manager.addEventListener("callbackInvoked", this.handleCallbackInvoked, { signal })
+    manager.addEventListener("callbackCompleted", this.handleCallbackCompleted, { signal })
+  }
+  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
+    this.removeElementOverlay(e.elementData)
   }
 
-  private logEvent<K extends ForesightEvent>(event: ForesightEventMap[K], color: string): void {
-    switch (this.devtoolsSettings.logging.logLocation) {
-      case "console":
-        console.log(`%c ${event.type}`, `color: ${color}`, event)
-        break
-      case "controlPanel":
-        // if (this.controlPanel) {
-        //   this.controlPanel.addEventLog(event.type, event)
-        // }
-        break
-      case "both": // dont add fall-through
-        console.log(`%c ${event.type}`, `color: ${color}`, event)
-        // if (this.controlPanel) {
-        //   this.controlPanel.addEventLog(event.type, event)
-        // }
-        break
+  private handleCallbackInvoked = (e: CallbackInvokedEvent) => {}
+  private handleCallbackCompleted = (e: CallbackCompletedEvent) => {}
+
+  private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
+    if (this.debugOverlay) {
+      this.debugOverlay.handleMouseTrajectoryUpdate(e)
     }
   }
 
-  /**
-   * Removes all debug overlays and data associated with an element.
-   *
-   * This method cleans up the link overlay, expanded overlay, and name label
-   * for the specified element, removes it from internal tracking maps, and
-   * refreshes the control panel's element list to reflect the removal.
-   *
-   * @param element - The ForesightElement to remove from debugging visualization
-   */
-  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
-    this.devtoolsSettings.logging.elementUnregistered && this.logEvent(e, "red")
-
-    this.removeElementOverlay(e.elementData)
-    // this.controlPanel.updateTitleElementCount()
-    // this.controlPanel.removeElementFromListContainer(e.elementData)
-  }
-
-  private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
-    // this.devtoolsSettings.logging.mouseTrajectoryUpdate && this.logEvent(e, "blue")
-    // if (!this.shadowRoot || !this.debugContainer) {
-    //   return
-    // }
-    // if (!this.predictedMouseIndicator || !this.mouseTrajectoryLine) {
-    //   return
-    // }
-    // //Hide scroll visuals on mouse move
-    // if (this.scrollTrajectoryLine) {
-    //   this.scrollTrajectoryLine.style.display = "none"
-    // }
-    // const { predictedPoint, currentPoint } = e.trajectoryPositions
-    // // Use transform for positioning to avoid layout reflow.
-    // // The CSS handles centering the element with `translate(-50%, -50%)`.
-    // this.predictedMouseIndicator.style.transform = `translate3d(${predictedPoint.x}px, ${predictedPoint.y}px, 0) translate3d(-50%, -50%, 0)`
-    // this.predictedMouseIndicator.style.display = e.predictionEnabled ? "block" : "none"
-    // // This hides the circle from the UI at the top-left corner when refreshing the page with the cursor outside of the window
-    // if (predictedPoint.x === 0 && predictedPoint.y === 0) {
-    //   this.predictedMouseIndicator.style.display = "none"
-    //   return
-    // }
-    // if (!e.predictionEnabled) {
-    //   this.mouseTrajectoryLine.style.display = "none"
-    //   return
-    // }
-    // const dx = predictedPoint.x - currentPoint.x
-    // const dy = predictedPoint.y - currentPoint.y
-    // const length = Math.sqrt(dx * dx + dy * dy)
-    // const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-    // // Use a single transform to position, rotate, and scale the line,
-    // // avoiding reflow from top/left changes.
-    // this.mouseTrajectoryLine.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
-    // this.mouseTrajectoryLine.style.width = `${length}px`
-    // this.mouseTrajectoryLine.style.display = "block"
-  }
-
   private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
-    // this.devtoolsSettings.logging.scrollTrajectoryUpdate && this.logEvent(e, "cyan")
-    // if (!this.scrollTrajectoryLine) return
-    // const dx = e.predictedPoint.x - e.currentPoint.x
-    // const dy = e.predictedPoint.y - e.currentPoint.y
-    // const length = Math.sqrt(dx * dx + dy * dy)
-    // const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-    // this.scrollTrajectoryLine.style.transform = `translate3d(${e.currentPoint.x}px, ${e.currentPoint.y}px, 0) rotate(${angle}deg)`
-    // this.scrollTrajectoryLine.style.width = `${length}px`
-    // this.scrollTrajectoryLine.style.display = "block"
+    if (this.debugOverlay) {
+      this.debugOverlay.handleScrollTrajectoryUpdate(e)
+    }
   }
 
   private handleSettingsChanged = (e: ManagerSettingsChangedEvent) => {
-    this.devtoolsSettings.logging.managerSettingsChanged && this.logEvent(e, "grey")
-
     // this.controlPanel?.updateControlsStateFromCode(
     //   e.managerData.globalSettings,
     //   this.devtoolsSettings
@@ -178,8 +112,6 @@ export class ForesightDebuggerLit {
   }
 
   private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
-    this.devtoolsSettings.logging.elementDataUpdated && this.logEvent(e, "purple")
-
     // Check if 'bounds' is included in the updatedProps array
     if (e.updatedProps.includes("bounds")) {
       // this.createOrUpdateElementOverlay(e.elementData)
@@ -358,6 +290,9 @@ export class ForesightDebuggerLit {
 
   public cleanup() {
     this.managerSubscriptionsController?.abort()
+    this.devtoolsElement?.remove()
+    this.devtoolsElement = null
+    this.debugOverlay = null
     // this.controlPanel?.cleanup()
     // this.shadowHost?.remove()
     // this.debugElementOverlays.clear()

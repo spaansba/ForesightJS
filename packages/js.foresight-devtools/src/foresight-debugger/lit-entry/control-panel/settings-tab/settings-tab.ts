@@ -7,7 +7,7 @@ import "../base-tab/tab-header"
 import "../base-tab/tab-content"
 import "../base-tab/chip"
 import "../copy-icon/copy-icon"
-import { ForesightDebuggerLit } from "../../ForesightDebuggerLit"
+import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
 import type { DevtoolsSettings } from "packages/js.foresight-devtools/src/types/types"
 import {
   MAX_POSITION_HISTORY_SIZE,
@@ -22,7 +22,7 @@ import {
   SCROLL_MARGIN_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
-} from "../../../constants"
+} from "../../../../constants"
 
 @customElement("settings-tab")
 export class SettingsTab extends LitElement {

@@ -1,12 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import type { ForesightRegisterOptions, ForesightManagerSettings } from "../types/types"
-import {
-  createMockElement,
-  mockElementBounds,
-  simulateMouseEvent,
-  simulateKeyboardEvent,
-} from "../../test-setup"
+import { createMockElement, mockElementBounds, simulateMouseEvent } from "../../test-setup"
 
 describe("ForesightManager", () => {
   let manager: ForesightManager

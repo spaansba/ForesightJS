@@ -6,22 +6,22 @@ import { map } from "lit/directives/map.js"
 import {
   safeSerializeEventData,
   type SerializedEventData,
-} from "packages/js.foresight-devtools/src/control_panel/controlPanelLogTab/helpers/safeSerializeEventData"
+} from "packages/js.foresight-devtools/src/foresight-debugger/helpers/safeSerializeEventData"
 import type { LogEvents, LoggingLocations } from "packages/js.foresight-devtools/src/types/types"
-import { ForesightDebuggerLit } from "../../ForesightDebuggerLit"
 import {
   BOTH_SVG,
   CLEAR_SVG,
   CONSOLE_SVG,
   CONTROL_PANEL_SVG,
   FILTER_SVG,
-} from "../../svg/svg-icons"
+} from "../../../svg/svg-icons"
 import "../base-tab/chip"
 import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
+import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {

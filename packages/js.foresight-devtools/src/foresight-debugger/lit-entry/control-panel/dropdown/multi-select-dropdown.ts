@@ -1,7 +1,7 @@
 import { html, css, type TemplateResult } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import { BaseDropdown, type DropdownOption } from "./base-dropdown"
-import { FILTER_SVG } from "../../svg/svg-icons"
+import { FILTER_SVG } from "../../../svg/svg-icons"
 
 @customElement("multi-select-dropdown")
 export class MultiSelectDropdown extends BaseDropdown {

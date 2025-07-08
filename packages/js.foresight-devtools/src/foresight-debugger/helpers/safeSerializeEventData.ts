@@ -1,5 +1,4 @@
 import type {
-  CallbackHits,
   CallbackHitType,
   ForesightEvent,
   ForesightEventMap,

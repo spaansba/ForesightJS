@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
-import { COPY_SVG, TICK_SVG } from "../../svg/svg-icons"
+import { COPY_SVG, TICK_SVG } from "../../../svg/svg-icons"
 
 @customElement("copy-icon")
 export class CopyIcon extends LitElement {

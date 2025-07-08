@@ -5,7 +5,7 @@ import {
   isPointInRectangle,
   areRectsEqual,
 } from "./rectAndHitSlop"
-import type { HitSlop, Rect, Point } from "../types/types"
+import type { Rect, Point } from "../types/types"
 
 describe("normalizeHitSlop", () => {
   it("should normalize number to all sides", () => {

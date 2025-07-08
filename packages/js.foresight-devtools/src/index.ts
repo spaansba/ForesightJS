@@ -1,7 +1,7 @@
-export { ForesightDebugger } from "./debugger/ForesightDebugger"
+export { ForesightDebugger } from "./debugger/foresightDebugger"
 export { ForesightDebuggerLit } from "./foresight-debugger/ForesightDebuggerLit"
 export type {
-  DebuggerSettings,
+  DevtoolsSettings,
   SortElementList,
   ForesightDebuggerData,
   DebuggerBooleanSettingKeys,

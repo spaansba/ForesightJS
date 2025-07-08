@@ -1,12 +1,12 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
-import type { ControllerTabs } from "../../types/types"
 
 import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
+import type { ControllerTabs } from "packages/js.foresight-devtools/src/types/types"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
@@ -15,7 +15,7 @@ export class ControlPanel extends LitElement {
       padding: 12px;
       position: fixed;
       bottom: 10px;
-      left: 10px;
+      right: 10px;
       background-color: rgba(0, 0, 0, 0.9);
       color: white;
       font-family: Arial, sans-serif;
@@ -30,7 +30,7 @@ export class ControlPanel extends LitElement {
       box-sizing: border-box;
     }
     .control-wrapper.minimized {
-      width: 220px;
+      width: 230px;
       height: 45px;
     }
 
@@ -67,7 +67,6 @@ export class ControlPanel extends LitElement {
       flex-direction: column;
       flex: 1;
       overflow: hidden;
-      margin-top: 10px;
     }
 
     .tab-container.hidden {
@@ -125,7 +124,11 @@ export class ControlPanel extends LitElement {
             -
           </button>
           <h1>Foresight DevTools</h1>
-          <span class="title-element-count">${this.visibleCount}/${this.totalCount}</span>
+          <span
+            title="Number of visible registered elements / total registered elements"
+            class="title-element-count"
+            >${this.visibleCount}/${this.totalCount}</span
+          >
         </div>
 
         <div class="tab-container ${this.isMinimized ? "hidden" : ""}">
