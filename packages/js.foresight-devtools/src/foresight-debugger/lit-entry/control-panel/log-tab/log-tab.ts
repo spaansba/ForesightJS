@@ -79,6 +79,7 @@ export class LogTab extends LitElement {
       .logs-container {
         flex: 1;
         overflow-y: auto;
+        padding: 4px;
       }
 
       .no-items {
