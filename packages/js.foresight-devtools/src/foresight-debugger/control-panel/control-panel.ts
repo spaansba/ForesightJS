@@ -25,7 +25,7 @@ export class ControlPanel extends LitElement {
       display: flex;
       flex-direction: column;
       width: 400px;
-      height: 400px;
+      height: 430px;
       transition: width 0.3s ease, height 0.3s ease;
       box-sizing: border-box;
     }
@@ -94,9 +94,27 @@ export class ControlPanel extends LitElement {
   `
   @state() private activeTab: ControllerTabs = "elements"
   @state() private isMinimized: boolean = false
+  @state() private visibleCount: number = 0
+  @state() private totalCount: number = 0
 
   private _handleTabChange(event: CustomEvent) {
     this.activeTab = event.detail.tab
+  }
+
+  private _handleVisibilityCountChange = (event: Event) => {
+    const customEvent = event as CustomEvent<{ visibleCount: number; totalCount: number }>
+    this.visibleCount = customEvent.detail.visibleCount
+    this.totalCount = customEvent.detail.totalCount
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this.addEventListener("visibility-count-updated", this._handleVisibilityCountChange)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this.removeEventListener("visibility-count-updated", this._handleVisibilityCountChange)
   }
 
   protected render() {
@@ -107,7 +125,7 @@ export class ControlPanel extends LitElement {
             -
           </button>
           <h1>Foresight DevTools</h1>
-          <span class="title-element-count">0/0</span>
+          <span class="title-element-count">${this.visibleCount}/${this.totalCount}</span>
         </div>
 
         <div class="tab-container ${this.isMinimized ? "hidden" : ""}">

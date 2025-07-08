@@ -6,7 +6,6 @@ export class TabContent extends LitElement {
   static styles = [
     css`
       :host {
-        height: 285px;
         overflow: hidden;
       }
 

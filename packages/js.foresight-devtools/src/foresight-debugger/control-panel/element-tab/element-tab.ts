@@ -161,6 +161,15 @@ export class ElementTab extends LitElement {
     })
     this.visibleElementsCount = visibleCount
     this.totalElementsCount = totalCount
+    
+    // Dispatch event to update control panel title
+    this.dispatchEvent(
+      new CustomEvent("visibility-count-updated", {
+        detail: { visibleCount, totalCount },
+        bubbles: true,
+        composed: true,
+      })
+    )
   }
 
   /**
