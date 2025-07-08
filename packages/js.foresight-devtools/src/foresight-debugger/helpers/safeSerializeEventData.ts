@@ -115,7 +115,13 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           id: event.elementData.element.id || "",
           registerCount: event.elementData.registerCount,
           hitslop: event.elementData.elementBounds.hitSlop,
-          summary: event.elementData.name,
+          // if its the 2nd+ time of the element registering, give the user a heads up in the summary
+          summary:
+            event.elementData.registerCount === 1
+              ? event.elementData.name
+              : `${event.elementData.name} - ${getOrdinalSuffix(
+                  event.elementData.registerCount
+                )} time`,
         }
       case "elementUnregistered":
         return {
@@ -125,7 +131,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           id: event.elementData.element.id || "",
           registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
-          summary: event.unregisterReason,
+          summary: `${event.elementData.name} - ${event.unregisterReason}`,
         }
       case "elementDataUpdated":
         return {
@@ -133,8 +139,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           updatedProps: event.updatedProps || [],
-          isIntersecting: event.elementData?.isIntersectingWithViewport,
-          summary: event.updatedProps.toString(),
+          isIntersecting: event.elementData.isIntersectingWithViewport,
+          summary: `${event.elementData.name} - ${event.updatedProps.toString()}`,
         }
       case "callbackInvoked":
         return {
@@ -142,7 +148,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           hitType: event.hitType,
-          summary: event.hitType.kind,
+          summary: `${event.elementData.name} - ${event.hitType.kind}`,
         }
       case "callbackCompleted":
         const elapsed = formatElapsed(event.elapsed)
@@ -153,7 +159,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           hitType: event.hitType,
           callbackRunTimeFormatted: elapsed,
           callbackRunTimeRaw: event.elapsed,
-          summary: elapsed,
+          summary: `${event.elementData.name} - ${elapsed}`,
         }
       case "mouseTrajectoryUpdate":
         return {
@@ -211,4 +217,16 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
  */
 function formatElapsed(ms: number): string {
   return `${(ms / 1000).toFixed(4)} s`
+}
+
+/**
+ * Returns the ordinal suffix for a given number (e.g., "1st", "2nd", "3rd", "4th").
+ *
+ * @param {number} n The number to get the ordinal suffix for.
+ * @returns {string} The ordinal suffix.
+ */
+function getOrdinalSuffix(n: number): string {
+  const suffixes = ["th", "st", "nd", "rd"]
+  const v = n % 100
+  return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0])
 }

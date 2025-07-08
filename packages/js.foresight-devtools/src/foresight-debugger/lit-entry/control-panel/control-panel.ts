@@ -24,7 +24,7 @@ export class ControlPanel extends LitElement {
       pointer-events: auto;
       display: flex;
       flex-direction: column;
-      width: 400px;
+      width: 450px;
       height: 430px;
       transition: width 0.3s ease, height 0.3s ease;
       box-sizing: border-box;
@@ -91,7 +91,7 @@ export class ControlPanel extends LitElement {
       height: 100%;
     }
   `
-  @state() private activeTab: ControllerTabs = "elements"
+  @state() private activeTab: ControllerTabs = "logs"
   @state() private isMinimized: boolean = false
   @state() private visibleCount: number = 0
   @state() private totalCount: number = 0

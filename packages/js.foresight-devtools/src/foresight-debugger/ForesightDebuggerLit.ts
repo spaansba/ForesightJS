@@ -61,6 +61,7 @@ export class ForesightDebuggerLit {
     }
     return devtools
   }
+
   private lit() {
     ForesightDevtools
     this.devtoolsElement = document.createElement("foresight-devtools")

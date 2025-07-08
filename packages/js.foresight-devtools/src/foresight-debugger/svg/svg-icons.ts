@@ -1,6 +1,6 @@
-import { svg } from "lit"
+import { html } from "lit"
 
-export const CONTROL_PANEL_SVG = svg`
+export const CONTROL_PANEL_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -19,7 +19,7 @@ export const CONTROL_PANEL_SVG = svg`
   </svg>
 `
 
-export const CONSOLE_SVG = svg`
+export const CONSOLE_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -36,7 +36,25 @@ export const CONSOLE_SVG = svg`
   </svg>
 `
 
-export const BOTH_SVG = svg`
+export const NONE_SVG = html`
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    <line x1="1" y1="1" x2="23" y2="23"></line>
+  </svg>
+`
+
+export const BOTH_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -57,7 +75,7 @@ export const BOTH_SVG = svg`
 `
 
 // Keep the existing SVGs that were not requested to be changed
-export const VISIBILITY_SVG = svg`
+export const VISIBILITY_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -73,7 +91,7 @@ export const VISIBILITY_SVG = svg`
     <circle cx="12" cy="12" r="3" />
   </svg>
 `
-export const DOCUMENT_SVG = svg`
+export const DOCUMENT_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -93,7 +111,7 @@ export const DOCUMENT_SVG = svg`
   </svg>
 `
 
-export const INSERTION_SVG = svg`
+export const INSERTION_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -109,7 +127,7 @@ export const INSERTION_SVG = svg`
   </svg>
 `
 
-export const FILTER_SVG = svg`
+export const FILTER_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -125,7 +143,7 @@ export const FILTER_SVG = svg`
   </svg>
 `
 
-export const CLEAR_SVG = svg`
+export const CLEAR_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
@@ -142,7 +160,7 @@ export const CLEAR_SVG = svg`
   </svg>
 `
 
-export const COPY_SVG = svg`
+export const COPY_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -159,7 +177,7 @@ export const COPY_SVG = svg`
   </svg>
 `
 
-export const TICK_SVG = svg`
+export const TICK_SVG = html`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"

@@ -51,7 +51,7 @@ export type LogEvents = {
   [K in ForesightEvent]: boolean
 }
 
-export type LoggingLocations = "controlPanel" | "console" | "both"
+export type LoggingLocations = "controlPanel" | "console" | "both" | "none"
 
 export type ControllerTabs = "settings" | "elements" | "logs"
 

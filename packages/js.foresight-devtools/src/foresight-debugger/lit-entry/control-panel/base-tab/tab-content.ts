@@ -28,6 +28,7 @@ export class TabContent extends LitElement {
 
       .content-container {
         height: 100%;
+        min-height: 150px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5);

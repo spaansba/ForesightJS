@@ -2,7 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
-import { ForesightDebugger, ForesightDebuggerLit } from "js.foresight-devtools"
+import { ForesightDebuggerLit } from "js.foresight-devtools"
 import { ForesightManager } from "js.foresight"
 
 ForesightManager.initialize({
@@ -17,20 +17,6 @@ ForesightManager.initialize({
   },
   enableTabPrediction: true,
   tabOffset: 2,
-})
-
-// Initialize the debugger with the manager instance
-ForesightDebugger.initialize(ForesightManager.instance, {
-  showDebugger: true,
-  showNameTags: true,
-  isControlPanelDefaultMinimized: false,
-  sortElementList: "visibility",
-  logging: {
-    logScrollTrajectoryUpdate: true,
-    // logElementRegistered: false,
-    // logElementUnregistered: false,
-    // logElementDataUpdated: false,
-  },
 })
 
 ForesightDebuggerLit.initialize(ForesightManager.instance)

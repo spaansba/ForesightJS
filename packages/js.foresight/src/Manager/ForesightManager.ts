@@ -249,12 +249,12 @@ export class ForesightManager {
         trajectoryHitTime: 0,
         trajectoryHitExpirationTimeoutId: undefined,
       },
-      name: name ?? element.id ?? "",
+      name: name || element.id || "unnamed",
       isIntersectingWithViewport: initialViewportState(initialRect),
       isRunningCallback: false,
       registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
     }
-    console.log(this.elements.has(element))
+
     this.elements.set(element, elementData)
 
     this.positionObserver?.observe(element)

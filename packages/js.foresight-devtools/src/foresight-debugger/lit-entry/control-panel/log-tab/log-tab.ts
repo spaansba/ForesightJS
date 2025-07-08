@@ -14,6 +14,7 @@ import {
   CONSOLE_SVG,
   CONTROL_PANEL_SVG,
   FILTER_SVG,
+  NONE_SVG,
 } from "../../../svg/svg-icons"
 import "../base-tab/chip"
 import "../dropdown/multi-select-dropdown"
@@ -21,6 +22,7 @@ import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
+import "./single-log"
 import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
 
 @customElement("log-tab")
@@ -90,102 +92,6 @@ export class LogTab extends LitElement {
         padding: 20px;
         color: #999;
       }
-
-      .log-entry {
-        margin-bottom: 6px;
-        background-color: rgba(40, 40, 40, 0.7);
-        border-left: 3px solid #555;
-        font-size: 11px;
-        line-height: 1.4;
-        overflow: hidden;
-      }
-
-      .log-header {
-        display: flex;
-        align-items: center;
-        padding: 6px 8px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        gap: 8px;
-      }
-
-      .log-header:hover {
-        background-color: rgba(60, 60, 60, 0.7);
-      }
-
-      .log-details {
-        position: relative; /* Positioning context for the copy button */
-        padding: 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        max-height: 200px;
-        overflow-y: auto;
-      }
-
-      .log-summary {
-        flex: 1;
-        color: #ccc;
-        font-size: 11px;
-        opacity: 0.8;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .log-toggle {
-        color: #b0c4de;
-        font-size: 11px;
-        transition: transform 0.2s ease;
-        width: 12px;
-        text-align: center;
-        user-select: none;
-      }
-
-      .log-entry.log-elementRegistered {
-        border-left-color: #2196f3;
-      }
-      .log-entry.log-callbackInvoked {
-        border-left-color: #4caf50;
-      }
-      .log-entry.log-callbackCompleted {
-        border-left-color: #00bcd4;
-      }
-      .log-entry.log-elementDataUpdated {
-        border-left-color: #ffc107;
-      }
-      .log-entry.log-elementUnregistered {
-        border-left-color: #ff9800;
-      }
-      .log-entry.log-managerSettingsChanged {
-        border-left-color: #f44336;
-      }
-      .log-entry.log-mouseTrajectoryUpdate {
-        border-left-color: #78909c;
-      }
-      .log-entry.log-scrollTrajectoryUpdate {
-        border-left-color: #607d8b;
-      }
-
-      .log-time {
-        color: #9e9e9e;
-        margin-right: 8px;
-        font-weight: bold;
-        font-size: 11px;
-      }
-
-      .log-type {
-        color: #b0c4de;
-        margin-right: 8px;
-        font-weight: bold;
-        font-size: 11px;
-      }
-
-      .log-data {
-        color: #e0e0e0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        font-size: 11px;
-        margin: 0;
-      }
     `,
   ]
 
@@ -235,6 +141,12 @@ export class LogTab extends LitElement {
         label: "Both",
         title: "Log to both the control panel and the console",
         icon: BOTH_SVG,
+      },
+      {
+        value: "none",
+        label: "None",
+        title: "Dont log anywhere",
+        icon: NONE_SVG,
       },
     ]
 
@@ -312,23 +224,16 @@ export class LogTab extends LitElement {
       .map(([eventType, _]) => eventType)
   }
 
-  private toggleLogEntry(logId: string): void {
-    const newSet = new Set(this.expandedLogs)
-    if (newSet.has(logId)) {
-      newSet.delete(logId)
-    } else {
-      newSet.add(logId)
-    }
-    this.expandedLogs = newSet
-  }
-
   private getNoLogsMessage(): string {
     const enabledCount = Object.values(this.eventsEnabled).filter(Boolean).length
     if (enabledCount === 0) {
-      return "Enable logging options above to see events."
+      return "Logging for all events is turned off"
     }
     if (this.logLocation === "console") {
-      return "No logs to display. Logging is set to console - check browser console for events."
+      return "No logs to display. Logging location is set to console - check browser console for events."
+    }
+    if (this.logLocation === "none") {
+      return "No logs to display. Logging location is set to none"
     }
     return "Interact with Foresight to generate events."
   }
@@ -405,16 +310,19 @@ export class LogTab extends LitElement {
   }
 
   private handleEvent<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
+    if (this.logLocation === "none") {
+      return
+    }
     if (this.logLocation === "console" || this.logLocation === "both") {
       const color = this.getEventColor(eventType)
       console.log(`%c[ForesightJS] ${eventType}:`, `color: ${color}; font-weight: bold;`, event)
     }
     if (this.logLocation === "controlPanel" || this.logLocation === "both") {
-      this.addEventLog(eventType, event)
+      this.addEventLog(event)
     }
   }
 
-  private addEventLog<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
+  private addEventLog<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
     const logData = safeSerializeEventData(event)
     if (logData.type === "serializationError") {
       console.error(logData.error, logData.errorMessage)
@@ -425,33 +333,6 @@ export class LogTab extends LitElement {
       newLogs.pop()
     }
     this.logs = newLogs
-  }
-
-  private serializeLogDataWithoutSummary(log: SerializedEventData): string {
-    const { summary, ...rest } = log
-    return JSON.stringify(rest, null, 2)
-  }
-
-  private async handleCopy(
-    event: MouseEvent,
-    log: SerializedEventData,
-    logId: string
-  ): Promise<void> {
-    event.stopPropagation()
-    if (this.copiedLogId === logId) return
-
-    const jsonString = this.serializeLogDataWithoutSummary(log)
-    try {
-      await navigator.clipboard.writeText(jsonString)
-      this.copiedLogId = logId
-      setTimeout(() => {
-        if (this.copiedLogId === logId) {
-          this.copiedLogId = null
-        }
-      }, 500)
-    } catch (err) {
-      console.error("Failed to copy JSON to clipboard:", err)
-    }
   }
 
   render() {
@@ -487,34 +368,8 @@ export class LogTab extends LitElement {
         <div class="logs-container">
           ${this.logs.length === 0
             ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
-            : map(this.logs, (log, index) => {
-                const logId = `log-${index}-${log.type}-${log.localizedTimestamp}`
-                const isExpanded = this.expandedLogs.has(logId)
-                const isCopied = this.copiedLogId === logId
-                const eventColor = this.getEventColor(log.type as ForesightEvent)
-
-                return html`
-                  <div class="log-entry log-${log.type}">
-                    <div class="log-header" @click="${() => this.toggleLogEntry(logId)}">
-                      <span class="log-time">${log.localizedTimestamp}</span>
-                      <span class="log-type" style="color: ${eventColor}">${log.type}</span>
-                      <span class="log-summary">${log.summary}</span>
-                      <span class="log-toggle">${isExpanded ? "▼" : "▶"}</span>
-                    </div>
-                    ${isExpanded
-                      ? html`
-                          <div class="log-details">
-                            <copy-icon
-                              positioned
-                              title="Copy JSON"
-                              .onCopy=${(e: MouseEvent) => this.handleCopy(e, log, logId)}
-                            ></copy-icon>
-                            <pre class="log-data">${this.serializeLogDataWithoutSummary(log)}</pre>
-                          </div>
-                        `
-                      : ""}
-                  </div>
-                `
+            : map(this.logs, log => {
+                return html` <single-log .log=${log}></single-log> `
               })}
         </div>
       </tab-content>
