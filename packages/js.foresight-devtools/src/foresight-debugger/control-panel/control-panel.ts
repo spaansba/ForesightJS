@@ -31,7 +31,7 @@ export class ControlPanel extends LitElement {
     }
     .control-wrapper.minimized {
       width: 220px;
-      height: 42px; /* Set a fixed height for the minimized state */
+      height: 45px;
     }
 
     .title-wrapper {
@@ -39,7 +39,7 @@ export class ControlPanel extends LitElement {
       justify-content: space-between;
       align-items: center;
       padding: 0;
-      flex-shrink: 0; /* Prevent this from shrinking */
+      flex-shrink: 0;
     }
 
     .title-wrapper h1 {
@@ -63,12 +63,9 @@ export class ControlPanel extends LitElement {
     }
 
     .tab-container {
-      /* Make this container a flex column that grows to fill the
-         remaining space in .control-wrapper */
       display: flex;
       flex-direction: column;
       flex: 1;
-      /* This is important to contain the children */
       overflow: hidden;
       margin-top: 10px;
     }
@@ -78,27 +75,16 @@ export class ControlPanel extends LitElement {
     }
 
     .tab-content {
-      /* Make this container grow to fill the remaining space
-         in .tab-container (after the tab-selector) */
       flex: 1;
-      /* This is needed so the child's height: 100% works */
       position: relative;
     }
 
     .tab-content > * {
-      /* Hide all tabs by default */
       display: none;
     }
 
     .tab-content > .active {
-      /*
-        CRITICAL CHANGE:
-        Change 'display: block' to 'display: flex'.
-        This is because your element-tab's :host is a flex container.
-        This ensures it behaves as intended.
-      */
       display: flex;
-      /* Make the active tab fill the entire .tab-content area */
       position: absolute;
       top: 0;
       left: 0;

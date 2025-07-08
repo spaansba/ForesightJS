@@ -6,9 +6,6 @@ export class TabHeader extends LitElement {
   static styles = [
     css`
       :host {
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
       }
       .tab-bar-info {
         display: flex;

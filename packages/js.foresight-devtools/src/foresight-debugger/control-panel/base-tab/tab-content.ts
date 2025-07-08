@@ -38,8 +38,8 @@ export class TabContent extends LitElement {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100%; /* Ensure it fills the container */
-        color: #afafaf; /* A subtle color for the message */
+        height: 100%;
+        color: #afafaf;
         font-style: italic;
         font-family: "Courier New", monospace;
       }
