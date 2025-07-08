@@ -584,7 +584,7 @@ export class ForesightManager {
       const start = performance.now()
       this.emit({
         type: "callbackInvoked",
-        timestamp: start,
+        timestamp: Date.now(),
         elementData,
         hitType: callbackHitType,
         managerData: this.getManagerData,
