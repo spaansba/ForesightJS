@@ -25,7 +25,7 @@ import "../copy-icon/copy-icon"
 import "./setting-item/setting-item-checkbox"
 import "./setting-item/setting-item-range"
 import "../base-tab/chip"
-import { ForesightDebugger } from "../../../ForesightDebugger"
+import { ForesightDevtools } from "../../foresight-devtools"
 
 @customElement("settings-tab")
 export class SettingsTab extends LitElement {
@@ -78,7 +78,7 @@ export class SettingsTab extends LitElement {
 
   constructor() {
     super()
-    const currentDevtoolsSettings = ForesightDebugger.instance.devtoolsSettings
+    const currentDevtoolsSettings = ForesightDevtools.instance.devtoolsSettings
     const currentManagerSettings = ForesightManager.instance.getManagerData.globalSettings
 
     this.devtoolsSettings = { ...currentDevtoolsSettings }
@@ -102,6 +102,7 @@ export class SettingsTab extends LitElement {
       },
       { signal }
     )
+
     this._updateChangedSettings()
   }
 
@@ -162,7 +163,7 @@ export class SettingsTab extends LitElement {
         ...this.devtoolsSettings,
         showNameTags: value,
       }
-      ForesightDebugger.instance.alterDebuggerSettings({ showNameTags: value })
+      ForesightDevtools.instance.alterDebuggerSettings({ showNameTags: value })
       this._updateChangedSettings()
     }
   }

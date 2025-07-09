@@ -5,7 +5,7 @@ import { Star, Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import styles from "./hero.module.css"
 import { PackageManagerTabs } from "./PackageManagerTabs"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 export function Hero() {
   const [stats, setStats] = useState({
@@ -43,13 +43,13 @@ export function Hero() {
     tabOffset: 3,
   })
 
-  ForesightDebugger.initialize(ForesightManager.instance, {
+  ForesightDevtools.initialize(ForesightManager.instance, {
     showNameTags: false,
     isControlPanelDefaultMinimized: true,
   })
 
   const turnOffDebugMode = () => {
-    ForesightDebugger.instance.alterDebuggerSettings({ showDebugger: false })
+    ForesightDevtools.instance.alterDebuggerSettings({ showDebugger: false })
   }
 
   return (

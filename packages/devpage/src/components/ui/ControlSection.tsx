@@ -6,8 +6,7 @@ import {
   useIsVisible,
 } from "../../stores/ButtonStateStore"
 import { ForesightManager } from "js.foresight"
-import { ForesightDebugger } from "js.foresight-devtools"
-
+import { ForesightDevtools } from "js.foresight-devtools"
 type ControlButton = {
   id: string
   label: string
@@ -57,8 +56,8 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       label: "Toggle Debug Mode",
       description: "Toggle Debug Mode",
       onClick: () => {
-        ForesightDebugger.instance.alterDebuggerSettings({
-          showDebugger: !ForesightDebugger.instance.getDebuggerData.settings.showDebugger,
+        ForesightDevtools.instance.alterDebuggerSettings({
+          showDebugger: !ForesightDevtools.instance.devtoolsSettings.showDebugger,
         })
       },
       isActive: true,

@@ -3,7 +3,7 @@ sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
-  - ForesightDebugger
+  - ForesightDevtools
   - Debug Controller
   - js.foresight-debugger
   - mouse prediction
@@ -39,7 +39,7 @@ The development tools are a separate package that work alongside your ForesightJ
 
 ```javascript
 import { ForesightManager } from "js.foresight"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
 ForesightManager.initialize({
@@ -47,7 +47,7 @@ ForesightManager.initialize({
 })
 
 // Initialize the development tools
-ForesightDebugger.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize(ForesightManager.instance, {
   showDebugger: true,
   isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
   showNameTags: true, // optional setting which shows the name of the element

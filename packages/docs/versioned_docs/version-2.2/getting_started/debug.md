@@ -3,7 +3,7 @@ sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
-  - ForesightDebugger
+  - ForesightDevtools
   - Debug Controller
   - mouse prediction
   - tab prediction

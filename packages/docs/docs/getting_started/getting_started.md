@@ -111,10 +111,10 @@ npm install js.foresight-devtools
 ```
 
 ```javascript
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize development tools
-ForesightDebugger.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize(ForesightManager.instance, {
   showDebugger: true,
   showNameTags: true,
   sortElementList: "visibility",

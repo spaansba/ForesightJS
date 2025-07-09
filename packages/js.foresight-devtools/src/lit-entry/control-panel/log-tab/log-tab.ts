@@ -23,7 +23,7 @@ import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
 import "./single-log"
-import { ForesightDebugger } from "../../../ForesightDebugger"
+import { ForesightDevtools } from "../../foresight-devtools"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {
@@ -113,7 +113,7 @@ export class LogTab extends LitElement {
     super()
     const {
       logging: { logLocation, ...eventFlags },
-    } = ForesightDebugger.instance.devtoolsSettings
+    } = ForesightDevtools.instance.devtoolsSettings
     this.eventsEnabled = eventFlags
     this.logLocation = logLocation
     this.logDropdown = [

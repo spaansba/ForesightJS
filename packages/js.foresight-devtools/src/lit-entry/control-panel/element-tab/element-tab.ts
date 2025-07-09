@@ -17,7 +17,7 @@ import type {
   ElementUnregisteredEvent,
 } from "js.foresight"
 import type { CallbackHits, CallbackHitType } from "js.foresight"
-import { ForesightDebugger } from "../../../ForesightDebugger"
+import { ForesightDevtools } from "../../foresight-devtools"
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 
@@ -108,7 +108,7 @@ export class ElementTab extends LitElement {
 
   constructor() {
     super()
-    this.sortOrder = ForesightDebugger.instance.devtoolsSettings.sortElementList
+    this.sortOrder = ForesightDevtools.instance.devtoolsSettings.sortElementList
     this.sortDropdown = [
       {
         value: "visibility",

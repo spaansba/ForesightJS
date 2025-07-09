@@ -56,7 +56,7 @@ export type ControllerTabs = "settings" | "elements" | "logs"
 
 export type SortElementList = "documentOrder" | "visibility" | "insertionOrder"
 
-export type ForesightDebuggerData = {
+export type ForesightDevtoolsData = {
   settings: Readonly<DevtoolsSettings>
 }
 

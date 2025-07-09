@@ -32,13 +32,13 @@ yarn add -D js.foresight-devtools
 
 ```javascript
 import { ForesightManager } from "js.foresight"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
 ForesightManager.initialize()
 
 // Initialize development tools
-ForesightDebugger.initialize(ForesightManager.instance)
+ForesightDevtools.initialize(ForesightManager.instance)
 ```
 
 ## Configuration Options
@@ -67,7 +67,7 @@ type DevelopmentToolsSettings = {
 
 ```javascript
 import { ForesightManager } from "js.foresight"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
 ForesightManager.initialize({
@@ -79,7 +79,7 @@ ForesightManager.initialize({
 })
 
 // Initialize development tools with custom settings
-ForesightDebugger.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize(ForesightManager.instance, {
   showDebugger: true,
   isControlPanelDefaultMinimized: false,
   showNameTags: true,

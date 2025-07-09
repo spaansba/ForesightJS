@@ -1,7 +1,2 @@
-export { ForesightDebugger } from "./ForesightDebugger"
-export type {
-  DevtoolsSettings,
-  SortElementList,
-  ForesightDebuggerData,
-  DebuggerBooleanSettingKeys,
-} from "./types/types"
+export { ForesightDevtools } from "./lit-entry/foresight-devtools"
+export type { DevtoolsSettings, SortElementList, DebuggerBooleanSettingKeys } from "./types/types"

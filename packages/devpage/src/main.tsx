@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
 import { ForesightManager } from "js.foresight"
-import { ForesightDebugger } from "js.foresight-devtools"
+import { ForesightDevtools } from "js.foresight-devtools"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -19,7 +19,7 @@ ForesightManager.initialize({
   tabOffset: 2,
 })
 
-ForesightDebugger.initialize(ForesightManager.instance)
+ForesightDevtools.initialize(ForesightManager.instance)
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -8,7 +8,7 @@ function DebugButton() {
 
   const tooltipText = debugMode
     ? "Turn off debug mode to see what users experience without visual indicators"
-    : "Enable ForesightDebugger to see visual indicators in the bottom-right when ForesightJS predicts user intent"
+    : "Enable ForesightDevtools to see visual indicators in the bottom-right when ForesightJS predicts user intent"
 
   return (
     <Tooltip content={tooltipText} position="top">
