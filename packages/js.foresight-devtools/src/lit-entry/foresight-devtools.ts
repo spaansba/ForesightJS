@@ -1,15 +1,6 @@
+import type { ForesightManager } from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type {
-  ElementDataUpdatedEvent,
-  ElementRegisteredEvent,
-  ElementUnregisteredEvent,
-  ForesightManager,
-  ManagerSettingsChangedEvent,
-  MouseTrajectoryUpdateEvent,
-  ScrollTrajectoryUpdateEvent,
-} from "js.foresight"
-import type { CallbackCompletedEvent, CallbackInvokedEvent } from "packages/js.foresight/dist"
 import type { DevtoolsSettings } from "../types/types"
 
 import "./control-panel/control-panel"
@@ -29,6 +20,8 @@ export class ForesightDevtools extends LitElement {
 
   private debugOverlay: any = null
   private static _instance: ForesightDevtools | null = null
+  private managerSubscriptionsController: AbortController | null = null
+  private foresightManagerInstance: ForesightManager | null = null
 
   public devtoolsSettings: Required<DevtoolsSettings> = {
     showDebugger: true,
@@ -48,10 +41,7 @@ export class ForesightDevtools extends LitElement {
     },
   }
 
-  public static initialize(
-    foresightManager: ForesightManager,
-    props?: Partial<DevtoolsSettings>
-  ): ForesightDevtools {
+  public static initialize(props?: Partial<DevtoolsSettings>): ForesightDevtools {
     if (!ForesightDevtools._instance) {
       ForesightDevtools._instance = document.createElement(
         "foresight-devtools"
@@ -74,14 +64,6 @@ export class ForesightDevtools extends LitElement {
       throw new Error("ForesightDevtools must be initialized before accessing instance")
     }
     return ForesightDevtools._instance
-  }
-
-  connectedCallback() {
-    super.connectedCallback()
-
-    requestAnimationFrame(() => {
-      this.debugOverlay = this.shadowRoot?.querySelector("debug-overlay")
-    })
   }
 
   disconnectedCallback() {

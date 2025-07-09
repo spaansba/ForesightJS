@@ -12,7 +12,7 @@ import type {
   CallbackInvokedEvent,
   ElementDataUpdatedEvent,
   ElementRegisteredEvent,
-} from "packages/js.foresight/dist"
+} from "js.foresight"
 import { ForesightDevtools } from "../foresight-devtools"
 interface ElementOverlay {
   expandedOverlay: HTMLElement

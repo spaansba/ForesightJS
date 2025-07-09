@@ -416,7 +416,6 @@ export class ForesightManager {
     }
 
     if (changedSettings.length > 0) {
-      console.log("here", changedSettings)
       this.emit({
         type: "managerSettingsChanged",
         timestamp: Date.now(),

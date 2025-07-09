@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import type { SerializedEventData } from "../../../helpers/safeSerializeEventData"
-import "../shared/expandable-item"
+import "../base-tab/expandable-item"
 
 @customElement("single-log")
 export class SingleLog extends LitElement {

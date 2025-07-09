@@ -19,7 +19,7 @@ ForesightManager.initialize({
   tabOffset: 2,
 })
 
-ForesightDevtools.initialize(ForesightManager.instance)
+ForesightDevtools.initialize()
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

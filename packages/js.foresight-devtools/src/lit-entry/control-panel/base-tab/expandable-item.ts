@@ -122,40 +122,11 @@ export class ExpandableItem extends LitElement {
     if (detailsSlot) {
       const assignedNodes = detailsSlot.assignedNodes()
       const textContent = assignedNodes.map(node => node.textContent).join("")
-
       try {
-        // Try modern clipboard API first
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(textContent)
-        } else {
-          // Fallback for older browsers or non-HTTPS
-          this.fallbackCopyToClipboard(textContent)
-        }
+        await navigator.clipboard.writeText(textContent)
       } catch (err) {
-        console.error("Failed to copy to clipboard:", err)
-        // Try fallback method on error
-        try {
-          this.fallbackCopyToClipboard(textContent)
-        } catch (fallbackErr) {
-          console.error("Fallback copy also failed:", fallbackErr)
-        }
+        console.error("Failed to copy text: ", err)
       }
-    }
-  }
-
-  private fallbackCopyToClipboard(text: string): void {
-    const textArea = document.createElement("textarea")
-    textArea.value = text
-    textArea.style.position = "fixed"
-    textArea.style.opacity = "0"
-    document.body.appendChild(textArea)
-    textArea.focus()
-    textArea.select()
-
-    try {
-      document.execCommand("copy")
-    } finally {
-      document.body.removeChild(textArea)
     }
   }
 

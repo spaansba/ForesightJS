@@ -1,7 +1,7 @@
 import type { ForesightElementData } from "js.foresight"
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
-import "../shared/expandable-item"
+import "../base-tab/expandable-item"
 
 @customElement("single-element")
 export class SingleElement extends LitElement {
@@ -69,7 +69,6 @@ export class SingleElement extends LitElement {
     return this.elementData.isIntersectingWithViewport ? "#4caf50" : "#666"
   }
 
-
   private getStatusIndicatorClass(): string {
     if (this.isActive) {
       return "prefetching"
@@ -95,8 +94,8 @@ export class SingleElement extends LitElement {
 
   render() {
     return html`
-      <expandable-item 
-        .borderColor=${this.getBorderColor()} 
+      <expandable-item
+        .borderColor=${this.getBorderColor()}
         .showCopyButton=${true}
         .itemId=${this.elementData.elementId}
         .isExpanded=${this.isExpanded}
