@@ -20,7 +20,7 @@ The `useForesight` hook serves as the base for all ForesightJS usage with any Re
 ## useForesight
 
 ```tsx
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useState } from "react"
 import {
   ForesightManager,
   type ForesightRegisterOptionsWithoutElement,

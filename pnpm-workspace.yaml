@@ -1,2 +1,8 @@
 packages:
-  - "packages/*"
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - core-js
+  - core-js-pure
+  - esbuild

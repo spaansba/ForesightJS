@@ -25,7 +25,7 @@ Below is an example of creating an wrapper around the React Router `Link` compon
 
 ```tsx
 "use client"
-import { ForesightManager, type ForesightRect } from "js.foresight"
+import { ForesightManager, type ForesightRect, ForesightRegisterOptions } from "js.foresight"
 import { useEffect, useRef, useState } from "react"
 import { Link, useFetcher, type LinkProps } from "react-router"
 import useForesight from "../hooks/useForesight"
