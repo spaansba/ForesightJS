@@ -1,5 +1,4 @@
-import type { HitSlop, UpdateForsightManagerSettings } from "js.foresight"
-import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
+import type { HitSlop, ForesightEvent } from "js.foresight"
 
 export type DevtoolsSettings = {
   /**

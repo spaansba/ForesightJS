@@ -8,7 +8,6 @@ export type {
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
   ForesightElementData,
-  CallbackHits as ForesightCallbackHits,
   ForesightEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
@@ -21,4 +20,5 @@ export type {
   UpdatedManagerSetting,
   HitSlop,
   CallbackHitType,
+  CallbackHits,
 } from "./types/types"
