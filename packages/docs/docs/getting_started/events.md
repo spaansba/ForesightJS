@@ -26,18 +26,18 @@ import { ForesightManager } from "js.foresight"
 const manager = ForesightManager.initialize(/* your config */)
 
 // Define handler as const for removal
-const handleCallbackFired = event => {
+const handleCallbackInvoked = event => {
   console.log(`Callback executed for ${event.elementData.name} in ${event.hitType.kind} mode`)
 }
 
 // Add the listener
-manager.addEventListener("callbackFired", handleCallbackFired)
+manager.addEventListener("callbackInvoked", handleCallbackInvoked)
 
 // Or if you dont have access to the manager
-ForesightManager.instance.addEventListener("callbackFired", handleCallbackFired)
+ForesightManager.instance.addEventListener("callbackInvoked", handleCallbackInvoked)
 
 // Later, remove the listener using the same reference
-manager.removeEventListener("callbackFired", handleCallbackFired)
+manager.removeEventListener("callbackInvoked", handleCallbackInvoked)
 ```
 
 ### Using with AbortController (Signals)
@@ -47,7 +47,7 @@ Event listeners support [AbortController signals](https://developer.mozilla.org/
 ```typescript
 const controller = new AbortController()
 
-manager.addEventListener("callbackFired", handleCallbackFired, { signal: controller.signal })
+manager.addEventListener("callbackInvoked", handleCallbackInvoked, { signal: controller.signal })
 
 // Later, remove all listeners added with this signal
 controller.abort()

@@ -1,12 +1,10 @@
 import Link from "@docusaurus/Link"
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 import { ForesightManager } from "js.foresight"
 import { Star, Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import styles from "./hero.module.css"
 import { PackageManagerTabs } from "./PackageManagerTabs"
 import { ForesightDevtools } from "js.foresight-devtools"
-
 export function Hero() {
   const [stats, setStats] = useState({
     githubStars: 0,
@@ -43,13 +41,16 @@ export function Hero() {
     tabOffset: 3,
   })
 
-  ForesightDevtools.initialize(ForesightManager.instance, {
+  ForesightDevtools.initialize({
     showNameTags: false,
-    isControlPanelDefaultMinimized: true,
+    isControlPanelDefaultMinimized: false,
+    logging: { callbackCompleted: true, callbackInvoked: true, managerSettingsChanged: true },
   })
 
   const turnOffDebugMode = () => {
-    ForesightDevtools.instance.alterDebuggerSettings({ showDebugger: false })
+    ForesightDevtools.instance.alterDebuggerSettings({
+      showDebugger: false,
+    })
   }
 
   return (

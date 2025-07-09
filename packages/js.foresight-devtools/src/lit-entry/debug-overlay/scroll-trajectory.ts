@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js"
 import { styleMap } from "lit/directives/style-map.js"
 import type { ScrollTrajectoryUpdateEvent, ManagerSettingsChangedEvent } from "js.foresight"
 import { ForesightManager } from "js.foresight"
+import type { Point } from "./mouse-trajectory"
 
 @customElement("scroll-trajectory")
 export class ScrollTrajectory extends LitElement {
@@ -16,10 +17,12 @@ export class ScrollTrajectory extends LitElement {
         position: absolute;
         top: 0;
         left: 0;
+        /*
+         * will-change is a crucial optimization that tells the browser
+         * to prepare for changes to these properties.
+         */
         will-change: transform, width;
-        transform: translate3d(var(--scroll-current-x), var(--scroll-current-y), 0)
-          rotate(var(--scroll-trajectory-angle));
-        width: var(--scroll-trajectory-length);
+        transform-origin: left center;
         height: 4px;
         background: repeating-linear-gradient(
           90deg,
@@ -28,7 +31,6 @@ export class ScrollTrajectory extends LitElement {
           transparent 8px,
           transparent 16px
         );
-        transform-origin: left center;
         z-index: 9999;
         border-radius: 2px;
         animation: scroll-dash-flow 1.5s linear infinite;
@@ -83,20 +85,16 @@ export class ScrollTrajectory extends LitElement {
   @state()
   private _isVisible = false
 
+  private _isUpdateScheduled = false
+  private _latestScrollTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
+
   connectedCallback(): void {
     super.connectedCallback()
     const { signal } = this._abortController
 
-    ForesightManager.instance.addEventListener(
-      "scrollTrajectoryUpdate",
-      (e: ScrollTrajectoryUpdateEvent) => {
-        if (this._scrollPredictionIsEnabled) {
-          this._isVisible = true
-          this.updateScrollTrajectoryLine(e)
-        }
-      },
-      { signal }
-    )
+    ForesightManager.instance.addEventListener("scrollTrajectoryUpdate", this.handleScrollUpdate, {
+      signal,
+    })
 
     ForesightManager.instance.addEventListener(
       "mouseTrajectoryUpdate",
@@ -108,13 +106,7 @@ export class ScrollTrajectory extends LitElement {
 
     ForesightManager.instance.addEventListener(
       "managerSettingsChanged",
-      (e: ManagerSettingsChangedEvent) => {
-        const isEnabled = e.managerData.globalSettings.enableScrollPrediction
-        this._scrollPredictionIsEnabled = isEnabled
-        if (!isEnabled) {
-          this._isVisible = false
-        }
-      },
+      this.handleSettingsChange,
       { signal }
     )
   }
@@ -125,37 +117,52 @@ export class ScrollTrajectory extends LitElement {
   }
 
   firstUpdated() {
-    // Get the stable element reference.
     this.scrollTrajectoryLineElement = this.shadowRoot?.querySelector(
       ".scroll-trajectory-line"
     ) as HTMLElement
   }
 
-  private updateScrollTrajectoryLine(e: ScrollTrajectoryUpdateEvent) {
-    if (!this.scrollTrajectoryLineElement) return
+  private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
+    const isEnabled = e.managerData.globalSettings.enableScrollPrediction
+    this._scrollPredictionIsEnabled = isEnabled
+    if (!isEnabled) {
+      this._isVisible = false
+    }
+  }
 
-    const currentPoint = e.currentPoint
-    const predictedPoint = e.predictedPoint
+  private handleScrollUpdate = (e: ScrollTrajectoryUpdateEvent) => {
+    if (!this._scrollPredictionIsEnabled) return
+
+    this._isVisible = true
+    this._latestScrollTrajectory = {
+      currentPoint: e.currentPoint,
+      predictedPoint: e.predictedPoint,
+    }
+
+    if (!this._isUpdateScheduled) {
+      this._isUpdateScheduled = true
+      requestAnimationFrame(this.renderScrollTrajectory)
+    }
+  }
+
+  private renderScrollTrajectory = () => {
+    if (!this.scrollTrajectoryLineElement || !this._latestScrollTrajectory) {
+      this._isUpdateScheduled = false
+      return
+    }
+
+    const { currentPoint, predictedPoint } = this._latestScrollTrajectory
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-    this.scrollTrajectoryLineElement.style.setProperty("--scroll-current-x", `${currentPoint.x}px`)
-    this.scrollTrajectoryLineElement.style.setProperty("--scroll-current-y", `${currentPoint.y}px`)
-    this.scrollTrajectoryLineElement.style.setProperty("--scroll-trajectory-angle", `${angle}deg`)
-    this.scrollTrajectoryLineElement.style.setProperty("--scroll-trajectory-length", `${length}px`)
+    this.scrollTrajectoryLineElement.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+    this.scrollTrajectoryLineElement.style.width = `${length}px`
+    this._isUpdateScheduled = false
   }
 
   render() {
     const styles = { display: this._isVisible ? "block" : "none" }
-    // The div is always in the DOM, its style is reactive.
     return html` <div class="scroll-trajectory-line" style=${styleMap(styles)}></div> `
-  }
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "scroll-trajectory": ScrollTrajectory
   }
 }

@@ -1,12 +1,10 @@
-import { ForesightManager } from "js.foresight"
+import { ForesightDevtools } from "js.foresight-devtools"
 import { useState, useEffect } from "react"
 
 function useDebugMode() {
   const [debugMode, setDebugMode] = useState(true)
   useEffect(() => {
-    ForesightManager.instance.alterGlobalSettings({
-      debug: debugMode,
-    })
+    ForesightDevtools.instance.alterDebuggerSettings({ showDebugger: debugMode })
   }, [debugMode])
 
   const toggleDebugMode = () => {

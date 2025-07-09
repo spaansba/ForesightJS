@@ -12,9 +12,9 @@ import { useState } from "react"
 function Playground() {
   const [resetTrigger, setResetTrigger] = useState(0)
   const handleResetAll = () => {
-    setResetTrigger((prev) => prev + 1)
+    setResetTrigger(prev => prev + 1)
   }
-  const buttonIds = Array.from({ length: 25 }, (_, i) => `btn-${i + 1}`)
+  const buttonIds = Array.from({ length: 27 }, (_, i) => `btn-${i + 1}`)
 
   return (
     <>

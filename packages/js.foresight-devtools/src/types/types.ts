@@ -1,5 +1,11 @@
 import type { HitSlop, ForesightEvent } from "js.foresight"
 
+export type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>
+    }
+  : T
+
 export type DevtoolsSettings = {
   /**
    * Whether to show visual debugging information on the screen.

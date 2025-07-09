@@ -1,7 +1,6 @@
-import type { ForesightManager } from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type { DevtoolsSettings } from "../types/types"
+import type { DeepPartial, DevtoolsSettings } from "../types/types"
 
 import "./control-panel/control-panel"
 import "./debug-overlay/debug-overlay"
@@ -20,8 +19,6 @@ export class ForesightDevtools extends LitElement {
 
   private debugOverlay: any = null
   private static _instance: ForesightDevtools | null = null
-  private managerSubscriptionsController: AbortController | null = null
-  private foresightManagerInstance: ForesightManager | null = null
 
   public devtoolsSettings: Required<DevtoolsSettings> = {
     showDebugger: true,
@@ -41,7 +38,7 @@ export class ForesightDevtools extends LitElement {
     },
   }
 
-  public static initialize(props?: Partial<DevtoolsSettings>): ForesightDevtools {
+  public static initialize(props?: DeepPartial<DevtoolsSettings>): ForesightDevtools {
     if (!ForesightDevtools._instance) {
       ForesightDevtools._instance = document.createElement(
         "foresight-devtools"
@@ -71,11 +68,11 @@ export class ForesightDevtools extends LitElement {
     this.cleanup()
   }
 
-  private shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): boolean {
+  private shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): newValue is T {
     return newValue !== undefined && newValue !== currentValue
   }
 
-  public alterDebuggerSettings(props?: Partial<DevtoolsSettings>) {
+  public alterDebuggerSettings(props?: DeepPartial<DevtoolsSettings>) {
     if (!props) return
 
     // Handle special cases with side effects

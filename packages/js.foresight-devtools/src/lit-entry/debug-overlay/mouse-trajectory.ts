@@ -7,6 +7,10 @@ import {
   type ManagerSettingsChangedEvent,
 } from "js.foresight"
 
+export type Point = {
+  x: number
+  y: number
+}
 @customElement("mouse-trajectory")
 export class MouseTrajectory extends LitElement {
   static styles = [
@@ -20,12 +24,9 @@ export class MouseTrajectory extends LitElement {
         top: 0;
         left: 0;
         will-change: transform, width;
-        transform: translate3d(var(--current-x), var(--current-y), 0)
-          rotate(var(--trajectory-angle));
-        width: var(--trajectory-length);
+        transform-origin: left center;
         height: 4px;
         background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.4));
-        transform-origin: left center;
         z-index: 9999;
         border-radius: 2px;
         box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
@@ -57,18 +58,16 @@ export class MouseTrajectory extends LitElement {
   @state()
   private _isVisible = false
 
+  private _isUpdateScheduled = false
+  private _latestTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
+
   connectedCallback(): void {
     super.connectedCallback()
     const { signal } = this._abortController
 
     ForesightManager.instance.addEventListener(
       "mouseTrajectoryUpdate",
-      (e: MouseTrajectoryUpdateEvent) => {
-        if (this._mousePredictionIsEnabled) {
-          this._isVisible = true // Show the line
-          this.updateTrajectoryLine(e)
-        }
-      },
+      this.handleTrajectoryUpdate,
       { signal }
     )
 
@@ -82,13 +81,7 @@ export class MouseTrajectory extends LitElement {
 
     ForesightManager.instance.addEventListener(
       "managerSettingsChanged",
-      (e: ManagerSettingsChangedEvent) => {
-        const isEnabled = e.managerData.globalSettings.enableMousePrediction
-        this._mousePredictionIsEnabled = isEnabled
-        if (!isEnabled) {
-          this._isVisible = false
-        }
-      },
+      this.handleSettingsChange,
       { signal }
     )
   }
@@ -102,30 +95,52 @@ export class MouseTrajectory extends LitElement {
     this.trajectoryLineElement = this.shadowRoot?.querySelector(".trajectory-line") as HTMLElement
   }
 
-  private updateTrajectoryLine(e: MouseTrajectoryUpdateEvent) {
-    if (!this.trajectoryLineElement) return
+  private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
+    const isEnabled = e.managerData.globalSettings.enableMousePrediction
+    this._mousePredictionIsEnabled = isEnabled
+    if (!isEnabled) {
+      this._isVisible = false
+    }
+  }
 
-    const currentPoint = e.trajectoryPositions.currentPoint
-    const predictedPoint = e.trajectoryPositions.predictedPoint
+  private handleTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
+    if (!this._mousePredictionIsEnabled) return
+
+    this._isVisible = true
+    this._latestTrajectory = e.trajectoryPositions
+
+    if (!this._isUpdateScheduled) {
+      this._isUpdateScheduled = true
+      requestAnimationFrame(this.renderTrajectory)
+    }
+  }
+
+  private renderTrajectory = () => {
+    if (!this.trajectoryLineElement || !this._latestTrajectory) {
+      this._isUpdateScheduled = false
+      return
+    }
+
+    const { currentPoint, predictedPoint } = this._latestTrajectory
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
     const length = Math.sqrt(dx * dx + dy * dy)
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-    this.trajectoryLineElement.style.setProperty("--current-x", `${currentPoint.x}px`)
-    this.trajectoryLineElement.style.setProperty("--current-y", `${currentPoint.y}px`)
-    this.trajectoryLineElement.style.setProperty("--trajectory-angle", `${angle}deg`)
-    this.trajectoryLineElement.style.setProperty("--trajectory-length", `${length}px`)
+    if (length === 0) {
+      this.style.display = "none"
+    } else {
+      this.style.display = ""
+      const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+
+      this.trajectoryLineElement.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
+      this.trajectoryLineElement.style.width = `${length}px`
+    }
+
+    this._isUpdateScheduled = false
   }
 
   render() {
     const styles = { display: this._isVisible ? "block" : "none" }
     return html` <div class="trajectory-line" style=${styleMap(styles)}></div> `
-  }
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "mouse-trajectory": MouseTrajectory
   }
 }

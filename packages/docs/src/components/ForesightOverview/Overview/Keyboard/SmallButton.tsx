@@ -4,7 +4,12 @@ import styles from "./styles.module.css"
 function SmallButton({ index }: { index: number }) {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [loadTime, setLoadTime] = useState<number>(0)
   const cardRef = useRef<HTMLButtonElement | null>(null)
+  const stateRef = useRef({ isLoading: false, isLoaded: false })
+
+  // Keep ref updated with current state
+  stateRef.current = { isLoading, isLoaded }
 
   const state = () => {
     if (isLoading) {
@@ -16,20 +21,20 @@ function SmallButton({ index }: { index: number }) {
     return "Element"
   }
 
-  const callback = () => {
-    if (!isLoading && !isLoaded) {
-      setIsLoading(true)
-      setTimeout(() => {
-        setIsLoaded(true)
-        setIsLoading(false)
-      }, 300)
-    }
-  }
   useEffect(() => {
     if (cardRef.current) {
       const { unregister } = ForesightManager.instance.register({
         element: cardRef.current,
-        callback,
+        callback: async () => {
+          if (!stateRef.current.isLoading && !stateRef.current.isLoaded) {
+            setIsLoading(true)
+            const randomTime = Math.floor(Math.random() * 500) + 50
+            setLoadTime(randomTime)
+            await new Promise(resolve => setTimeout(resolve, randomTime))
+            setIsLoading(false)
+            setIsLoaded(true)
+          }
+        },
         hitSlop: 0,
         unregisterOnCallback: true,
       })
@@ -48,14 +53,13 @@ function SmallButton({ index }: { index: number }) {
     >
       <div className={styles.buttonContent}>
         <div className={styles.buttonText}>{state()}</div>
-        {isLoading && (
-          <div className={styles.loadingIndicator}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+
+        {isLoaded && (
+          <>
+            <div className={styles.timeSmall}>{loadTime}ms</div>
+            <div className={styles.checkmark}>✓</div>
+          </>
         )}
-        {isLoaded && <div className={styles.checkmark}>✓</div>}
       </div>
     </button>
   )

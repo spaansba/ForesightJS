@@ -591,7 +591,6 @@ export class ForesightManager {
     this.elements.set(elementData.element, { ...elementData, isRunningCallback: true })
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType, elementData)
-      const start = performance.now()
       this.emit({
         type: "callbackInvoked",
         timestamp: Date.now(),
@@ -599,7 +598,7 @@ export class ForesightManager {
         hitType: callbackHitType,
         managerData: this.getManagerData,
       })
-      // DONT remove await
+      const start = performance.now()
       await elementData.callback()
       const elapsed = performance.now() - start
       this.emit({
