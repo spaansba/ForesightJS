@@ -487,6 +487,123 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("Callback Error Handling", () => {
+    it("should emit callbackCompleted with error status when callback throws an error", async () => {
+      const errorMessage = "Test callback error"
+      const errorCallback = vi.fn(() => {
+        throw new Error(errorMessage)
+      })
+
+      const callbackCompletedListener = vi.fn()
+      const callbackInvokedListener = vi.fn()
+
+      // Add listeners to capture the events
+      manager.addEventListener("callbackCompleted", callbackCompletedListener)
+      manager.addEventListener("callbackInvoked", callbackInvokedListener)
+
+      // Register element with error callback
+      const result = manager.register({
+        element: testElement,
+        callback: errorCallback,
+        name: "error-element",
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Get the element data and call the callback directly to test error handling
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+
+      // Access the private callCallback method through type assertion
+      const callCallbackMethod = (manager as any)["callCallback"]
+      expect(typeof callCallbackMethod).toBe("function")
+
+      // Call the callback directly with the element data
+      callCallbackMethod.call(manager, elementData, { kind: "mouse", subType: "hover" })
+
+      // Wait for async callback to complete
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      // Verify callbackInvoked was emitted
+      expect(callbackInvokedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "callbackInvoked",
+          elementData: expect.objectContaining({
+            name: "error-element",
+          }),
+          hitType: expect.objectContaining({
+            kind: "mouse",
+            subType: "hover",
+          }),
+        })
+      )
+
+      // Verify callbackCompleted was emitted with error status
+      expect(callbackCompletedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "callbackCompleted",
+          elementData: expect.objectContaining({
+            name: "error-element",
+          }),
+          hitType: expect.objectContaining({
+            kind: "mouse",
+            subType: "hover",
+          }),
+          status: "error",
+          errorMessage: errorMessage,
+          elapsed: expect.any(Number),
+        })
+      )
+
+      // Verify the callback was actually called
+      expect(errorCallback).toHaveBeenCalled()
+    })
+
+    it("should emit callbackCompleted with success status when callback succeeds", async () => {
+      const successCallback = vi.fn()
+      const callbackCompletedListener = vi.fn()
+
+      manager.addEventListener("callbackCompleted", callbackCompletedListener)
+
+      // Register element with successful callback
+      const result = manager.register({
+        element: testElement,
+        callback: successCallback,
+        name: "success-element",
+      })
+
+      unregisterFunctions.push(result.unregister)
+
+      // Get the element data and call the callback directly
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+
+      // Access the private callCallback method through type assertion
+      const callCallbackMethod = (manager as any)["callCallback"]
+
+      // Call the callback directly with the element data
+      callCallbackMethod.call(manager, elementData, { kind: "mouse", subType: "hover" })
+
+      // Wait for async callback to complete
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      // Verify callbackCompleted was emitted with success status
+      expect(callbackCompletedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "callbackCompleted",
+          elementData: expect.objectContaining({
+            name: "success-element",
+          }),
+          status: "success",
+          elapsed: expect.any(Number),
+        })
+      )
+
+      // Verify the callback was actually called
+      expect(successCallback).toHaveBeenCalled()
+    })
+  })
+
   describe("Performance and Edge Cases", () => {
     it("should handle elements with zero dimensions", () => {
       const zeroElement = createMockElement("div")
