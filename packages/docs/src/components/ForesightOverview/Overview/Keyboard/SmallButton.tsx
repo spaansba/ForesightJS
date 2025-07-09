@@ -8,7 +8,6 @@ function SmallButton({ index }: { index: number }) {
   const cardRef = useRef<HTMLButtonElement | null>(null)
   const stateRef = useRef({ isLoading: false, isLoaded: false })
 
-  // Keep ref updated with current state
   stateRef.current = { isLoading, isLoaded }
 
   const state = () => {

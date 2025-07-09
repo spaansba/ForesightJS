@@ -15,6 +15,7 @@ import {
   CONTROL_PANEL_SVG,
   FILTER_SVG,
   NONE_SVG,
+  WARNING_SVG,
 } from "../../../svg/svg-icons"
 import "../base-tab/chip"
 import "../dropdown/multi-select-dropdown"
@@ -91,6 +92,35 @@ export class LogTab extends LitElement {
         font-style: italic;
         padding: 20px;
         color: #999;
+      }
+
+      .warning-container {
+        background: none;
+        border: none;
+        color: #ffc107;
+        cursor: help;
+        padding: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        vertical-align: top;
+      }
+
+      .warning-container svg {
+        width: 16px;
+        height: 16px;
+        stroke: #ffc107;
+        fill: none;
+        transition: stroke 0.2s;
+      }
+
+      .warning-container:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+      }
+
+      .warning-container:hover svg {
+        stroke: #ffdc3e;
       }
     `,
   ]
@@ -217,6 +247,15 @@ export class LogTab extends LitElement {
       .map(([eventType, _]) => eventType)
   }
 
+  private shouldShowPerformanceWarning(): boolean {
+    const hasConsoleOutput = this.logLocation === "console" || this.logLocation === "both"
+    const hasTrajectoryEvents =
+      this.eventsEnabled.mouseTrajectoryUpdate ||
+      this.eventsEnabled.scrollTrajectoryUpdate ||
+      this.eventsEnabled.elementDataUpdated
+    return hasConsoleOutput && hasTrajectoryEvents
+  }
+
   private getNoLogsMessage(): string {
     const enabledCount = Object.values(this.eventsEnabled).filter(Boolean).length
     if (enabledCount === 0) {
@@ -313,7 +352,7 @@ export class LogTab extends LitElement {
     }
     if (this.logLocation === "console" || this.logLocation === "both") {
       const color = this.getEventColor(eventType)
-      console.log(`%c[ForesightJS] ${eventType}:`, `color: ${color}; font-weight: bold;`, event)
+      console.log(`%c[ForesightJS] ${eventType}`, `color: ${color}; font-weight: bold;`, event)
     }
     if (this.logLocation === "controlPanel" || this.logLocation === "both") {
       this.addEventLog(event)
@@ -346,11 +385,23 @@ export class LogTab extends LitElement {
           </chip-element>
         </div>
         <div slot="actions">
+          ${this.shouldShowPerformanceWarning()
+            ? html`
+                <div
+                  class="warning-container"
+                  title="Console logging can be slow with frequent trajectory events.
+Consider using 'Control Panel' only for better performance."
+                >
+                  ${WARNING_SVG}
+                </div>
+              `
+            : ""}
           <single-select-dropdown
             .dropdownOptions="${this.logDropdown}"
             .selectedOptionValue="${this.logLocation}"
             .onSelectionChange="${this.handleLogLocationChange}"
           ></single-select-dropdown>
+
           <multi-select-dropdown
             .dropdownOptions="${this.filterDropdown}"
             .selectedValues="${this.getSelectedEventFilters()}"

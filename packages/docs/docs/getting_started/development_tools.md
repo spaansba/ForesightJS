@@ -17,7 +17,7 @@ last_updated:
 
 # Development Tools
 
-ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools) that help you understand and tune how ForesightJS is working in your application. This standalone development package is particularly helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools) that help you understand and tune how ForesightJS is working in your application. This standalone development package is helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
 
 The development tools are built entirely using ForesightJS's [built-in events](/docs/getting_started/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
@@ -42,16 +42,25 @@ import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
-ForesightManager.initialize({
-  // optional props
-})
+ForesightManager.initialize({})
 
 // Initialize the development tools
-ForesightDevtools.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize({
   showDebugger: true,
   isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
   showNameTags: true, // optional setting which shows the name of the element
   sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
+  logging: {
+    logLocation: "controlPanel", // Where to log the Foresight Events
+    callbackCompleted: false,
+    callbackInvoked: false,
+    elementDataUpdated: false,
+    elementRegistered: false,
+    elementUnregistered: false,
+    managerSettingsChanged: false,
+    mouseTrajectoryUpdate: false,
+    scrollTrajectoryUpdate: false,
+  },
 })
 ```
 

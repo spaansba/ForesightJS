@@ -91,13 +91,12 @@ unregister(element)
 
 **Typescript Type:** `ForesightRegisterOptions` or `ForesightRegisterOptionsWithoutElement` if you want to omit the `element`
 
-| Parameter              | Type           | Required | Description                                                                     | Default                             |
-| ---------------------- | -------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------- |
-| `element`              | HTMLElement    | Yes      | The DOM element to monitor                                                      |                                     |
-| `callback`             | function       | Yes      | Function that executes when interaction is predicted or occurs                  |                                     |
-| `hitSlop`              | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox | 0 or defaultHitSlop from initialize |
-| `name`                 | string         | No       | A descriptive name for the element, useful for development tools.               | element.id or "" if there is no id  |
-| `unregisterOnCallback` | bool           | No       | Should the callback be ran more than ones?                                      | true                                |
+| Parameter  | Type           | Required | Description                                                                     | Default                             |
+| ---------- | -------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------- |
+| `element`  | HTMLElement    | Yes      | The DOM element to monitor                                                      |                                     |
+| `callback` | function       | Yes      | Function that executes when interaction is predicted or occurs                  |                                     |
+| `hitSlop`  | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox | 0 or defaultHitSlop from initialize |
+| `name`     | string         | No       | A descriptive name for the element, useful for development tools.               | element.id or "" if there is no id  |
 
 ### Return Value of register()
 
