@@ -40,22 +40,6 @@ export class DebugOverlay extends LitElement {
     this.elementOverlaysRef = this.shadowRoot!.querySelector("element-overlays")
   }
 
-  public handleMouseTrajectoryUpdate(event: MouseTrajectoryUpdateEvent) {
-    if (this.mouseTrajectoryRef) {
-      this.mouseTrajectoryRef.updateTrajectory(event)
-      // Hide scroll visuals on mouse move
-      if (this.scrollTrajectoryRef) {
-        this.scrollTrajectoryRef.hide()
-      }
-    }
-  }
-
-  public handleScrollTrajectoryUpdate(event: ScrollTrajectoryUpdateEvent) {
-    if (this.scrollTrajectoryRef) {
-      this.scrollTrajectoryRef.updateScrollTrajectory(event)
-    }
-  }
-
   public createOrUpdateElementOverlay(
     elementData: ForesightElementData,
     showNameTags: boolean = true

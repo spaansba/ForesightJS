@@ -1,6 +1,19 @@
 import { LitElement, html, css } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type { ForesightElementData, ForesightElement, CallbackHitType } from "js.foresight"
+import {
+  type ForesightElementData,
+  type ForesightElement,
+  type CallbackHitType,
+  ForesightManager,
+  type ElementUnregisteredEvent,
+} from "js.foresight"
+import type {
+  CallbackCompletedEvent,
+  CallbackInvokedEvent,
+  ElementDataUpdatedEvent,
+  ElementRegisteredEvent,
+} from "packages/js.foresight/dist"
+import { ForesightDevtools } from "../foresight-devtools"
 interface ElementOverlay {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
@@ -113,11 +126,7 @@ export class ElementOverlays extends LitElement {
     return overlays
   }
 
-  private updateElementOverlays(
-    overlays: ElementOverlay,
-    elementData: ForesightElementData,
-    showNameTags: boolean
-  ) {
+  private updateElementOverlays(overlays: ElementOverlay, elementData: ForesightElementData) {
     const { expandedOverlay, nameLabel } = overlays
     const { expandedRect } = elementData.elementBounds
 
@@ -129,7 +138,7 @@ export class ElementOverlays extends LitElement {
     expandedOverlay.style.display = "block"
 
     nameLabel.textContent = elementData.name
-    if (elementData.name === "" || !showNameTags) {
+    if (elementData.name === "" || !ForesightDevtools.instance.devtoolsSettings.showNameTags) {
       nameLabel.style.display = "none"
     } else {
       nameLabel.style.display = "block"
@@ -139,17 +148,14 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  public createOrUpdateElementOverlay(
-    elementData: ForesightElementData,
-    showNameTags: boolean = true
-  ) {
+  public createOrUpdateElementOverlay(elementData: ForesightElementData) {
     if (!this.containerElement) return
 
     let overlays = this.overlayMap.get(elementData.element)
     if (!overlays) {
       overlays = this.createElementOverlays(elementData)
     }
-    this.updateElementOverlays(overlays, elementData, showNameTags)
+    this.updateElementOverlays(overlays, elementData)
   }
 
   public removeElementOverlay(elementData: ForesightElementData) {
@@ -226,6 +232,62 @@ export class ElementOverlays extends LitElement {
         nameLabel.style.display = "block"
       }
     })
+  }
+
+  private _abortController: AbortController | null = null
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+    ForesightManager.instance.addEventListener(
+      "elementRegistered",
+      (e: ElementRegisteredEvent) => {
+        this.createOrUpdateElementOverlay(e.elementData)
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
+      "elementUnregistered",
+      (e: ElementUnregisteredEvent) => {
+        this.removeElementOverlay(e.elementData)
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
+      "elementDataUpdated",
+      (e: ElementDataUpdatedEvent) => {
+        if (e.updatedProps.includes("bounds")) {
+          this.createOrUpdateElementOverlay(e.elementData)
+        }
+        if (e.updatedProps.includes("visibility")) {
+          if (!e.elementData.isIntersectingWithViewport) {
+            this.removeElementOverlay(e.elementData)
+          }
+        }
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
+      "callbackInvoked",
+      (e: CallbackInvokedEvent) => {
+        this.highlightElementCallback(e.elementData, e.hitType)
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
+      "callbackCompleted",
+      (e: CallbackCompletedEvent) => {
+        this.unhighlightElementCallback(e.elementData)
+      },
+      { signal }
+    )
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
   }
 
   render() {

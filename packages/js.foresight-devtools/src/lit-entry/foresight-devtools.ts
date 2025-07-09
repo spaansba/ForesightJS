@@ -27,8 +27,6 @@ export class ForesightDevtools extends LitElement {
 
   @state() private isInitialized = false
 
-  private managerSubscriptionsController: AbortController | null = null
-  private foresightManagerInstance: ForesightManager | null = null
   private debugOverlay: any = null
   private static _instance: ForesightDevtools | null = null
 
@@ -62,8 +60,6 @@ export class ForesightDevtools extends LitElement {
     }
 
     const devtools = ForesightDevtools._instance
-    devtools.foresightManagerInstance = foresightManager
-    devtools.subscribeToManagerEvents()
     devtools.isInitialized = true
 
     if (props !== undefined) {
@@ -91,66 +87,6 @@ export class ForesightDevtools extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback()
     this.cleanup()
-  }
-
-  private subscribeToManagerEvents() {
-    if (!this.foresightManagerInstance) return
-
-    this.managerSubscriptionsController = new AbortController()
-    const signal = this.managerSubscriptionsController.signal
-    const manager = this.foresightManagerInstance
-
-    manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
-    manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
-    manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
-    manager.addEventListener("callbackInvoked", this.handleCallbackInvoked, { signal })
-    manager.addEventListener("callbackCompleted", this.handleCallbackCompleted, { signal })
-  }
-
-  private handleRegisterElement = (e: ElementRegisteredEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.createOrUpdateElementOverlay(
-        e.elementData,
-        this.devtoolsSettings.showNameTags
-      )
-    }
-  }
-
-  private handleUnregisterElement = (e: ElementUnregisteredEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.removeElementOverlay(e.elementData)
-    }
-  }
-
-  private handleCallbackInvoked = (e: CallbackInvokedEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.handleCallbackInvoked(e)
-    }
-  }
-
-  private handleCallbackCompleted = (e: CallbackCompletedEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.handleCallbackCompleted(e)
-    }
-  }
-
-  private handleElementDataUpdated = (e: ElementDataUpdatedEvent) => {
-    if (e.updatedProps.includes("bounds")) {
-      if (this.debugOverlay) {
-        this.debugOverlay.createOrUpdateElementOverlay(
-          e.elementData,
-          this.devtoolsSettings.showNameTags
-        )
-      }
-    }
-    // Check if 'visibility' is included in the updatedProps array
-    if (e.updatedProps.includes("visibility")) {
-      if (!e.elementData.isIntersectingWithViewport) {
-        if (this.debugOverlay) {
-          this.debugOverlay.removeElementOverlay(e.elementData)
-        }
-      }
-    }
   }
 
   private shouldUpdateSetting<T>(newValue: T | undefined, currentValue: T): boolean {
@@ -270,10 +206,8 @@ export class ForesightDevtools extends LitElement {
     }
   }
 
-  private cleanup() {
-    this.managerSubscriptionsController?.abort()
-    this.managerSubscriptionsController = null
-  }
+  //TODO add cleanup
+  private cleanup() {}
 
   render() {
     if (!this.isInitialized) {
