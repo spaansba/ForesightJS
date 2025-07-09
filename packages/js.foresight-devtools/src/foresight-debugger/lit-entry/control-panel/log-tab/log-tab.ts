@@ -35,6 +35,11 @@ export class LogTab extends LitElement {
         height: 100%;
       }
 
+      .chips-container {
+        display: flex;
+        gap: 4px;
+      }
+
       .clear-button {
         background: none;
         border: none;
@@ -98,25 +103,12 @@ export class LogTab extends LitElement {
 
   @state() private logDropdown: DropdownOption[]
   @state() private filterDropdown: DropdownOption[]
-  @state() private logLocation: LoggingLocations = "controlPanel"
+  @state() private logLocation: LoggingLocations
+  @state() private eventsEnabled: LogEvents
   @state() private logs: Array<SerializedEventData & { logId: string }> = []
   @state() private expandedLogIds: Set<string> = new Set()
   private MAX_LOGS: number = 100
   private logIdCounter: number = 0
-
-  // This state property is essential to track WHICH log item was copied.
-  @state() private copiedLogId: string | null = null
-
-  @state() private eventsEnabled: LogEvents = {
-    elementRegistered: false,
-    elementUnregistered: false,
-    elementDataUpdated: false,
-    callbackInvoked: false,
-    callbackCompleted: false,
-    mouseTrajectoryUpdate: false,
-    scrollTrajectoryUpdate: false,
-    managerSettingsChanged: false,
-  }
 
   @property() noContentMessage: string = "No logs available"
   private _abortController: AbortController | null = null
@@ -125,6 +117,11 @@ export class LogTab extends LitElement {
 
   constructor() {
     super()
+    const {
+      logging: { logLocation, ...eventFlags },
+    } = ForesightDebuggerLit.instance.devtoolsSettings
+    this.eventsEnabled = eventFlags
+    this.logLocation = logLocation
     this.logDropdown = [
       {
         value: "controlPanel",
@@ -258,11 +255,6 @@ export class LogTab extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback()
-    const {
-      logging: { logLocation, ...eventFlags },
-    } = ForesightDebuggerLit.instance.devtoolsSettings
-    this.eventsEnabled = eventFlags
-    this.logLocation = logLocation
     this._abortController = new AbortController()
     this.setupDynamicEventListeners()
   }
@@ -342,7 +334,7 @@ export class LogTab extends LitElement {
     }
     const logWithId = {
       ...logData,
-      logId: (++this.logIdCounter).toString()
+      logId: (++this.logIdCounter).toString(),
     }
     const newLogs = [logWithId, ...this.logs]
     if (newLogs.length > this.MAX_LOGS) {
@@ -354,7 +346,7 @@ export class LogTab extends LitElement {
   render() {
     return html`
       <tab-header>
-        <div slot="chips">
+        <div slot="chips" class="chips-container">
           <chip-element title="Number of logged events (Max ${this.MAX_LOGS})">
             ${this.logs.length} events
           </chip-element>
@@ -385,11 +377,13 @@ export class LogTab extends LitElement {
           ${this.logs.length === 0
             ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
             : map(this.logs, log => {
-                return html` <single-log 
-                  .log=${log} 
-                  .isExpanded=${this.expandedLogIds.has(log.logId)}
-                  .onToggle=${this.handleLogToggle}
-                ></single-log> `
+                return html`
+                  <single-log
+                    .log=${log}
+                    .isExpanded=${this.expandedLogIds.has(log.logId)}
+                    .onToggle=${this.handleLogToggle}
+                  ></single-log>
+                `
               })}
         </div>
       </tab-content>

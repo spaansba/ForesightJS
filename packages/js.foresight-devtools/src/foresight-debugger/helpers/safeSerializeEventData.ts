@@ -8,6 +8,7 @@ import type {
   ScrollDirection,
   UpdatedDataPropertyNames,
 } from "js.foresight/types/types"
+import type { UpdatedManagerSetting } from "packages/js.foresight/dist"
 
 type SerializedEventType = ForesightEvent | "serializationError"
 
@@ -75,6 +76,7 @@ interface ScrollTrajectoryUpdatePayload extends PayloadBase {
 interface ManagerSettingsChangedPayload extends PayloadBase {
   type: "managerSettingsChanged"
   globalSettings: ForesightManagerSettings
+  settingsChanged: UpdatedManagerSetting[]
 }
 
 interface SerializationErrorPayload extends PayloadBase {
@@ -185,7 +187,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "managerSettingsChanged",
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           globalSettings: event.managerData?.globalSettings || {},
-          summary: "",
+          settingsChanged: event.updatedSettings,
+          summary: event.updatedSettings.map(setting => setting.setting).join(", "),
         }
       default:
         const _exhaustiveCheck: never = event

@@ -31,10 +31,14 @@ export class ElementTab extends LitElement {
       height: 100%;
     }
 
+    .chips-container {
+      display: flex;
+      gap: 8px;
+    }
+
     .element-list {
       flex: 1;
       overflow-y: auto;
-      padding: 4px;
     }
 
     .element-content {
@@ -349,7 +353,7 @@ export class ElementTab extends LitElement {
   render() {
     return html`
       <tab-header>
-        <div slot="chips">
+        <div slot="chips" class="chips-container">
           <chip-element title="Number of visible registered elements / total registered elements">
             ${this.visibleElementsCount}/${this.totalElementsCount} visible
           </chip-element>

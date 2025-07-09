@@ -122,11 +122,40 @@ export class ExpandableItem extends LitElement {
     if (detailsSlot) {
       const assignedNodes = detailsSlot.assignedNodes()
       const textContent = assignedNodes.map(node => node.textContent).join("")
+      
       try {
-        await navigator.clipboard.writeText(textContent)
+        // Try modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(textContent)
+        } else {
+          // Fallback for older browsers or non-HTTPS
+          this.fallbackCopyToClipboard(textContent)
+        }
       } catch (err) {
         console.error("Failed to copy to clipboard:", err)
+        // Try fallback method on error
+        try {
+          this.fallbackCopyToClipboard(textContent)
+        } catch (fallbackErr) {
+          console.error("Fallback copy also failed:", fallbackErr)
+        }
       }
+    }
+  }
+
+  private fallbackCopyToClipboard(text: string): void {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.opacity = '0'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    
+    try {
+      document.execCommand('copy')
+    } finally {
+      document.body.removeChild(textArea)
     }
   }
 
@@ -148,7 +177,7 @@ export class ExpandableItem extends LitElement {
         ${this.isExpanded
           ? html`
               <div class="item-details">
-                <copy-icon positioned title="Copy Details" .onCopy=${this.handleCopy}></copy-icon>
+                <copy-icon positioned title="Copy Details" .onCopy=${(event: MouseEvent) => this.handleCopy(event)}></copy-icon>
                 <pre class="item-data">
                   <slot name="details"></slot>
                 </pre>

@@ -41,10 +41,14 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       type: "small-button",
     },
     {
-      id: "Random",
-      label: "Random",
-      description: "Random",
-      onClick: () => {},
+      id: "change-global-settings",
+      label: "Change Global Settings",
+      description: "Change global settings of the Foresight Manager",
+      onClick: () => {
+        ForesightManager.instance.alterGlobalSettings({
+          scrollMargin: Math.floor(Math.random() * 501),
+        })
+      },
       isActive: true,
       type: "small-button",
     },

@@ -20,6 +20,8 @@ import type {
   UpdateForsightManagerSettings,
   ForesightEventListener,
   UpdatedDataPropertyNames,
+  UpdatedManagerSetting,
+  NumericSettingConfig,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -329,88 +331,97 @@ export class ForesightManager {
   }
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
-    // Call each update function and store whether it made a change.
-    // This ensures every update function is executed.
-    const oldPositionHistorySize = this._globalSettings.positionHistorySize
-    const positionHistoryChanged = this.updateNumericSettings(
-      props?.positionHistorySize,
-      "positionHistorySize",
-      MIN_POSITION_HISTORY_SIZE,
-      MAX_POSITION_HISTORY_SIZE
-    )
+    const changedSettings: UpdatedManagerSetting[] = []
+    const NUMERIC_SETTING_CONFIGS: readonly NumericSettingConfig[] = [
+      {
+        setting: "positionHistorySize",
+        min: MIN_POSITION_HISTORY_SIZE,
+        max: MAX_POSITION_HISTORY_SIZE,
+      },
+      {
+        setting: "trajectoryPredictionTime",
+        min: MIN_TRAJECTORY_PREDICTION_TIME,
+        max: MAX_TRAJECTORY_PREDICTION_TIME,
+      },
+      {
+        setting: "scrollMargin",
+        min: MIN_SCROLL_MARGIN,
+        max: MAX_SCROLL_MARGIN,
+      },
+      {
+        setting: "tabOffset",
+        min: MIN_TAB_OFFSET,
+        max: MAX_TAB_OFFSET,
+      },
+    ]
 
-    if (
-      positionHistoryChanged &&
-      this._globalSettings.positionHistorySize < oldPositionHistorySize
-    ) {
-      if (this.trajectoryPositions.positions.length > this._globalSettings.positionHistorySize) {
-        this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(
-          this.trajectoryPositions.positions.length - this._globalSettings.positionHistorySize
-        )
+    NUMERIC_SETTING_CONFIGS.forEach(({ setting, min, max }) => {
+      const newValue = props?.[setting]
+      if (newValue === undefined) return
+
+      const oldValue = this._globalSettings[setting]
+      const changed = this.updateNumericSettings(newValue, setting, min, max)
+
+      if (changed) {
+        changedSettings.push({
+          setting,
+          oldValue,
+          newValue: this._globalSettings[setting],
+        })
+
+        // Special case for positionHistorySize remains the same
+        if (
+          setting === "positionHistorySize" &&
+          this._globalSettings.positionHistorySize < oldValue
+        ) {
+          const newSize = this._globalSettings.positionHistorySize
+          if (this.trajectoryPositions.positions.length > newSize) {
+            this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(-newSize)
+          }
+        }
       }
-    }
+    })
 
-    const trajectoryTimeChanged = this.updateNumericSettings(
-      props?.trajectoryPredictionTime,
-      "trajectoryPredictionTime",
-      MIN_TRAJECTORY_PREDICTION_TIME,
-      MAX_TRAJECTORY_PREDICTION_TIME
-    )
+    const booleanSettings: ManagerBooleanSettingKeys[] = [
+      "enableMousePrediction",
+      "enableScrollPrediction",
+      "enableTabPrediction",
+    ]
 
-    const scrollMarginChanged = this.updateNumericSettings(
-      props?.scrollMargin,
-      "scrollMargin",
-      MIN_SCROLL_MARGIN,
-      MAX_SCROLL_MARGIN
-    )
+    booleanSettings.forEach(setting => {
+      const newValue = props?.[setting]
+      if (newValue === undefined) return
 
-    const tabOffsetChanged = this.updateNumericSettings(
-      props?.tabOffset,
-      "tabOffset",
-      MIN_TAB_OFFSET,
-      MAX_TAB_OFFSET
-    )
+      const oldValue = this._globalSettings[setting]
+      const changed = this.updateBooleanSetting(newValue, setting)
 
-    const mousePredictionChanged = this.updateBooleanSetting(
-      props?.enableMousePrediction,
-      "enableMousePrediction"
-    )
+      if (changed) {
+        changedSettings.push({ setting, oldValue, newValue: this._globalSettings[setting] })
+      }
+    })
 
-    const scrollPredictionChanged = this.updateBooleanSetting(
-      props?.enableScrollPrediction,
-      "enableScrollPrediction"
-    )
-
-    const tabPredictionChanged = this.updateBooleanSetting(
-      props?.enableTabPrediction,
-      "enableTabPrediction"
-    )
-
-    let hitSlopChanged = false
     if (props?.defaultHitSlop !== undefined) {
+      const oldHitSlop = this._globalSettings.defaultHitSlop
       const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
-      if (!areRectsEqual(this._globalSettings.defaultHitSlop, normalizedNewHitSlop)) {
+
+      if (!areRectsEqual(oldHitSlop, normalizedNewHitSlop)) {
         this._globalSettings.defaultHitSlop = normalizedNewHitSlop
-        hitSlopChanged = true
+        changedSettings.push({
+          setting: "defaultHitSlop",
+          oldValue: oldHitSlop,
+          newValue: normalizedNewHitSlop,
+        })
         this.forceUpdateAllElementBounds()
       }
     }
 
-    const settingsActuallyChanged =
-      positionHistoryChanged ||
-      trajectoryTimeChanged ||
-      tabOffsetChanged ||
-      mousePredictionChanged ||
-      tabPredictionChanged ||
-      scrollPredictionChanged ||
-      hitSlopChanged ||
-      scrollMarginChanged
-
-    if (settingsActuallyChanged) {
+    if (changedSettings.length > 0) {
+      console.log("here", changedSettings)
       this.emit({
         type: "managerSettingsChanged",
         timestamp: Date.now(),
         managerData: this.getManagerData,
+        updatedSettings: changedSettings,
       })
     }
   }

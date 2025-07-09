@@ -53,7 +53,11 @@ export class CopyIcon extends LitElement {
     if (this.isCopied) return
 
     if (this.onCopy) {
-      await this.onCopy(event)
+      try {
+        await this.onCopy(event)
+      } catch (error) {
+        console.error("Error in onCopy function:", error)
+      }
     }
 
     this.isCopied = true
@@ -65,7 +69,7 @@ export class CopyIcon extends LitElement {
     this.copyTimeout = setTimeout(() => {
       this.isCopied = false
       this.copyTimeout = null
-    }, 500)
+    }, 2000)
   }
 
   disconnectedCallback(): void {

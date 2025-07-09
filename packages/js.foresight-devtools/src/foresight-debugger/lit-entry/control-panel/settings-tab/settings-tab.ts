@@ -1,13 +1,8 @@
+import type { ForesightManagerSettings } from "js.foresight"
+import { ForesightManager } from "js.foresight"
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { ForesightManager } from "js.foresight"
-import type { ForesightManagerSettings } from "js.foresight"
 
-import "../base-tab/tab-header"
-import "../base-tab/tab-content"
-import "../base-tab/chip"
-import "../copy-icon/copy-icon"
-import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
 import type { DevtoolsSettings } from "packages/js.foresight-devtools/src/types/types"
 import {
   MAX_POSITION_HISTORY_SIZE,
@@ -23,6 +18,14 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../../../../constants"
+import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
+import "../base-tab/chip"
+import "../base-tab/tab-content"
+import "../base-tab/tab-header"
+import "../copy-icon/copy-icon"
+import "./setting-item/setting-item-checkbox"
+import "./setting-item/setting-item-range"
+import "../base-tab/chip"
 
 @customElement("settings-tab")
 export class SettingsTab extends LitElement {
@@ -57,175 +60,49 @@ export class SettingsTab extends LitElement {
       border-bottom: 1px solid rgba(176, 196, 222, 0.2);
       padding-bottom: 8px;
     }
-
-    .setting-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(80, 80, 80, 0.2);
-    }
-
-    .setting-item:last-child {
-      border-bottom: none;
-    }
-
-    .setting-item label {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-weight: 500;
-      color: #fff;
-      font-size: 13px;
-      cursor: pointer;
-      min-width: 180px;
-    }
-
-    .setting-description {
-      font-size: 11px;
-      color: #9e9e9e;
-      line-height: 1.3;
-      font-weight: normal;
-    }
-
-    .setting-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .setting-value {
-      font-size: 12px;
-      color: #b0c4de;
-      font-weight: 500;
-      min-width: 45px;
-      text-align: right;
-    }
-
-    /* Modern Toggle Switches */
-    input[type="checkbox"] {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      position: relative;
-      width: 44px;
-      height: 22px;
-      background-color: #444;
-      cursor: pointer;
-      outline: none;
-      transition: all 0.3s ease;
-      vertical-align: middle;
-      flex-shrink: 0;
-      margin: 0;
-      border: 2px solid #555;
-    }
-
-    input[type="checkbox"]::before {
-      content: "";
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background-color: white;
-      top: 1px;
-      left: 1px;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    input[type="checkbox"]:checked {
-      background-color: #b0c4de;
-      border-color: #b0c4de;
-    }
-
-    input[type="checkbox"]:checked::before {
-      transform: translateX(22px);
-      background-color: white;
-    }
-
-    input[type="checkbox"]:hover {
-      box-shadow: 0 0 0 3px rgba(176, 196, 222, 0.1);
-    }
-
-    /* Modern Range Sliders */
-    input[type="range"] {
-      margin: 0;
-      cursor: pointer;
-      -webkit-appearance: none;
-      appearance: none;
-      background: transparent;
-      height: 22px;
-      vertical-align: middle;
-      width: 100px;
-    }
-
-    input[type="range"]::-webkit-slider-runnable-track {
-      height: 6px;
-      background: #444;
-      border: 1px solid #555;
-    }
-
-    input[type="range"]::-moz-range-track {
-      height: 6px;
-      background: #444;
-      border: 1px solid #555;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      margin-top: -7px;
-      background: #b0c4de;
-      height: 20px;
-      width: 20px;
-      border: 2px solid #333;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      transition: all 0.2s ease;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      background: #b0c4de;
-      height: 20px;
-      width: 20px;
-      border: 2px solid #333;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      transition: all 0.2s ease;
-    }
-
-    input[type="range"]:hover::-webkit-slider-thumb {
-      transform: scale(1.1);
-      box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
-    }
-
-    input[type="range"]:hover::-moz-range-thumb {
-      transform: scale(1.1);
-      box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
-    }
   `
 
-  @state() private managerSettings: ForesightManagerSettings | null = null
-  @state() private devtoolsSettings: DevtoolsSettings | null = null
+  @state() private managerSettings: ForesightManagerSettings
+  @state() private initialSettings: Readonly<{
+    manager: ForesightManagerSettings
+    devtools: DevtoolsSettings
+  }>
+  @state() private devtoolsSettings: DevtoolsSettings
+  @state() private changedSettings: {
+    name: string
+    initial: any
+    current: any
+  }[] = []
 
   private _abortController: AbortController | null = null
+
+  constructor() {
+    super()
+    const currentDevtoolsSettings = ForesightDebuggerLit.instance.devtoolsSettings
+    const currentManagerSettings = ForesightManager.instance.getManagerData.globalSettings
+
+    this.devtoolsSettings = { ...currentDevtoolsSettings }
+    this.managerSettings = { ...currentManagerSettings }
+
+    this.initialSettings = {
+      devtools: { ...currentDevtoolsSettings },
+      manager: { ...currentManagerSettings },
+    }
+  }
 
   connectedCallback(): void {
     super.connectedCallback()
     this._abortController = new AbortController()
     const { signal } = this._abortController
-
-    // Get initial settings
-    this.managerSettings = ForesightManager.instance.getManagerData.globalSettings
-    this.devtoolsSettings = ForesightDebuggerLit.instance.devtoolsSettings
-
-    // Listen for settings changes
     ForesightManager.instance.addEventListener(
       "managerSettingsChanged",
-      () => {
-        this.managerSettings = ForesightManager.instance.getManagerData.globalSettings
+      e => {
+        this.managerSettings = e.managerData.globalSettings
+        this._updateChangedSettings()
       },
       { signal }
     )
+    this._updateChangedSettings()
   }
 
   disconnectedCallback(): void {
@@ -234,38 +111,59 @@ export class SettingsTab extends LitElement {
     this._abortController = null
   }
 
-  private handleManagerSettingChange(
-    setting: keyof ForesightManagerSettings,
-    value: boolean | number
+  private _updateChangedSettings(): void {
+    const changes: { name: string; initial: any; current: any }[] = []
+    this._checkManagerSettingsChanges(changes)
+    this._checkDevtoolsSettingsChanges(changes)
+    this.changedSettings = changes
+  }
+
+  private _checkManagerSettingsChanges(
+    changes: { name: string; initial: any; current: any }[]
   ): void {
-    ForesightManager.instance.alterGlobalSettings({
-      [setting]: value,
-    })
+    const managerKeys: (keyof ForesightManagerSettings)[] = [
+      "enableMousePrediction",
+      "enableTabPrediction",
+      "enableScrollPrediction",
+      "trajectoryPredictionTime",
+      "positionHistorySize",
+      "tabOffset",
+      "scrollMargin",
+    ]
+
+    for (const key of managerKeys) {
+      const initialValue = this.initialSettings.manager[key]
+      const currentValue = this.managerSettings[key]
+      if (initialValue !== currentValue) {
+        changes.push({ name: key, initial: initialValue, current: currentValue })
+      }
+    }
   }
 
-  private handleDevtoolsSettingChange(setting: keyof DevtoolsSettings, value: boolean): void {
-    ForesightDebuggerLit.instance.alterDebuggerSettings({
-      [setting]: value,
-    })
-  }
-
-  private handleRangeChange(event: Event, setting: keyof ForesightManagerSettings): void {
-    const target = event.target as HTMLInputElement
-    const value = parseInt(target.value, 10)
-    this.handleManagerSettingChange(setting, value)
-  }
-
-  private handleCheckboxChange(
-    event: Event,
-    setting: keyof ForesightManagerSettings | keyof DevtoolsSettings
+  private _checkDevtoolsSettingsChanges(
+    changes: { name: string; initial: any; current: any }[]
   ): void {
-    const target = event.target as HTMLInputElement
-    const isChecked = target.checked
+    const devtoolsKeys: (keyof DevtoolsSettings)[] = ["showNameTags"]
+
+    for (const key of devtoolsKeys) {
+      const initialValue = this.initialSettings.devtools[key]
+      const currentValue = this.devtoolsSettings[key]
+      if (initialValue !== currentValue) {
+        changes.push({ name: key, initial: initialValue, current: currentValue })
+      }
+    }
+  }
+
+  private _handleDevtoolsSettingChange(e: CustomEvent<{ setting: string; value: boolean }>): void {
+    const { setting, value } = e.detail
 
     if (setting === "showNameTags") {
-      this.handleDevtoolsSettingChange(setting, isChecked)
-    } else {
-      this.handleManagerSettingChange(setting as keyof ForesightManagerSettings, isChecked)
+      this.devtoolsSettings = {
+        ...this.devtoolsSettings,
+        showNameTags: value,
+      }
+      ForesightDebuggerLit.instance.alterDebuggerSettings({ showNameTags: value })
+      this._updateChangedSettings()
     }
   }
 
@@ -276,9 +174,11 @@ export class SettingsTab extends LitElement {
 
     try {
       const settingsCode = this.generateSettingsCode(this.managerSettings)
-      await navigator.clipboard.writeText(settingsCode)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(settingsCode)
+      }
     } catch (err) {
-      console.error("Failed to copy settings to clipboard:", err)
+      console.error("Failed to copy settings code:", err)
     }
   }
 
@@ -303,13 +203,30 @@ export class SettingsTab extends LitElement {
         .hasContent=${false}
       ></tab-content>`
     }
+    const settings = this.managerSettings
+
+    const chipTitle =
+      this.changedSettings.length > 0
+        ? `Settings that have been changed this session compared to your initialized settings.\nClick on the copy icon to easely copy the new setting into your project\n\n` +
+          this.changedSettings
+            .map(
+              change =>
+                `${change.name}: ${JSON.stringify(change.initial)} -> ${JSON.stringify(
+                  change.current
+                )}`
+            )
+            .join("\n")
+        : "No settings changed from initial values"
 
     return html`
       <tab-header>
+        <div slot="chips" class="chips-container">
+          <chip-element .title=${chipTitle}> ${this.changedSettings.length} changed </chip-element>
+        </div>
         <div slot="actions">
           <copy-icon
             title="Copy current settings as code"
-            .onCopy=${this.handleCopySettings}
+            .onCopy=${() => this.handleCopySettings()}
           ></copy-icon>
         </div>
       </tab-header>
@@ -317,169 +234,84 @@ export class SettingsTab extends LitElement {
       <tab-content .hasContent=${true}>
         <div class="settings-content">
           <div class="settings-section">
-            <!-- Mouse Prediction Group -->
             <div class="settings-group">
               <h4>Mouse Prediction</h4>
-              <div class="setting-item">
-                <label>
-                  Enable Mouse Prediction
-                  <span class="setting-description">
-                    Predict mouse movement trajectory and trigger callbacks before cursor reaches
-                    target
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="checkbox"
-                    .checked=${this.managerSettings.enableMousePrediction}
-                    @change=${(e: Event) => this.handleCheckboxChange(e, "enableMousePrediction")}
-                  />
-                </div>
-              </div>
-              <div class="setting-item">
-                <label>
-                  Position History
-                  <span class="setting-description">
-                    Number of past mouse positions stored for velocity calculations
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="range"
-                    min="${MIN_POSITION_HISTORY_SIZE}"
-                    max="${MAX_POSITION_HISTORY_SIZE}"
-                    .value=${this.managerSettings.positionHistorySize.toString()}
-                    @input=${(e: Event) => this.handleRangeChange(e, "positionHistorySize")}
-                  />
-                  <span class="setting-value">
-                    ${this.managerSettings.positionHistorySize} ${POSITION_HISTORY_SIZE_UNIT}
-                  </span>
-                </div>
-              </div>
-              <div class="setting-item">
-                <label>
-                  Prediction Time
-                  <span class="setting-description">
-                    How far into the future to calculate mouse trajectory path
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="range"
-                    min="${MIN_TRAJECTORY_PREDICTION_TIME}"
-                    max="${MAX_TRAJECTORY_PREDICTION_TIME}"
-                    step="10"
-                    .value=${this.managerSettings.trajectoryPredictionTime.toString()}
-                    @input=${(e: Event) => this.handleRangeChange(e, "trajectoryPredictionTime")}
-                  />
-                  <span class="setting-value">
-                    ${this.managerSettings.trajectoryPredictionTime}
-                    ${TRAJECTORY_PREDICTION_TIME_UNIT}
-                  </span>
-                </div>
-              </div>
+              <setting-item-checkbox
+                .isChecked=${settings.enableMousePrediction}
+                header="Enable Mouse Prediction"
+                description="Execute callbacks when mouse is ${settings.trajectoryPredictionTime}ms away from registered elements in mouse direction"
+                setting="enableMousePrediction"
+              ></setting-item-checkbox>
+              <setting-item-range
+                .currentValue=${settings.trajectoryPredictionTime}
+                .maxValue=${MAX_TRAJECTORY_PREDICTION_TIME}
+                .minValue=${MIN_TRAJECTORY_PREDICTION_TIME}
+                .unit=${TRAJECTORY_PREDICTION_TIME_UNIT}
+                header="Prediction Time"
+                description="How far into the future to calculate mouse trajectory path"
+                setting="trajectoryPredictionTime"
+              ></setting-item-range>
+              <setting-item-range
+                .currentValue=${settings.positionHistorySize}
+                .maxValue=${MAX_POSITION_HISTORY_SIZE}
+                .minValue=${MIN_POSITION_HISTORY_SIZE}
+                .unit=${POSITION_HISTORY_SIZE_UNIT}
+                header="Position History Size"
+                description="How far into the future, in ${POSITION_HISTORY_SIZE_UNIT}, to calculate mouse trajectory path"
+                setting="positionHistorySize"
+              >
+              </setting-item-range>
             </div>
-
-            <!-- Keyboard Navigation Group -->
             <div class="settings-group">
               <h4>Keyboard Navigation</h4>
-              <div class="setting-item">
-                <label>
-                  Enable Tab Prediction
-                  <span class="setting-description">
-                    Execute callbacks when user is within tab offset of registered elements
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="checkbox"
-                    .checked=${this.managerSettings.enableTabPrediction}
-                    @change=${(e: Event) => this.handleCheckboxChange(e, "enableTabPrediction")}
-                  />
-                </div>
-              </div>
-              <div class="setting-item">
-                <label>
-                  Tab Offset
-                  <span class="setting-description">
-                    Number of tabbable elements to look ahead when predicting navigation
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="range"
-                    min="${MIN_TAB_OFFSET}"
-                    max="${MAX_TAB_OFFSET}"
-                    step="1"
-                    .value=${this.managerSettings.tabOffset.toString()}
-                    @input=${(e: Event) => this.handleRangeChange(e, "tabOffset")}
-                  />
-                  <span class="setting-value"
-                    >${this.managerSettings.tabOffset} ${TAB_OFFSET_UNIT}</span
-                  >
-                </div>
-              </div>
+              <setting-item-checkbox
+                .isChecked=${settings.enableTabPrediction}
+                header="Enable Tab Prediction"
+                description="Execute callbacks when user ${settings.tabOffset} tabbable elements away from registered elements in tab direction"
+                setting="enableTabPrediction"
+              >
+              </setting-item-checkbox>
+              <setting-item-range
+                .currentValue=${settings.tabOffset}
+                .maxValue=${MAX_TAB_OFFSET}
+                .minValue=${MIN_TAB_OFFSET}
+                .unit=${TAB_OFFSET_UNIT}
+                header="Tab Offset"
+                description="Number of tabbable elements to look ahead when predicting navigation"
+                setting="tabOffset"
+              >
+              </setting-item-range>
             </div>
 
-            <!-- Scroll Prediction Group -->
             <div class="settings-group">
               <h4>Scroll Prediction</h4>
-              <div class="setting-item">
-                <label>
-                  Enable Scroll Prediction
-                  <span class="setting-description">
-                    Predict scroll direction and trigger callbacks for elements in path
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="checkbox"
-                    .checked=${this.managerSettings.enableScrollPrediction}
-                    @change=${(e: Event) => this.handleCheckboxChange(e, "enableScrollPrediction")}
-                  />
-                </div>
-              </div>
-              <div class="setting-item">
-                <label>
-                  Scroll Margin
-                  <span class="setting-description">
-                    Pixel distance to check from mouse position in scroll direction
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="range"
-                    min="${MIN_SCROLL_MARGIN}"
-                    max="${MAX_SCROLL_MARGIN}"
-                    step="10"
-                    .value=${this.managerSettings.scrollMargin.toString()}
-                    @input=${(e: Event) => this.handleRangeChange(e, "scrollMargin")}
-                  />
-                  <span class="setting-value"
-                    >${this.managerSettings.scrollMargin} ${SCROLL_MARGIN_UNIT}</span
-                  >
-                </div>
-              </div>
+              <setting-item-checkbox
+                .isChecked=${settings.enableScrollPrediction}
+                header="Enable Scroll Prediction"
+                description="Execute callbacks when user is ${settings.scrollMargin}px away from registered elements in scroll direction"
+                setting="enableScrollPrediction"
+              ></setting-item-checkbox>
+              <setting-item-range
+                .currentValue=${settings.scrollMargin}
+                .maxValue=${MAX_SCROLL_MARGIN}
+                .minValue=${MIN_SCROLL_MARGIN}
+                .unit=${SCROLL_MARGIN_UNIT}
+                header="Scroll Margin"
+                description="Pixel distance to check from mouse position in scroll direction"
+                setting="scrollMargin"
+              ></setting-item-range>
             </div>
 
             <!-- Developer Tools Group -->
             <div class="settings-group">
               <h4>Developer Tools</h4>
-              <div class="setting-item">
-                <label>
-                  Show Name Tags
-                  <span class="setting-description">
-                    Display name tags over each registered element in debug mode
-                  </span>
-                </label>
-                <div class="setting-controls">
-                  <input
-                    type="checkbox"
-                    .checked=${this.devtoolsSettings.showNameTags}
-                    @change=${(e: Event) => this.handleCheckboxChange(e, "showNameTags")}
-                  />
-                </div>
-              </div>
+              <setting-item-checkbox
+                .isChecked=${this.devtoolsSettings.showNameTags}
+                header="Show Name Tags"
+                description="Display name tags over each registered element in the debugger"
+                setting="showNameTags"
+                @setting-changed=${this._handleDevtoolsSettingChange}
+              ></setting-item-checkbox>
             </div>
           </div>
         </div>

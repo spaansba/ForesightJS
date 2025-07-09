@@ -12,7 +12,10 @@
     "composite": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "src/foresight-debugger/lit-entry/control-panel/settings-tab/setting-group.ts"
+  ],
   "exclude": ["node_modules", "dist"],
   "references": [{ "path": "../js.foresight" }]
 }

@@ -18,6 +18,7 @@ export type {
   MouseTrajectoryUpdateEvent,
   ScrollTrajectoryUpdateEvent,
   ManagerSettingsChangedEvent,
+  UpdatedManagerSetting,
   HitSlop,
   CallbackHitType,
 } from "./types/types"

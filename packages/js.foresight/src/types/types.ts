@@ -279,6 +279,12 @@ export type ManagerBooleanSettingKeys = {
     : never
 }[keyof UpdateForsightManagerSettings]
 
+export type NumericSettingConfig = {
+  setting: NumericSettingKeys
+  min: number
+  max: number
+}
+
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
   elementRegistered: ElementRegisteredEvent
@@ -361,7 +367,16 @@ export interface ScrollTrajectoryUpdateEvent extends ForesightBaseEvent {
 export interface ManagerSettingsChangedEvent extends ForesightBaseEvent {
   type: "managerSettingsChanged"
   managerData: ForesightManagerData
+  updatedSettings: UpdatedManagerSetting[]
 }
+
+export type UpdatedManagerSetting = {
+  [K in keyof ForesightManagerSettings]: {
+    setting: K
+    newValue: ForesightManagerSettings[K]
+    oldValue: ForesightManagerSettings[K]
+  }
+}[keyof ForesightManagerSettings]
 
 // Event listener type
 export type ForesightEventListener<K extends ForesightEvent = ForesightEvent> = (
