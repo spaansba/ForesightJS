@@ -20,7 +20,6 @@ export class ScrollTrajectory extends LitElement {
         transform: translate3d(var(--scroll-current-x), var(--scroll-current-y), 0)
           rotate(var(--scroll-trajectory-angle));
         width: var(--scroll-trajectory-length);
-        /* display is now controlled by styleMap */
         height: 4px;
         background: repeating-linear-gradient(
           90deg,
@@ -37,9 +36,40 @@ export class ScrollTrajectory extends LitElement {
       }
 
       .scroll-trajectory-line::after {
-        /* styles omitted for brevity */
+        content: "";
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid #22c55e;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+        filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+        animation: scroll-arrow-pulse 1.5s ease-in-out infinite;
       }
-      /* keyframes omitted for brevity */
+
+      @keyframes scroll-dash-flow {
+        0% {
+          background-position: 0px 0px;
+        }
+        100% {
+          background-position: 16px 0px;
+        }
+      }
+
+      @keyframes scroll-arrow-pulse {
+        0%,
+        100% {
+          transform: translateY(-50%) scale(1);
+          filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+        }
+        50% {
+          transform: translateY(-50%) scale(1.2);
+          filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
+        }
+      }
     `,
   ]
 
