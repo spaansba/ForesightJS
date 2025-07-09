@@ -50,13 +50,17 @@ interface CallbackInvokedPayload extends PayloadBase {
   hitType: CallbackHitType
 }
 
-interface CallbackCompletedPayload extends PayloadBase {
+interface CallbackCompletedBasePayload extends PayloadBase {
   type: "callbackCompleted"
   name: string
   callbackRunTimeFormatted: string
   callbackRunTimeRaw: number
   hitType: CallbackHitType
+  status: "success" | "error"
 }
+
+type CallbackCompletedPayload = CallbackCompletedBasePayload &
+  ({ status: "success" } | { status: "error"; errorMessage: string })
 
 interface MouseTrajectoryUpdatePayload extends PayloadBase {
   type: "mouseTrajectoryUpdate"
@@ -112,11 +116,11 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       case "elementRegistered":
         return {
           type: "elementRegistered",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           id: event.elementData.element.id || "",
           registerCount: event.elementData.registerCount,
           hitslop: event.elementData.elementBounds.hitSlop,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           // if its the 2nd+ time of the element registering, give the user a heads up in the summary
           summary:
             event.elementData.registerCount === 1
@@ -128,75 +132,78 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       case "elementUnregistered":
         return {
           type: "elementUnregistered",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           id: event.elementData.element.id || "",
           registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           summary: `${event.elementData.name} - ${event.unregisterReason}`,
         }
       case "elementDataUpdated":
         return {
           type: "elementDataUpdated",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           updatedProps: event.updatedProps || [],
           isIntersecting: event.elementData.isIntersectingWithViewport,
+          localizedTimestamp: new Date().toLocaleTimeString(),
           summary: `${event.elementData.name} - ${event.updatedProps.toString()}`,
         }
       case "callbackInvoked":
         return {
           type: "callbackInvoked",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           name: event.elementData.name,
           hitType: event.hitType,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           summary: `${event.elementData.name} - ${event.hitType.kind}`,
         }
       case "callbackCompleted":
         const elapsed = formatElapsed(event.elapsed)
         return {
           type: "callbackCompleted",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          ...(event.status === "error"
+            ? { status: "error", errorMessage: event.errorMessage }
+            : { status: "success" }),
           name: event.elementData.name,
           hitType: event.hitType,
           callbackRunTimeFormatted: elapsed,
           callbackRunTimeRaw: event.elapsed,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           summary: `${event.elementData.name} - ${elapsed}`,
         }
       case "mouseTrajectoryUpdate":
         return {
           type: "mouseTrajectoryUpdate",
-          localizedTimestamp: new Date().toLocaleTimeString(),
           currentPoint: event.trajectoryPositions?.currentPoint,
           predictedPoint: event.trajectoryPositions?.predictedPoint,
           positionCount: event.trajectoryPositions?.positions?.length || 0,
           mousePredictionEnabled: event.predictionEnabled,
+          localizedTimestamp: new Date().toLocaleTimeString(),
           summary: "",
         }
       case "scrollTrajectoryUpdate":
         return {
           type: "scrollTrajectoryUpdate",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           currentPoint: event.currentPoint,
           predictedPoint: event.predictedPoint,
           scrollDirection: event.scrollDirection,
+          localizedTimestamp: new Date().toLocaleTimeString(),
           summary: event.scrollDirection,
         }
       case "managerSettingsChanged":
         return {
           type: "managerSettingsChanged",
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           globalSettings: event.managerData?.globalSettings || {},
           settingsChanged: event.updatedSettings,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           summary: event.updatedSettings.map(setting => setting.setting).join(", "),
         }
       default:
         const _exhaustiveCheck: never = event
         return {
           type: "serializationError",
-          localizedTimestamp: new Date().toLocaleTimeString(),
           error: "Failed to serialize event data",
           errorMessage: JSON.stringify(_exhaustiveCheck),
+          localizedTimestamp: new Date().toLocaleTimeString(),
           summary: "",
         }
     }

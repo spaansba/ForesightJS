@@ -598,15 +598,32 @@ export class ForesightManager {
         hitType: callbackHitType,
       })
       const start = performance.now()
-      await elementData.callback()
-      const elapsed = performance.now() - start
-      this.emit({
-        type: "callbackCompleted",
-        timestamp: Date.now(),
-        elementData,
-        hitType: callbackHitType,
-        elapsed,
-      })
+      try {
+        await elementData.callback()
+        this.emit({
+          type: "callbackCompleted",
+          timestamp: Date.now(),
+          elementData,
+          hitType: callbackHitType,
+          elapsed: performance.now() - start,
+          status: "success",
+        })
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error(
+          `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
+          error
+        )
+        this.emit({
+          type: "callbackCompleted",
+          timestamp: Date.now(),
+          elementData,
+          hitType: callbackHitType,
+          elapsed: performance.now() - start,
+          status: "error",
+          errorMessage,
+        })
+      }
       this.unregister(elementData.element, "callbackHit")
     }
     asyncCallbackWrapper()
@@ -633,7 +650,6 @@ export class ForesightManager {
 
       this.emit({
         type: "elementDataUpdated",
-        timestamp: Date.now(),
         elementData: updatedElementData,
         updatedProps: ["bounds"],
       })
@@ -697,7 +713,6 @@ export class ForesightManager {
       this.emit({
         type: "elementDataUpdated",
         elementData: updatedElementData,
-        timestamp: Date.now(),
         updatedProps,
       })
     }
@@ -751,7 +766,6 @@ export class ForesightManager {
       }
       this.emit({
         type: "scrollTrajectoryUpdate",
-        timestamp: Date.now(),
         currentPoint: this.trajectoryPositions.currentPoint,
         predictedPoint: this.predictedScrollPoint,
         scrollDirection: this.scrollDirection,

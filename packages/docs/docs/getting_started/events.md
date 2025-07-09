@@ -59,7 +59,7 @@ controller.abort()
 Fired **_before_** an element's callback is executed.
 
 ```typescript
-type CallbackFiredEvent = {
+type CallbackInvokedEvent = {
   type: "callbackInvoked"
   timestamp: number
   elementData: ForesightElementData
@@ -72,12 +72,14 @@ type CallbackFiredEvent = {
 Fired **_after_** an element's callback is executed.
 
 ```typescript
-type CallbackFiredEvent = {
+type CallbackCompletedEvent = {
   type: "callbackCompleted"
   timestamp: number
   elementData: ForesightElementData
   hitType: HitType
   elapsed: number // Time between callbackInvoked and callbackCompleted
+  status: "success" | "error"
+  errorMessage?: string
 }
 ```
 
@@ -136,7 +138,6 @@ Fired when tracked element data changes (bounds or visibility).
 ```typescript
 type ElementDataUpdatedEvent = {
   type: "elementDataUpdated"
-  timestamp: number
   elementData: ForesightElementData
   updatedProps: UpdatedDataPropertyNames[] // "bounds" | "visibility"
 }
@@ -168,7 +169,6 @@ Fired during scroll events when scroll prediction is active.
 ```typescript
 type ScrollTrajectoryUpdateEvent = {
   type: "scrollTrajectoryUpdate"
-  timestamp: number
   currentPoint: Point // { x: number; y: number }
   predictedPoint: Point // { x: number; y: number }
   scrollDirection: ScrollDirection // "down" | "up" | "left" | "right"

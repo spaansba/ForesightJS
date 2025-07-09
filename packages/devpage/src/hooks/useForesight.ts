@@ -20,6 +20,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       callback: async () => {
         const randomTimeout = Math.floor(Math.random() * 1000)
         await new Promise(resolve => setTimeout(resolve, randomTimeout))
+        // throw new Error("Test error - callback always fails")
       },
     })
 

@@ -326,7 +326,7 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
  */
 export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCall"
 
-export interface ElementDataUpdatedEvent extends ForesightBaseEvent {
+export interface ElementDataUpdatedEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "elementDataUpdated"
   elementData: ForesightElementData
   updatedProps: UpdatedDataPropertyNames[]
@@ -340,12 +340,15 @@ export interface CallbackInvokedEvent extends ForesightBaseEvent {
   hitType: CallbackHitType
 }
 
-export interface CallbackCompletedEvent extends ForesightBaseEvent {
+interface CallbackCompletedEventBase extends ForesightBaseEvent {
   type: "callbackCompleted"
   elementData: ForesightElementData
   hitType: CallbackHitType
   elapsed: number
 }
+
+export type CallbackCompletedEvent = CallbackCompletedEventBase &
+  ({ status: "success" } | { status: "error"; errorMessage: string })
 
 export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "mouseTrajectoryUpdate"
@@ -353,7 +356,7 @@ export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "ti
   predictionEnabled: boolean
 }
 
-export interface ScrollTrajectoryUpdateEvent extends ForesightBaseEvent {
+export interface ScrollTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "scrollTrajectoryUpdate"
   currentPoint: Point
   predictedPoint: Point

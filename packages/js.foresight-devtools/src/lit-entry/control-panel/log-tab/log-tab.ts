@@ -335,8 +335,8 @@ export class LogTab extends LitElement {
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
       elementRegistered: "#2196f3",
-      callbackInvoked: "#4caf50",
-      callbackCompleted: "#00bcd4",
+      callbackInvoked: "#00bcd4",
+      callbackCompleted: "#4caf50",
       elementDataUpdated: "#ffc107",
       elementUnregistered: "#ff9800",
       managerSettingsChanged: "#f44336",

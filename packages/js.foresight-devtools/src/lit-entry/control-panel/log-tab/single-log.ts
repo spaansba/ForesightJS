@@ -17,8 +17,10 @@ export class SingleLog extends LitElement {
         font-size: 10px;
         font-family: "SF Mono", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
         min-width: 70px;
+        max-width: 70px;
         text-align: left;
         letter-spacing: 0.02em;
+        flex-shrink: 0;
       }
 
       .log-type-badge {
@@ -29,11 +31,12 @@ export class SingleLog extends LitElement {
         text-transform: uppercase;
         letter-spacing: 0.02em;
         color: var(--log-color, #b0c4de);
-        min-width: fit-content;
-        white-space: nowrap;
         min-width: 90px;
+        max-width: 90px;
+        white-space: nowrap;
         text-align: left;
         margin-left: 10px;
+        flex-shrink: 0;
       }
 
       .log-summary {
@@ -46,6 +49,14 @@ export class SingleLog extends LitElement {
         text-overflow: ellipsis;
         margin-left: 6px;
         font-weight: 400;
+        min-width: 0;
+      }
+
+      .log-content {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
       }
 
       /* Color definitions for each log type */
@@ -53,10 +64,10 @@ export class SingleLog extends LitElement {
         --log-color: #2196f3;
       }
       :host(.log-callbackInvoked) {
-        --log-color: #4caf50;
+        --log-color: #00bcd4;
       }
       :host(.log-callbackCompleted) {
-        --log-color: #00bcd4;
+        --log-color: #4caf50;
       }
       :host(.log-elementDataUpdated) {
         --log-color: #ffc107;
@@ -72,6 +83,12 @@ export class SingleLog extends LitElement {
       }
       :host(.log-scrollTrajectoryUpdate) {
         --log-color: #607d8b;
+      }
+
+      /* Error status styling for callbackCompleted */
+      :host(.log-callbackCompleted.error-status) {
+        --log-color: #f44336;
+        background-color: rgba(244, 67, 54, 0.1);
       }
     `,
   ]
@@ -92,8 +109,8 @@ export class SingleLog extends LitElement {
   private getLogTypeColor(logType: string): string {
     const colorMap: Record<string, string> = {
       elementRegistered: "#2196f3",
-      callbackInvoked: "#4caf50",
-      callbackCompleted: "#00bcd4",
+      callbackInvoked: "#00bcd4",
+      callbackCompleted: "#4caf50",
       elementDataUpdated: "#ffc107",
       elementUnregistered: "#ff9800",
       managerSettingsChanged: "#f44336",
@@ -117,21 +134,42 @@ export class SingleLog extends LitElement {
     return eventNames[eventType] || eventType
   }
 
+  private truncateLogSummary(summary: string, maxLength: number = 50): string {
+    if (summary.length <= maxLength) {
+      return summary
+    }
+    return summary.substring(0, maxLength) + "..."
+  }
+
   render() {
     const log = this.log
-    this.className = `log-${log.type}`
+    let className = `log-${log.type}`
+    
+    // Add error status class for callbackCompleted with error status
+    if (log.type === "callbackCompleted" && "status" in log && log.status === "error") {
+      className += " error-status"
+    }
+    
+    this.className = className
+
+    // Use red border for error status, otherwise use the normal color
+    const borderColor = (log.type === "callbackCompleted" && "status" in log && log.status === "error") 
+      ? "#f44336" 
+      : this.getLogTypeColor(log.type)
 
     return html`
       <expandable-item
-        .borderColor=${this.getLogTypeColor(log.type)}
+        .borderColor=${borderColor}
         .itemId=${log.logId}
         .isExpanded=${this.isExpanded}
         .onToggle=${this.onToggle}
       >
         <div slot="content">
-          <span class="log-time">${log.localizedTimestamp}</span>
-          <span class="log-type-badge">${this.getEventDisplayName(log.type)}</span>
-          <span class="log-summary">${log.summary}</span>
+          <div class="log-content">
+            <span class="log-time">${log.localizedTimestamp}</span>
+            <span class="log-type-badge">${this.getEventDisplayName(log.type)}</span>
+            <span class="log-summary">${this.truncateLogSummary(log.summary)}</span>
+          </div>
         </div>
         <div slot="details">${this.serializeLogDataWithoutSummary(log)}</div>
       </expandable-item>
