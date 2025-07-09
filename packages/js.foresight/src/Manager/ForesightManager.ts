@@ -596,7 +596,6 @@ export class ForesightManager {
         timestamp: Date.now(),
         elementData,
         hitType: callbackHitType,
-        managerData: this.getManagerData,
       })
       const start = performance.now()
       await elementData.callback()
@@ -606,7 +605,6 @@ export class ForesightManager {
         timestamp: Date.now(),
         elementData,
         hitType: callbackHitType,
-        managerData: this.getManagerData,
         elapsed,
       })
       this.unregister(elementData.element, "callbackHit")

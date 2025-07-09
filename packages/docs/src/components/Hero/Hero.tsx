@@ -43,7 +43,7 @@ export function Hero() {
 
   ForesightDevtools.initialize({
     showNameTags: false,
-    isControlPanelDefaultMinimized: false,
+    isControlPanelDefaultMinimized: true,
     logging: { callbackCompleted: true, callbackInvoked: true, managerSettingsChanged: true },
   })
 

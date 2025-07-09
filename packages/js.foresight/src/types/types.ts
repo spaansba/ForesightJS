@@ -338,17 +338,13 @@ export interface CallbackInvokedEvent extends ForesightBaseEvent {
   type: "callbackInvoked"
   elementData: ForesightElementData
   hitType: CallbackHitType
-  managerData: ForesightManagerData
 }
 
 export interface CallbackCompletedEvent extends ForesightBaseEvent {
   type: "callbackCompleted"
   elementData: ForesightElementData
   hitType: CallbackHitType
-  managerData: ForesightManagerData
   elapsed: number
-  result?: unknown
-  error?: unknown
 }
 
 export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {

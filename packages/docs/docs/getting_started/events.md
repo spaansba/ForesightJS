@@ -23,21 +23,18 @@ All events can be listened to using the standard `addEventListener` pattern on t
 ```typescript
 import { ForesightManager } from "js.foresight"
 
-const manager = ForesightManager.initialize(/* your config */)
-
 // Define handler as const for removal
 const handleCallbackInvoked = event => {
-  console.log(`Callback executed for ${event.elementData.name} in ${event.hitType.kind} mode`)
+  console.log(
+    `Callback executed for ${event.elementData.name} in ${event.hitType.kind} mode, which took ${event.elapsed} ms`
+  )
 }
 
-// Add the listener
-manager.addEventListener("callbackInvoked", handleCallbackInvoked)
-
-// Or if you dont have access to the manager
+// Add the event
 ForesightManager.instance.addEventListener("callbackInvoked", handleCallbackInvoked)
 
 // Later, remove the listener using the same reference
-manager.removeEventListener("callbackInvoked", handleCallbackInvoked)
+ForesightManager.instance.removeEventListener("callbackInvoked", handleCallbackInvoked)
 ```
 
 ### Using with AbortController (Signals)
@@ -54,6 +51,46 @@ controller.abort()
 ```
 
 ## Available Events
+
+### Interaction Events
+
+#### `callbackInvoked`
+
+Fired **_before_** an element's callback is executed.
+
+```typescript
+type CallbackFiredEvent = {
+  type: "callbackInvoked"
+  timestamp: number
+  elementData: ForesightElementData
+  hitType: HitType
+}
+```
+
+#### `callbackCompleted`
+
+Fired **_after_** an element's callback is executed.
+
+```typescript
+type CallbackFiredEvent = {
+  type: "callbackCompleted"
+  timestamp: number
+  elementData: ForesightElementData
+  hitType: HitType
+  elapsed: number // Time between callbackInvoked and callbackCompleted
+}
+```
+
+**HitType structure**:
+
+```typescript
+type HitType =
+  | { kind: "mouse"; subType: "hover" | "trajectory" }
+  | { kind: "tab"; subType: "forwards" | "reverse" }
+  | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
+```
+
+---
 
 ### Element Lifecycle Events
 
@@ -101,43 +138,9 @@ type ElementDataUpdatedEvent = {
   type: "elementDataUpdated"
   timestamp: number
   elementData: ForesightElementData
-  updatedProps: "bounds" | "visibility"[]
+  updatedProps: UpdatedDataPropertyNames[] // "bounds" | "visibility"
 }
 ```
-
-**updatedProps** values:
-
-- `bounds`: Element's position or size changed (detected via ResizeObserver and MutationObserver)
-- `visibility`: Element's viewport intersection status changed. We track visibility for performance gains by only observing elements that are actually visible to the user, reducing unnecessary calculations for off-screen elements
-
----
-
-### Interaction Events
-
-#### `callbackFired`
-
-Fired when an element's callback is executed due to user interaction prediction or actual interaction.
-
-```typescript
-type CallbackFiredEvent = {
-  type: "callbackFired"
-  timestamp: number
-  elementData: ForesightElementData
-  hitType: HitType
-  managerData: ForesightManagerData
-}
-```
-
-**HitType structure**:
-
-```typescript
-type HitType =
-  | { kind: "mouse"; subType: "hover" | "trajectory" }
-  | { kind: "tab"; subType: "forwards" | "reverse" }
-  | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
-```
-
----
 
 ### Prediction Events
 
@@ -148,7 +151,6 @@ Fired during mouse movement.
 ```typescript
 type MouseTrajectoryUpdateEvent = {
   type: "mouseTrajectoryUpdate"
-  timestamp: number
   trajectoryPositions: {
     currentPoint: { x: number; y: number }
     predictedPoint: { x: number; y: number }
@@ -167,9 +169,9 @@ Fired during scroll events when scroll prediction is active.
 type ScrollTrajectoryUpdateEvent = {
   type: "scrollTrajectoryUpdate"
   timestamp: number
-  currentPoint: { x: number; y: number }
-  predictedPoint: { x: number; y: number }
-  scrollDirection: "down" | "up" | "left" | "right"
+  currentPoint: Point // { x: number; y: number }
+  predictedPoint: Point // { x: number; y: number }
+  scrollDirection: ScrollDirection // "down" | "up" | "left" | "right"
 }
 ```
 
@@ -186,6 +188,7 @@ type ManagerSettingsChangedEvent = {
   type: "managerSettingsChanged"
   timestamp: number
   managerData: Readonly<ForesightManagerData>
+  updatedSettings: UpdatedManagerSetting[]
 }
 ```
 

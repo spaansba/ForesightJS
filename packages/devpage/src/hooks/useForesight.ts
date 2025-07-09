@@ -18,7 +18,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       element: elementRef.current,
       ...options,
       callback: async () => {
-        const randomTimeout = Math.floor(Math.random() * 1000) // 0 to 500 ms
+        const randomTimeout = Math.floor(Math.random() * 1000)
         await new Promise(resolve => setTimeout(resolve, randomTimeout))
       },
     })

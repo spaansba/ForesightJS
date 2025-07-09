@@ -106,8 +106,8 @@ export class SettingItemRange extends LitElement {
     }
   }
 
-  updated(changedProperties: Map<string, any>) {
-    super.updated(changedProperties)
+  willUpdate(changedProperties: Map<string, any>) {
+    super.willUpdate(changedProperties)
     if (changedProperties.has("currentValue")) {
       this.displayValue = this.currentValue
     }
