@@ -57,8 +57,10 @@ export class SingleElement extends LitElement {
     `,
   ]
 
-  @property() elementData!: ForesightElementData
+  @property() elementData!: ForesightElementData & { elementId: string }
   @property() isActive: boolean = false
+  @property() isExpanded: boolean = false
+  @property() onToggle: ((elementId: string) => void) | undefined
 
   private getBorderColor(): string {
     if (this.isActive) {
@@ -66,6 +68,7 @@ export class SingleElement extends LitElement {
     }
     return this.elementData.isIntersectingWithViewport ? "#4caf50" : "#666"
   }
+
 
   private getStatusIndicatorClass(): string {
     if (this.isActive) {
@@ -76,7 +79,6 @@ export class SingleElement extends LitElement {
 
   private formatElementDetails(): string {
     const details = {
-      id: this.elementData.element.id || "none",
       tagName: this.elementData.element.tagName.toLowerCase(),
       isIntersecting: this.elementData.isIntersectingWithViewport,
       registerCount: this.elementData.registerCount,
@@ -93,7 +95,13 @@ export class SingleElement extends LitElement {
 
   render() {
     return html`
-      <expandable-item .borderColor=${this.getBorderColor()} .showCopyButton=${true}>
+      <expandable-item 
+        .borderColor=${this.getBorderColor()} 
+        .showCopyButton=${true}
+        .itemId=${this.elementData.elementId}
+        .isExpanded=${this.isExpanded}
+        .onToggle=${this.onToggle}
+      >
         <div slot="content" class="element-content">
           <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
           <span class="element-name ${this.isActive ? "callback-active" : ""}">

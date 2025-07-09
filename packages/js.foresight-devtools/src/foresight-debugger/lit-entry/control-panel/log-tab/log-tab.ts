@@ -99,9 +99,10 @@ export class LogTab extends LitElement {
   @state() private logDropdown: DropdownOption[]
   @state() private filterDropdown: DropdownOption[]
   @state() private logLocation: LoggingLocations = "controlPanel"
-  @state() private logs: Array<SerializedEventData> = []
-  @state() private expandedLogs: Set<string> = new Set()
+  @state() private logs: Array<SerializedEventData & { logId: string }> = []
+  @state() private expandedLogIds: Set<string> = new Set()
   private MAX_LOGS: number = 100
+  private logIdCounter: number = 0
 
   // This state property is essential to track WHICH log item was copied.
   @state() private copiedLogId: string | null = null
@@ -239,9 +240,19 @@ export class LogTab extends LitElement {
     return "Interact with Foresight to generate events."
   }
 
+  private handleLogToggle = (logId: string): void => {
+    const newExpandedLogIds = new Set(this.expandedLogIds)
+    if (newExpandedLogIds.has(logId)) {
+      newExpandedLogIds.delete(logId)
+    } else {
+      newExpandedLogIds.add(logId)
+    }
+    this.expandedLogIds = newExpandedLogIds
+  }
+
   private clearLogs(): void {
     this.logs = []
-    this.expandedLogs.clear()
+    this.expandedLogIds.clear()
     this.noContentMessage = "Logs cleared"
   }
 
@@ -329,7 +340,11 @@ export class LogTab extends LitElement {
       console.error(logData.error, logData.errorMessage)
       return
     }
-    const newLogs = [logData, ...this.logs]
+    const logWithId = {
+      ...logData,
+      logId: (++this.logIdCounter).toString()
+    }
+    const newLogs = [logWithId, ...this.logs]
     if (newLogs.length > this.MAX_LOGS) {
       newLogs.pop()
     }
@@ -370,7 +385,11 @@ export class LogTab extends LitElement {
           ${this.logs.length === 0
             ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
             : map(this.logs, log => {
-                return html` <single-log .log=${log}></single-log> `
+                return html` <single-log 
+                  .log=${log} 
+                  .isExpanded=${this.expandedLogIds.has(log.logId)}
+                  .onToggle=${this.handleLogToggle}
+                ></single-log> `
               })}
         </div>
       </tab-content>

@@ -75,9 +75,11 @@ export class SingleLog extends LitElement {
       }
     `,
   ]
-  @property() private log: SerializedEventData
+  @property() private log: SerializedEventData & { logId: string }
+  @property() isExpanded: boolean = false
+  @property() onToggle: ((logId: string) => void) | undefined
 
-  constructor(log: SerializedEventData) {
+  constructor(log: SerializedEventData & { logId: string }) {
     super()
     this.log = log
   }
@@ -120,7 +122,12 @@ export class SingleLog extends LitElement {
     this.className = `log-${log.type}`
 
     return html`
-      <expandable-item .borderColor=${this.getLogTypeColor(log.type)}>
+      <expandable-item 
+        .borderColor=${this.getLogTypeColor(log.type)}
+        .itemId=${log.logId}
+        .isExpanded=${this.isExpanded}
+        .onToggle=${this.onToggle}
+      >
         <div slot="content">
           <span class="log-time">${log.localizedTimestamp}</span>
           <span class="log-type-badge">${this.getEventDisplayName(log.type)}</span>

@@ -20,6 +20,7 @@ import type {
 import type { CallbackHits, CallbackHitType } from "js.foresight/types/types"
 
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
+import { ForesightDebuggerLit } from "../../../ForesightDebuggerLit"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -96,15 +97,20 @@ export class ElementTab extends LitElement {
   private totalElementsCount: number = 0
 
   @state() private sortDropdown: DropdownOption[]
-  @state() private sortOrder: SortElementList = "visibility"
-  @state() private elementListItems: Map<ForesightElement, ForesightElementData> = new Map()
+  @state() private sortOrder: SortElementList
+  @state() private elementListItems: Map<
+    ForesightElement,
+    ForesightElementData & { elementId: string }
+  > = new Map()
   @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
   @state() private activeCallbacks: Set<ForesightElement> = new Set()
-
+  @state() private expandedElementIds: Set<string> = new Set()
+  private elementIdCounter: number = 0
   private _abortController: AbortController | null = null
 
   constructor() {
     super()
+    this.sortOrder = ForesightDebuggerLit.instance.devtoolsSettings.sortElementList
     this.sortDropdown = [
       {
         value: "visibility",
@@ -131,7 +137,20 @@ export class ElementTab extends LitElement {
     this.sortOrder = value as SortElementList
   }
 
-  // Updates the individual state properties for visibility
+  private generateElementId(): string {
+    return (++this.elementIdCounter).toString()
+  }
+
+  private handleElementToggle = (elementId: string): void => {
+    const newExpandedElementIds = new Set(this.expandedElementIds)
+    if (newExpandedElementIds.has(elementId)) {
+      newExpandedElementIds.delete(elementId)
+    } else {
+      newExpandedElementIds.add(elementId)
+    }
+    this.expandedElementIds = newExpandedElementIds
+  }
+
   private updateVisibilityCounts() {
     let visibleCount = 0
     let totalCount = 0
@@ -144,7 +163,6 @@ export class ElementTab extends LitElement {
     this.visibleElementsCount = visibleCount
     this.totalElementsCount = totalCount
 
-    // Dispatch event to update control panel title
     this.dispatchEvent(
       new CustomEvent("visibility-count-updated", {
         detail: { visibleCount, totalCount },
@@ -163,7 +181,7 @@ export class ElementTab extends LitElement {
     const lines: string[] = []
 
     lines.push(`Total Hits: ${hitCounts.total}`)
-    lines.push("") // Add a blank line for separation
+    lines.push("")
 
     lines.push(`Mouse: Trajectory: ${hitCounts.mouse.trajectory}, Hover: ${hitCounts.mouse.hover}`)
     lines.push(
@@ -174,19 +192,22 @@ export class ElementTab extends LitElement {
     return lines.join("\n")
   }
 
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback()
     this._abortController = new AbortController()
     const { signal } = this._abortController
-
-    this.updateElementListFromManager() // Populate initial list
-    this.updateVisibilityCounts() // Initial update for visibility counts
+    this.updateElementListFromManager()
+    this.updateVisibilityCounts()
 
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
-        this.elementListItems.set(e.elementData.element, e.elementData)
-        this.updateVisibilityCounts() // Update counts
+        const elementWithId = {
+          ...e.elementData,
+          elementId: this.generateElementId(),
+        }
+        this.elementListItems.set(e.elementData.element, elementWithId)
+        this.updateVisibilityCounts()
       },
       { signal }
     )
@@ -194,10 +215,17 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementDataUpdated",
       (e: ElementDataUpdatedEvent) => {
-        this.elementListItems = new Map(
-          this.elementListItems.set(e.elementData.element, e.elementData)
-        )
-        this.updateVisibilityCounts()
+        const existingElementData = this.elementListItems.get(e.elementData.element)
+        if (existingElementData) {
+          const updatedElementWithId = {
+            ...e.elementData,
+            elementId: existingElementData.elementId,
+          }
+          this.elementListItems = new Map(
+            this.elementListItems.set(e.elementData.element, updatedElementWithId)
+          )
+          this.updateVisibilityCounts()
+        }
       },
       { signal }
     )
@@ -206,9 +234,8 @@ export class ElementTab extends LitElement {
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
         this.elementListItems.delete(e.elementData.element)
-        // Create a new map to trigger Lit update for the map itself
         this.elementListItems = new Map(this.elementListItems)
-        this.updateVisibilityCounts() // Update counts
+        this.updateVisibilityCounts()
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
@@ -236,14 +263,24 @@ export class ElementTab extends LitElement {
     )
   }
 
-  disconnectedCallback(): void {
+  disconnectedCallback() {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
   }
 
   private updateElementListFromManager() {
-    this.elementListItems = new Map(ForesightManager.instance.registeredElements)
+    const elementsWithIds = new Map<
+      ForesightElement,
+      ForesightElementData & { elementId: string }
+    >()
+    ForesightManager.instance.registeredElements.forEach((elementData, element) => {
+      elementsWithIds.set(element, {
+        ...elementData,
+        elementId: this.generateElementId(),
+      })
+    })
+    this.elementListItems = elementsWithIds
   }
 
   private handleCallbackCompleted(hitType: CallbackHitType) {
@@ -270,10 +307,10 @@ export class ElementTab extends LitElement {
 
     newHitCount.total++
 
-    this.hitCount = newHitCount // Lit will detect this change and re-render
+    this.hitCount = newHitCount
   }
 
-  private getSortedElements(): ForesightElementData[] {
+  private getSortedElements(): (ForesightElementData & { elementId: string })[] {
     const elementsData = Array.from(this.elementListItems.values())
 
     switch (this.sortOrder) {
@@ -282,19 +319,27 @@ export class ElementTab extends LitElement {
       case "documentOrder":
         return elementsData.sort(this.sortByDocumentPosition)
       case "visibility":
-        return elementsData.sort((a: ForesightElementData, b: ForesightElementData) => {
-          if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
-            return a.isIntersectingWithViewport ? -1 : 1
+        return elementsData.sort(
+          (
+            a: ForesightElementData & { elementId: string },
+            b: ForesightElementData & { elementId: string }
+          ) => {
+            if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
+              return a.isIntersectingWithViewport ? -1 : 1
+            }
+            return this.sortByDocumentPosition(a, b)
           }
-          return this.sortByDocumentPosition(a, b)
-        })
+        )
       default:
         this.sortOrder satisfies never
         return elementsData
     }
   }
 
-  private sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
+  private sortByDocumentPosition = (
+    a: ForesightElementData & { elementId: string },
+    b: ForesightElementData & { elementId: string }
+  ) => {
     const position = a.element.compareDocumentPosition(b.element)
     if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
     if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
@@ -325,15 +370,16 @@ export class ElementTab extends LitElement {
         .hasContent=${!!this.elementListItems.size}
       >
         <div class="element-list">
-          ${map(
-            this.getSortedElements(),
-            elementData => html`
-              <single-element 
+          ${map(this.getSortedElements(), elementData => {
+            return html`
+              <single-element
                 .elementData=${elementData}
                 .isActive=${this.activeCallbacks.has(elementData.element)}
+                .isExpanded=${this.expandedElementIds.has(elementData.elementId)}
+                .onToggle=${this.handleElementToggle}
               ></single-element>
             `
-          )}
+          })}
         </div>
       </tab-content>
     `

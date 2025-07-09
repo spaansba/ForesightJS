@@ -45,8 +45,6 @@ export class ExpandableItem extends LitElement {
       .item-details {
         position: relative;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
-        /* padding: 0px; */
-        /* background-color: #e0e0e0; */
       }
 
       .item-toggle {
@@ -108,10 +106,14 @@ export class ExpandableItem extends LitElement {
 
   @property() borderColor: string = "#555"
   @property() showCopyButton: boolean = false
-  @state() private isExpanded: boolean = false
+  @property() itemId: string = ""
+  @property() isExpanded: boolean = false
+  @property() onToggle: ((itemId: string) => void) | undefined
 
   private toggleExpand(): void {
-    this.isExpanded = !this.isExpanded
+    if (this.onToggle) {
+      this.onToggle(this.itemId)
+    }
   }
 
   private async handleCopy(event: MouseEvent): Promise<void> {

@@ -25,7 +25,7 @@ export class ControlPanel extends LitElement {
       display: flex;
       flex-direction: column;
       width: 450px;
-      height: 430px;
+      height: 450px;
       transition: width 0.3s ease, height 0.3s ease;
       box-sizing: border-box;
     }
@@ -91,13 +91,20 @@ export class ControlPanel extends LitElement {
       height: 100%;
     }
   `
-  @state() private activeTab: ControllerTabs = "logs"
+  @state() private activeTab: ControllerTabs
   @state() private isMinimized: boolean = false
   @state() private visibleCount: number = 0
   @state() private totalCount: number = 0
 
+  private localStorageSelectedTabKey = "foresight-devtools-control-panel-tab"
+  constructor() {
+    super()
+    const tab = localStorage.getItem(this.localStorageSelectedTabKey)
+    this.activeTab = (tab as ControllerTabs) || "logs"
+  }
   private _handleTabChange(event: CustomEvent) {
     this.activeTab = event.detail.tab
+    localStorage.setItem(this.localStorageSelectedTabKey, this.activeTab)
   }
 
   private _handleVisibilityCountChange = (event: Event) => {
