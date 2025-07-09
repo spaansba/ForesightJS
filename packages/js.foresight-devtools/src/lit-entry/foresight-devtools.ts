@@ -102,10 +102,6 @@ export class ForesightDevtools extends LitElement {
 
     manager.addEventListener("elementRegistered", this.handleRegisterElement, { signal })
     manager.addEventListener("elementDataUpdated", this.handleElementDataUpdated, { signal })
-    manager.addEventListener("mouseTrajectoryUpdate", this.handleMouseTrajectoryUpdate, { signal })
-    manager.addEventListener("scrollTrajectoryUpdate", this.handleScrollTrajectoryUpdate, {
-      signal,
-    })
     manager.addEventListener("elementUnregistered", this.handleUnregisterElement, { signal })
     manager.addEventListener("callbackInvoked", this.handleCallbackInvoked, { signal })
     manager.addEventListener("callbackCompleted", this.handleCallbackCompleted, { signal })
@@ -135,18 +131,6 @@ export class ForesightDevtools extends LitElement {
   private handleCallbackCompleted = (e: CallbackCompletedEvent) => {
     if (this.debugOverlay) {
       this.debugOverlay.handleCallbackCompleted(e)
-    }
-  }
-
-  private handleMouseTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.handleMouseTrajectoryUpdate(e)
-    }
-  }
-
-  private handleScrollTrajectoryUpdate = (e: ScrollTrajectoryUpdateEvent) => {
-    if (this.debugOverlay) {
-      this.debugOverlay.handleScrollTrajectoryUpdate(e)
     }
   }
 

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit"
 import { customElement } from "lit/decorators.js"
 import type { ScrollTrajectoryUpdateEvent } from "js.foresight"
+import { ForesightManager } from "packages/js.foresight/dist"
 
 @customElement("scroll-trajectory")
 export class ScrollTrajectory extends LitElement {
@@ -101,6 +102,27 @@ export class ScrollTrajectory extends LitElement {
     if (this.scrollTrajectoryLine) {
       this.scrollTrajectoryLine.style.display = "none"
     }
+  }
+
+  private _abortController: AbortController | null = null
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+    ForesightManager.instance.addEventListener(
+      "scrollTrajectoryUpdate",
+      (e: ScrollTrajectoryUpdateEvent) => {
+        this.updateScrollTrajectory(e)
+      },
+      { signal }
+    )
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
   }
 
   render() {

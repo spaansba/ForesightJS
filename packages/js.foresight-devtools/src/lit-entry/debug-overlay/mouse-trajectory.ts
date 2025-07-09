@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type { MouseTrajectoryUpdateEvent } from "js.foresight"
+import { ForesightManager, type MouseTrajectoryUpdateEvent } from "js.foresight"
 
 @customElement("mouse-trajectory")
 export class MouseTrajectory extends LitElement {
@@ -57,6 +57,27 @@ export class MouseTrajectory extends LitElement {
       }
     `,
   ]
+
+  private _abortController: AbortController | null = null
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+    ForesightManager.instance.addEventListener(
+      "mouseTrajectoryUpdate",
+      (e: MouseTrajectoryUpdateEvent) => {
+        this.updateTrajectory(e)
+      },
+      { signal }
+    )
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
+  }
 
   firstUpdated() {
     const container = this.shadowRoot!.querySelector("#trajectory-container")!
