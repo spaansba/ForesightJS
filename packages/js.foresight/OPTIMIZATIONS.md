@@ -4,31 +4,6 @@ This document outlines potential performance optimizations for the ForesightMana
 
 ## Micro-Optimizations
 
-### 3. Array Allocation in DOM Mutations (line 497)
-
-### 4. Optimize Element Bounds Updates (lines 428-436)
-
-**Current Issue**: Double Map lookup with forEach
-
-```typescript
-// Current: Uses forEach with double lookup
-this.elements.forEach((_, element) => {
-  const elementData = this.elements.get(element)
-  // ...
-})
-```
-
-**Optimized Version**:
-
-```typescript
-// Optimized: Single iteration
-for (const [element, elementData] of this.elements) {
-  if (elementData.isIntersectingWithViewport) {
-    this.forceUpdateElementBounds(elementData)
-  }
-}
-```
-
 ### 5. Cache Frequently Used Values (lines 438-448)
 
 **Current Issue**: Recalculates values and creates objects unnecessarily
