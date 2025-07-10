@@ -450,11 +450,13 @@ export class ForesightManager {
   private handleMouseMove = (e: MouseEvent) => {
     this.updatePointerState(e)
 
-    this.elements.forEach(currentData => {
+    // Use for...of instead of forEach for better performance in hot code path
+    // Avoids function call overhead and iterator creation on every mouse move
+    for (const currentData of this.elements.values()) {
       if (!currentData.isIntersectingWithViewport) {
-        return
+        continue
       }
-      const { expandedRect } = currentData.elementBounds
+      const expandedRect = currentData.elementBounds.expandedRect
 
       if (!this._globalSettings.enableMousePrediction) {
         if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
@@ -471,7 +473,7 @@ export class ForesightManager {
       ) {
         this.callCallback(currentData, { kind: "mouse", subType: "trajectory" })
       }
-    })
+    }
 
     this.emit({
       type: "mouseTrajectoryUpdate",
