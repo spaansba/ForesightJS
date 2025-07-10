@@ -44,13 +44,13 @@
   "author": "Bart Spaans",
   "license": "MIT",
   "peerDependencies": {
-    "js.foresight": "^3.0.1"
+    "js.foresight": "^3.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "js.foresight": "workspace:*",
     "tslib": "^2.8.1",
-    "tsup": "^8.0.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   },
