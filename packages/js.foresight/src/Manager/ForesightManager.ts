@@ -426,13 +426,11 @@ export class ForesightManager {
   }
 
   private forceUpdateAllElementBounds() {
-    this.elements.forEach((_, element) => {
-      const elementData = this.elements.get(element)
-      // For performance only update rects that are currently intersecting with the viewport
-      if (elementData && elementData.isIntersectingWithViewport) {
+    for (const [_, elementData] of this.elements) {
+      if (elementData.isIntersectingWithViewport) {
         this.forceUpdateElementBounds(elementData)
       }
-    })
+    }
   }
 
   private updatePointerState(e: MouseEvent): void {

@@ -4,39 +4,7 @@ This document outlines potential performance optimizations for the ForesightMana
 
 ## Micro-Optimizations
 
-### 1. Event Handler Performance (lines 450-481)
-
-### 2. Reduce Object Destructuring (line 457)
-
-**Current Issue**: Creates new object reference unnecessarily
-
-```typescript
-// Current: Creates new object reference
-const { expandedRect } = currentData.elementBounds
-```
-
-**Optimized Version**:
-
-```typescript
-// Optimized: Direct access
-const expandedRect = currentData.elementBounds.expandedRect
-```
-
 ### 3. Array Allocation in DOM Mutations (line 497)
-
-**Current Issue**: Creates new array from Map keys
-
-```typescript
-// Current: Creates new array
-for (const element of Array.from(this.elements.keys())) {
-```
-
-**Optimized Version**:
-
-```typescript
-// Optimized: Direct iteration
-for (const element of this.elements.keys()) {
-```
 
 ### 4. Optimize Element Bounds Updates (lines 428-436)
 
