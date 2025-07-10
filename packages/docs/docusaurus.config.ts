@@ -60,6 +60,7 @@ const config: Config = {
           includeBlog: false,
           includePages: true,
           enableMarkdownFiles: true,
+          enableLlmsFullTxt: true,
         },
       } satisfies LLMPluginOptions,
     ],
