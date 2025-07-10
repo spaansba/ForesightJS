@@ -130,7 +130,11 @@ export class ForesightManager {
   private lastKeyDown: KeyboardEvent | null = null
 
   // AbortController for managing global event listeners
-  private globalListenersController: AbortController | null = null
+  private globalListenersController: AbortController = new AbortController()
+
+  // RequestAnimationFrame throttling for mouse events
+  private rafId: number | null = null
+  private pendingMouseEvent: MouseEvent | null = null
 
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
 
@@ -450,6 +454,20 @@ export class ForesightManager {
   }
 
   private handleMouseMove = (e: MouseEvent) => {
+    this.pendingMouseEvent = e
+    // Throttle processing to animation frames for better performance
+    if (this.rafId) return
+
+    this.rafId = requestAnimationFrame(() => {
+      if (this.pendingMouseEvent) {
+        this.processMouseMovement(this.pendingMouseEvent)
+        this.pendingMouseEvent = null
+      }
+      this.rafId = null
+    })
+  }
+
+  private processMouseMovement(e: MouseEvent) {
     this.updatePointerState(e)
 
     // Use for...of instead of forEach for better performance in hot code path
@@ -786,8 +804,8 @@ export class ForesightManager {
       return
     }
 
-    this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
+    //TODO only add event listeners when the events are enabled (mouse/tab)
     document.addEventListener("mousemove", this.handleMouseMove) // Dont add signal we still need to emit events even without elements
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
@@ -813,12 +831,18 @@ export class ForesightManager {
     this.isSetup = false
 
     this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
-    this.globalListenersController = null
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()
     this.positionObserver = null
+
+    // Cancel any pending RAF and clean up mouse event throttling
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingMouseEvent = null
   }
 }

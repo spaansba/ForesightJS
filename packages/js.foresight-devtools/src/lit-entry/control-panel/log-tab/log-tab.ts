@@ -369,11 +369,12 @@ export class LogTab extends LitElement {
       ...logData,
       logId: (++this.logIdCounter).toString(),
     }
-    const newLogs = [logWithId, ...this.logs]
-    if (newLogs.length > this.MAX_LOGS) {
-      newLogs.pop()
+    // More efficient: direct array manipulation
+    this.logs.unshift(logWithId)
+    if (this.logs.length > this.MAX_LOGS) {
+      this.logs.pop()
     }
-    this.logs = newLogs
+    this.requestUpdate()
   }
 
   render() {

@@ -51,8 +51,8 @@ export class ElementOverlays extends LitElement {
       }
 
       .expanded-overlay.invoked-by-scroll {
-        --glow-color-rgb: 34, 197, 94;
-        border-color: #22c55e;
+        --glow-color-rgb: 234, 179, 8;
+        border-color: #eab308;
         background-color: rgba(var(--glow-color-rgb), 0.1);
         animation: callback-glow 2s ease-in-out infinite;
       }

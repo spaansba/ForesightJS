@@ -48,7 +48,6 @@ export class MouseTrajectory extends LitElement {
     `,
   ]
 
-  private trajectoryLineElement?: HTMLElement
   private _abortController = new AbortController()
 
   @state()
@@ -57,6 +56,9 @@ export class MouseTrajectory extends LitElement {
 
   @state()
   private _isVisible = false
+
+  @state()
+  private _trajectoryStyles: { [key: string]: string } = {}
 
   private _isUpdateScheduled = false
   private _latestTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
@@ -91,9 +93,7 @@ export class MouseTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  firstUpdated() {
-    this.trajectoryLineElement = this.shadowRoot?.querySelector(".trajectory-line") as HTMLElement
-  }
+  // Removed firstUpdated - no longer needed for direct DOM access
 
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
     const isEnabled = e.managerData.globalSettings.enableMousePrediction
@@ -116,7 +116,7 @@ export class MouseTrajectory extends LitElement {
   }
 
   private renderTrajectory = () => {
-    if (!this.trajectoryLineElement || !this._latestTrajectory) {
+    if (!this._latestTrajectory) {
       this._isUpdateScheduled = false
       return
     }
@@ -127,20 +127,24 @@ export class MouseTrajectory extends LitElement {
     const length = Math.sqrt(dx * dx + dy * dy)
 
     if (length === 0) {
-      this.style.display = "none"
+      this._trajectoryStyles = { display: "none" }
     } else {
-      this.style.display = ""
       const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-      this.trajectoryLineElement.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
-      this.trajectoryLineElement.style.width = `${length}px`
+      this._trajectoryStyles = {
+        transform: `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`,
+        width: `${length}px`,
+      }
     }
 
     this._isUpdateScheduled = false
+    this.requestUpdate()
   }
 
   render() {
-    const styles = { display: this._isVisible ? "block" : "none" }
-    return html` <div class="trajectory-line" style=${styleMap(styles)}></div> `
+    const combinedStyles = {
+      display: this._isVisible ? "block" : "none",
+      ...this._trajectoryStyles,
+    }
+    return html` <div class="trajectory-line" style=${styleMap(combinedStyles)}></div> `
   }
 }

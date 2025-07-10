@@ -214,10 +214,10 @@ export class ElementTab extends LitElement {
             ...e.elementData,
             elementId: existingElementData.elementId,
           }
-          this.elementListItems = new Map(
-            this.elementListItems.set(e.elementData.element, updatedElementWithId)
-          )
+          // Direct Map mutation is more efficient than creating new Map
+          this.elementListItems.set(e.elementData.element, updatedElementWithId)
           this.updateVisibilityCounts()
+          this.requestUpdate()
         }
       },
       { signal }
@@ -227,11 +227,11 @@ export class ElementTab extends LitElement {
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
         this.elementListItems.delete(e.elementData.element)
-        this.elementListItems = new Map(this.elementListItems)
         this.updateVisibilityCounts()
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
+        this.requestUpdate()
         this.activeCallbacks.delete(e.elementData.element)
       },
       { signal }
@@ -277,30 +277,25 @@ export class ElementTab extends LitElement {
   }
 
   private handleCallbackCompleted(hitType: CallbackHitType) {
-    const newHitCount = {
-      ...this.hitCount,
-      mouse: { ...this.hitCount.mouse },
-      scroll: { ...this.hitCount.scroll },
-      tab: { ...this.hitCount.tab },
-    }
-
+    // Direct mutation is more efficient than object spreading
     switch (hitType.kind) {
       case "mouse":
-        newHitCount.mouse[hitType.subType]++
+        this.hitCount.mouse[hitType.subType]++
         break
       case "tab":
-        newHitCount.tab[hitType.subType]++
+        this.hitCount.tab[hitType.subType]++
         break
       case "scroll":
-        newHitCount.scroll[hitType.subType]++
+        this.hitCount.scroll[hitType.subType]++
         break
       default:
         hitType satisfies never
     }
 
-    newHitCount.total++
+    this.hitCount.total++
 
-    this.hitCount = newHitCount
+    // Trigger LIT's reactive update
+    this.requestUpdate()
   }
 
   private getSortedElements(): (ForesightElementData & { elementId: string })[] {

@@ -81,12 +81,13 @@ export class SettingsTab extends LitElement {
     const currentDevtoolsSettings = ForesightDevtools.instance.devtoolsSettings
     const currentManagerSettings = ForesightManager.instance.getManagerData.globalSettings
 
-    this.devtoolsSettings = { ...currentDevtoolsSettings }
-    this.managerSettings = { ...currentManagerSettings }
+    // Shallow copy is sufficient for settings objects
+    this.devtoolsSettings = Object.assign({}, currentDevtoolsSettings)
+    this.managerSettings = Object.assign({}, currentManagerSettings)
 
     this.initialSettings = {
-      devtools: { ...currentDevtoolsSettings },
-      manager: { ...currentManagerSettings },
+      devtools: Object.assign({}, currentDevtoolsSettings),
+      manager: Object.assign({}, currentManagerSettings),
     }
   }
 

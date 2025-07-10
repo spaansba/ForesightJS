@@ -22,15 +22,15 @@ export class ScrollTrajectory extends LitElement {
         height: 4px;
         background: repeating-linear-gradient(
           90deg,
-          #22c55e 0px,
-          #22c55e 8px,
+          #eab308 0px,
+          #eab308 8px,
           transparent 8px,
           transparent 16px
         );
         z-index: 9999;
         border-radius: 2px;
         animation: scroll-dash-flow 1.5s linear infinite;
-        box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        box-shadow: 0 0 12px rgba(234, 179, 8, 0.4);
       }
 
       .scroll-trajectory-line::after {
@@ -41,10 +41,10 @@ export class ScrollTrajectory extends LitElement {
         transform: translateY(-50%);
         width: 0;
         height: 0;
-        border-left: 8px solid #22c55e;
+        border-left: 8px solid #eab308;
         border-top: 4px solid transparent;
         border-bottom: 4px solid transparent;
-        filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+        filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.6));
         animation: scroll-arrow-pulse 1.5s ease-in-out infinite;
       }
 
@@ -61,17 +61,16 @@ export class ScrollTrajectory extends LitElement {
         0%,
         100% {
           transform: translateY(-50%) scale(1);
-          filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+          filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.6));
         }
         50% {
           transform: translateY(-50%) scale(1.2);
-          filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
+          filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.8));
         }
       }
     `,
   ]
 
-  private scrollTrajectoryLineElement?: HTMLElement
   private _abortController = new AbortController()
 
   @state()
@@ -79,7 +78,13 @@ export class ScrollTrajectory extends LitElement {
     ForesightManager.instance.getManagerData.globalSettings.enableScrollPrediction
 
   @state()
+  private _scrollMargin = ForesightManager.instance.getManagerData.globalSettings.scrollMargin
+
+  @state()
   private _isVisible = false
+
+  @state()
+  private _trajectoryStyles: { [key: string]: string } = {}
 
   private _isUpdateScheduled = false
   private _latestScrollTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
@@ -112,17 +117,17 @@ export class ScrollTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  firstUpdated() {
-    this.scrollTrajectoryLineElement = this.shadowRoot?.querySelector(
-      ".scroll-trajectory-line"
-    ) as HTMLElement
-  }
+  // Removed firstUpdated - no longer needed for direct DOM access
 
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
     const isEnabled = e.managerData.globalSettings.enableScrollPrediction
     this._scrollPredictionIsEnabled = isEnabled
     if (!isEnabled) {
       this._isVisible = false
+    }
+    const scrollMarginUpdate = e.updatedSettings.find(update => update.setting === "scrollMargin")
+    if (scrollMarginUpdate) {
+      this._scrollMargin = scrollMarginUpdate.newValue
     }
   }
 
@@ -142,7 +147,7 @@ export class ScrollTrajectory extends LitElement {
   }
 
   private renderScrollTrajectory = () => {
-    if (!this.scrollTrajectoryLineElement || !this._latestScrollTrajectory) {
+    if (!this._latestScrollTrajectory) {
       this._isUpdateScheduled = false
       return
     }
@@ -150,15 +155,22 @@ export class ScrollTrajectory extends LitElement {
     const { currentPoint, predictedPoint } = this._latestScrollTrajectory
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
-    const length = Math.sqrt(dx * dx + dy * dy)
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-    this.scrollTrajectoryLineElement.style.transform = `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`
-    this.scrollTrajectoryLineElement.style.width = `${length}px`
+
+    this._trajectoryStyles = {
+      transform: `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`,
+    }
+
     this._isUpdateScheduled = false
+    this.requestUpdate()
   }
 
   render() {
-    const styles = { display: this._isVisible ? "block" : "none" }
-    return html` <div class="scroll-trajectory-line" style=${styleMap(styles)}></div> `
+    const combinedStyles = {
+      display: this._isVisible ? "block" : "none",
+      width: `${this._scrollMargin}px`,
+      ...this._trajectoryStyles,
+    }
+    return html` <div class="scroll-trajectory-line" style=${styleMap(combinedStyles)}></div> `
   }
 }
