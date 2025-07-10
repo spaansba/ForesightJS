@@ -496,7 +496,7 @@ export class ForesightManager {
     }
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        for (const element of Array.from(this.elements.keys())) {
+        for (const element of this.elements.keys()) {
           if (!element.isConnected) {
             this.unregister(element, "disconnected")
           }

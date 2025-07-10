@@ -45,7 +45,7 @@ export type TrajectoryPositions = {
  */
 export type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
-  expandedRect: Rect
+  expandedRect: Readonly<Rect>
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
   originalRect: DOMRectReadOnly
   /** The hit slop values applied to this element. */

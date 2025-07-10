@@ -6,35 +6,17 @@ This document outlines potential performance optimizations for the ForesightMana
 
 ### 1. Event Handler Performance (lines 450-481)
 
-**Current Issue**: Creates new iterator every mousemove event
-```typescript
-// Current: Creates new iterator every mousemove
-this.elements.forEach(currentData => {
-  if (!currentData.isIntersectingWithViewport) {
-    return
-  }
-  // ... rest of logic
-})
-```
-
-**Optimized Version**:
-```typescript
-// Optimized: Use for...of with early termination
-for (const currentData of this.elements.values()) {
-  if (!currentData.isIntersectingWithViewport) continue
-  // ... rest of logic
-}
-```
-
 ### 2. Reduce Object Destructuring (line 457)
 
 **Current Issue**: Creates new object reference unnecessarily
+
 ```typescript
 // Current: Creates new object reference
 const { expandedRect } = currentData.elementBounds
 ```
 
 **Optimized Version**:
+
 ```typescript
 // Optimized: Direct access
 const expandedRect = currentData.elementBounds.expandedRect
@@ -43,12 +25,14 @@ const expandedRect = currentData.elementBounds.expandedRect
 ### 3. Array Allocation in DOM Mutations (line 497)
 
 **Current Issue**: Creates new array from Map keys
+
 ```typescript
 // Current: Creates new array
 for (const element of Array.from(this.elements.keys())) {
 ```
 
 **Optimized Version**:
+
 ```typescript
 // Optimized: Direct iteration
 for (const element of this.elements.keys()) {
@@ -57,6 +41,7 @@ for (const element of this.elements.keys()) {
 ### 4. Optimize Element Bounds Updates (lines 428-436)
 
 **Current Issue**: Double Map lookup with forEach
+
 ```typescript
 // Current: Uses forEach with double lookup
 this.elements.forEach((_, element) => {
@@ -66,6 +51,7 @@ this.elements.forEach((_, element) => {
 ```
 
 **Optimized Version**:
+
 ```typescript
 // Optimized: Single iteration
 for (const [element, elementData] of this.elements) {
@@ -78,6 +64,7 @@ for (const [element, elementData] of this.elements) {
 ### 5. Cache Frequently Used Values (lines 438-448)
 
 **Current Issue**: Recalculates values and creates objects unnecessarily
+
 ```typescript
 // Current: Recalculates every time
 private updatePointerState(e: MouseEvent): void {
@@ -89,12 +76,13 @@ private updatePointerState(e: MouseEvent): void {
 ```
 
 **Optimized Version**:
+
 ```typescript
 // Optimized: Cache enabled state and reuse objects
 private updatePointerState(e: MouseEvent): void {
   const currentPoint = { x: e.clientX, y: e.clientY }
   this.trajectoryPositions.currentPoint = currentPoint
-  
+
   if (this._globalSettings.enableMousePrediction) {
     this.trajectoryPositions.predictedPoint = predictNextMousePosition(...)
   } else {
@@ -126,7 +114,7 @@ private updateSpatialGrid(elementData: ForesightElementData) {
   const maxX = Math.floor(rect.right / 100)
   const minY = Math.floor(rect.top / 100)
   const maxY = Math.floor(rect.bottom / 100)
-  
+
   // Add element to all grid cells it occupies
   for (let x = minX; x <= maxX; x++) {
     for (let y = minY; y <= maxY; y++) {
@@ -141,11 +129,11 @@ private updateSpatialGrid(elementData: ForesightElementData) {
 
 private handleMouseMove = (e: MouseEvent) => {
   this.updatePointerState(e)
-  
+
   // Only check elements in nearby grid cells
   const gridKey = this.getGridKey(e.clientX, e.clientY)
   const nearbyElements = this.spatialGrid.get(gridKey) || new Set()
-  
+
   for (const currentData of nearbyElements) {
     if (!currentData.isIntersectingWithViewport) continue
     // ... rest of logic
@@ -172,20 +160,20 @@ private handlePositionChange = (entries: PositionObserverEntry[]) => {
 // Optimized: Batch updates and single emit
 private handlePositionChange = (entries: PositionObserverEntry[]) => {
   const updates: Array<{
-    elementData: ForesightElementData, 
+    elementData: ForesightElementData,
     props: UpdatedDataPropertyNames[]
   }> = []
-  
+
   for (const entry of entries) {
     const elementData = this.elements.get(entry.target)
     if (!elementData) continue
-    
+
     const updatedProps = this.calculateUpdatedProps(elementData, entry)
     if (updatedProps.length > 0) {
       updates.push({ elementData, props: updatedProps })
     }
   }
-  
+
   // Single batch emit
   if (updates.length > 0) {
     this.emit({
@@ -212,9 +200,9 @@ private pendingMouseEvent: MouseEvent | null = null
 
 private handleMouseMove = (e: MouseEvent) => {
   this.pendingMouseEvent = e
-  
+
   if (this.rafId) return
-  
+
   this.rafId = requestAnimationFrame(() => {
     if (this.pendingMouseEvent) {
       this.updatePointerState(this.pendingMouseEvent)
@@ -245,7 +233,7 @@ private processMousePredictions() {
 // Current: Creates new object and async wrapper every time
 private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
   this.elements.set(elementData.element, { ...elementData, isRunningCallback: true })
-  
+
   // Optimized: Update in-place and reuse callback wrapper
   elementData.isRunningCallback = true
   this.executeCallback(elementData, callbackHitType)
@@ -253,14 +241,14 @@ private callCallback(elementData: ForesightElementData, callbackHitType: Callbac
 
 private executeCallback = (elementData: ForesightElementData, callbackHitType: CallbackHitType) => {
   this.updateHitCounters(callbackHitType, elementData)
-  
+
   this.emit({
     type: "callbackInvoked",
     timestamp: Date.now(),
     elementData,
     hitType: callbackHitType,
   })
-  
+
   const start = performance.now()
   try {
     const result = elementData.callback()
@@ -342,7 +330,7 @@ private cleanupUnusedListeners() {
     document.removeEventListener("mousemove", this.handleMouseMove)
     this.mouseListenersActive = false
   }
-  
+
   if (this.tabListenersActive && !this._globalSettings.enableTabPrediction) {
     document.removeEventListener("keydown", this.handleKeyDown)
     document.removeEventListener("focusin", this.handleFocusIn)
