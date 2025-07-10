@@ -14,4 +14,7 @@ export default defineConfig({
   minify: true,
   external: ["js.foresight"],
   outDir: "dist",
+  env: {
+    NODE_ENV: "production",
+  },
 })

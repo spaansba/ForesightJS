@@ -82,7 +82,7 @@ const config: Config = {
           label: "Documentation",
         },
         {
-          to: "/#playground",
+          to: "https://foresightjs.com/#playground",
           label: "Playground",
           position: "left",
         },

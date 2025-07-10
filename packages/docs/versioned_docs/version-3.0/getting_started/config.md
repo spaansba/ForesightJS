@@ -107,7 +107,7 @@ The `ForesightManager.instance.register()` method returns an object with the fol
 
 | Property              | Type     | Description                                                                                                                                                                                 |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started#what-about-touch-devices)                             |
+| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Elements will not be registered on touch devices.                                                                                   |
 | `isLimitedConnection` | boolean  | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                          |
 | `isRegistered`        | boolean  | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                              |
 | `unregister`          | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones. |
