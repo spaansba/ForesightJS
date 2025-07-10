@@ -151,8 +151,7 @@ export class ElementOverlays extends LitElement {
       },
       { signal }
     )
-    
-    // Listen for showNameTags changes
+
     document.addEventListener(
       "showNameTagsChanged",
       (e: Event) => {

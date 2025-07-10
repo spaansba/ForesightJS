@@ -17,10 +17,6 @@ export class ScrollTrajectory extends LitElement {
         position: absolute;
         top: 0;
         left: 0;
-        /*
-         * will-change is a crucial optimization that tells the browser
-         * to prepare for changes to these properties.
-         */
         will-change: transform, width;
         transform-origin: left center;
         height: 4px;

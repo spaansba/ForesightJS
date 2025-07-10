@@ -170,11 +170,6 @@ export class ElementTab extends LitElement {
     )
   }
 
-  /**
-   * Generates a nicely formatted title string for the "hits" chip, always showing all categories.
-   * @param hitCounts The current CallbackHits object.
-   * @returns A multi-line string for the chip's title.
-   */
   private _generateHitsChipTitle(hitCounts: CallbackHits): string {
     const lines: string[] = []
 

@@ -39,7 +39,7 @@ export class CopyIcon extends LitElement {
     }
 
     .copy-button.copied svg {
-      stroke: #4caf50; /* Green tick */
+      stroke: #4caf50;
     }
   `
 

@@ -8,7 +8,6 @@ import type { DevtoolsSettings } from "../../../../types/types"
 export class SettingItemCheckbox extends LitElement {
   static styles = [
     css`
-      /* Modern Toggle Switches */
       input[type="checkbox"] {
         appearance: none;
         -webkit-appearance: none;
@@ -66,7 +65,6 @@ export class SettingItemCheckbox extends LitElement {
       const targetIsChecked = target.checked
 
       if (this.setting === "showNameTags") {
-        // Emit event for devtools settings
         this.dispatchEvent(
           new CustomEvent("setting-changed", {
             detail: { setting: this.setting, value: targetIsChecked },

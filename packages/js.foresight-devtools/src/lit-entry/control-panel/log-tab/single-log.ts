@@ -59,7 +59,6 @@ export class SingleLog extends LitElement {
         min-width: 0;
       }
 
-      /* Color definitions for each log type */
       :host(.log-elementRegistered) {
         --log-color: #2196f3;
       }
@@ -85,7 +84,6 @@ export class SingleLog extends LitElement {
         --log-color: #607d8b;
       }
 
-      /* Error status styling for callbackCompleted */
       :host(.log-callbackCompleted.error-status) {
         --log-color: #f44336;
         background-color: rgba(244, 67, 54, 0.1);
@@ -144,18 +142,17 @@ export class SingleLog extends LitElement {
   render() {
     const log = this.log
     let className = `log-${log.type}`
-    
-    // Add error status class for callbackCompleted with error status
+
     if (log.type === "callbackCompleted" && "status" in log && log.status === "error") {
       className += " error-status"
     }
-    
+
     this.className = className
 
-    // Use red border for error status, otherwise use the normal color
-    const borderColor = (log.type === "callbackCompleted" && "status" in log && log.status === "error") 
-      ? "#f44336" 
-      : this.getLogTypeColor(log.type)
+    const borderColor =
+      log.type === "callbackCompleted" && "status" in log && log.status === "error"
+        ? "#f44336"
+        : this.getLogTypeColor(log.type)
 
     return html`
       <expandable-item

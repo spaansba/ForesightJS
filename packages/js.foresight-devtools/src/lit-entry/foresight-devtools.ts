@@ -74,7 +74,6 @@ export class ForesightDevtools extends LitElement {
   public alterDebuggerSettings(props?: DeepPartial<DevtoolsSettings>) {
     if (!props) return
 
-    // Handle special cases with side effects
     if (this.shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {
       this.devtoolsSettings.showNameTags = props.showNameTags!
       this.dispatchEvent(
@@ -92,7 +91,6 @@ export class ForesightDevtools extends LitElement {
       }
     }
 
-    // Handle simple property updates
     if (
       this.shouldUpdateSetting(
         props.isControlPanelDefaultMinimized,

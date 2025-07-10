@@ -33,19 +33,12 @@ export class MultiSelectDropdown extends BaseDropdown {
     const isCurrentlySelected = this.selectedValues.includes(option.value)
 
     if (isCurrentlySelected) {
-      // Remove from selection
       this.selectedValues = this.selectedValues.filter(value => value !== option.value)
     } else {
-      // Add to selection
       this.selectedValues = [...this.selectedValues, option.value]
     }
-
-    // Call the callback with just the changed value and its new state
     const newSelectionState = !isCurrentlySelected
     this.onSelectionChange?.(option.value, newSelectionState)
-
-    // Don't close dropdown on multi-select
-    // this.isDropdownOpen remains true
   }
 
   protected _getTriggerIcon(): TemplateResult {

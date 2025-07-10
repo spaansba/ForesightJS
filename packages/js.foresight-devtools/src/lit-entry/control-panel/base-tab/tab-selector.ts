@@ -9,8 +9,8 @@ export class TabSelector extends LitElement {
       border-bottom: 2px solid #444;
       margin-top: 12px;
       display: flex;
-      justify-content: space-evenly; /* Or space-around, or flex-start, etc. */
-      width: 100%; /* Ensure the wrapper takes up the full width of its host */
+      justify-content: space-evenly;
+      width: 100%;
     }
 
     .tab-button {
@@ -24,7 +24,7 @@ export class TabSelector extends LitElement {
       transition: all 0.2s ease;
       font-size: 13px;
       font-weight: 500;
-      text-align: center; /* Center the text within each button */
+      text-align: center;
     }
     .tab-button:hover {
       color: #b0c4de;
@@ -40,13 +40,12 @@ export class TabSelector extends LitElement {
   @property({ type: String })
   activeTab: ControllerTabs = "settings"
 
-  // Define the available tabs programmatically
   private tabs: ControllerTabs[] = ["settings", "elements", "logs"]
 
   private _handleTabClick(selectedTab: ControllerTabs) {
     this.dispatchEvent(
       new CustomEvent("tab-change", {
-        detail: { tab: selectedTab }, // Pass the selected tab in the detail object
+        detail: { tab: selectedTab },
         bubbles: true,
         composed: true,
       })

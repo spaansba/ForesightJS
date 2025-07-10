@@ -2,14 +2,13 @@ import { LitElement, html, css, type TemplateResult } from "lit"
 import { property, state } from "lit/decorators.js"
 
 export type DropdownOption = {
-  value: string // Unique identifier for the option
-  label: string // Text displayed in the menu
-  title: string // Tooltip text
-  icon: TemplateResult // Lit HTML template for the icon
+  value: string
+  label: string
+  title: string
+  icon: TemplateResult
 }
 
 export abstract class BaseDropdown extends LitElement {
-  // Static property to track currently open dropdown
   private static currentlyOpen: BaseDropdown | null = null
 
   static styles = [
@@ -140,7 +139,6 @@ export abstract class BaseDropdown extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback()
     document.removeEventListener("click", this._handleOutsideClick)
-    // Clear static reference if this was the open dropdown
     if (BaseDropdown.currentlyOpen === this) {
       BaseDropdown.currentlyOpen = null
     }
@@ -150,19 +148,15 @@ export abstract class BaseDropdown extends LitElement {
     event.stopPropagation()
 
     if (this.isDropdownOpen) {
-      // Close this dropdown
       this._closeDropdown()
     } else {
-      // Close any other open dropdown first
       if (BaseDropdown.currentlyOpen && BaseDropdown.currentlyOpen !== this) {
         BaseDropdown.currentlyOpen._closeDropdown()
       }
 
-      // Open this dropdown
       this.isDropdownOpen = true
       BaseDropdown.currentlyOpen = this
 
-      // Position dropdown after DOM update
       requestAnimationFrame(() => {
         this._positionDropdown()
       })
@@ -182,13 +176,11 @@ export abstract class BaseDropdown extends LitElement {
 
     if (triggerButton && dropdownMenu) {
       const rect = triggerButton.getBoundingClientRect()
-      const dropdownHeight = dropdownMenu.offsetHeight || 200 // fallback height
+      const dropdownHeight = dropdownMenu.offsetHeight || 200
 
-      // Position dropdown below the trigger button
       const top = rect.bottom + 5
       const right = window.innerWidth - rect.right
 
-      // Check if dropdown would go off-screen at the bottom
       const availableSpaceBelow = window.innerHeight - rect.bottom
       const shouldPositionAbove = availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight
 
@@ -210,7 +202,6 @@ export abstract class BaseDropdown extends LitElement {
     }
   }
 
-  // Abstract methods that child classes must implement
   protected abstract _handleOptionClick(option: DropdownOption): void
   protected abstract _getTriggerIcon(): TemplateResult
   protected abstract _isOptionSelected(option: DropdownOption): boolean
