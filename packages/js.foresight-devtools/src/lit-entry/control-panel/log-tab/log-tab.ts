@@ -247,13 +247,14 @@ export class LogTab extends LitElement {
       .map(([eventType, _]) => eventType)
   }
 
+  //TODO check if devtools is open, but is harder than I thought. Look into later
   private shouldShowPerformanceWarning(): boolean {
     const hasConsoleOutput = this.logLocation === "console" || this.logLocation === "both"
-    const hasTrajectoryEvents =
+    const hasFrequentEvents =
       this.eventsEnabled.mouseTrajectoryUpdate ||
       this.eventsEnabled.scrollTrajectoryUpdate ||
       this.eventsEnabled.elementDataUpdated
-    return hasConsoleOutput && hasTrajectoryEvents
+    return hasConsoleOutput && hasFrequentEvents
   }
 
   private getNoLogsMessage(): string {

@@ -38,7 +38,7 @@ import { ForesightDevtools } from "js.foresight-devtools"
 ForesightManager.initialize()
 
 // Initialize development tools
-ForesightDevtools.initialize(ForesightManager.instance)
+ForesightDevtools.initialize()
 ```
 
 ## Configuration Options
@@ -49,6 +49,17 @@ type DevelopmentToolsSettings = {
   isControlPanelDefaultMinimized?: boolean
   showNameTags?: boolean // Show element names on overlays
   sortElementList?: "documentOrder" | "visibility" | "insertionOrder" // Control panel sorting
+  logging: {
+    logLocation: "controlPanel" | "console" | "both" | "none" // Where to log the Foresight Events
+    callbackCompleted: boolean
+    callbackInvoked: boolean
+    elementDataUpdated: boolean
+    elementRegistered: boolean
+    elementUnregistered: boolean
+    managerSettingsChanged: boolean
+    mouseTrajectoryUpdate: boolean
+    scrollTrajectoryUpdate: boolean
+  }
 }
 ```
 
@@ -62,6 +73,22 @@ type DevelopmentToolsSettings = {
 | `isControlPanelDefaultMinimized` | `boolean`         | `false`      | When true, the development tools control panel will be minimized on page load                                                                                                     |
 | `showNameTags`                   | `boolean`         | `true`       | Shows the element `name` (or `id` if no `name` is given) above registered elements                                                                                                |
 | `sortElementList`                | `SortElementList` | `visibility` | Controls element sorting in control panel: `visibility` sorts by viewport visibility, `documentOrder` sorts by HTML structure order, `insertionOrder` sorts by registration order |
+
+### Logging Configuration
+
+**TypeScript Type:** `LogEvents & { logLocation: LoggingLocations }`
+
+| Setting                  | Type                                                    | Default          | Description                                                                                    |
+| ------------------------ | ------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `logLocation`            | `"controlPanel"` \| `"console"` \| `"both"` \| `"none"` | `"controlPanel"` | Where to output the ForesightJS event logs                                                     |
+| `callbackCompleted`      | `boolean`                                               | `false`          | Log when element callbacks finish executing (includes success/error status and execution time) |
+| `callbackInvoked`        | `boolean`                                               | `false`          | Log when element callbacks are triggered (includes hit type: mouse/keyboard/scroll)            |
+| `elementDataUpdated`     | `boolean`                                               | `false`          | Log when element data changes (bounds updates, visibility changes)                             |
+| `elementRegistered`      | `boolean`                                               | `false`          | Log when new elements are registered with ForesightJS                                          |
+| `elementUnregistered`    | `boolean`                                               | `false`          | Log when elements are unregistered (includes reason: callbackHit/disconnected/apiCall)         |
+| `managerSettingsChanged` | `boolean`                                               | `false`          | Log when ForesightManager global settings are modified                                         |
+| `mouseTrajectoryUpdate`  | `boolean`                                               | `false`          | Log real-time mouse trajectory predictions (high frequency - use with caution)                 |
+| `scrollTrajectoryUpdate` | `boolean`                                               | `false`          | Log scroll direction predictions and trajectory updates                                        |
 
 ### Usage Example with All Options
 
@@ -79,11 +106,22 @@ ForesightManager.initialize({
 })
 
 // Initialize development tools with custom settings
-ForesightDevtools.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize({
   showDebugger: true,
   isControlPanelDefaultMinimized: false,
   showNameTags: true,
   sortElementList: "visibility",
+  logging: {
+    logLocation: "controlPanel",
+    callbackCompleted: true,
+    callbackInvoked: true,
+    elementRegistered: true,
+    elementUnregistered: true,
+    elementDataUpdated: false, // High frequency - keep disabled for performance
+    managerSettingsChanged: true,
+    mouseTrajectoryUpdate: false, // High frequency - keep disabled for performance
+    scrollTrajectoryUpdate: false, // High frequency - keep disabled for performance
+  },
 })
 
 // Register elements as usual
