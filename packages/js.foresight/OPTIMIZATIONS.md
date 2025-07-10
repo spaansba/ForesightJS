@@ -2,38 +2,6 @@
 
 This document outlines potential performance optimizations for the ForesightManager class without changing functionality.
 
-## Micro-Optimizations
-
-### 5. Cache Frequently Used Values (lines 438-448)
-
-**Current Issue**: Recalculates values and creates objects unnecessarily
-
-```typescript
-// Current: Recalculates every time
-private updatePointerState(e: MouseEvent): void {
-  this.trajectoryPositions.currentPoint = { x: e.clientX, y: e.clientY }
-  this.trajectoryPositions.predictedPoint = this._globalSettings.enableMousePrediction
-    ? predictNextMousePosition(...)
-    : { ...this.trajectoryPositions.currentPoint }
-}
-```
-
-**Optimized Version**:
-
-```typescript
-// Optimized: Cache enabled state and reuse objects
-private updatePointerState(e: MouseEvent): void {
-  const currentPoint = { x: e.clientX, y: e.clientY }
-  this.trajectoryPositions.currentPoint = currentPoint
-
-  if (this._globalSettings.enableMousePrediction) {
-    this.trajectoryPositions.predictedPoint = predictNextMousePosition(...)
-  } else {
-    this.trajectoryPositions.predictedPoint = currentPoint
-  }
-}
-```
-
 ## Major Optimizations
 
 ### 1. Spatial Partitioning for Mouse Events

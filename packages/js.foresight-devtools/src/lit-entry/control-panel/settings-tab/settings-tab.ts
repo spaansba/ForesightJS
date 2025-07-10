@@ -163,7 +163,7 @@ export class SettingsTab extends LitElement {
         ...this.devtoolsSettings,
         showNameTags: value,
       }
-      ForesightDevtools.instance.alterDebuggerSettings({ showNameTags: value })
+      ForesightDevtools.instance.alterDevtoolsSettings({ showNameTags: value })
       this._updateChangedSettings()
     }
   }

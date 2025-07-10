@@ -49,7 +49,7 @@ export class ForesightDevtools extends LitElement {
     devtools.isInitialized = true
 
     if (props !== undefined) {
-      devtools.alterDebuggerSettings(props)
+      devtools.alterDevtoolsSettings(props)
     }
 
     return devtools
@@ -71,7 +71,7 @@ export class ForesightDevtools extends LitElement {
     return newValue !== undefined && newValue !== currentValue
   }
 
-  public alterDebuggerSettings(props?: DeepPartial<DevtoolsSettings>) {
+  public alterDevtoolsSettings(props?: DeepPartial<DevtoolsSettings>) {
     if (!props) return
 
     if (this.shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {

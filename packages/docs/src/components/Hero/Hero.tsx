@@ -48,7 +48,7 @@ export function Hero() {
   })
 
   const turnOffDebugMode = () => {
-    ForesightDevtools.instance.alterDebuggerSettings({
+    ForesightDevtools.instance.alterDevtoolsSettings({
       showDebugger: false,
     })
   }

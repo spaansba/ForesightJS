@@ -1,9 +1,10 @@
 import { ForesightManager } from "js.foresight"
+import { ForesightDevtools } from "js.foresight-devtools"
 import { useEffect, useRef, useState } from "react"
 
 function Mass() {
   const [resetKey, setResetKey] = useState(0)
-  const buttons = Array.from({ length: 2000 }, (_, i) => (
+  const buttons = Array.from({ length: 1000 }, (_, i) => (
     <SmallButton key={`${resetKey}-${i}`} name={i} />
   ))
 
@@ -21,8 +22,8 @@ function Mass() {
         <button
           className="size-20 bg-black text-white cursor-pointer rounded flex items-center justify-center font-semibold"
           onClick={() => {
-            ForesightManager.instance.alterGlobalSettings({
-              debug: !ForesightManager.instance.getManagerData.globalSettings.debug,
+            ForesightDevtools.instance.alterDevtoolsSettings({
+              showDebugger: !ForesightDevtools.instance.devtoolsSettings.showDebugger,
             })
           }}
         >
@@ -31,7 +32,7 @@ function Mass() {
         <button
           className="size-20 bg-black text-white cursor-pointer rounded flex items-center justify-center font-semibold"
           onClick={() => {
-            setResetKey((prev) => prev + 1)
+            setResetKey(prev => prev + 1)
           }}
         >
           Reset

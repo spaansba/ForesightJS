@@ -56,7 +56,7 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
       label: "Toggle Debug Mode",
       description: "Toggle Debug Mode",
       onClick: () => {
-        ForesightDevtools.instance.alterDebuggerSettings({
+        ForesightDevtools.instance.alterDevtoolsSettings({
           showDebugger: !ForesightDevtools.instance.devtoolsSettings.showDebugger,
         })
       },
