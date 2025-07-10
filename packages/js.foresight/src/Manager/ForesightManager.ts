@@ -434,15 +434,18 @@ export class ForesightManager {
   }
 
   private updatePointerState(e: MouseEvent): void {
+    const currentPoint = { x: e.clientX, y: e.clientY }
+    this.trajectoryPositions.currentPoint = currentPoint
+
     if (this._globalSettings.enableMousePrediction) {
       this.trajectoryPositions.predictedPoint = predictNextMousePosition(
-        (this.trajectoryPositions.currentPoint = { x: e.clientX, y: e.clientY }),
+        currentPoint,
         this.trajectoryPositions.positions,
         this._globalSettings.positionHistorySize,
         this._globalSettings.trajectoryPredictionTime
       )
     } else {
-      this.trajectoryPositions.predictedPoint = { x: e.clientX, y: e.clientY }
+      this.trajectoryPositions.predictedPoint = currentPoint
     }
   }
 

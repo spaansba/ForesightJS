@@ -53,7 +53,7 @@ function SmallButton({ name }: { name: number }) {
     ForesightManager.instance.register({
       element: buttonRef.current,
       callback: () => {
-        console.log(name)
+        // console.log(name)
       },
       name: name.toString(),
       hitSlop: 0,

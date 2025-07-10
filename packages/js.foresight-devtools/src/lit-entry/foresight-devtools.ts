@@ -25,7 +25,7 @@ export class ForesightDevtools extends LitElement {
     showNameTags: true,
     sortElementList: "visibility",
     logging: {
-      logLocation: "both",
+      logLocation: "controlPanel",
       callbackCompleted: true,
       callbackInvoked: true,
       elementDataUpdated: false,
@@ -57,7 +57,7 @@ export class ForesightDevtools extends LitElement {
 
   public static get instance(): ForesightDevtools {
     if (!ForesightDevtools._instance) {
-      throw new Error("ForesightDevtools must be initialized before accessing instance")
+      return ForesightDevtools.initialize()
     }
     return ForesightDevtools._instance
   }
@@ -86,9 +86,7 @@ export class ForesightDevtools extends LitElement {
 
     if (this.shouldUpdateSetting(props.showDebugger, this.devtoolsSettings.showDebugger)) {
       this.devtoolsSettings.showDebugger = props.showDebugger!
-      if (!this.devtoolsSettings.showDebugger) {
-        this.cleanup()
-      }
+      this.requestUpdate()
     }
 
     if (
@@ -180,11 +178,13 @@ export class ForesightDevtools extends LitElement {
     }
   }
 
-  //TODO add cleanup
-  private cleanup() {}
+  private cleanup() {
+    // Just trigger a re-render to hide the components
+    this.requestUpdate()
+  }
 
   render() {
-    if (!this.isInitialized) {
+    if (!this.isInitialized || !this.devtoolsSettings.showDebugger) {
       return html``
     }
     return html`<control-panel></control-panel> <debug-overlay></debug-overlay>`
