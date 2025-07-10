@@ -53,7 +53,8 @@ const config: Config = {
       "@signalwire/docusaurus-plugin-llms-txt",
       {
         siteTitle: "ForesightJS",
-        siteDescription: "Comprehensive guide to ForesightJS",
+        siteDescription:
+          "Comprehensive guide to ForesightJS, the most modern way to prefetch your data",
         depth: 2,
         content: {
           includeBlog: false,
