@@ -12,7 +12,7 @@ export default function Home(): ReactNode {
       description="ForesightJS is a lightweight JavaScript library that predicts user intent based on mouse movements and keyboard navigation, enabling optimal prefetching timing and improved performance."
     >
       <Hero />
-      
+
       <main>
         <Features />
         <DemoWrapper />

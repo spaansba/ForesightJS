@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState } from "react"
 import styles from "../../styles.module.css"
 import BaseCard from "./BaseCard"
 

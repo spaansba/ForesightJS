@@ -1,6 +1,4 @@
-import { useEffect, useRef } from "react"
 import styles from "../../styles.module.css"
-import { ForesightManager } from "js.foresight"
 import Tooltip from "../../Tooltip"
 
 type ResetCardsButtonProps = {

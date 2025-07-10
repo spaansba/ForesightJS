@@ -1,4 +1,4 @@
-import useDebugMode from "@site/src/hooks/useDebugMode"
+import useDebugMode from "../../hooks/useDebugMode"
 import React from "react"
 import styles from "./styles.module.css"
 import Tooltip from "./Tooltip"
