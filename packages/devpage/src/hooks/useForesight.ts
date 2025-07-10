@@ -17,11 +17,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
     const result = ForesightManager.instance.register({
       element: elementRef.current,
       ...options,
-      callback: async () => {
-        const randomTimeout = Math.floor(Math.random() * 1000)
-        await new Promise(resolve => setTimeout(resolve, randomTimeout))
-        // throw new Error("Test error - callback always fails")
-      },
+      callback: options.callback,
     })
 
     setRegisterResults(result)

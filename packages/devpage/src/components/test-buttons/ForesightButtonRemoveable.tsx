@@ -17,8 +17,9 @@ function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
           <div className="size-40 shadow-md bg-teal-600 rounded-lg ">
             <BaseForesightButton
               registerOptions={{
-                callback: () => {
-                  console.log(name)
+                callback: async () => {
+                  const randomTimeout = Math.floor(Math.random() * 1000)
+                  await new Promise(resolve => setTimeout(resolve, randomTimeout))
                 },
                 hitSlop: 0,
                 name: name,

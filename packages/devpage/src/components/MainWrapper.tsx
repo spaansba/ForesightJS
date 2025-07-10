@@ -6,6 +6,7 @@ import ControlSection from "./ui/ControlSection"
 import { useResetKey } from "../stores/ButtonStateStore"
 import { ForesightManager } from "js.foresight"
 import { useEffect } from "react"
+import ForesightButtonError from "./test-buttons/ForesightButtonError"
 
 export const Main = () => {
   const resetKey = useResetKey()
@@ -30,19 +31,15 @@ export const Main = () => {
       <div className="px-8 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-wrap gap-8 justify-center mb-12">
-            {/* <ForesightButtonRegular name={"multi hit"} /> */}
             <ForesightButtonVisibility name="visibility" />
-            <ForesightButtonResizeable name="resizeable" />
-            <ForesightButtonRemoveable name="removeable" />
+            <ForesightButtonError name="callback errror" />
             <ForesightButtonNoName />
+            <ForesightButtonRemoveable name="removeable" />
+            <ForesightButtonResizeable name="resizeable" />
             <ForesightButtonVisibility name="visibility2" />
             <ForesightButtonRemoveable name="removeable2" />
             <ForesightButtonVisibility name="visibility3" />
             <ForesightButtonRemoveable name="removeable3" />
-            <ForesightButtonNoName />
-            <ForesightButtonVisibility name="visibility4" />
-            <ForesightButtonRemoveable name="removeable4" />
-            <ForesightButtonNoName />
           </div>
         </div>
       </div>

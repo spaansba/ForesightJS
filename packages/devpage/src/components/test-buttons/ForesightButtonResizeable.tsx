@@ -21,7 +21,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         >
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-size-change`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-size-change`,
             }}
@@ -59,7 +62,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         >
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-border-change`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-border-change`,
             }}
@@ -77,7 +83,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
           </span>
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-content-change`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-content-change`,
             }}
@@ -95,7 +104,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
           </span>
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-font-change`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-font-change`,
             }}
@@ -114,7 +126,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         >
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-transform-scale`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-transform-scale`,
             }}
@@ -133,7 +148,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         >
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-asymmetric`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-asymmetric`,
             }}
@@ -153,7 +171,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
           >
             <BaseForesightButton
               registerOptions={{
-                callback: () => console.log(`${name}-flex-grow`),
+                callback: async () => {
+                  const randomTimeout = Math.floor(Math.random() * 1000)
+                  await new Promise(resolve => setTimeout(resolve, randomTimeout))
+                },
                 hitSlop: 30,
                 name: `${name}-flex-grow`,
               }}
@@ -174,7 +195,10 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
         >
           <BaseForesightButton
             registerOptions={{
-              callback: () => console.log(`${name}-max-width`),
+              callback: async () => {
+                const randomTimeout = Math.floor(Math.random() * 1000)
+                await new Promise(resolve => setTimeout(resolve, randomTimeout))
+              },
               hitSlop: 30,
               name: `${name}-max-width`,
             }}
