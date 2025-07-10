@@ -37,12 +37,26 @@ export class ForesightDevtools extends LitElement {
     },
   }
 
+  private constructor() {
+    super()
+  }
+
+  private static createAndAppendInstance(): void {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return
+    }
+    ForesightDevtools._instance = document.createElement("foresight-devtools") as ForesightDevtools
+    document.body.appendChild(ForesightDevtools._instance)
+  }
+
   public static initialize(props?: DeepPartial<DevtoolsSettings>): ForesightDevtools {
     if (!ForesightDevtools._instance) {
-      ForesightDevtools._instance = document.createElement(
-        "foresight-devtools"
-      ) as ForesightDevtools
-      document.body.appendChild(ForesightDevtools._instance)
+      ForesightDevtools.createAndAppendInstance()
+    }
+
+    // If still no instance after create attempt (SSR case), return early
+    if (!ForesightDevtools._instance) {
+      return ForesightDevtools._instance!
     }
 
     const devtools = ForesightDevtools._instance
@@ -59,7 +73,7 @@ export class ForesightDevtools extends LitElement {
     if (!ForesightDevtools._instance) {
       return ForesightDevtools.initialize()
     }
-    return ForesightDevtools._instance
+    return ForesightDevtools._instance!
   }
 
   disconnectedCallback() {
