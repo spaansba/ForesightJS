@@ -373,7 +373,6 @@ export class ForesightManager {
           newValue: this._globalSettings[setting],
         })
 
-        // Special case for positionHistorySize remains the same
         if (
           setting === "positionHistorySize" &&
           this._globalSettings.positionHistorySize < oldValue
