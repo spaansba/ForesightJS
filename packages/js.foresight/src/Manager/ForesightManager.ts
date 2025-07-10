@@ -588,7 +588,7 @@ export class ForesightManager {
       return
     }
     // We have this async wrapper so we can time exactly how long the callback takes
-    this.elements.set(elementData.element, { ...elementData, isRunningCallback: true })
+    elementData.isRunningCallback = true
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType, elementData)
       this.emit({
