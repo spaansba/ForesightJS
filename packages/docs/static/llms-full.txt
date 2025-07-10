@@ -1,0 +1,1102 @@
+# Behind the Scenes
+
+:::note
+Reading this is not necessary to use the library; this is just for understanding how ForesightJS works.
+:::
+
+This document delves into the internal workings of ForesightJS, offering a look "behind the scenes" at its architecture and prediction logic. While understanding these details isn't necessary for using the library, it provides insight into how ForesightJS manages elements, observes changes, and predicts user interactions like mouse movements and tab navigation. The following sections explore the core `ForesightManager`, the observers it employs, and the algorithms behind its predictive capabilities.
+
+### ForesightManager Structure
+
+ForesightJS employs a singleton pattern, ensuring only one instance of `ForesightManager` exists. This central instance manages all prediction logic, registered elements, and global settings. Elements are stored in a `Map`, where the key is the registered element itself. Calling `ForesightManager.instance.register()` multiple times with the same element overwrites the existing entry rather than creating a duplicate.
+
+Since the DOM and registered elements might change position, and we want to keep the DOM clean, we require the [`element.getBoundingClientRect`](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) for each element on each update. However, calling this function can trigger [reflows](https://developer.mozilla.org/en-US/docs/Glossary/Reflow), which we want to avoid. To obtain this rect and manage registered element state, we use observers instead.
+
+### Observer Architecture
+
+ForesightJS utilizes both browser-native observers and a third-party observer library to monitor element positions and DOM changes:
+
+- **`MutationObserver`:** This browser-native observer detects when registered elements are removed from the DOM, leading to their automatic unregistration. This provides a safety net if developers forget to manually unregister elements on removal.
+
+- **[`PositionObserver`](https://github.com/Shopify/position-observer/):** Created by [Shopify](https://github.com/Shopify), this library uses browser-native observers under the hood to asynchronously monitor changes in the position of registered elements without polling.
+
+The `PositionObserver` works by using a layered approach to track element position changes across the page. It uses an internal `VisibilityObserver` built on the native `IntersectionObserver` to determine if target elements are visible in the viewport. This optimization means only visible targets are monitored for position changes.
+
+When a target element becomes visible, the system activates a `ResizeObserver` to track size changes of the target element itself. Next to that each target gets its own `PositionIntersectionObserverOptions` containing an internal `IntersectionObserver` with smart rootMargin calculations.
+
+This smart rootMargin transforms the observer from "observing against viewport" to "observing against the target element". By calculating the rootMargin values, the system creates target-specific observation regions. Other elements on the page are observed by these target-specific IntersectionObservers, and when any element moves and intersects or overlaps with a target, callbacks fire. This enables tracking any position changes affecting the target elements without constantly polling `getBoundingClientRect()` on every element.
+
+With the observer foundation in place, we can now examine how ForesightJS implements its three core prediction mechanisms, starting with mouse trajectory prediction.
+
+## Mouse Prediction
+
+Mouse prediction analyzes cursor movement patterns to anticipate where users intend to click. By tracking mouse velocity and trajectory, ForesightJS can predict when a user's cursor path will intersect with registered elements.
+
+### Event Handlers
+
+- **`mousemove`:** Records the mouse's `clientX` and `clientY` coordinates on each `mousemove` event. ForesightJS maintains a history of these positions, with the history size limited by the `positionHistorySize` setting.
+
+### Mouse Position Prediction Mechanism
+
+ForesightJS predicts the mouse's future location using linear extrapolation based on its recent movement history.
+
+The [`predictNextMousePosition`](https://github.com/spaansba/ForesightJS/blob/main/packages/js.foresight/src/helpers/predictNextMousePosition.ts) function implements this in three main steps:
+
+1.  **History Tracking:** The function utilizes stored past mouse positions, each with an associated timestamp.
+2.  **Velocity Calculation:** It calculates the average velocity (change in position over time) using the oldest and newest points in the recorded history.
+3.  **Extrapolation:** Using this calculated velocity and the `trajectoryPredictionTimeInMs` setting (which defines how far into the future to predict), the function projects the mouse's current position along its path to estimate its future `x` and `y` coordinates.
+
+This process yields a `predictedPoint` which allows for a line in memory between the current mouse position and this `predictedPoint` for intersection checks. It only checks elements that are currently visible in the viewport, as determined by the `PositionObserver`.
+
+### Trajectory Intersection Checking
+
+To determine if the predicted mouse path will intersect with a registered element, ForesightJS employs the [`lineSegmentIntersectsRect`](https://github.com/spaansba/ForesightJS/blob/main/src/foresightManager/helpers/lineSigmentIntersectsRect.ts) function. This function implements the [**Liang-Barsky line clipping algorithm**](https://en.wikipedia.org/wiki/Liang%E2%80%93Barsky_algorithm), an efficient method for checking intersections between a line segment (the predicted mouse path) and a rectangular area (the expanded bounds of a registered element).
+
+The process involves:
+
+1.  **Defining the Line Segment:** The line segment is defined by the `currentPoint` (current mouse position) and the `predictedPoint` (from the extrapolation step).
+2.  **Defining the Rectangle:** The target rectangle is the `expandedRect` of a registered element, which includes its `hitSlop`.
+3.  **Clipping Tests:** The algorithm iteratively "clips" the line segment against each of the rectangle's four edges, calculating if and where the line segment crosses each edge.
+4.  **Intersection Determination:** An intersection is confirmed if a valid portion of the line segment remains after all clipping tests (specifically, if its calculated entry parameter \(t_0\) is less than or equal to its exit parameter \(t_1\)).
+
+This mechanism allows ForesightJS to predict if the user's future mouse trajectory will intersect an element. If an intersection is detected, the element's registered `callback` function is invoked.
+
+## Tab Prediction
+
+Tab prediction anticipates keyboard navigation by monitoring Tab key presses and focus changes. When users navigate through tabbable elements using the Tab key,
+
+### Event Handlers
+
+For tab prediction, ForesightJS monitors specific keyboard and focus events:
+
+- **`keydown`:** Listens for `keydown` events to detect when the `Tab` key was pressed.
+- **`focusin`:** Fires when an element gains focus. When a `focusin` event follows a `Tab` key press detected via `keydown`, ForesightJS identifies this sequence as tab navigation.
+
+These event listeners are managed by an `AbortController` for proper cleanup.
+
+### Tab Navigation Prediction
+
+When ForesightJS detects a `Tab` key press followed by a `focusin` event, it recognizes this as user-initiated tab navigation. Identifying all currently tabbable elements on a page is a surprisingly complex task due to varying browser behaviors, element states, and accessibility considerations. Therefore, to reliably determine the tab order, ForesightJS uses the [`tabbable`](https://github.com/focus-trap/tabbable) library.
+
+To optimize performance, ForesightJS caches the results from the `tabbable` library since calling `tabbable()` can be computationally expensive as it uses `element.getBoundingClientRect()` under the hood. The cache is invalidated and refreshed whenever DOM mutations are detected, ensuring the tab order remains accurate even as the page structure changes.
+
+The prediction logic then proceeds as follows:
+
+1.  **Identify Current Focus:** ForesightJS determines the index of the newly focused element within the ordered list of all tabbable elements provided by the `tabbable` library.
+2.  **Determine Tab Direction:** The library checks if the `Shift` key was held during the `Tab` press to ascertain the tabbing direction (forward or backward).
+3.  **Calculate Prediction Range:** Based on the current focused element's index, the tab direction, and the configured `tabOffset`, ForesightJS defines a range of elements that are likely to receive focus next.
+4.  **Trigger Callbacks:** If any registered ForesightJS elements fall within this predicted range, their respective `callback` functions are invoked.
+
+## Scroll Prediction
+
+The final prediction mechanism leverages the existing observer infrastructure to detect scroll-based user intent without additional event listeners.
+
+Unlike mouse and tab prediction, scroll prediction does not require additional event handlers. The `PositionObserver` callback returns an array of elements that have moved in some way. By analyzing the delta between the previous `boundingClientRect` and the new one for elements that remain in the viewport, we can determine the direction elements are moving and thus infer the scroll direction.
+
+Note that this approach may also trigger in other scenarios where elements move, such as animations or dynamic layout changes. If your website has many such animations, you may need to disable scroll prediction entirely.
+
+# Configuration
+
+ForesightJS provides two levels of configuration:
+
+1. **Global Configuration**: Applied to the entire ForesightManager through initialization
+2. **Element-Specific Configuration**: Applied when registering individual elements
+
+## Global Configuration
+
+Global settings are specified when initializing the ForesightManager. This should be done once at your application's entry point.
+
+_If you want the default global options you dont need to initialize the ForesightManager._
+
+```javascript
+import { ForesightManager } from "foresightjs"
+
+// Initialize the manager once at the top of your app if you want custom global settings
+// ALL SETTINGS ARE OPTIONAL
+ForesightManager.initialize({
+  enableMousePrediction: true,
+  positionHistorySize: 8,
+  trajectoryPredictionTime: 80,
+  defaultHitSlop: 10,
+  enableTabPrediction: true,
+  tabOffset: 3,
+  enableScrollPrediction: true,
+  scrollMargin: 150,
+})
+```
+
+### Available Global Settings
+
+**Typescript Type:** `ForesightManagerSettings`
+
+:::note
+All numeric settings are clamped to their specified Min/Max values to prevent invalid configurations.
+:::
+
+| Setting                    | Type               | Default                                  | Min/Max | Description                                                                                                                |
+| -------------------------- | ------------------ | ---------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `enableMousePrediction`    | `boolean`          | `true`                                   | -       | Toggles whether trajectory prediction is active. If `false`, only direct hovers will trigger the callback for mouse users. |
+| `positionHistorySize`      | `number`           | 8                                        | 0/30    | Number of mouse positions to keep in history for velocity calculations                                                     |
+| `trajectoryPredictionTime` | `number`           | 120                                      | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                            |
+| `defaultHitSlop`           | `number` \| `Rect` | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox           |
+| `enableTabPrediction`      | `boolean`          | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                                  |
+| `tabOffset`                | `number`           | 2                                        | 0/20    | Tab stops away from an element to trigger callback                                                                         |
+| `enableScrollPrediction`   | `boolean`          | `true`                                   | -       | Toggles whether scroll prediction is on on                                                                                 |
+| `scrollMargin`             | `number`           | 150                                      | 30/300  | Sets the pixel distance to check from the mouse position in the scroll direction callback                                  |
+
+:::note Development Tools
+Visual development tools are now available as a separate package. See the [development tools documentation](/docs/getting_started/development_tools) for details on installing and configuring the `js.foresight-devtools` package.
+:::
+
+## Element-Specific Configuration
+
+When registering elements with the ForesightManager, you can provide configuration specific to each element:
+
+```javascript
+const myElement = document.getElementById("my-element")
+
+const { unregister, isTouchDevice } = ForesightManager.instance.register({
+  element: myElement, // The element to monitor
+  callback: () => {
+    console.log("prefetching")
+  }, // Function that executes when interaction is predicted or occurs
+  hitSlop: { top: 10, left: 50, right: 50, bottom: 100 }, // Fully invisible "slop" around the element. Basically increases the hover hitbox
+  name: "My button name", // A descriptive name, useful for development tools
+  unregisterOnCallback: false, // Should the callback be ran more than ones?
+})
+
+// its best practice to unregister the element if you are done with it (return of an useEffect in React for example)
+unregister(element)
+```
+
+### Element Registration Parameters
+
+**Typescript Type:** `ForesightRegisterOptions` or `ForesightRegisterOptionsWithoutElement` if you want to omit the `element`
+
+| Parameter  | Type           | Required | Description                                                                     | Default                             |
+| ---------- | -------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------- |
+| `element`  | HTMLElement    | Yes      | The DOM element to monitor                                                      |                                     |
+| `callback` | function       | Yes      | Function that executes when interaction is predicted or occurs                  |                                     |
+| `hitSlop`  | number \| Rect | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox | 0 or defaultHitSlop from initialize |
+| `name`     | string         | No       | A descriptive name for the element, useful for development tools.               | element.id or "" if there is no id  |
+
+### Return Value of register()
+
+The `ForesightManager.instance.register()` method returns an object with the following properties:
+
+**Typescript Type:** `ForesightRegisterResult`
+
+| Property              | Type     | Description                                                                                                                                                                                 |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started#what-about-touch-devices)                             |
+| `isLimitedConnection` | boolean  | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                          |
+| `isRegistered`        | boolean  | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                              |
+| `unregister`          | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones. |
+
+# Development Tools
+
+[![npm version](https://img.shields.io/npm/v/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
+[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+ForesightJS offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how ForesightJS works within your application. This standalone development package is helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
+
+These tools are built entirely using ForesightJS's [built-in events](/docs/getting_started/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
+
+## Installation
+
+To install the ForesightJS Development Tools package, use your preferred package manager:
+
+```bash
+pnpm add -D js.foresight-devtools
+# or
+npm install -D js.foresight-devtools
+# or
+yarn add -D js.foresight-devtools
+```
+
+## Enabling Development Tools
+
+The development tools are a separate package that integrate with your ForesightJS setup:
+
+```javascript
+import { ForesightManager } from "js.foresight"
+import { ForesightDevtools } from "js.foresight-devtools"
+
+// Initialize ForesightJS
+ForesightManager.initialize({})
+
+// Initialize the development tools (all options are optional)
+ForesightDevtools.initialize({
+  showDebugger: true,
+  isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
+  showNameTags: true, // optional setting which shows the name of the element
+  sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
+  logging: {
+    logLocation: "controlPanel", // Where to log the Foresight Events
+    callbackCompleted: false,
+    callbackInvoked: false,
+    elementDataUpdated: false,
+    elementRegistered: false,
+    elementUnregistered: false,
+    managerSettingsChanged: false,
+    mouseTrajectoryUpdate: false,
+    scrollTrajectoryUpdate: false,
+  },
+})
+```
+
+## Development Tools Features
+
+Once enabled, the ForesightJS Development Tools add several visual layers to your application, including mouse and scroll trajectories and element hitboxes. A control panel also appears in the bottom-right corner of the screen.
+
+### Control Panel
+
+This panel allows you to change all available [Global Configurations](/docs/getting_started/config#global-configuration). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior.
+
+In addition to configuration controls, the panel provides two extra key views: one for registered elements and another for displaying emitted event logs.
+
+#### View currently registered elements
+
+The control panel also shows an overview of the currently registered elements. Next to each element's visibility the element will also show when its currently prefetching and when its done prefetching. If you need more detailed information about the prefetching of elements, or the inner workings of Foresight you can change to the logs tab.
+
+#### View emitted event logs
+
+This section displays a timeline of emitted enabled Foresight [events](/docs/getting_started/events), helping you track and understand how the system responds to user interactions and state changes in real time.
+
+:::caution
+Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.
+:::
+
+# Events
+
+ForesightManager emits various events during its operation to provide insight into element registration, prediction activities, and callback executions. These events are primarily used by the [ForesightJS DevTools](/docs/getting_started/development_tools) for visual debugging and monitoring, but can also be leveraged for telemetry, analytics, and performance monitoring in your applications.
+
+## Usage
+
+All events can be listened to using the standard `addEventListener` pattern on the ForesightManager instance:
+
+```typescript
+import { ForesightManager } from "js.foresight"
+
+// Define handler as const for removal
+const handleCallbackInvoked = event => {
+  console.log(
+    `Callback executed for ${event.elementData.name} in ${event.hitType.kind} mode, which took ${event.elapsed} ms`
+  )
+}
+
+// Add the event
+ForesightManager.instance.addEventListener("callbackInvoked", handleCallbackInvoked)
+
+// Later, remove the listener using the same reference
+ForesightManager.instance.removeEventListener("callbackInvoked", handleCallbackInvoked)
+```
+
+### Using with AbortController (Signals)
+
+Event listeners support [AbortController signals](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) for easy cleanup:
+
+```typescript
+const controller = new AbortController()
+
+manager.addEventListener("callbackInvoked", handleCallbackInvoked, { signal: controller.signal })
+
+// Later, remove all listeners added with this signal
+controller.abort()
+```
+
+## Available Events
+
+### Interaction Events
+
+#### `callbackInvoked`
+
+Fired **_before_** an element's callback is executed.
+
+```typescript
+type CallbackFiredEvent = {
+  type: "callbackInvoked"
+  timestamp: number
+  elementData: ForesightElementData
+  hitType: HitType
+}
+```
+
+#### `callbackCompleted`
+
+Fired **_after_** an element's callback is executed.
+
+```typescript
+type CallbackFiredEvent = {
+  type: "callbackCompleted"
+  timestamp: number
+  elementData: ForesightElementData
+  hitType: HitType
+  elapsed: number // Time between callbackInvoked and callbackCompleted
+}
+```
+
+**HitType structure**:
+
+```typescript
+type HitType =
+  | { kind: "mouse"; subType: "hover" | "trajectory" }
+  | { kind: "tab"; subType: "forwards" | "reverse" }
+  | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
+```
+
+---
+
+### Element Lifecycle Events
+
+#### `elementRegistered`
+
+Fired when an element is successfully registered with ForesightManager.
+
+```typescript
+type ElementRegisteredEvent = {
+  type: "elementRegistered"
+  timestamp: number
+  elementData: ForesightElementData
+}
+```
+
+---
+
+#### `elementUnregistered`
+
+Fired when an element is removed from ForesightManager tracking.
+
+```typescript
+type ElementUnregisteredEvent = {
+  type: "elementUnregistered"
+  timestamp: number
+  elementData: ForesightElementData
+  unregisterReason: "callbackHit" | "disconnected" | "apiCall"
+}
+```
+
+**Unregister reasons**:
+
+- `callbackHit`: Element was automatically unregistered after its callback fired
+- `disconnected`: Element was removed from the DOM
+- `apiCall`: Manually unregistered via `manager.unregister()`
+
+---
+
+#### `elementDataUpdated`
+
+Fired when tracked element data changes (bounds or visibility).
+
+```typescript
+type ElementDataUpdatedEvent = {
+  type: "elementDataUpdated"
+  timestamp: number
+  elementData: ForesightElementData
+  updatedProps: UpdatedDataPropertyNames[] // "bounds" | "visibility"
+}
+```
+
+### Prediction Events
+
+#### `mouseTrajectoryUpdate`
+
+Fired during mouse movement.
+
+```typescript
+type MouseTrajectoryUpdateEvent = {
+  type: "mouseTrajectoryUpdate"
+  trajectoryPositions: {
+    currentPoint: { x: number; y: number }
+    predictedPoint: { x: number; y: number }
+  }
+  predictionEnabled: boolean
+}
+```
+
+---
+
+#### `scrollTrajectoryUpdate`
+
+Fired during scroll events when scroll prediction is active.
+
+```typescript
+type ScrollTrajectoryUpdateEvent = {
+  type: "scrollTrajectoryUpdate"
+  timestamp: number
+  currentPoint: Point // { x: number; y: number }
+  predictedPoint: Point // { x: number; y: number }
+  scrollDirection: ScrollDirection // "down" | "up" | "left" | "right"
+}
+```
+
+---
+
+### Configuration Events
+
+#### `managerSettingsChanged`
+
+Fired when global ForesightManager settings are updated.
+
+```typescript
+type ManagerSettingsChangedEvent = {
+  type: "managerSettingsChanged"
+  timestamp: number
+  managerData: Readonly<ForesightManagerData>
+  updatedSettings: UpdatedManagerSetting[]
+}
+```
+
+**managerData**
+see [getManagerData](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata)
+
+---
+
+# Getting Started
+
+[![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
+[![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/js.foresight)](https://bundlephobia.com/package/js.foresight)
+[![GitHub stars](https://img.shields.io/github/stars/spaansba/ForesightJS.svg?style=social&label=Star)](https://github.com/spaansba/ForesightJS)
+[![GitHub last commit](https://img.shields.io/github/last-commit/spaansba/ForesightJS)](https://github.com/spaansba/ForesightJS/commits)
+
+[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com/#playground)
+
+ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements, scroll and keyboard navigation. By analyzing cursor/scroll trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
+
+### Understanding ForesightJS's Role:
+
+When you over simplify prefetching it exists of three parts.
+
+- **What** resource or data to load
+- **How** the loading method and caching strategy is
+- **When** the optimal moment to start fetching is
+
+ForesightJS takes care of the **When** by predicting user intent with mouse trajectory and tab navigation.
+You supply the **What** and **How** inside your `callback` when you register an element.
+
+## Download
+
+```bash
+pnpm add js.foresight
+# or
+npm install js.foresight
+# or
+yarn add js.foresight
+```
+
+## Which problems does ForesightJS solve?
+
+### Problem 1: On-Hover Prefetching Still Has Latency
+
+Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires—time that could be used for prefetching.
+
+### Problem 2: Viewport-Based Prefetching is Wasteful
+
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger **_1.59MB_** of unnecessary prefetch requests.
+
+### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
+
+Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
+
+### The ForesightJS Solution
+
+ForesightJS bridges the gap between wasteful viewport prefetching and basic hover prefetching. The `ForesightManager` predicts user interactions by analyzing mouse trajectory patterns, scroll direction and keyboard navigation sequences. This allows you to prefetch resources at the optimal time to improve performance, but targeted enough to avoid waste.
+
+## Basic Usage Example
+
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](/docs/integrations).
+
+```javascript
+import { ForesightManager } from "foresightjs"
+
+// Initialize the manager if you want custom global settings (do this once at app startup)
+// If you dont want global settings, you dont have to initialize the manager
+ForesightManager.initialize({
+  trajectoryPredictionTime: 80, // How far ahead (in milliseconds) to predict the mouse trajectory
+})
+
+// Register an element to be tracked
+const myButton = document.getElementById("my-button")
+
+const { isTouchDevice, unregister } = ForesightManager.instance.register({
+  element: myButton,
+  callback: () => {
+    // This is where your prefetching logic goes
+  },
+  hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
+})
+
+// Later, when done with this element:
+unregister()
+```
+
+## Integrations
+
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built [integrations](/docs/integrations) for every framework, ready-to-use implementations for [Next.js](/docs/integrations/react/nextjs) and [React Router](/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+
+## Configuration
+
+ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](/docs/getting_started/config).
+
+## Development Tools
+
+ForesightJS has dedicated [Development Tools](/docs/getting_started/development_tools) created with [Foresight Events](/docs/getting_started/events) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution.
+
+```bash
+npm install js.foresight-devtools
+```
+
+```javascript
+import { ForesightDevtools } from "js.foresight-devtools"
+
+// Initialize development tools
+ForesightDevtools.initialize(ForesightManager.instance, {
+  showDebugger: true,
+  showNameTags: true,
+  sortElementList: "visibility",
+})
+```
+
+This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
+
+## What About Touch Devices and Slow Connections?
+
+Since ForesightJS relies on the keyboard/mouse it will not register elements for touch devices. For limited connections (2G or data-saver mode), we respect the user's preference to minimize data usage and skip registration aswell.
+
+The `ForesightManager.instance.register()` method returns these properties:
+
+- `isTouchDevice` - true if user is on a touch device
+- `isLimitedConnection` - true when user is on a 2G connection or has data-saver enabled
+- `isRegistered` - true if element was actually registered
+
+With these properties you could create your own fallback prefetching methods if required. For example if the user is on a touch device you could prefetch based on viewport.
+An example of this can be found in the [Next.js](/docs/integrations/react/nextjs) or [React Router](/docs/integrations/react/react-router) ForesightLink components.
+
+## How Does ForesightJS Work?
+
+For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
+
+## Providing Context to AI Tools
+
+Since ForesightJS is a relatively new and unknown library, most AI assistants and large language models (LLMs) may not have comprehensive knowledge about it in their training data. To help AI assistants better understand and work with ForesightJS, you can provide them with context from our [llms.txt](https://foresightjs.com/llms.txt) page, which contains structured information about the library's API and usage patterns.
+
+Additionally, every page in our documentation is available in markdown format (try adding .md to any documentation URL). You can share these markdown files as context with AI assistants, though all this information is also consolidated in the llms.txt file for convenience.
+
+## Contributing
+
+Please see the [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md)
+
+# Static Properties
+
+The ForesightManager exposes several static properties for accessing and checking the manager state.
+
+**_All properties are read-only_**
+
+## ForesightManager.instance
+
+Gets the singleton instance of ForesightManager, initializing it if necessary. This is the primary way to access the manager throughout your application.
+
+**Returns:** `ForesightManager`
+
+**Example:**
+
+```javascript
+const manager = ForesightManager.instance
+
+// Register an element
+manager.register({
+  element: myButton,
+  callback: () => console.log("Predicted interaction!"),
+})
+
+// or
+ForesightManager.instance.register({
+  element: myButton,
+  callback: () => console.log("Predicted interaction!"),
+})
+```
+
+## ForesightManager.instance.registeredElements
+
+Gets a Map of all currently registered elements and their associated data. This is useful for debugging or inspecting the current state of registered elements.
+
+**Returns:** `ReadonlyMap<ForesightElement, ForesightElementData>`
+
+## ForesightManager.instance.isInitiated
+
+Checks whether the ForesightManager has been initialized. Useful for conditional logic or debugging.
+
+**Returns:** `Readonly<boolean>`
+
+## ForesightManager.instance.getManagerData
+
+Snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+
+**Properties:**
+
+- `registeredElements` - Map of all currently registered elements and their associated data
+- `eventListeners` - Map of all event listeners listening to [ForesightManager Events](/docs/getting_started/events).
+- `globalSettings` - Current [global configuration](/docs/getting_started/config#global-configuration) settings
+- `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab/scroll) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
+- `positionObserverElements` - Elements currently being tracked by the position observer (a.k.a elements that are currently visible)
+
+**Returns:** `Readonly<ForesightManagerData>`
+
+The return will look something like this:
+
+```json
+{
+  "registeredElements": {
+    "size": 7,
+    "entries": "<all your currently registered elements>"
+  },
+  "eventListeners": {
+    "0": {
+      "elementRegistered": []
+    },
+    "1": {
+      "elementUnregistered": []
+    },
+    "2": {
+      "elementDataUpdated": []
+    },
+    "3": {
+      "mouseTrajectoryUpdate": []
+    },
+    "4": {
+      "scrollTrajectoryUpdate": []
+    },
+    "5": {
+      "managerSettingsChanged": []
+    },
+    "6": {
+      "callbackFired": []
+    }
+  },
+  "globalSettings": {
+    "defaultHitSlop": {
+      "bottom": 10,
+      "left": 10,
+      "right": 10,
+      "top": 10
+    },
+    "enableMousePrediction": true,
+    "enableScrollPrediction": true,
+    "enableTabPrediction": true,
+    "positionHistorySize": 10,
+    "resizeScrollThrottleDelay": 0,
+    "scrollMargin": 150,
+    "tabOffset": 2,
+    "trajectoryPredictionTime": 100
+  },
+  "globalCallbackHits": {
+    "mouse": {
+      "hover": 0,
+      "trajectory": 3
+    },
+    "scroll": {
+      "down": 2,
+      "left": 0,
+      "right": 0,
+      "up": 0
+    },
+    "tab": {
+      "forwards": 3,
+      "reverse": 0
+    },
+    "total": 8
+  }
+}
+```
+
+# TypeScript
+
+ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possbile.
+
+## Helper Types
+
+### ForesightRegisterOptionsWithoutElement
+
+Usefull for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
+
+```typescript
+type ForesightButtonProps = {
+  registerOptions: ForesightRegisterOptionsWithoutElement
+}
+
+function ForesightButton({ registerOptions }: ForesightButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!buttonRef.current) {
+      return
+    }
+
+    const { unregister } = ForesightManager.instance.register({
+      element: buttonRef.current,
+      ...registerOptions,
+    })
+
+    return () => {
+      unregister()
+    }
+  }, [buttonRef, registerOptions])
+
+  return (
+    <button ref={buttonRef}>
+      <span>{registerOptions.name}</span>
+    </button>
+  )
+}
+```
+
+# Angular
+
+```bash
+npm install js.foresight js.foresight-devtools ngx-foresight
+# or
+pnpm install js.foresight js.foresight-devtools ngx-foresight
+```
+
+After that import the `ForesightjsDirective` to the components with `href` and `routerLink`, and use the `ForesightjsStrategy` as `preloadingStrategy` in the router's configuration. For example:
+
+```ts
+import { ForesightManager } from 'js.foresight';
+import { ForesightDebugger } from 'js.foresight-devtools';
+import { ForesightjsDirective } from 'ngx-foresight';
+
+ForesightManager.initialize({
+  enableMousePrediction: true,
+  positionHistorySize: 8,
+  trajectoryPredictionTime: 80,
+  defaultHitSlop: 10,
+  enableTabPrediction: true,
+  tabOffset: 3,
+  enableScrollPrediction: true,
+  scrollMargin: 150,
+});
+
+ForesightDebugger.initialize(ForesightManager.instance, {
+  showDebugger: true,
+  isControlPanelDefaultMinimized: true, // optional setting which allows you to minimize the control panel on default
+  showNameTags: true, // optional setting which shows the name of the element
+  sortElementList: 'visibility', // optional setting for how the elements in the control panel are sorted
+});
+```
+
+```html
+<div class="pill-group-horizontal">
+  <a href="/feature1" class="pill" foresightjs>Feature 1</a>
+  <a href="/feature2" class="pill" foresightjs>Feature 2</a>
+  <a href="/feature3" class="pill" foresightjs>Feature 3</a>
+</div>
+```
+
+```ts
+// configure preloading strategy as per routes
+    provideRouter(routes, withPreloading(ForesightjsStrategy)),
+```
+
+# Integrations
+
+Explore framework-specific guides and routing integrations:
+
+## React
+- [React Router](./react/react-router.md)
+- [Next.js](./react/nextjs.md)
+- [useForesight Hook](./react/useForesight.md)
+
+## Vue
+- [Vue](./vue/vue.md)
+
+## TanStack
+- [TanStack Router](./tanstack.md)
+
+# Next.js
+
+## Next.js default prefetching
+
+Next.js's default prefetching method prefetches when links enter the viewport, this is a great user experience but can lead to unnecessary data transfer for bigger websites. For example by scrolling down the [Next.js homepage](https://nextjs.org/) it triggers **~1.59MB** of prefetch requests as every single link on the page gets prefetched, regardless of user intent.
+
+To avoid this, we can wrap the `Link` component and add ForesightJS. The official Next.js [prefetching docs](https://nextjs.org/docs/app/guides/prefetching#extending-or-ejecting-link) mention ForesightJS as an example for custom prefetching strategies.
+
+## ForesightLink Component
+
+Below is an example of creating an wrapper around the Next.js `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default Next.js prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/integrations/react/useForesight).
+
+```tsx
+"use client"
+import type { LinkProps } from "next/link"
+import Link from "next/link"
+import { type ForesightRegisterOptions } from "js.foresight"
+import useForesight from "../hooks/useForesight"
+import { useRouter } from "next/navigation"
+
+interface ForesightLinkProps
+  extends Omit<LinkProps, "prefetch">,
+    Omit<ForesightRegisterOptions, "element" | "callback"> {
+  children: React.ReactNode
+  className?: string
+}
+
+export function ForesightLink({
+  children,
+  className,
+  hitSlop = 0,
+  unregisterOnCallback = true,
+  name = "",
+  ...props
+}: ForesightLinkProps) {
+  const router = useRouter() // import from "next/navigation" not "next/router"
+
+  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
+    callback: () => router.prefetch(props.href.toString()),
+    hitSlop: hitSlop,
+    name: name,
+    unregisterOnCallback: unregisterOnCallback,
+  })
+
+  return (
+    <Link
+      {...props}
+      prefetch={registerResults?.isTouchDevice ?? false}
+      ref={elementRef}
+      className={className}
+    >
+      {children}
+    </Link>
+  )
+}
+```
+
+## Basic Usage
+
+```tsx
+import ForesightLink from "./ForesightLink"
+export default function Navigation() {
+  return (
+    <ForesightLink
+      href="/home"
+      className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+      name="nav-home"
+    >
+      Home
+    </ForesightLink>
+  )
+}
+```
+
+:::caution
+If you dont see the correct prefetching behaviour make sure you are in production. Next.js only prefetches in production and not in development
+:::
+
+# React Router
+
+## React Router's Prefetching
+
+React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesnt have the same flexibility as ForesightJS. To add ForesightJS to React Router you can create a `ForesightLink` component wrapping the `Link` component.
+
+## ForesightLink Component
+
+Below is an example of creating an wrapper around the React Router `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default React Router prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/integrations/react/useForesight).
+
+```tsx
+"use client"
+import { ForesightManager, type ForesightRect, ForesightRegisterOptions } from "js.foresight"
+import { useEffect, useRef, useState } from "react"
+import { Link, useFetcher, type LinkProps } from "react-router"
+import useForesight from "../hooks/useForesight"
+
+interface ForesightLinkProps
+  extends Omit<LinkProps, "prefetch">,
+    Omit<ForesightRegisterOptions, "element" | "callback"> {
+  children: React.ReactNode
+  className?: string
+}
+
+export function ForesightLink({
+  children,
+  className,
+  hitSlop = 0,
+  unregisterOnCallback = true,
+  name = "",
+  ...props
+}: ForesightLinkProps) {
+  const fetcher = useFetcher()
+
+  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
+    callback: () => {
+      if (fetcher.state === "idle" && !fetcher.data) {
+        fetcher.load(props.to.toString())
+      }
+    },
+    hitSlop: hitSlop,
+    name: name,
+    unregisterOnCallback: unregisterOnCallback,
+  })
+
+  return (
+    <Link
+      {...props}
+      prefetch={registerResults?.isTouchDevice ? "render" : "none"}
+      ref={elementRef}
+      className={className}
+    >
+      {children}
+    </Link>
+  )
+}
+```
+
+### Usage of ForesightLink
+
+```tsx
+export function Navigation() {
+  return (
+    <>
+      <ForesightLink to={"/contact"} hitSlop={20} name="contact-link">
+        contact
+      </ForesightLink>
+      <ForesightLink to={"/about"} name="about-link">
+        about
+      </ForesightLink>
+    </>
+  )
+}
+```
+
+# useForesight
+
+The `useForesight` hook serves as the base for all ForesightJS usage with any React framework.
+
+## useForesight
+
+```tsx
+import { useRef, useEffect, useState } from "react"
+import {
+  ForesightManager,
+  type ForesightRegisterOptionsWithoutElement,
+  type ForesightRegisterResult,
+} from "js.foresight"
+
+export default function useForesight<T extends HTMLElement = HTMLElement>(
+  options: ForesightRegisterOptionsWithoutElement
+) {
+  const elementRef = useRef<T>(null)
+  const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
+
+  useEffect(() => {
+    if (!elementRef.current) return
+
+    const result = ForesightManager.instance.register({
+      element: elementRef.current,
+      ...options,
+    })
+
+    setRegisterResults(result)
+
+    return () => {
+      result.unregister()
+    }
+  }, [options])
+
+  return { elementRef, registerResults }
+}
+```
+
+### Return Values
+
+The hook returns an object containing:
+
+- `elementRef` - To attach to your target element
+- [`registerResults`](/docs/getting_started/config#return-value-of-register) - Registration details like `isRegistered`
+
+**Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
+
+This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
+
+### Basic Usage
+
+```TS
+import useForesight from "./useForesight"
+
+function MyComponent() {
+  const { elementRef, registerResults } = useForesight<HTMLButtonElement>({
+    callback: () => {
+      console.log("Prefetching data...")
+      // Your prefetch logic here
+    },
+    hitSlop: 10,
+    name: "my-button",
+  })
+
+  return <button ref={elementRef}>Hover to prefetch</button>
+}
+```
+
+### Framework Integrations
+
+For ready-to-use components built on top of useForesight, see our framework-specific integrations:
+
+- [React Router](/docs/integrations/react/react-router#foresightlink-component)
+- [Next.js](/docs/integrations/react/nextjs#foresightlink-component)
+
+# TanStack Router
+
+## Native Predictive Prefetching Coming to TanStack Router
+
+Good news for TanStack Router users as predictive prefetching is planned as a built-in feature. [See announcement by Tanner Linsley](https://x.com/tannerlinsley/status/1908723776650355111).
+
+A subtle difference is that ForesightJS applies `hitSlop` around _target elements_, TanStack Router's method is expected to use a predictive "slop" around the _mouse cursor's future path_ to detect intersections.
+
+While ForesightJS offers a debug visualization mode not expected in the TanStack Router implementation, the native integration will likely provide better integration. Given the track record of the TanStack team, this native solution will be worth adopting when available.
+
+# Vue
+
+Vue integration examples coming soon.
+
+<!-- ## Basic Usage
+
+```vue
+<template>
+  <button ref="buttonRef" @click="handleClick">Prefetch on Intent</button>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from "vue"
+import { ForesightManager } from "js.foresight"
+
+const buttonRef = ref(null)
+let unregister = null
+
+onMounted(() => {
+  if (buttonRef.value) {
+    const result = ForesightManager.instance.register({
+      element: buttonRef.value,
+      callback: () => {
+        console.log("Prefetching...")
+        // Your prefetch logic here
+      },
+      hitSlop: 20,
+      name: "vue-button",
+    })
+
+    unregister = result.unregister
+  }
+})
+
+onUnmounted(() => {
+  if (unregister) {
+    unregister()
+  }
+})
+
+const handleClick = () => {
+  console.log("Button clicked!")
+}
+</script>
+``` -->
