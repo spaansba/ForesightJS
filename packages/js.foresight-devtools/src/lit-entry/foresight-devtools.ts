@@ -17,7 +17,6 @@ export class ForesightDevtools extends LitElement {
 
   @state() private isInitialized = false
 
-  private debugOverlay: any = null
   private static _instance: ForesightDevtools | null = null
 
   public devtoolsSettings: Required<DevtoolsSettings> = {
@@ -78,12 +77,10 @@ export class ForesightDevtools extends LitElement {
     // Handle special cases with side effects
     if (this.shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {
       this.devtoolsSettings.showNameTags = props.showNameTags!
-      if (this.debugOverlay) {
-        this.debugOverlay.updateNameTagVisibility(this.devtoolsSettings.showNameTags)
-      }
       this.dispatchEvent(
-        new CustomEvent("debuggerSettingsChanged", {
-          detail: { devtoolsSettings: this.devtoolsSettings },
+        new CustomEvent("showNameTagsChanged", {
+          detail: { showNameTags: props.showNameTags! },
+          bubbles: true,
         })
       )
     }

@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit"
-import { customElement, state } from "lit/decorators.js"
+import { customElement, state, query } from "lit/decorators.js"
 import {
   type ForesightElementData,
   type ForesightElement,
@@ -28,7 +28,7 @@ interface CallbackAnimation {
 export class ElementOverlays extends LitElement {
   @state() private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
   @state() private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
-  private containerElement!: HTMLElement
+  @query("#overlays-container") private containerElement!: HTMLElement
 
   static styles = [
     css`
@@ -44,13 +44,9 @@ export class ElementOverlays extends LitElement {
 
       .expanded-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        will-change: transform;
+        will-change: transform, box-shadow;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
-        box-sizing: border-box;
-        border-radius: 8px;
         transition: border-color 0.2s ease, background-color 0.2s ease;
       }
 
@@ -98,141 +94,12 @@ export class ElementOverlays extends LitElement {
         font-size: 11px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
           sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-        border-radius: 4px;
         z-index: 10001;
         white-space: nowrap;
         pointer-events: none;
       }
     `,
   ]
-
-  firstUpdated() {
-    this.containerElement = this.shadowRoot!.querySelector("#overlays-container")! as HTMLElement
-  }
-
-  private createElementOverlays(elementData: ForesightElementData): ElementOverlay {
-    const expandedOverlay = document.createElement("div")
-    expandedOverlay.className = "expanded-overlay"
-    expandedOverlay.setAttribute("data-element-name", elementData.name || "")
-
-    const nameLabel = document.createElement("div")
-    nameLabel.className = "name-label"
-
-    this.containerElement.appendChild(expandedOverlay)
-    this.containerElement.appendChild(nameLabel)
-
-    const overlays = { expandedOverlay, nameLabel }
-    this.overlayMap.set(elementData.element, overlays)
-    return overlays
-  }
-
-  private updateElementOverlays(overlays: ElementOverlay, elementData: ForesightElementData) {
-    const { expandedOverlay, nameLabel } = overlays
-    const { expandedRect } = elementData.elementBounds
-
-    const expandedWidth = expandedRect.right - expandedRect.left
-    const expandedHeight = expandedRect.bottom - expandedRect.top
-    expandedOverlay.style.width = `${expandedWidth}px`
-    expandedOverlay.style.height = `${expandedHeight}px`
-    expandedOverlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
-    expandedOverlay.style.display = "block"
-
-    nameLabel.textContent = elementData.name
-    if (elementData.name === "" || !ForesightDevtools.instance.devtoolsSettings.showNameTags) {
-      nameLabel.style.display = "none"
-    } else {
-      nameLabel.style.display = "block"
-      nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${
-        expandedRect.top - 25
-      }px, 0)`
-    }
-  }
-
-  public createOrUpdateElementOverlay(elementData: ForesightElementData) {
-    if (!this.containerElement) return
-
-    let overlays = this.overlayMap.get(elementData.element)
-    if (!overlays) {
-      overlays = this.createElementOverlays(elementData)
-    }
-    this.updateElementOverlays(overlays, elementData)
-  }
-
-  public removeElementOverlay(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      overlays.expandedOverlay.remove()
-      overlays.nameLabel.remove()
-      this.overlayMap.delete(elementData.element)
-    }
-
-    // Clean up any pending animation
-    const existingAnimation = this.callbackAnimations.get(elementData.element)
-    if (existingAnimation) {
-      clearTimeout(existingAnimation.timeoutId)
-      this.callbackAnimations.delete(elementData.element)
-    }
-  }
-
-  public highlightElementCallback(elementData: ForesightElementData, hitType: CallbackHitType) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      // Clear any existing animation timeout
-      const existingAnimation = this.callbackAnimations.get(elementData.element)
-      if (existingAnimation) {
-        clearTimeout(existingAnimation.timeoutId)
-        this.callbackAnimations.delete(elementData.element)
-      }
-
-      switch (hitType.kind) {
-        case "mouse":
-          overlays.expandedOverlay.classList.add("invoked-by-mouse")
-          break
-        case "scroll":
-          overlays.expandedOverlay.classList.add("invoked-by-scroll")
-          break
-        case "tab":
-          overlays.expandedOverlay.classList.add("invoked-by-tab")
-          break
-        default:
-          hitType satisfies never
-      }
-    }
-  }
-
-  public unhighlightElementCallback(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      // Ensure minimum animation duration of 400ms
-      const animationDelay = setTimeout(() => {
-        overlays.expandedOverlay.classList.remove("callback-invoked")
-        this.callbackAnimations.delete(elementData.element)
-      }, 400)
-
-      this.callbackAnimations.set(elementData.element, {
-        element: elementData.element,
-        timeoutId: animationDelay,
-      })
-    }
-  }
-
-  public updateNameTagVisibility(showNameTags: boolean) {
-    // Update all existing overlays with new name tag visibility
-    this.overlayMap.forEach((overlays, element) => {
-      const elementData = {
-        element,
-        name: overlays.nameLabel.textContent || "",
-      } as ForesightElementData
-      // We need the element bounds, but since this is just for name tag visibility,
-      // we can skip the full update and just handle the name label
-      const nameLabel = overlays.nameLabel
-      if (elementData.name === "" || !showNameTags) {
-        nameLabel.style.display = "none"
-      } else {
-        nameLabel.style.display = "block"
-      }
-    })
-  }
 
   private _abortController: AbortController | null = null
 
@@ -243,7 +110,9 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
-        this.createOrUpdateElementOverlay(e.elementData)
+        if (e.elementData.isIntersectingWithViewport) {
+          this.createOrUpdateElementOverlay(e.elementData)
+        }
       },
       { signal }
     )
@@ -282,6 +151,123 @@ export class ElementOverlays extends LitElement {
       },
       { signal }
     )
+    
+    // Listen for showNameTags changes
+    document.addEventListener(
+      "showNameTagsChanged",
+      (e: Event) => {
+        const customEvent = e as CustomEvent<{ showNameTags: boolean }>
+        this.updateNameTagVisibility(customEvent.detail.showNameTags)
+      },
+      { signal }
+    )
+  }
+
+  private createElementOverlays(elementData: ForesightElementData): ElementOverlay {
+    const expandedOverlay = document.createElement("div")
+    expandedOverlay.className = "expanded-overlay"
+    const nameLabel = document.createElement("div")
+    nameLabel.className = "name-label"
+    this.containerElement.appendChild(expandedOverlay)
+    this.containerElement.appendChild(nameLabel)
+    const overlays = { expandedOverlay, nameLabel }
+    this.overlayMap.set(elementData.element, overlays)
+    return overlays
+  }
+
+  private updateElementOverlays(overlays: ElementOverlay, elementData: ForesightElementData) {
+    const { expandedOverlay, nameLabel } = overlays
+    const { expandedRect } = elementData.elementBounds
+
+    const expandedWidth = expandedRect.right - expandedRect.left
+    const expandedHeight = expandedRect.bottom - expandedRect.top
+    expandedOverlay.style.width = `${expandedWidth}px`
+    expandedOverlay.style.height = `${expandedHeight}px`
+    expandedOverlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
+
+    if (!ForesightDevtools.instance.devtoolsSettings.showNameTags) {
+      nameLabel.style.display = "none"
+    } else {
+      nameLabel.textContent = elementData.name
+      nameLabel.style.display = "block"
+      nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${
+        expandedRect.top - 25
+      }px, 0)`
+    }
+  }
+
+  private createOrUpdateElementOverlay(elementData: ForesightElementData) {
+    let overlays = this.overlayMap.get(elementData.element)
+    if (!overlays) {
+      overlays = this.createElementOverlays(elementData)
+    }
+    this.updateElementOverlays(overlays, elementData)
+  }
+
+  private removeElementOverlay(elementData: ForesightElementData) {
+    const overlays = this.overlayMap.get(elementData.element)
+    if (overlays) {
+      overlays.expandedOverlay.remove()
+      overlays.nameLabel.remove()
+      this.overlayMap.delete(elementData.element)
+    }
+
+    this.clearCallbackAnimationTimeout(elementData.element)
+  }
+
+  private clearCallbackAnimationTimeout(element: ForesightElement) {
+    const existingAnimation = this.callbackAnimations.get(element)
+    if (existingAnimation) {
+      clearTimeout(existingAnimation.timeoutId)
+      this.callbackAnimations.delete(element)
+    }
+  }
+
+  private highlightElementCallback(elementData: ForesightElementData, hitType: CallbackHitType) {
+    const overlays = this.overlayMap.get(elementData.element)
+    if (overlays) {
+      this.clearCallbackAnimationTimeout(elementData.element)
+
+      switch (hitType.kind) {
+        case "mouse":
+          overlays.expandedOverlay.classList.add("invoked-by-mouse")
+          break
+        case "scroll":
+          overlays.expandedOverlay.classList.add("invoked-by-scroll")
+          break
+        case "tab":
+          overlays.expandedOverlay.classList.add("invoked-by-tab")
+          break
+        default:
+          hitType satisfies never
+      }
+    }
+  }
+
+  private unhighlightElementCallback(elementData: ForesightElementData) {
+    const overlays = this.overlayMap.get(elementData.element)
+    if (overlays) {
+      const animationDelay = setTimeout(() => {
+        overlays.expandedOverlay.classList.remove("callback-invoked")
+        this.callbackAnimations.delete(elementData.element)
+      }, 400)
+
+      this.callbackAnimations.set(elementData.element, {
+        element: elementData.element,
+        timeoutId: animationDelay,
+      })
+    }
+  }
+
+  public updateNameTagVisibility(showNameTags: boolean) {
+    this.overlayMap.forEach(overlays => {
+      const nameLabel = overlays.nameLabel
+      if (!showNameTags) {
+        nameLabel.style.display = "none"
+      } else {
+        nameLabel.style.display = "block"
+      }
+    })
   }
 
   disconnectedCallback(): void {
