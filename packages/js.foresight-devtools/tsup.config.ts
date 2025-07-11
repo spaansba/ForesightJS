@@ -17,4 +17,8 @@ export default defineConfig({
   env: {
     NODE_ENV: "production",
   },
+  define: {
+    "process.env.NODE_ENV": '"production"',
+    PRODUCTION: "true",
+  },
 })

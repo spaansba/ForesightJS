@@ -14,7 +14,9 @@ export class CopyIcon extends LitElement {
       align-items: center;
       justify-content: center;
       opacity: 0.6;
-      transition: opacity 0.2s ease, background-color 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        background-color 0.2s ease;
     }
 
     :host([positioned]) .copy-button {

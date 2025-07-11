@@ -47,7 +47,9 @@ export class ElementOverlays extends LitElement {
         will-change: transform, box-shadow;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
-        transition: border-color 0.2s ease, background-color 0.2s ease;
+        transition:
+          border-color 0.2s ease,
+          background-color 0.2s ease;
       }
 
       .expanded-overlay.invoked-by-scroll {

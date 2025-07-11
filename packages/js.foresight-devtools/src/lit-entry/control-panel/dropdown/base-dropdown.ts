@@ -48,7 +48,9 @@ export abstract class BaseDropdown extends LitElement {
         stroke: white;
         fill: none;
         stroke-width: 2;
-        transition: transform 0.2s ease, stroke 0.2s;
+        transition:
+          transform 0.2s ease,
+          stroke 0.2s;
       }
 
       .trigger-button:hover {

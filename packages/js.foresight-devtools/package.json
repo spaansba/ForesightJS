@@ -3,11 +3,14 @@
   "version": "1.0.1",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --clean --minify",
     "dev": "tsup --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "prettier": "prettier --write .",
+    "lint": "eslint . --fix",
+    "prepublishOnly": "pnpm lint && pnpm test:run && pnpm build"
   },
   "exports": {
     ".": {
