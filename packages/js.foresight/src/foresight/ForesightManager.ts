@@ -575,8 +575,6 @@ export class ForesightManager {
   }
 
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    console.log(elementData.isRunningCallback)
-
     if (elementData.isRunningCallback) {
       return
     }

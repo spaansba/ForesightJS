@@ -19,7 +19,7 @@ export function getFocusedElementIndex(
   targetElement: HTMLElement
 ): number {
   // First, try to predict the next index based on the last known position.
-  if (lastFocusedIndex !== null) {
+  if (lastFocusedIndex !== null && lastFocusedIndex > -1) {
     const predictedIndex = isReversed ? lastFocusedIndex - 1 : lastFocusedIndex + 1
 
     // Check if the prediction is valid and correct.
@@ -32,6 +32,5 @@ export function getFocusedElementIndex(
     }
   }
 
-  // Slow way if we dont find it
-  return tabbableElementsCache.findIndex((element) => element === targetElement)
+  return tabbableElementsCache.findIndex(element => element === targetElement)
 }

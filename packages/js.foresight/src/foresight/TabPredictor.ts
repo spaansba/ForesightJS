@@ -64,6 +64,8 @@ export class TabPredictor extends BasePredictor {
   }
 
   private handleFocusIn = (e: FocusEvent) => {
+    console.log(this.tabbableElementsCache)
+    console.log(this.lastFocusedIndex)
     try {
       if (!this.lastKeyDown) {
         return
@@ -74,7 +76,7 @@ export class TabPredictor extends BasePredictor {
       }
 
       // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
-      if (!this.tabbableElementsCache.length) {
+      if (!this.tabbableElementsCache.length || this.lastFocusedIndex === -1) {
         this.tabbableElementsCache = tabbable(document.documentElement)
       }
 
@@ -94,7 +96,7 @@ export class TabPredictor extends BasePredictor {
       for (let i = 0; i <= this.tabOffset; i++) {
         const elementIndex = isReversed ? currentIndex - i : currentIndex + i
         const element = this.tabbableElementsCache[elementIndex]
-        
+
         // Type guard: ensure element exists and is a valid ForesightElement
         if (element && element instanceof Element && this.elements.has(element)) {
           elementsToPredict.push(element)
