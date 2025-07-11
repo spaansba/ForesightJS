@@ -579,7 +579,6 @@ export class ForesightManager {
       return
     }
     // We have this async wrapper so we can time exactly how long the callback takes
-    elementData.isRunningCallback = true
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType)
       this.emit({
@@ -617,50 +616,16 @@ export class ForesightManager {
       }
       this.unregister(elementData.element, "callbackHit")
     }
+    elementData.isRunningCallback = true
     asyncCallbackWrapper()
   }
 
-  /**
-   * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
-   * We need an observer for that
-   */
-  private forceUpdateElementBounds(elementData: ForesightElementData) {
-    const newOriginalRect = elementData.element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
-
-    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
-      const updatedElementData = {
-        ...elementData,
-        elementBounds: {
-          ...elementData.elementBounds,
-          originalRect: newOriginalRect,
-          expandedRect,
-        },
-      }
-      this.elements.set(elementData.element, updatedElementData)
-
-      this.emit({
-        type: "elementDataUpdated",
-        elementData: updatedElementData,
-        updatedProps: ["bounds"],
-      })
-    }
-  }
-
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    // Start batch processing for scroll prediction
-    if (this._globalSettings.enableScrollPrediction) {
-      this.scrollPredictor?.startBatch()
-    }
-
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) {
         continue
       }
-      // Always call handlePositionChangeDataUpdates before handleScrollPrefetch
-      this.handlePositionChangeDataUpdates(elementData, entry)
-
       if (this._globalSettings.enableScrollPrediction) {
         this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
       } else {
@@ -677,11 +642,13 @@ export class ForesightManager {
           })
         }
       }
+      // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
+      this.handlePositionChangeDataUpdates(elementData, entry)
     }
 
     // End batch processing for scroll prediction
     if (this._globalSettings.enableScrollPrediction) {
-      this.scrollPredictor?.endBatch()
+      this.scrollPredictor?.resetScrollProps()
     }
   }
 
@@ -692,41 +659,25 @@ export class ForesightManager {
     const updatedProps: UpdatedDataPropertyNames[] = []
     const isNowIntersecting = entry.isIntersecting
 
-    // Create updated element data with new intersection state
-    let updatedElementData = {
-      ...elementData,
-      isIntersectingWithViewport: isNowIntersecting,
-    }
-
     // Track visibility changes
     if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
       updatedProps.push("visibility")
+      elementData.isIntersectingWithViewport = isNowIntersecting
     }
 
     // Handle bounds updates for intersecting elements
     if (isNowIntersecting) {
       updatedProps.push("bounds")
-      this.scrollPredictor?.handleScrollPrefetch(updatedElementData, entry.boundingClientRect)
-      updatedElementData = {
-        ...updatedElementData,
-        elementBounds: {
-          hitSlop: elementData.elementBounds.hitSlop,
-          originalRect: entry.boundingClientRect,
-          expandedRect: getExpandedRect(
-            entry.boundingClientRect,
-            elementData.elementBounds.hitSlop
-          ),
-        },
+      elementData.elementBounds = {
+        hitSlop: elementData.elementBounds.hitSlop,
+        originalRect: entry.boundingClientRect,
+        expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
       }
     }
-
-    // Update state and emit once
-
-    this.elements.set(elementData.element, updatedElementData)
     if (updatedProps.length) {
       this.emit({
         type: "elementDataUpdated",
-        elementData: updatedElementData,
+        elementData: elementData,
         updatedProps,
       })
     }
@@ -766,5 +717,33 @@ export class ForesightManager {
     this.domObserver = null
     this.positionObserver?.disconnect()
     this.positionObserver = null
+  }
+
+  /**
+   * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
+   * We need an observer for that
+   */
+  private forceUpdateElementBounds(elementData: ForesightElementData) {
+    const newOriginalRect = elementData.element.getBoundingClientRect()
+    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
+
+    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
+      const updatedElementData = {
+        ...elementData,
+        elementBounds: {
+          ...elementData.elementBounds,
+          originalRect: newOriginalRect,
+          expandedRect,
+        },
+      }
+
+      this.elements.set(elementData.element, updatedElementData)
+
+      this.emit({
+        type: "elementDataUpdated",
+        elementData: updatedElementData,
+        updatedProps: ["bounds"],
+      })
+    }
   }
 }

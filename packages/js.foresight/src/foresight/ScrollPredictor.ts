@@ -26,7 +26,6 @@ export class ScrollPredictor extends BasePredictor {
 
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
-  private isInBatch: boolean = false
   public scrollMargin: number
   private trajectoryPositions: Readonly<TrajectoryPositions>
 
@@ -38,22 +37,12 @@ export class ScrollPredictor extends BasePredictor {
 
   public cleanup(): void {
     this.abort()
-    this.resetBatchState()
-    this.isInBatch = false
+    this.resetScrollProps()
   }
 
-  private resetBatchState(): void {
+  public resetScrollProps(): void {
     this.scrollDirection = null
     this.predictedScrollPoint = null
-  }
-
-  public startBatch(): void {
-    this.resetBatchState()
-    this.isInBatch = true
-  }
-
-  public endBatch(): void {
-    this.isInBatch = false
   }
 
   public handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect): void {
@@ -65,6 +54,7 @@ export class ScrollPredictor extends BasePredictor {
       // ONCE per handlePositionChange batch we decide what the scroll direction is
       this.scrollDirection =
         this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
+
       if (this.scrollDirection === "none") {
         return
       }
