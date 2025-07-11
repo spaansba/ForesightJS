@@ -1,6 +1,12 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
-import type { callCallbackFunction, ForesightElement, ForesightElementData } from "../types/types"
+import type {
+  CallCallbackFunction,
+  EmitFunction,
+  ForesightElement,
+  ForesightElementData,
+} from "../types/types"
+import { BasePredictor } from "./BasePredictor"
 
 /**
  * Manages the prediction of user intent based on Tab key navigation.
@@ -13,15 +19,13 @@ import type { callCallbackFunction, ForesightElement, ForesightElementData } fro
  * - Predicting which registered elements the user is about to focus.
  * - Calling a provided callback when a prediction is made.
  */
-export class TabPredictor {
+export class TabPredictor extends BasePredictor {
   // Internal state for tab prediction
   private lastKeyDown: KeyboardEvent | null = null
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
-  private tabAbortController: AbortController | null = null
   public tabOffset: number
-  private elements: ReadonlyMap<ForesightElement, ForesightElementData>
-  private callbackFunction: callCallbackFunction
+
   /**
    * Creates an instance of TabPredictor.
    * @param initialTabOffset - The initial tab offset setting.
@@ -30,17 +34,16 @@ export class TabPredictor {
   constructor(
     initialTabOffset: number,
     elements: Map<ForesightElement, ForesightElementData>,
-    callbackFunction: callCallbackFunction
+    callbackFunction: CallCallbackFunction,
+    emit: EmitFunction
   ) {
-    this.elements = elements
+    super(elements, callbackFunction, emit)
     this.initializeListeners()
     this.tabOffset = initialTabOffset
-    this.callbackFunction = callbackFunction
   }
 
-  private initializeListeners() {
-    this.tabAbortController = new AbortController()
-    const { signal } = this.tabAbortController
+  protected initializeListeners(): void {
+    const { signal } = this.abortController
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
   }
@@ -50,11 +53,10 @@ export class TabPredictor {
     this.lastFocusedIndex = null
   }
 
-  public cleanup() {
-    if (this.tabAbortController) {
-      this.tabAbortController.abort()
-      this.tabAbortController = null
-    }
+  public cleanup(): void {
+    this.abort()
+    this.tabbableElementsCache = []
+    this.lastFocusedIndex = -1
   }
 
   // We store the last key for the FocusIn event, meaning we know if the user is tabbing around the page.
