@@ -1,7 +1,11 @@
 import { LitElement, html, css } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { styleMap } from "lit/directives/style-map.js"
-import type { ScrollTrajectoryUpdateEvent, ManagerSettingsChangedEvent } from "js.foresight"
+import type {
+  ScrollTrajectoryUpdateEvent,
+  ManagerSettingsChangedEvent,
+  ElementUnregisteredEvent,
+} from "js.foresight"
 import { ForesightManager } from "js.foresight"
 import type { Point } from "./mouse-trajectory"
 
@@ -106,6 +110,12 @@ export class ScrollTrajectory extends LitElement {
     )
 
     ForesightManager.instance.addEventListener(
+      "elementUnregistered",
+      this.handleElementUnregistered,
+      { signal }
+    )
+
+    ForesightManager.instance.addEventListener(
       "managerSettingsChanged",
       this.handleSettingsChange,
       { signal }
@@ -117,7 +127,12 @@ export class ScrollTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  // Removed firstUpdated - no longer needed for direct DOM access
+  // On last element make sure to remove any leftovers
+  private handleElementUnregistered = (e: ElementUnregisteredEvent) => {
+    if (e.wasLastElement) {
+      this._isVisible = false
+    }
+  }
 
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
     const isEnabled = e.managerData.globalSettings.enableScrollPrediction

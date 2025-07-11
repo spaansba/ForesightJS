@@ -36,7 +36,7 @@ export function Hero() {
   ForesightManager.initialize({
     enableMousePrediction: true,
     trajectoryPredictionTime: 110,
-    positionHistorySize: 14,
+    positionHistorySize: 5,
     defaultHitSlop: 0,
     tabOffset: 3,
   })
