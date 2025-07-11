@@ -1,703 +1,743 @@
-# JS.Foresight-Devtools Performance Optimization Guide
+# Performance Optimizations (POP) - js.foresight-devtools
 
-## Executive Summary
+This document outlines all performance optimizations implemented and potential improvements for the ForesightJS development tools overlay system.
 
-This document provides comprehensive optimization strategies for the js.foresight-devtools package, focusing on LIT web components best practices, performance improvements, and maintainability enhancements. The recommendations are based on deep analysis of the current implementation and LIT framework expertise.
+## Current Optimizations
 
-## 🎯 Priority Classification
+### Memory Management & Cleanup
 
-**🔴 Critical (Performance Impact)**
-
-- Memory leaks and inefficient cleanup
-- Event system bottlenecks
-- Rendering performance issues
-
-**🟡 High (User Experience)**
-
-- State management optimization
-- List rendering improvements
-- Animation performance
-
-**🟢 Medium (Maintainability)**
-
-- Code structure improvements
-- Best practices implementation
-- Future-proofing
-
-## 📊 Current Architecture Analysis
-
-### Component Structure
-
-- **23 LIT components** with clear separation of concerns
-- **Singleton pattern** for main orchestrator
-- **Event-driven architecture** with custom events
-- **Shadow DOM isolation** for style encapsulation
-
-### Performance Characteristics
-
-- ✅ **Strengths**: Efficient trajectory rendering, proper cleanup with AbortController
-- ❌ **Weaknesses**: Excessive object copying, event listener accumulation, no virtualization
-- ⚠️ **Concerns**: Growing unbounded lists, synchronous operations
-
-## 🔧 Critical Optimizations
-
-### 1. State Management Overhaul
-
-#### Current Issues
-
+#### AbortController Pattern
 ```typescript
-// ❌ ANTI-PATTERN: Excessive object spreading
-const newHitCount = {
-  ...this.hitCount,
-  mouse: { ...this.hitCount.mouse },
-  scroll: { ...this.hitCount.scroll },
-  tab: { ...this.hitCount.tab },
+// All overlay components use AbortController for proper cleanup
+disconnectedCallback(): void {
+  this._abortController?.abort()
+  this._abortController = null
 }
 ```
 
-#### Optimization Strategy
+#### Map-based Storage
+- Element overlays use `Map<ForesightElement, ElementOverlay>` for O(1) lookups
+- Efficient element-to-overlay mapping and retrieval
+- Automatic cleanup when elements are unregistered
 
+#### Timeout Management
+- Callback animations tracked with timeout IDs
+- Proper cleanup prevents memory leaks
+- AbortController prevents event listener accumulation
+
+### Rendering Optimizations
+
+#### RequestAnimationFrame
 ```typescript
-// ✅ OPTIMIZED: Direct mutation with change detection
-private updateHitCount(hitType: CallbackHitType) {
-  const target = this.hitCount[hitType.kind];
-  target[hitType.subType]++;
-  this.hitCount.total++;
-  this.requestUpdate();
+// Mouse and scroll trajectory components use RAF for smooth animations
+if (!this._isUpdateScheduled) {
+  this._isUpdateScheduled = true
+  requestAnimationFrame(this.renderTrajectory)
+}
+```
+
+#### Hardware Acceleration
+```css
+/* GPU acceleration with will-change properties */
+.expanded-overlay {
+  will-change: transform, box-shadow;
+  transform: translate3d(${left}px, ${top}px, 0);
 }
 
-// ✅ OPTIMIZED: Generic settings updater
-private updateSettings<T extends keyof DevtoolsSettings>(
-  key: T,
-  newValue: DevtoolsSettings[T],
-  shouldDispatchEvent = false
-) {
-  if (this.shouldUpdateSetting(newValue, this.devtoolsSettings[key])) {
-    this.devtoolsSettings[key] = newValue!;
-    if (shouldDispatchEvent) {
-      this.dispatchEvent(new CustomEvent(`${key}Changed`, { detail: { [key]: newValue! } }));
-    }
-    this.requestUpdate();
+.trajectory-line {
+  will-change: transform, width;
+  transform-origin: left center;
+}
+```
+
+#### Efficient Positioning
+- Transform3d usage for hardware acceleration
+- StyleMap directive for dynamic styling
+- CSS transitions preferred over JavaScript animations
+
+### Event Handling Optimizations
+
+#### Event Delegation
+- Centralized event handling through ForesightManager
+- Single AbortController per component
+- Event listeners registered only when needed
+
+#### Conditional Rendering
+```typescript
+// Trajectory visibility managed through state flags
+@property({ type: Boolean })
+showTrajectory = false
+
+// Batch updates to prevent excessive re-renders
+private _isUpdateScheduled = false
+```
+
+## Element Overlays Optimizations
+
+### Current Implementation
+```typescript
+// Efficient bounds calculation with hit slop
+const expandedRect = {
+  left: rect.left - hitSlop.left,
+  top: rect.top - hitSlop.top,
+  width: rect.width + hitSlop.left + hitSlop.right,
+  height: rect.height + hitSlop.top + hitSlop.bottom
+}
+
+// Hardware-accelerated positioning
+style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
+```
+
+### Potential Improvements
+- **Virtual Scrolling**: Implement viewport-based rendering for many overlays
+- **Intersection Observer**: Hide off-screen overlays automatically
+- **CSS Containment**: Use `contain: layout style paint` for isolation
+- **Debounced Updates**: Batch overlay position updates during rapid changes
+
+## Mouse Trajectory Optimizations
+
+### Current Implementation
+```typescript
+// Efficient math calculations
+const dx = predictedPoint.x - currentPoint.x
+const dy = predictedPoint.y - currentPoint.y
+const length = Math.sqrt(dx * dx + dy * dy)
+
+// Optimized line rotation
+const angle = Math.atan2(dy, dx) * (180 / Math.PI)
+```
+
+### Potential Improvements
+- **Vector Caching**: Cache frequently calculated vectors
+- **Bezier Curves**: Use cubic-bezier for smoother trajectory rendering
+- **Canvas Fallback**: Consider canvas for complex trajectories
+- **Path Optimization**: Implement Douglas-Peucker algorithm for path simplification
+
+## Scroll Trajectory Optimizations
+
+### Current Implementation
+```css
+/* CSS animations for scroll indication */
+@keyframes scroll-dash-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+.scroll-trajectory {
+  animation: scroll-dash-flow 1.5s linear infinite;
+}
+```
+
+### Potential Improvements
+- **CSS Custom Properties**: Use CSS variables for dynamic animation timing
+- **Momentum Prediction**: Implement momentum-based scroll prediction
+- **Multi-directional**: Optimize for diagonal scroll directions
+
+## Advanced Optimization Opportunities
+
+### Shared Resource Management
+```typescript
+// Overlay pool for memory efficiency
+class OverlayPool {
+  private pool: HTMLElement[] = []
+  private inUse = new Set<HTMLElement>()
+  
+  acquire(): HTMLElement {
+    const overlay = this.pool.pop() || this.createElement()
+    this.inUse.add(overlay)
+    return overlay
+  }
+  
+  release(overlay: HTMLElement): void {
+    this.inUse.delete(overlay)
+    this.pool.push(overlay)
+    overlay.style.display = 'none'
   }
 }
 ```
 
-### 2. Event System Optimization
-
-#### Current Issues
-
-- Multiple components listening to same events
-- Repetitive event handler registration
-- Potential memory leaks from unmanaged listeners
-
-#### Optimization Strategy: Central Event Dispatcher
-
+### Performance Monitoring
 ```typescript
-// ✅ OPTIMIZED: Reactive Controller for shared event handling
-export class ForesightManagerController implements ReactiveController {
-  private host: ReactiveControllerHost
-  private _abortController = new AbortController()
-  private _eventHandlers = new Map<string, Set<(event: any) => void>>()
+// Reactive controller for performance tracking
+class OverlayPerformanceController implements ReactiveController {
+  private renderTimes: number[] = []
+  
+  measureRenderPerformance() {
+    const start = performance.now()
+    // ... render operations
+    const duration = performance.now() - start
+    this.renderTimes.push(duration)
+  }
+}
+```
 
+### CSS Containment Strategy
+```css
+.overlay-container {
+  contain: layout style paint;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.trajectory-line {
+  contain: layout paint;
+  isolation: isolate;
+}
+```
+
+## Performance Monitoring Strategies
+
+### Runtime Metrics
+- Track overlay render times
+- Monitor memory usage patterns
+- Measure trajectory calculation performance
+- Log high-frequency update scenarios
+
+### Virtual Rendering Implementation
+```typescript
+// For scenes with many overlays
+private get visibleOverlays() {
+  return this.overlays.filter(overlay => 
+    this.isInViewport(overlay.bounds)
+  )
+}
+
+private isInViewport(bounds: DOMRect): boolean {
+  const viewport = {
+    top: window.scrollY,
+    left: window.scrollX,
+    right: window.scrollX + window.innerWidth,
+    bottom: window.scrollY + window.innerHeight
+  }
+  
+  return bounds.left < viewport.right &&
+         bounds.right > viewport.left &&
+         bounds.top < viewport.bottom &&
+         bounds.bottom > viewport.top
+}
+```
+
+## Known Performance Bottlenecks
+
+### High-Frequency Updates
+- Mouse trajectory updates on high-DPI displays
+- Scroll trajectory during rapid scrolling
+- Multiple overlay updates during window resize
+
+### DOM Manipulation
+- Direct style changes in some cases
+- Potential layout thrashing from frequent position updates
+- Large numbers of overlay elements in complex scenarios
+
+## Responsive Optimization
+```typescript
+// Optimize for different screen densities
+private updateOverlayDensity() {
+  const pixelRatio = window.devicePixelRatio || 1
+  const scaleFactor = Math.min(1, 2 / pixelRatio)
+  this.overlayScale = scaleFactor
+}
+
+// Responsive overlay sizing
+private getOptimalOverlaySize(): number {
+  const screenSize = Math.min(window.innerWidth, window.innerHeight)
+  return screenSize < 768 ? 8 : 12 // Smaller overlays on mobile
+}
+```
+
+## Lit Framework Performance Optimizations
+
+### Core Lit Performance Benefits
+
+#### No Virtual DOM Overhead
+- Lit directly manipulates the real DOM, optimizing only necessary parts
+- Updates only changed DOM sections without full tree rebuilding
+- 5KB gzipped footprint for minimal bundle impact
+
+#### Reactive Property System
+```typescript
+// Efficient reactive updates - only re-renders when properties change
+@property({ type: Boolean })
+showOverlay = false
+
+@property({ type: Object })
+overlayData: OverlayConfig | null = null
+
+// Internal state changes don't trigger re-renders
+private _internalCache = new Map()
+```
+
+### Lit-Specific Optimization Strategies
+
+#### Cache Directive for Template Performance
+```typescript
+import { cache } from 'lit/directives/cache.js'
+
+render() {
+  return html`
+    ${cache(this.showTrajectory ? 
+      html`<trajectory-overlay .data=${this.trajectoryData}></trajectory-overlay>` :
+      html`<static-overlay></static-overlay>`
+    )}
+  `
+}
+```
+
+#### Guard Directive for Conditional Rendering
+```typescript
+import { guard } from 'lit/directives/guard.js'
+
+render() {
+  return html`
+    ${guard([this.overlayPositions], () => 
+      this.overlayPositions.map(pos => 
+        html`<element-overlay .position=${pos}></element-overlay>`
+      )
+    )}
+  `
+}
+```
+
+#### Watch Directive for Signal Integration (2025)
+```typescript
+import { watch } from '@lit-labs/signals'
+import { signal } from '@lit-labs/signals'
+
+class OptimizedOverlay extends LitElement {
+  // Signal-based state for fine-grained reactivity
+  private overlayVisibility = signal(true)
+  private trajectoryPoints = signal<Point[]>([])
+  
+  render() {
+    return html`
+      <div class="overlay ${watch(this.overlayVisibility)}">
+        ${watch(this.trajectoryPoints, (points) => 
+          points.map(point => html`<div class="point" style="left: ${point.x}px; top: ${point.y}px;"></div>`)
+        )}
+      </div>
+    `
+  }
+}
+```
+
+### Reactive Controller Optimizations
+
+#### Performance-Optimized Controller
+```typescript
+class OverlayPerformanceController implements ReactiveController {
+  private host: ReactiveControllerHost
+  private _isUpdateScheduled = false
+  private _animationFrameId?: number
+  
   constructor(host: ReactiveControllerHost) {
     this.host = host
     host.addController(this)
   }
-
-  subscribe<K extends keyof ForesightEventMap>(
-    eventType: K,
-    handler: (event: ForesightEventMap[K]) => void
-  ) {
-    if (!this._eventHandlers.has(eventType)) {
-      this._eventHandlers.set(eventType, new Set())
-      // Register actual listener only once
-      ForesightManager.instance.addEventListener(eventType, this.handleEvent, {
-        signal: this._abortController.signal,
-      })
-    }
-    this._eventHandlers.get(eventType)!.add(handler)
-  }
-
-  private handleEvent = (event: any) => {
-    const handlers = this._eventHandlers.get(event.type)
-    if (handlers) {
-      handlers.forEach(handler => handler(event))
-    }
-  }
-
+  
   hostConnected() {
-    // Setup complete
+    // Initialize performance monitoring
+    this.startPerformanceObserver()
   }
-
+  
   hostDisconnected() {
-    this._abortController.abort()
-    this._eventHandlers.clear()
+    // Cleanup to prevent memory leaks
+    if (this._animationFrameId) {
+      cancelAnimationFrame(this._animationFrameId)
+    }
+    this.stopPerformanceObserver()
   }
-}
-```
-
-### 3. Rendering Performance Improvements
-
-#### Trajectory Component Optimization
-
-```typescript
-// ✅ OPTIMIZED: Use styleMap consistently
-export class OptimizedTrajectoryComponent extends LitElement {
-  private _trajectoryStyles: StyleInfo = {}
-  private _rafId?: number
-  private _latestTrajectory: TrajectoryData | null = null
-
-  private scheduleRender = () => {
-    if (!this._rafId) {
-      this._rafId = requestAnimationFrame(() => {
-        this.updateTrajectoryStyles()
-        this.requestUpdate()
-        this._rafId = undefined
+  
+  scheduleUpdate() {
+    if (!this._isUpdateScheduled) {
+      this._isUpdateScheduled = true
+      this._animationFrameId = requestAnimationFrame(() => {
+        this._isUpdateScheduled = false
+        this.host.requestUpdate()
       })
     }
   }
-
-  private updateTrajectoryStyles = () => {
-    if (!this._latestTrajectory) return
-
-    const { currentPoint, predictedPoint } = this._latestTrajectory
-    const dx = predictedPoint.x - currentPoint.x
-    const dy = predictedPoint.y - currentPoint.y
-    const length = Math.sqrt(dx * dx + dy * dy)
-    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-    this._trajectoryStyles = {
-      transform: `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`,
-      width: `${length}px`,
-      display: length === 0 ? "none" : "block",
-    }
-  }
-
-  render() {
-    return html`<div class="trajectory-line" style=${styleMap(this._trajectoryStyles)}></div>`
-  }
 }
 ```
 
-#### List Rendering with Virtualization
-
+#### Controller-Directive Integration
 ```typescript
-// ✅ OPTIMIZED: Virtual scrolling for large lists
-export class VirtualizedElementList extends LitElement {
-  @property({ type: Array }) items: ElementData[] = []
-  @property({ type: Number }) itemHeight = 50
-  @property({ type: Number }) containerHeight = 400
-
-  private _scrollTop = 0
-  private _visibleCount = Math.ceil(this.containerHeight / this.itemHeight)
-
-  private get visibleItems() {
-    const startIndex = Math.floor(this._scrollTop / this.itemHeight)
-    const endIndex = Math.min(startIndex + this._visibleCount, this.items.length)
-    return this.items.slice(startIndex, endIndex).map((item, index) => ({
-      item,
-      index: startIndex + index,
-    }))
+// Controller directive for optimized overlay management
+class OverlayDirective extends Directive implements ReactiveController {
+  private host!: ReactiveControllerHost
+  private overlayElement?: HTMLElement
+  
+  render(overlayConfig: OverlayConfig) {
+    return noChange // Directive handles DOM directly
   }
+  
+  update(part: Part, [overlayConfig]: Parameters<this['render']>) {
+    if (!this.host) {
+      this.host = (part as any).options?.host
+      this.host?.addController(this)
+    }
+    
+    this.updateOverlay(overlayConfig)
+    return noChange
+  }
+  
+  hostUpdate() {
+    // Optimize overlay positioning during host updates
+    this.optimizeOverlayPosition()
+  }
+  
+  private updateOverlay(config: OverlayConfig) {
+    // Direct DOM manipulation for performance
+    if (!this.overlayElement) {
+      this.overlayElement = document.createElement('div')
+      this.overlayElement.className = 'optimized-overlay'
+    }
+    
+    // Batch style updates
+    Object.assign(this.overlayElement.style, {
+      transform: `translate3d(${config.x}px, ${config.y}px, 0)`,
+      width: `${config.width}px`,
+      height: `${config.height}px`,
+    })
+  }
+}
 
+const overlayDirective = directive(OverlayDirective)
+```
+
+### List Optimization with Repeat Directive
+
+#### Efficient Overlay List Rendering
+```typescript
+import { repeat } from 'lit/directives/repeat.js'
+
+class OverlayContainer extends LitElement {
+  @property({ type: Array })
+  overlays: OverlayData[] = []
+  
   render() {
     return html`
-      <div
-        class="virtual-list-container"
-        style="height: ${this.containerHeight}px; overflow-y: auto;"
-        @scroll=${this.handleScroll}
+      ${repeat(
+        this.overlays,
+        (overlay) => overlay.id, // Key function for efficient updates
+        (overlay, index) => html`
+          <element-overlay 
+            .data=${overlay}
+            .index=${index}
+            @overlay-change=${this.handleOverlayChange}
+          ></element-overlay>
+        `
+      )}
+    `
+  }
+  
+  private handleOverlayChange(e: CustomEvent) {
+    // Optimized event handling - only update specific overlay
+    const { id, changes } = e.detail
+    const overlayIndex = this.overlays.findIndex(o => o.id === id)
+    if (overlayIndex >= 0) {
+      this.overlays = [
+        ...this.overlays.slice(0, overlayIndex),
+        { ...this.overlays[overlayIndex], ...changes },
+        ...this.overlays.slice(overlayIndex + 1)
+      ]
+    }
+  }
+}
+```
+
+### Lit Signal Integration (2025)
+
+#### Signal-Based State Management
+```typescript
+import { signal, computed } from '@lit-labs/signals'
+
+class SignalOptimizedOverlay extends LitElement {
+  // Signals for fine-grained reactivity
+  private mousePosition = signal({ x: 0, y: 0 })
+  private isVisible = signal(true)
+  
+  // Computed signals for derived state
+  private overlayStyle = computed(() => ({
+    transform: `translate3d(${this.mousePosition.value.x}px, ${this.mousePosition.value.y}px, 0)`,
+    opacity: this.isVisible.value ? 1 : 0
+  }))
+  
+  render() {
+    return html`
+      <div 
+        class="signal-overlay" 
+        style=${styleMap(watch(this.overlayStyle))}
       >
-        <div style="height: ${this.items.length * this.itemHeight}px; position: relative;">
-          ${this.visibleItems.map(
-            ({ item, index }) => html`
-              <div
-                style="position: absolute; top: ${index * this.itemHeight}px; height: ${this
-                  .itemHeight}px;"
-              >
-                <single-element .elementData=${item}></single-element>
-              </div>
-            `
-          )}
-        </div>
+        ${watch(this.isVisible, (visible) => 
+          visible ? html`<overlay-content></overlay-content>` : nothing
+        )}
       </div>
     `
   }
-
-  private handleScroll = (e: Event) => {
-    this._scrollTop = (e.target as HTMLElement).scrollTop
-    this.requestUpdate()
+  
+  updateMousePosition(x: number, y: number) {
+    // Signal update - automatically triggers reactive updates
+    this.mousePosition.value = { x, y }
   }
 }
 ```
 
-### 4. Memory Management Improvements
+### Advanced Lit Performance Patterns
 
-#### Circular Buffer for Logs
-
+#### Template Memoization
 ```typescript
-// ✅ OPTIMIZED: Efficient log management
-export class CircularBuffer<T> {
-  private buffer: T[] = [];
-  private head = 0;
-  private size = 0;
-
-  constructor(private capacity: number) {}
-
-  push(item: T): void {
-    if (this.size < this.capacity) {
-      this.buffer[this.size++] = item;
-    } else {
-      this.buffer[this.head] = item;
-      this.head = (this.head + 1) % this.capacity;
+class MemoizedOverlay extends LitElement {
+  private _templateCache = new Map<string, TemplateResult>()
+  
+  private getMemoizedTemplate(key: string, factory: () => TemplateResult): TemplateResult {
+    if (!this._templateCache.has(key)) {
+      this._templateCache.set(key, factory())
     }
+    return this._templateCache.get(key)!
   }
-
-  toArray(): T[] {
-    if (this.size < this.capacity) {
-      return this.buffer.slice(0, this.size);
-    }
-    return [...this.buffer.slice(this.head), ...this.buffer.slice(0, this.head)];
+  
+  render() {
+    const cacheKey = `${this.overlayType}-${this.overlaySize}-${this.isActive}`
+    
+    return this.getMemoizedTemplate(cacheKey, () => html`
+      <div class="overlay overlay--${this.overlayType} ${this.isActive ? 'active' : ''}">
+        <!-- Complex template content -->
+      </div>
+    `)
   }
-
-  clear(): void {
-    this.buffer = [];
-    this.head = 0;
-    this.size = 0;
-  }
-}
-
-// Usage in log-tab.ts
-private logBuffer = new CircularBuffer<LogEntry>(this.MAX_LOGS);
-
-private addEventLog(logWithId: LogEntry): void {
-  this.logBuffer.push(logWithId);
-  this.logs = this.logBuffer.toArray();
-  this.requestUpdate();
 }
 ```
 
-#### Improved Cleanup in Element Overlays
-
+#### Lit-Specific Memory Management
 ```typescript
-// ✅ OPTIMIZED: Comprehensive cleanup
-export class ElementOverlays extends LitElement {
-  private overlayMap = new Map<ForesightElement, ElementOverlay>()
-  private intersectionObserver?: IntersectionObserver
-
-  connectedCallback() {
-    super.connectedCallback()
-    this.setupIntersectionObserver()
+class MemoryOptimizedController implements ReactiveController {
+  private cleanup: Array<() => void> = []
+  
+  hostConnected() {
+    // Track cleanup functions
+    const resizeObserver = new ResizeObserver(this.handleResize)
+    resizeObserver.observe(this.host as Element)
+    this.cleanup.push(() => resizeObserver.disconnect())
+    
+    const mutationObserver = new MutationObserver(this.handleMutation)
+    mutationObserver.observe(this.host as Element, { childList: true })
+    this.cleanup.push(() => mutationObserver.disconnect())
   }
+  
+  hostDisconnected() {
+    // Execute all cleanup functions
+    this.cleanup.forEach(fn => fn())
+    this.cleanup.length = 0
+  }
+}
+```
 
-  private setupIntersectionObserver() {
-    this.intersectionObserver = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (!entry.isIntersecting) {
-            this.hideOverlay(entry.target)
-          }
-        })
-      },
-      { rootMargin: "50px" }
+## 2025 Performance Optimization Insights
+
+### Latest DOM Optimization Strategies
+
+#### Batch DOM Updates
+```typescript
+// Update elements in batches to avoid layout thrashing
+private batchDOMUpdates(overlays: ElementOverlay[]) {
+  // Use DocumentFragment for batch DOM insertion
+  const fragment = document.createDocumentFragment()
+  overlays.forEach(overlay => fragment.appendChild(overlay.element))
+  this.container.appendChild(fragment)
+}
+```
+
+#### Modern Framework Integration
+- Leverage React Compiler for automatic memoization (2025)
+- Use Svelte/SolidJS for minimal DOM interactions
+- Implement windowing techniques for large overlay lists
+
+### Advanced GPU Acceleration (2025)
+
+#### Strategic Layer Management
+```css
+/* Small unique translateZ values for separate compositing layers */
+.overlay-1 { transform: translateZ(0.0001px); }
+.overlay-2 { transform: translateZ(0.0002px); }
+.overlay-3 { transform: translateZ(0.0003px); }
+
+/* Enhanced GPU acceleration with strategic will-change */
+.overlay-active {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+```
+
+#### Chromium 2025 Updates
+- SVG animation hardware acceleration
+- Percentage-based transformation optimization
+- Enhanced clip-path GPU support
+- Improved background image acceleration
+
+### Intersection Observer v2 Implementation
+
+#### Performance-Optimized Visibility Monitoring
+```typescript
+class OptimizedOverlayObserver {
+  private observer: IntersectionObserver
+  private visibilityObserver: IntersectionObserver // v2 for fraud detection
+  
+  constructor() {
+    // Main visibility observer with optimized thresholds
+    this.observer = new IntersectionObserver(
+      this.handleIntersection.bind(this),
+      {
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+        rootMargin: '50px 0px', // Preload slightly before visible
+      }
+    )
+    
+    // v2 observer for critical visibility verification
+    this.visibilityObserver = new IntersectionObserver(
+      this.handleVisibilityChange.bind(this),
+      { trackVisibility: true, delay: 100 }
     )
   }
-
-  private removeElementOverlay(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      // Comprehensive cleanup
-      this.intersectionObserver?.unobserve(overlays.expandedOverlay)
-      overlays.expandedOverlay.remove()
-      overlays.nameLabel.remove()
-      this.overlayMap.delete(elementData.element)
-    }
-    this.clearCallbackAnimationTimeout(elementData.element)
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback()
-    this.intersectionObserver?.disconnect()
-    this.overlayMap.clear()
-  }
-}
-```
-
-## 🚀 Advanced Optimization Techniques
-
-### 1. LIT Task Integration for Async Operations
-
-```typescript
-import { Task } from "@lit/task"
-
-export class AsyncElementTab extends LitElement {
-  private sortTask = new Task(this, {
-    task: async ([elements, sortOrder]) => {
-      // Expensive sorting operation
-      await new Promise(resolve => setTimeout(resolve, 0)) // Yield to event loop
-      return this.performAdvancedSort(elements, sortOrder)
-    },
-    args: () => [this.elementListItems, this.sortOrder],
-  })
-
-  render() {
-    return this.sortTask.render({
-      pending: () => html`<div class="loading">Sorting elements...</div>`,
-      complete: sortedElements => html`
-        ${map(
-          sortedElements,
-          elementData => html` <single-element .elementData=${elementData}></single-element> `
-        )}
-      `,
-      error: error => html`<div class="error">Error: ${error.message}</div>`,
+  
+  private handleIntersection(entries: IntersectionObserverEntry[]) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // Activate overlay rendering
+        this.activateOverlay(entry.target)
+      } else {
+        // Deactivate to save performance
+        this.deactivateOverlay(entry.target)
+        // Unobserve if permanently out of view
+        this.observer.unobserve(entry.target)
+      }
     })
   }
 }
 ```
 
-### 2. Performance Monitoring Integration
-
+#### Multiple Observer Strategy
 ```typescript
-// ✅ OPTIMIZED: Performance monitoring controller
-export class PerformanceController implements ReactiveController {
-  private host: ReactiveControllerHost
-  private renderTimes: number[] = []
-  private memoryUsage: number[] = []
-
-  constructor(host: ReactiveControllerHost) {
-    this.host = host
-    host.addController(this)
+// Separate observers for different overlay types
+class OverlayObserverManager {
+  private trajectoryObserver: IntersectionObserver
+  private elementObserver: IntersectionObserver
+  private debugObserver: IntersectionObserver
+  
+  constructor() {
+    // High-frequency trajectory overlays
+    this.trajectoryObserver = new IntersectionObserver(
+      this.handleTrajectoryVisibility.bind(this),
+      { threshold: 0.1, rootMargin: '100px' }
+    )
+    
+    // Element overlays with precise thresholds
+    this.elementObserver = new IntersectionObserver(
+      this.handleElementVisibility.bind(this),
+      { threshold: [0, 0.5, 1], rootMargin: '25px' }
+    )
+    
+    // Debug overlays with minimal thresholds
+    this.debugObserver = new IntersectionObserver(
+      this.handleDebugVisibility.bind(this),
+      { threshold: 0, rootMargin: '200px' }
+    )
   }
+}
+```
 
-  hostUpdated() {
-    this.measurePerformance()
+### Modern Loading Techniques (2025)
+
+#### Esbuild/Vite Optimization
+```typescript
+// Lazy loading for overlay components
+const DebugOverlay = lazy(() => import('./debug-overlay/debug-overlay.js'))
+const MouseTrajectory = lazy(() => import('./debug-overlay/mouse-trajectory.js'))
+
+// Bundle splitting for optimal loading
+export const overlayModules = {
+  core: () => import('./core-overlays'),
+  debug: () => import('./debug-overlays'),
+  trajectory: () => import('./trajectory-overlays')
+}
+```
+
+#### Progressive Enhancement Strategy
+```typescript
+// Adaptive performance based on device capabilities
+class AdaptiveOverlayRenderer {
+  private performanceMode: 'high' | 'medium' | 'low'
+  
+  constructor() {
+    this.performanceMode = this.detectPerformanceMode()
   }
-
-  private measurePerformance() {
-    const now = performance.now()
-    this.renderTimes.push(now)
-
-    if (this.renderTimes.length > 100) {
-      this.renderTimes.shift()
-    }
-
-    if ("memory" in performance) {
-      this.memoryUsage.push((performance as any).memory.usedJSHeapSize)
-    }
+  
+  private detectPerformanceMode(): 'high' | 'medium' | 'low' {
+    const deviceMemory = (navigator as any).deviceMemory || 4
+    const hardwareConcurrency = navigator.hardwareConcurrency || 4
+    const pixelRatio = window.devicePixelRatio || 1
+    
+    if (deviceMemory >= 8 && hardwareConcurrency >= 8) return 'high'
+    if (deviceMemory >= 4 && hardwareConcurrency >= 4) return 'medium'
+    return 'low'
   }
-
-  getPerformanceStats() {
-    return {
-      avgRenderTime: this.renderTimes.reduce((a, b) => a + b, 0) / this.renderTimes.length,
-      memoryTrend: this.memoryUsage.slice(-10),
-      renderFrequency: this.renderTimes.length,
+  
+  renderOverlays() {
+    switch (this.performanceMode) {
+      case 'high':
+        return this.renderFullFeatureOverlays()
+      case 'medium':
+        return this.renderOptimizedOverlays()
+      case 'low':
+        return this.renderMinimalOverlays()
     }
   }
 }
 ```
 
-### 3. Debounced Input Handling
+### Performance Budget Implementation
 
+#### Real-time Performance Monitoring
 ```typescript
-// ✅ OPTIMIZED: Debounced settings updates
-export class DebouncedSettingsController implements ReactiveController {
-  private host: ReactiveControllerHost
-  private pendingUpdates = new Map<string, any>()
-  private timeoutId?: number
-
-  constructor(
-    host: ReactiveControllerHost,
-    private debounceMs = 300
-  ) {
-    this.host = host
-    host.addController(this)
-  }
-
-  updateSetting(key: string, value: any) {
-    this.pendingUpdates.set(key, value)
-
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId)
+class OverlayPerformanceBudget {
+  private renderTimeLimit = 16 // 60fps budget
+  private memoryLimit = 50 * 1024 * 1024 // 50MB limit
+  
+  measureRenderPerformance(renderFn: () => void): boolean {
+    const start = performance.now()
+    renderFn()
+    const duration = performance.now() - start
+    
+    if (duration > this.renderTimeLimit) {
+      console.warn(`Overlay render exceeded budget: ${duration}ms`)
+      this.reduceOverlayComplexity()
+      return false
     }
-
-    this.timeoutId = setTimeout(() => {
-      this.flushUpdates()
-    }, this.debounceMs)
+    return true
   }
-
-  private flushUpdates() {
-    if (this.pendingUpdates.size > 0) {
-      ForesightManager.instance.updateSettings(Object.fromEntries(this.pendingUpdates))
-      this.pendingUpdates.clear()
-      this.host.requestUpdate()
-    }
+  
+  private reduceOverlayComplexity() {
+    // Implement progressive degradation
+    this.disableNonEssentialAnimations()
+    this.reduceOverlayCount()
+    this.simplifyTrajectoryCalculations()
   }
 }
 ```
 
-## 🎨 User Experience Enhancements
+## Future Optimization Directions
 
-### 1. Smooth Animations with CSS Custom Properties
+1. **CSS Houdini Paint Worklets**: Custom trajectory rendering
+2. **Web Workers**: Offload complex calculations
+3. **WebGL Overlays**: Hardware-accelerated complex scenes
+4. **Service Worker Caching**: Overlay asset optimization
+5. **Performance Observer**: Automated performance monitoring
+6. **Container Queries**: Responsive overlay sizing
 
-```typescript
-// ✅ OPTIMIZED: CSS custom properties for smooth transitions
-export class AnimatedComponent extends LitElement {
-  static styles = css`
-    :host {
-      --transition-duration: 0.3s;
-      --transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
-    }
+## Implementation Priority (2025 Updated)
 
-    .animated-element {
-      transition:
-        transform var(--transition-duration) var(--transition-easing),
-        opacity var(--transition-duration) var(--transition-easing);
-    }
+1. **Immediate**: Intersection Observer v2, GPU acceleration optimization
+2. **High Priority**: Adaptive performance, batch DOM updates
+3. **Medium Priority**: Web Workers, CSS Houdini integration
+4. **Future**: WebGL implementation, advanced caching strategies
 
-    .fade-in {
-      animation: fadeIn var(--transition-duration) var(--transition-easing);
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  `
-}
-```
-
-### 2. Accessible Focus Management
-
-```typescript
-// ✅ OPTIMIZED: Keyboard navigation support
-export class AccessibleControlPanel extends LitElement {
-  private focusController = new FocusController(this)
-
-  connectedCallback() {
-    super.connectedCallback()
-    this.addEventListener("keydown", this.handleKeyDown)
-  }
-
-  private handleKeyDown = (e: KeyboardEvent) => {
-    switch (e.key) {
-      case "Tab":
-        this.focusController.handleTabNavigation(e)
-        break
-      case "Escape":
-        this.focusController.returnFocus()
-        break
-      case "ArrowUp":
-      case "ArrowDown":
-        this.focusController.handleArrowNavigation(e)
-        break
-    }
-  }
-}
-```
-
-## 📈 Performance Metrics & Monitoring
-
-### Key Performance Indicators
-
-- **Render Time**: Target < 16ms for 60fps
-- **Memory Usage**: Monitor heap growth
-- **Event Frequency**: Track high-frequency events
-- **List Performance**: Measure sort/filter operations
-
-### Monitoring Implementation
-
-```typescript
-// ✅ OPTIMIZED: Performance dashboard
-export class PerformanceDashboard extends LitElement {
-  private performanceController = new PerformanceController(this)
-
-  render() {
-    const stats = this.performanceController.getPerformanceStats()
-
-    return html`
-      <div class="performance-dashboard">
-        <div class="metric">
-          <label>Avg Render Time:</label>
-          <span class=${stats.avgRenderTime > 16 ? "warning" : "good"}>
-            ${stats.avgRenderTime.toFixed(2)}ms
-          </span>
-        </div>
-        <div class="metric">
-          <label>Memory Usage:</label>
-          <span
-            >${(stats.memoryTrend[stats.memoryTrend.length - 1] / 1024 / 1024).toFixed(2)}MB</span
-          >
-        </div>
-        <div class="metric">
-          <label>Update Frequency:</label>
-          <span>${stats.renderFrequency}/sec</span>
-        </div>
-      </div>
-    `
-  }
-}
-```
-
-## 🔄 Migration Strategy
-
-### Phase 1: Critical Fixes (Week 1-2)
-
-1. ✅ Implement circular buffer for logs
-2. ✅ Fix memory leaks in element overlays
-3. ✅ Optimize state management patterns
-4. ✅ Add performance monitoring
-
-### Phase 2: Architecture Improvements (Week 3-4)
-
-1. ✅ Implement LIT controllers for shared logic
-2. ✅ Add virtual scrolling for large lists
-3. ✅ Optimize rendering with styleMap
-4. ✅ Implement debounced input handling
-
-### Phase 3: Advanced Features (Week 5-6)
-
-1. ✅ Add async task management
-2. ✅ Implement accessibility improvements
-3. ✅ Add performance dashboard
-4. ✅ Code splitting and lazy loading
-
-## 📝 Code Quality Improvements
-
-### 1. Type Safety Enhancements
-
-```typescript
-// ✅ OPTIMIZED: Strict typing for better performance
-interface OptimizedEventMap {
-  [K in keyof ForesightEventMap]: {
-    type: K;
-    handler: (event: ForesightEventMap[K]) => void;
-    options?: AddEventListenerOptions;
-  }
-}
-
-export class TypeSafeEventHandler<T extends keyof ForesightEventMap> {
-  constructor(
-    private eventType: T,
-    private handler: (event: ForesightEventMap[T]) => void,
-    private options?: AddEventListenerOptions
-  ) {}
-
-  register(target: EventTarget) {
-    target.addEventListener(this.eventType, this.handler, this.options);
-  }
-
-  unregister(target: EventTarget) {
-    target.removeEventListener(this.eventType, this.handler, this.options);
-  }
-}
-```
-
-### 2. Error Boundaries and Resilience
-
-```typescript
-// ✅ OPTIMIZED: Error boundary pattern
-export class ErrorBoundaryMixin<T extends Constructor<LitElement>>(superClass: T) {
-  private errorCount = 0;
-  private maxErrors = 5;
-
-  protected render() {
-    try {
-      return super.render();
-    } catch (error) {
-      this.errorCount++;
-      console.error('Render error:', error);
-
-      if (this.errorCount >= this.maxErrors) {
-        return html`<div class="error-boundary">Component crashed. Please refresh.</div>`;
-      }
-
-      return html`<div class="error-boundary">Temporary error. Retrying...</div>`;
-    }
-  }
-}
-```
-
-## 🔮 Future-Proofing Strategies
-
-### 1. Progressive Enhancement
-
-- ✅ Graceful degradation for older browsers
-- ✅ Feature detection for advanced APIs
-- ✅ Polyfill strategy for missing features
-
-### 2. Scalability Patterns
-
-- ✅ Lazy loading for large component trees
-- ✅ Code splitting by feature
-- ✅ Dynamic imports for optional features
-
-### 3. Testing Strategy
-
-- ✅ Unit tests for performance-critical components
-- ✅ Integration tests for event handling
-- ✅ Performance regression tests
-
-## 📊 Expected Performance Improvements
-
-### Before vs After Metrics
-
-- **Memory Usage**: 40-60% reduction through efficient state management
-- **Render Performance**: 2-3x faster with optimized rendering
-- **Event Handling**: 50% reduction in event listener overhead
-- **List Performance**: 10x faster with virtualization
-- **Startup Time**: 30% faster with lazy loading
-
-### User Experience Improvements
-
-- **Smoother animations** with optimized CSS and requestAnimationFrame
-- **Faster interactions** with debounced input handling
-- **Better accessibility** with improved focus management
-- **Reduced jank** through efficient rendering strategies
-
-## 🎯 Action Items
-
-### Immediate (This Week)
-
-- [ ] Implement circular buffer for log management
-- [ ] Fix memory leaks in element overlays
-- [ ] Add performance monitoring dashboard
-- [ ] Optimize state management patterns
-
-### Short Term (Next 2 Weeks)
-
-- [ ] Implement LIT controllers for shared logic
-- [ ] Add virtual scrolling for large lists
-- [ ] Optimize rendering with consistent styleMap usage
-- [ ] Add debounced input handling
-
-### Long Term (Next Month)
-
-- [ ] Implement async task management
-- [ ] Add comprehensive accessibility features
-- [ ] Implement code splitting and lazy loading
-- [ ] Add performance regression testing
-
-## 🏆 Success Metrics
-
-### Performance Targets
-
-- **Render Time**: < 16ms for 60fps animations
-- **Memory Growth**: < 2MB per hour of usage
-- **Event Latency**: < 100ms for user interactions
-- **List Operations**: < 50ms for 1000+ items
-
-### Quality Targets
-
-- **Code Coverage**: > 80% for performance-critical paths
-- **Bundle Size**: < 200KB gzipped
-- **Accessibility Score**: AA compliance
-- **Browser Support**: Modern browsers (ES2020+)
-
----
-
-_This optimization guide represents a comprehensive strategy for improving the js.foresight-devtools package performance, maintainability, and user experience while following LIT framework best practices._
+This optimization strategy leverages 2025's latest web performance techniques to ensure ForesightJS development tools remain cutting-edge and performant across all device types and usage scenarios.

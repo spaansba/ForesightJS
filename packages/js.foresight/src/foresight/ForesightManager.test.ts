@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import type { ForesightRegisterOptions, ForesightManagerSettings } from "../types/types"
-import { createMockElement, mockElementBounds, simulateMouseEvent } from "../../test-setup"
+import {
+  createMockElement,
+  mockElementBounds,
+  simulateMouseEvent,
+  createMockRect,
+} from "../../test-setup"
 
 describe("ForesightManager", () => {
   let manager: ForesightManager
@@ -663,6 +668,228 @@ describe("ForesightManager", () => {
       listeners.slice(50).forEach(listener => {
         expect(listener).toHaveBeenCalled()
       })
+    })
+  })
+
+  describe("handlePositionChangeDataUpdates", () => {
+    let elementDataUpdatedListener: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      elementDataUpdatedListener = vi.fn()
+      manager.addEventListener("elementDataUpdated", elementDataUpdatedListener)
+    })
+
+    it("should update visibility when isIntersecting changes from false to true", () => {
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+      unregisterFunctions.push(result.unregister)
+
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+      if (!elementData) return
+
+      // Set initial state to not intersecting
+      elementData.isIntersectingWithViewport = false
+
+      // Create mock PositionObserverEntry
+      const mockEntry = {
+        target: testElement,
+        isIntersecting: true,
+        boundingClientRect: createMockRect(100, 100, 100, 50),
+        intersectionRect: createMockRect(100, 100, 100, 50),
+        rootBounds: createMockRect(0, 0, 1920, 1080),
+      }
+
+      // Call the private method through type assertion
+      const handlePositionChangeMethod = (manager as ForesightManager)[
+        "handlePositionChangeDataUpdates"
+      ]
+      handlePositionChangeMethod.call(manager, elementData, mockEntry)
+
+      // Verify visibility was updated
+      expect(elementData.isIntersectingWithViewport).toBe(true)
+
+      // Verify event was emitted with correct props
+      expect(elementDataUpdatedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "elementDataUpdated",
+          elementData: elementData,
+          updatedProps: expect.arrayContaining(["visibility", "bounds"]),
+        })
+      )
+    })
+
+    it("should update visibility when isIntersecting changes from true to false", () => {
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+      unregisterFunctions.push(result.unregister)
+
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+      if (!elementData) return
+
+      // Set initial state to intersecting
+      elementData.isIntersectingWithViewport = true
+
+      // Create mock PositionObserverEntry
+      const mockEntry = {
+        target: testElement,
+        isIntersecting: false,
+        boundingClientRect: createMockRect(100, 100, 100, 50),
+        intersectionRect: createMockRect(100, 100, 100, 50),
+        rootBounds: createMockRect(0, 0, 1920, 1080),
+      }
+
+      // Call the private method
+      const handlePositionChangeMethod = (manager as ForesightManager)[
+        "handlePositionChangeDataUpdates"
+      ]
+      handlePositionChangeMethod.call(manager, elementData, mockEntry)
+
+      // Verify visibility was updated
+      expect(elementData.isIntersectingWithViewport).toBe(false)
+
+      // Verify event was emitted with only visibility update (no bounds update when not intersecting)
+      expect(elementDataUpdatedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "elementDataUpdated",
+          elementData: elementData,
+          updatedProps: ["visibility"],
+        })
+      )
+    })
+
+    it("should update bounds when element is intersecting", () => {
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+        hitSlop: { top: 10, right: 10, bottom: 10, left: 10 },
+      })
+      unregisterFunctions.push(result.unregister)
+
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+      if (!elementData) return
+
+      // Set initial state
+      elementData.isIntersectingWithViewport = true
+      const originalBounds = elementData.elementBounds
+
+      // Create mock PositionObserverEntry with new bounds
+      const newRect = createMockRect(200, 200, 150, 75)
+      const mockEntry = {
+        target: testElement,
+        isIntersecting: true,
+        boundingClientRect: newRect,
+        intersectionRect: newRect,
+        rootBounds: createMockRect(0, 0, 1920, 1080),
+      }
+
+      // Call the private method
+      const handlePositionChangeMethod = (manager as ForesightManager)[
+        "handlePositionChangeDataUpdates"
+      ]
+      handlePositionChangeMethod.call(manager, elementData, mockEntry)
+
+      // Verify bounds were updated
+      expect(elementData.elementBounds.originalRect).toEqual(newRect)
+      expect(elementData.elementBounds.hitSlop).toEqual(originalBounds.hitSlop)
+      expect(elementData.elementBounds.expandedRect).toEqual({
+        x: 190, // 200 - 10 (left hitSlop)
+        y: 190, // 200 - 10 (top hitSlop)
+        width: 170, // 150 + 10 + 10 (left + right hitSlop)
+        height: 95, // 75 + 10 + 10 (top + bottom hitSlop)
+      })
+
+      // Verify event was emitted
+      expect(elementDataUpdatedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "elementDataUpdated",
+          elementData: elementData,
+          updatedProps: ["bounds"],
+        })
+      )
+    })
+
+    it("should not emit event when no changes occur", () => {
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+      unregisterFunctions.push(result.unregister)
+
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+      if (!elementData) return
+
+      // Set initial state to match entry
+      elementData.isIntersectingWithViewport = false
+
+      // Create mock PositionObserverEntry with same intersection state
+      const mockEntry = {
+        target: testElement,
+        isIntersecting: false,
+        boundingClientRect: createMockRect(100, 100, 100, 50),
+        intersectionRect: createMockRect(100, 100, 100, 50),
+        rootBounds: createMockRect(0, 0, 1920, 1080),
+      }
+
+      // Call the private method
+      const handlePositionChangeMethod = (manager as ForesightManager)[
+        "handlePositionChangeDataUpdates"
+      ]
+      handlePositionChangeMethod.call(manager, elementData, mockEntry)
+
+      // Verify no event was emitted
+      expect(elementDataUpdatedListener).not.toHaveBeenCalled()
+    })
+
+    it("should update both visibility and bounds when element becomes intersecting", () => {
+      const result = manager.register({
+        element: testElement,
+        callback: mockCallback,
+      })
+      unregisterFunctions.push(result.unregister)
+
+      const elementData = manager.registeredElements.get(testElement)
+      expect(elementData).toBeDefined()
+      if (!elementData) return
+
+      // Set initial state to not intersecting
+      elementData.isIntersectingWithViewport = false
+
+      // Create mock PositionObserverEntry
+      const newRect = createMockRect(300, 300, 200, 100)
+      const mockEntry = {
+        target: testElement,
+        isIntersecting: true,
+        boundingClientRect: newRect,
+        intersectionRect: newRect,
+        rootBounds: createMockRect(0, 0, 1920, 1080),
+      }
+
+      // Call the private method
+      const handlePositionChangeMethod = (manager as ForesightManager)[
+        "handlePositionChangeDataUpdates"
+      ]
+      handlePositionChangeMethod.call(manager, elementData, mockEntry)
+
+      // Verify both visibility and bounds were updated
+      expect(elementData.isIntersectingWithViewport).toBe(true)
+      expect(elementData.elementBounds.originalRect).toEqual(newRect)
+
+      // Verify event was emitted with both update types
+      expect(elementDataUpdatedListener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "elementDataUpdated",
+          elementData: elementData,
+          updatedProps: expect.arrayContaining(["visibility", "bounds"]),
+        })
+      )
     })
   })
 })

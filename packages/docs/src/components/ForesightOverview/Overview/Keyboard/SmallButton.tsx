@@ -27,7 +27,7 @@ function SmallButton({ index }: { index: number }) {
         callback: async () => {
           if (!stateRef.current.isLoading && !stateRef.current.isLoaded) {
             setIsLoading(true)
-            const randomTime = Math.floor(Math.random() * 500) + 50
+            const randomTime = Math.floor(Math.random() * 250) + 50
             setLoadTime(randomTime)
             await new Promise(resolve => setTimeout(resolve, randomTime))
             setIsLoading(false)

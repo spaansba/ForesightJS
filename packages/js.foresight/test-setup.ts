@@ -93,6 +93,7 @@ export const createMockRect = (x = 0, y = 0, width = 100, height = 100) => ({
   height,
   x,
   y,
+  toJSON: () => ({ top: y, left: x, right: x + width, bottom: y + height, width, height, x, y }),
 })
 
 export const mockElementBounds = (element: Element, rect: Partial<DOMRect>) => {

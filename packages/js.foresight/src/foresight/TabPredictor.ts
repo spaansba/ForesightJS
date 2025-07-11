@@ -64,8 +64,6 @@ export class TabPredictor extends BasePredictor {
   }
 
   private handleFocusIn = (e: FocusEvent) => {
-    console.log(this.tabbableElementsCache)
-    console.log(this.lastFocusedIndex)
     try {
       if (!this.lastKeyDown) {
         return
