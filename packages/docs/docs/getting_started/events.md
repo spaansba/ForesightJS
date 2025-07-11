@@ -120,6 +120,7 @@ type ElementUnregisteredEvent = {
   timestamp: number
   elementData: ForesightElementData
   unregisterReason: "callbackHit" | "disconnected" | "apiCall"
+  wasLastElement: boolean
 }
 ```
 

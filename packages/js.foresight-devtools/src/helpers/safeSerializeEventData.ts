@@ -37,6 +37,7 @@ interface ElementUnregisteredPayload extends PayloadBase {
   id: string
   registerCount: number
   unregisterReason: string
+  wasLastElement: boolean
 }
 interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
@@ -139,6 +140,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           id: event.elementData.element.id || "",
           registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
+          wasLastElement: event.wasLastElement,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${event.unregisterReason}`,
