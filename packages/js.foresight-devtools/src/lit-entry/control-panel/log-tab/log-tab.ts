@@ -243,7 +243,7 @@ export class LogTab extends LitElement {
 
   private getSelectedEventFilters(): string[] {
     return Object.entries(this.eventsEnabled)
-      .filter(([enabled]) => enabled)
+      .filter(([, enabled]) => enabled)
       .map(([eventType]) => eventType)
   }
 
