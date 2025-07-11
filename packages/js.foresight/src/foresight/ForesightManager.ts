@@ -115,49 +115,11 @@ export class ForesightManager {
 
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
-  private globalListenersController: AbortController | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
-  private mousePredictor: MousePredictor
+  private mousePredictor: MousePredictor | null = null
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor | null = null
-  private constructor() {
-    const settings = this._globalSettings
-    const dependencies: PredictorDependencies = {
-      callCallback: this.callCallback.bind(this),
-      emit: this.emit.bind(this),
-      elements: this.elements,
-    }
-
-    if (settings.enableTabPrediction) {
-      this.tabPredictor = new TabPredictor({
-        dependencies,
-        settings: {
-          tabOffset: settings.tabOffset,
-        },
-      })
-    }
-
-    if (settings.enableScrollPrediction) {
-      this.scrollPredictor = new ScrollPredictor({
-        dependencies,
-        settings: {
-          scrollMargin: settings.scrollMargin,
-        },
-        trajectoryPositions: this.trajectoryPositions,
-      })
-    }
-
-    // Always initialize mouse since if its not enabled we still check for hover
-    this.mousePredictor = new MousePredictor({
-      dependencies,
-      settings: {
-        enableMousePrediction: settings.enableMousePrediction,
-        trajectoryPredictionTime: settings.trajectoryPredictionTime,
-        positionHistorySize: settings.positionHistorySize,
-      },
-      trajectoryPositions: this.trajectoryPositions,
-    })
-  }
+  private constructor() {}
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
@@ -526,15 +488,6 @@ export class ForesightManager {
     }
   }
 
-  private forceUpdateAllElementBounds() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const [_, elementData] of this.elements) {
-      if (elementData.isIntersectingWithViewport) {
-        this.forceUpdateElementBounds(elementData)
-      }
-    }
-  }
-
   /**
    * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
    *
@@ -692,6 +645,43 @@ export class ForesightManager {
       return
     }
 
+    const settings = this._globalSettings
+    const dependencies: PredictorDependencies = {
+      callCallback: this.callCallback.bind(this),
+      emit: this.emit.bind(this),
+      elements: this.elements,
+    }
+
+    if (settings.enableTabPrediction) {
+      this.tabPredictor = new TabPredictor({
+        dependencies,
+        settings: {
+          tabOffset: settings.tabOffset,
+        },
+      })
+    }
+
+    if (settings.enableScrollPrediction) {
+      this.scrollPredictor = new ScrollPredictor({
+        dependencies,
+        settings: {
+          scrollMargin: settings.scrollMargin,
+        },
+        trajectoryPositions: this.trajectoryPositions,
+      })
+    }
+
+    // Always initialize mouse since if its not enabled we still check for hover and need it for scroll
+    this.mousePredictor = new MousePredictor({
+      dependencies,
+      settings: {
+        enableMousePrediction: settings.enableMousePrediction,
+        trajectoryPredictionTime: settings.trajectoryPredictionTime,
+        positionHistorySize: settings.positionHistorySize,
+      },
+      trajectoryPositions: this.trajectoryPositions,
+    })
+
     //Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
@@ -711,14 +701,22 @@ export class ForesightManager {
 
   private removeGlobalListeners() {
     this.isSetup = false
-    this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
-    this.globalListenersController = null
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()
     this.positionObserver = null
+    this.mousePredictor?.cleanup()
+    this.tabPredictor?.cleanup()
+    this.scrollPredictor?.cleanup()
   }
 
+  private forceUpdateAllElementBounds() {
+    for (const [, elementData] of this.elements) {
+      if (elementData.isIntersectingWithViewport) {
+        this.forceUpdateElementBounds(elementData)
+      }
+    }
+  }
   /**
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
