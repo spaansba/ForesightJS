@@ -387,3 +387,8 @@ interface ForesightBaseEvent {
   type: ForesightEvent
   timestamp: number
 }
+
+export type callCallbackFunction = (
+  elementData: ForesightElementData,
+  callbackHitType: CallbackHitType
+) => void

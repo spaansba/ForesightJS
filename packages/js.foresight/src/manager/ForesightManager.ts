@@ -1,4 +1,3 @@
-import { tabbable, type FocusableElement } from "tabbable"
 import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
   CallbackHits,
@@ -51,11 +50,11 @@ import {
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
-import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
 import { getScrollDirection } from "../helpers/getScrollDirection"
 import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 import { initialViewportState } from "../helpers/initialViewportState"
+import { TabPredictor } from "./TabPredictor"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -119,27 +118,25 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
 
-  private tabbableElementsCache: FocusableElement[] = []
-  private lastFocusedIndex: number | null = null
-
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
-  // Track the last keydown event to determine if focus change was due to Tab
-  private lastKeyDown: KeyboardEvent | null = null
-
-  // AbortController for managing global event listeners
   private globalListenersController: AbortController | null = null
-
-  // RequestAnimationFrame throttling for mouse events
   private rafId: number | null = null
   private pendingMouseEvent: MouseEvent | null = null
 
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
-
-  // Never put something in the constructor, use initialize instead
-  private constructor() {}
+  private tabPredictor: TabPredictor | null = null
+  private constructor() {
+    if (this._globalSettings.enableTabPrediction) {
+      this.tabPredictor = new TabPredictor(
+        this._globalSettings.tabOffset,
+        this.elements,
+        this.callCallback.bind(this)
+      )
+    }
+  }
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
@@ -148,6 +145,7 @@ export class ForesightManager {
     if (props !== undefined) {
       ForesightManager.manager.alterGlobalSettings(props)
     }
+
     return ForesightManager.manager
   }
 
@@ -382,6 +380,10 @@ export class ForesightManager {
             this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(-newSize)
           }
         }
+
+        if (setting === "tabOffset" && this.tabPredictor) {
+          this.tabPredictor.tabOffset = newValue
+        }
       }
     })
 
@@ -400,6 +402,20 @@ export class ForesightManager {
 
       if (changed) {
         changedSettings.push({ setting, oldValue, newValue: this._globalSettings[setting] })
+        if (setting === "enableTabPrediction") {
+          if (newValue) {
+            this.tabPredictor = new TabPredictor(
+              this._globalSettings.tabOffset,
+              this.elements,
+              this.callCallback.bind(this)
+            )
+          } else {
+            if (this.tabPredictor) {
+              this.tabPredictor.cleanup()
+            }
+            this.tabPredictor = null
+          }
+        }
       }
     })
 
@@ -511,8 +527,7 @@ export class ForesightManager {
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
     // Invalidate tabbale elements cache
     if (mutationsList.length) {
-      this.tabbableElementsCache = []
-      this.lastFocusedIndex = null
+      this.tabPredictor?.invalidateCache()
     }
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
@@ -523,69 +538,6 @@ export class ForesightManager {
         }
       }
     }
-  }
-
-  // We store the last key for the FocusIn event, meaning we know if the user is tabbing around the page.
-  // We dont use handleKeyDown for the full event because of 2 main reasons:
-  // 1: handleKeyDown e.target returns the target on which the keydown is pressed (meaning we dont know which target got the focus)
-  // 2: handleKeyUp does return the correct e.target however when holding tab the event doesnt repeat (handleKeyDown does)
-  private handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Tab") {
-      this.lastKeyDown = e
-    }
-  }
-
-  private handleFocusIn = (e: FocusEvent) => {
-    if (!this.lastKeyDown || !this._globalSettings.enableTabPrediction) {
-      return
-    }
-    const targetElement = e.target
-    if (!(targetElement instanceof HTMLElement)) {
-      return
-    }
-
-    // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
-    if (!this.tabbableElementsCache.length) {
-      this.tabbableElementsCache = tabbable(document.documentElement)
-    }
-
-    // Determine the range of elements to check based on the tab direction and offset
-    const isReversed = this.lastKeyDown.shiftKey
-
-    const currentIndex: number = getFocusedElementIndex(
-      isReversed,
-      this.lastFocusedIndex,
-      this.tabbableElementsCache,
-      targetElement
-    )
-
-    this.lastFocusedIndex = currentIndex
-
-    this.lastKeyDown = null
-    const elementsToPredict: ForesightElement[] = []
-    for (let i = 0; i <= this._globalSettings.tabOffset; i++) {
-      if (isReversed) {
-        const element = this.tabbableElementsCache[currentIndex - i]
-        if (this.elements.has(element as ForesightElement)) {
-          elementsToPredict.push(element as ForesightElement)
-        }
-      } else {
-        const element = this.tabbableElementsCache[currentIndex + i]
-        if (this.elements.has(element as ForesightElement)) {
-          elementsToPredict.push(element as ForesightElement)
-        }
-      }
-    }
-
-    elementsToPredict.forEach(element => {
-      const foresightElement = this.elements.get(element)
-      if (foresightElement) {
-        this.callCallback(foresightElement, {
-          kind: "tab",
-          subType: isReversed ? "reverse" : "forwards",
-        })
-      }
-    })
   }
 
   private updateHitCounters(callbackHitType: CallbackHitType) {
@@ -804,10 +756,8 @@ export class ForesightManager {
       return
     }
     this.globalListenersController = new AbortController()
-    const { signal } = this.globalListenersController
+    // const { signal } = this.globalListenersController
     document.addEventListener("mousemove", this.handleMouseMove) // Dont add signal we still need to emit events even without elements
-    document.addEventListener("keydown", this.handleKeyDown, { signal })
-    document.addEventListener("focusin", this.handleFocusIn, { signal })
 
     //Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
     this.domObserver = new MutationObserver(this.handleDomMutations)
@@ -831,8 +781,6 @@ export class ForesightManager {
 
     this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
     this.globalListenersController = null
-    this.tabbableElementsCache = []
-    this.lastFocusedIndex = null
     this.domObserver?.disconnect()
     this.domObserver = null
     this.positionObserver?.disconnect()
