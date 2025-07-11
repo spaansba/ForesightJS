@@ -229,8 +229,6 @@ describe("ForesightManager", () => {
     })
 
     it("should track callback hits", () => {
-      const initialHits = manager.getManagerData.globalCallbackHits.mouse.hover
-
       simulateMouseEvent("mousemove", window, { clientX: 150, clientY: 125 })
 
       const newHits = manager.getManagerData.globalCallbackHits.mouse.hover
@@ -515,7 +513,11 @@ describe("ForesightManager", () => {
       expect(elementData).toBeDefined()
 
       // Access the private callCallback method through type assertion
-      const callCallbackMethod = (manager as any)["callCallback"]
+      const callCallbackMethod = (manager as ForesightManager)["callCallback"]
+
+      if (!elementData) {
+        throw new Error("ElementData not defined")
+      }
       expect(typeof callCallbackMethod).toBe("function")
 
       // Call the callback directly with the element data
@@ -579,8 +581,10 @@ describe("ForesightManager", () => {
       expect(elementData).toBeDefined()
 
       // Access the private callCallback method through type assertion
-      const callCallbackMethod = (manager as any)["callCallback"]
-
+      const callCallbackMethod = (manager as ForesightManager)["callCallback"]
+      if (!elementData) {
+        throw new Error("ElementData not defined")
+      }
       // Call the callback directly with the element data
       callCallbackMethod.call(manager, elementData, { kind: "mouse", subType: "hover" })
 

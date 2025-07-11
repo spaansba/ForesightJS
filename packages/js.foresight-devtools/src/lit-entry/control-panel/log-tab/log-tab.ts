@@ -243,8 +243,8 @@ export class LogTab extends LitElement {
 
   private getSelectedEventFilters(): string[] {
     return Object.entries(this.eventsEnabled)
-      .filter(([_, enabled]) => enabled)
-      .map(([eventType, _]) => eventType)
+      .filter(([enabled]) => enabled)
+      .map(([eventType]) => eventType)
   }
 
   //TODO check if devtools is open, but is harder than I thought. Look into later
@@ -361,17 +361,13 @@ export class LogTab extends LitElement {
   }
 
   private addEventLog<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
-    const logData = safeSerializeEventData(event)
-    if (logData.type === "serializationError") {
-      console.error(logData.error, logData.errorMessage)
+    const log = safeSerializeEventData(event, (++this.logIdCounter).toString())
+    if (log.type === "serializationError") {
+      console.error(log.error, log.errorMessage)
       return
     }
-    const logWithId = {
-      ...logData,
-      logId: (++this.logIdCounter).toString(),
-    }
     // More efficient: direct array manipulation
-    this.logs.unshift(logWithId)
+    this.logs.unshift(log)
     if (this.logs.length > this.MAX_LOGS) {
       this.logs.pop()
     }

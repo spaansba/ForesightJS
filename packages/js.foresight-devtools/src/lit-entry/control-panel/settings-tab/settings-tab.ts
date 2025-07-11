@@ -1,4 +1,4 @@
-import type { ForesightManagerSettings } from "js.foresight"
+import type { ForesightManagerSettings, UpdatedManagerSetting } from "js.foresight"
 import { ForesightManager } from "js.foresight"
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
@@ -26,6 +26,15 @@ import "./setting-item/setting-item-checkbox"
 import "./setting-item/setting-item-range"
 import "../base-tab/chip"
 import { ForesightDevtools } from "../../foresight-devtools"
+
+// A helper type to represent a change in a Devtools setting
+type UpdatedDevtoolsSetting = {
+  [K in keyof DevtoolsSettings]: {
+    setting: K
+    newValue: DevtoolsSettings[K]
+    oldValue: DevtoolsSettings[K]
+  }
+}[keyof DevtoolsSettings]
 
 @customElement("settings-tab")
 export class SettingsTab extends LitElement {
@@ -68,11 +77,7 @@ export class SettingsTab extends LitElement {
     devtools: DevtoolsSettings
   }>
   @state() private devtoolsSettings: DevtoolsSettings
-  @state() private changedSettings: {
-    name: string
-    initial: any
-    current: any
-  }[] = []
+  @state() private changedSettings: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[] = []
 
   private _abortController: AbortController | null = null
 
@@ -114,14 +119,14 @@ export class SettingsTab extends LitElement {
   }
 
   private _updateChangedSettings(): void {
-    const changes: { name: string; initial: any; current: any }[] = []
+    const changes: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[] = []
     this._checkManagerSettingsChanges(changes)
     this._checkDevtoolsSettingsChanges(changes)
     this.changedSettings = changes
   }
 
   private _checkManagerSettingsChanges(
-    changes: { name: string; initial: any; current: any }[]
+    changes: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[]
   ): void {
     const managerKeys: (keyof ForesightManagerSettings)[] = [
       "enableMousePrediction",
@@ -134,24 +139,32 @@ export class SettingsTab extends LitElement {
     ]
 
     for (const key of managerKeys) {
-      const initialValue = this.initialSettings.manager[key]
-      const currentValue = this.managerSettings[key]
-      if (initialValue !== currentValue) {
-        changes.push({ name: key, initial: initialValue, current: currentValue })
+      const oldValue = this.initialSettings.manager[key]
+      const newValue = this.managerSettings[key]
+      if (oldValue !== newValue) {
+        changes.push({
+          setting: key,
+          oldValue,
+          newValue,
+        } as UpdatedManagerSetting)
       }
     }
   }
 
   private _checkDevtoolsSettingsChanges(
-    changes: { name: string; initial: any; current: any }[]
+    changes: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[]
   ): void {
     const devtoolsKeys: (keyof DevtoolsSettings)[] = ["showNameTags"]
 
     for (const key of devtoolsKeys) {
-      const initialValue = this.initialSettings.devtools[key]
-      const currentValue = this.devtoolsSettings[key]
-      if (initialValue !== currentValue) {
-        changes.push({ name: key, initial: initialValue, current: currentValue })
+      const oldValue = this.initialSettings.devtools[key]
+      const newValue = this.devtoolsSettings[key]
+      if (oldValue !== newValue) {
+        changes.push({
+          setting: key,
+          oldValue,
+          newValue,
+        } as UpdatedDevtoolsSetting)
       }
     }
   }
@@ -213,8 +226,8 @@ export class SettingsTab extends LitElement {
           this.changedSettings
             .map(
               change =>
-                `${change.name}: ${JSON.stringify(change.initial)} -> ${JSON.stringify(
-                  change.current
+                `${change.setting}: ${JSON.stringify(change.oldValue)} -> ${JSON.stringify(
+                  change.newValue
                 )}`
             )
             .join("\n")

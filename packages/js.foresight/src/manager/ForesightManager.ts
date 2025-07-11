@@ -429,6 +429,7 @@ export class ForesightManager {
   }
 
   private forceUpdateAllElementBounds() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [_, elementData] of this.elements) {
       if (elementData.isIntersectingWithViewport) {
         this.forceUpdateElementBounds(elementData)
@@ -587,7 +588,7 @@ export class ForesightManager {
     })
   }
 
-  private updateHitCounters(callbackHitType: CallbackHitType, elementData: ForesightElementData) {
+  private updateHitCounters(callbackHitType: CallbackHitType) {
     switch (callbackHitType.kind) {
       case "mouse":
         this._globalCallbackHits.mouse[callbackHitType.subType]++
@@ -611,7 +612,7 @@ export class ForesightManager {
     // We have this async wrapper so we can time exactly how long the callback takes
     elementData.isRunningCallback = true
     const asyncCallbackWrapper = async () => {
-      this.updateHitCounters(callbackHitType, elementData)
+      this.updateHitCounters(callbackHitType)
       this.emit({
         type: "callbackInvoked",
         timestamp: Date.now(),

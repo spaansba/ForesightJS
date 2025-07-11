@@ -1,9 +1,8 @@
 import { LitElement, css, html } from "lit"
-import { customElement, state } from "lit/decorators.js"
+import { customElement } from "lit/decorators.js"
 import "./element-overlays"
 import "./mouse-trajectory"
 import "./scroll-trajectory"
-import { ForesightManager } from "js.foresight"
 
 @customElement("debug-overlay")
 export class DebugOverlay extends LitElement {

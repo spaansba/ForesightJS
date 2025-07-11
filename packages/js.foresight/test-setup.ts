@@ -2,21 +2,21 @@ import "@testing-library/jest-dom"
 import { afterEach, beforeEach, vi } from "vitest"
 
 // Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-  constructor(callback: ResizeObserverCallback) {}
-}
+// global.ResizeObserver = class ResizeObserver {
+//   observe() {}
+//   unobserve() {}
+//   disconnect() {}
+//   constructor(callback: ResizeObserverCallback) {}
+// }
 
-// Mock MutationObserver
-global.MutationObserver = class MutationObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-  takeRecords() { return [] }
-  constructor(callback: MutationCallback) {}
-}
+// // Mock MutationObserver
+// global.MutationObserver = class MutationObserver {
+//   observe() {}
+//   unobserve() {}
+//   disconnect() {}
+//   takeRecords() { return [] }
+//   constructor(callback: MutationCallback) {}
+// }
 
 // Mock PositionObserver from position-observer library
 const mockPositionObserver = {
@@ -155,7 +155,7 @@ export const simulateScrollEvent = (
 }
 
 // Mock matchMedia
-global.matchMedia = vi.fn().mockImplementation((query) => ({
+global.matchMedia = vi.fn().mockImplementation(query => ({
   matches: false,
   media: query,
   onchange: null,

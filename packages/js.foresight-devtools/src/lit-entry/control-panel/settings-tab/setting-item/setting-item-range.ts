@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit"
+import { LitElement, html, css, type PropertyValues } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 
 import "./setting-item"
@@ -106,7 +106,7 @@ export class SettingItemRange extends LitElement {
     }
   }
 
-  willUpdate(changedProperties: Map<string, any>) {
+  willUpdate(changedProperties: PropertyValues) {
     super.willUpdate(changedProperties)
     if (changedProperties.has("currentValue")) {
       this.displayValue = this.currentValue

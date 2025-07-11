@@ -20,6 +20,7 @@ interface PayloadBase {
   type: SerializedEventType
   localizedTimestamp: string
   summary: string // The text / data you see as preview on the right of the event (keep this short)
+  logId: string
 }
 
 interface ElementRegisteredPayload extends PayloadBase {
@@ -108,7 +109,8 @@ export type SerializedEventData =
  * @returns Serialized event data or error object if serialization fails
  */
 export function safeSerializeEventData<K extends keyof ForesightEventMap>(
-  event: ForesightEventMap[K]
+  event: ForesightEventMap[K],
+  logId: string
 ): SerializedEventData {
   try {
     // For different event types, extract only the relevant serializable data
@@ -122,6 +124,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           hitslop: event.elementData.elementBounds.hitSlop,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           // if its the 2nd+ time of the element registering, give the user a heads up in the summary
+          logId: logId,
           summary:
             event.elementData.registerCount === 1
               ? event.elementData.name
@@ -137,6 +140,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
           summary: `${event.elementData.name} - ${event.unregisterReason}`,
         }
       case "elementDataUpdated":
@@ -146,6 +150,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           updatedProps: event.updatedProps || [],
           isIntersecting: event.elementData.isIntersectingWithViewport,
           localizedTimestamp: new Date().toLocaleTimeString(),
+          logId: logId,
           summary: `${event.elementData.name} - ${event.updatedProps.toString()}`,
         }
       case "callbackInvoked":
@@ -154,9 +159,10 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           name: event.elementData.name,
           hitType: event.hitType,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
           summary: `${event.elementData.name} - ${event.hitType.kind}`,
         }
-      case "callbackCompleted":
+      case "callbackCompleted": {
         const elapsed = formatElapsed(event.elapsed)
         return {
           type: "callbackCompleted",
@@ -168,8 +174,10 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           callbackRunTimeFormatted: elapsed,
           callbackRunTimeRaw: event.elapsed,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
           summary: `${event.elementData.name} - ${elapsed}`,
         }
+      }
       case "mouseTrajectoryUpdate":
         return {
           type: "mouseTrajectoryUpdate",
@@ -178,6 +186,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           positionCount: event.trajectoryPositions?.positions?.length || 0,
           mousePredictionEnabled: event.predictionEnabled,
           localizedTimestamp: new Date().toLocaleTimeString(),
+          logId: logId,
           summary: "",
         }
       case "scrollTrajectoryUpdate":
@@ -187,6 +196,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           predictedPoint: event.predictedPoint,
           scrollDirection: event.scrollDirection,
           localizedTimestamp: new Date().toLocaleTimeString(),
+          logId: logId,
           summary: event.scrollDirection,
         }
       case "managerSettingsChanged":
@@ -195,17 +205,20 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           globalSettings: event.managerData?.globalSettings || {},
           settingsChanged: event.updatedSettings,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
           summary: event.updatedSettings.map(setting => setting.setting).join(", "),
         }
-      default:
+      default: {
         const _exhaustiveCheck: never = event
         return {
           type: "serializationError",
           error: "Failed to serialize event data",
           errorMessage: JSON.stringify(_exhaustiveCheck),
           localizedTimestamp: new Date().toLocaleTimeString(),
+          logId: logId,
           summary: "",
         }
+      }
     }
   } catch (error) {
     // Fallback if serialization fails
@@ -214,6 +227,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       error: "Failed to serialize event data",
       localizedTimestamp: new Date().toLocaleTimeString(),
       errorMessage: error instanceof Error ? error.message : String(error),
+      logId: logId,
       summary: "",
     }
   }

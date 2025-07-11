@@ -31,6 +31,7 @@ function userUsesTouchDevice(): boolean {
  * }
  */
 function hasConnectionLimitations(): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
   if (!connection) return false
 
