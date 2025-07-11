@@ -1,12 +1,15 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
-import type {
-  CallCallbackFunction,
-  EmitFunction,
-  ForesightElement,
-  ForesightElementData,
-} from "../types/types"
-import { BasePredictor } from "./BasePredictor"
+import type { ForesightElement } from "../types/types"
+import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
+
+export interface TabPredictorSettings {
+  tabOffset: number
+}
+
+export interface TabPredictorConfig extends BasePredictorConfig {
+  settings: TabPredictorSettings
+}
 
 /**
  * Manages the prediction of user intent based on Tab key navigation.
@@ -26,20 +29,10 @@ export class TabPredictor extends BasePredictor {
   private lastFocusedIndex: number | null = null
   public tabOffset: number
 
-  /**
-   * Creates an instance of TabPredictor.
-   * @param initialTabOffset - The initial tab offset setting.
-   * @param elements - A reference to the manager's map of registered elements.
-   */
-  constructor(
-    initialTabOffset: number,
-    elements: Map<ForesightElement, ForesightElementData>,
-    callbackFunction: CallCallbackFunction,
-    emit: EmitFunction
-  ) {
-    super(elements, callbackFunction, emit)
+  constructor(config: TabPredictorConfig) {
+    super(config)
+    this.tabOffset = config.settings.tabOffset
     this.initializeListeners()
-    this.tabOffset = initialTabOffset
   }
 
   protected initializeListeners(): void {
@@ -56,7 +49,8 @@ export class TabPredictor extends BasePredictor {
   public cleanup(): void {
     this.abort()
     this.tabbableElementsCache = []
-    this.lastFocusedIndex = -1
+    this.lastFocusedIndex = null
+    this.lastKeyDown = null
   }
 
   // We store the last key for the FocusIn event, meaning we know if the user is tabbing around the page.
@@ -70,55 +64,54 @@ export class TabPredictor extends BasePredictor {
   }
 
   private handleFocusIn = (e: FocusEvent) => {
-    if (!this.lastKeyDown) {
-      return
-    }
-    const targetElement = e.target
-    if (!(targetElement instanceof HTMLElement)) {
-      return
-    }
+    try {
+      if (!this.lastKeyDown) {
+        return
+      }
+      const targetElement = e.target
+      if (!(targetElement instanceof HTMLElement)) {
+        return
+      }
 
-    // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
-    if (!this.tabbableElementsCache.length) {
-      this.tabbableElementsCache = tabbable(document.documentElement)
-    }
+      // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
+      if (!this.tabbableElementsCache.length) {
+        this.tabbableElementsCache = tabbable(document.documentElement)
+      }
 
-    const isReversed = this.lastKeyDown.shiftKey
+      const isReversed = this.lastKeyDown.shiftKey
 
-    const currentIndex: number = getFocusedElementIndex(
-      isReversed,
-      this.lastFocusedIndex,
-      this.tabbableElementsCache,
-      targetElement
-    )
+      const currentIndex: number = getFocusedElementIndex(
+        isReversed,
+        this.lastFocusedIndex,
+        this.tabbableElementsCache,
+        targetElement
+      )
 
-    this.lastFocusedIndex = currentIndex
+      this.lastFocusedIndex = currentIndex
 
-    this.lastKeyDown = null
-    const elementsToPredict: ForesightElement[] = []
-    for (let i = 0; i <= this.tabOffset; i++) {
-      if (isReversed) {
-        const element = this.tabbableElementsCache[currentIndex - i]
-        if (this.elements.has(element as ForesightElement)) {
-          elementsToPredict.push(element as ForesightElement)
-        }
-      } else {
-        const element = this.tabbableElementsCache[currentIndex + i]
-        if (this.elements.has(element as ForesightElement)) {
-          elementsToPredict.push(element as ForesightElement)
+      this.lastKeyDown = null
+      const elementsToPredict: ForesightElement[] = []
+      for (let i = 0; i <= this.tabOffset; i++) {
+        const elementIndex = isReversed ? currentIndex - i : currentIndex + i
+        const element = this.tabbableElementsCache[elementIndex]
+        
+        // Type guard: ensure element exists and is a valid ForesightElement
+        if (element && element instanceof Element && this.elements.has(element)) {
+          elementsToPredict.push(element)
         }
       }
-    }
 
-    elementsToPredict.forEach(element => {
-      const elementData = this.elements.get(element)
-      if (elementData) {
-        console.log("here")
-        this.callbackFunction(elementData, {
-          kind: "tab",
-          subType: isReversed ? "reverse" : "forwards",
-        })
-      }
-    })
+      elementsToPredict.forEach(element => {
+        const elementData = this.elements.get(element)
+        if (elementData) {
+          this.callCallback(elementData, {
+            kind: "tab",
+            subType: isReversed ? "reverse" : "forwards",
+          })
+        }
+      })
+    } catch (error) {
+      this.handleError(error, "handleFocusIn")
+    }
   }
 }

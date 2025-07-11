@@ -18,10 +18,7 @@ import {
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
 import { clampNumber } from "../helpers/clampNumber"
-import { getScrollDirection } from "../helpers/getScrollDirection"
 import { initialViewportState } from "../helpers/initialViewportState"
-import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
-import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import {
   areRectsEqual,
   getExpandedRect,
@@ -45,14 +42,15 @@ import type {
   ForesightRegisterResult,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
-  Point,
-  ScrollDirection,
+  TrajectoryPositions,
   UpdatedDataPropertyNames,
   UpdatedManagerSetting,
   UpdateForsightManagerSettings,
 } from "../types/types"
-import { TabPredictor } from "./TabPredictor"
+import type { PredictorDependencies } from "./BasePredictor"
 import { MousePredictor } from "./MousePredictor"
+import { ScrollPredictor } from "./ScrollPredictor"
+import { TabPredictor } from "./TabPredictor"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -75,7 +73,11 @@ import { MousePredictor } from "./MousePredictor"
 export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
-
+  private trajectoryPositions: TrajectoryPositions = {
+    positions: [],
+    currentPoint: { x: 0, y: 0 },
+    predictedPoint: { x: 0, y: 0 },
+  }
   private isSetup: boolean = false
   private _globalCallbackHits: CallbackHits = {
     mouse: {
@@ -111,33 +113,50 @@ export class ForesightManager {
     tabOffset: DEFAULT_TAB_OFFSET,
   }
 
-  private predictedScrollPoint: Point | null = null
-  private scrollDirection: ScrollDirection | null = null
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   private globalListenersController: AbortController | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
   private mousePredictor: MousePredictor
   private tabPredictor: TabPredictor | null = null
+  private scrollPredictor: ScrollPredictor | null = null
   private constructor() {
     const settings = this._globalSettings
-    if (settings.enableTabPrediction) {
-      this.tabPredictor = new TabPredictor(
-        settings.tabOffset,
-        this.elements,
-        this.callCallback.bind(this),
-        this.emit.bind(this)
-      )
+    const dependencies: PredictorDependencies = {
+      callCallback: this.callCallback.bind(this),
+      emit: this.emit.bind(this),
+      elements: this.elements,
     }
+
+    if (settings.enableTabPrediction) {
+      this.tabPredictor = new TabPredictor({
+        dependencies,
+        settings: {
+          tabOffset: settings.tabOffset,
+        },
+      })
+    }
+
+    if (settings.enableScrollPrediction) {
+      this.scrollPredictor = new ScrollPredictor({
+        dependencies,
+        settings: {
+          scrollMargin: settings.scrollMargin,
+        },
+        trajectoryPositions: this.trajectoryPositions,
+      })
+    }
+
     // Always initialize mouse since if its not enabled we still check for hover
-    this.mousePredictor = new MousePredictor(
-      settings.enableMousePrediction,
-      settings.trajectoryPredictionTime,
-      settings.positionHistorySize,
-      this.elements,
-      this.callCallback.bind(this),
-      this.emit.bind(this)
-    )
+    this.mousePredictor = new MousePredictor({
+      dependencies,
+      settings: {
+        enableMousePrediction: settings.enableMousePrediction,
+        trajectoryPredictionTime: settings.trajectoryPredictionTime,
+        positionHistorySize: settings.positionHistorySize,
+      },
+      trajectoryPositions: this.trajectoryPositions,
+    })
   }
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
@@ -184,11 +203,12 @@ export class ForesightManager {
     if (!listeners) {
       return
     }
-    listeners.forEach(listener => {
+
+    listeners.forEach((listener, index) => {
       try {
         listener(event)
       } catch (error) {
-        console.error(`Error in ForesightManager event listener for ${event.type}:`, error)
+        console.error(`Error in ForesightManager event listener ${index} for ${event.type}:`, error)
       }
     })
   }
@@ -367,9 +387,9 @@ export class ForesightManager {
       })
       if (this._globalSettings.positionHistorySize < oldPositionHistorySize) {
         const newSize = this._globalSettings.positionHistorySize
-        const positions = this.mousePredictor.trajectoryPositions.positions
+        const positions = this.trajectoryPositions.positions
         if (positions.length > newSize) {
-          this.mousePredictor.trajectoryPositions.positions = positions.slice(-newSize)
+          this.trajectoryPositions.positions = positions.slice(-newSize)
         }
       }
     }
@@ -382,10 +402,14 @@ export class ForesightManager {
       MAX_SCROLL_MARGIN
     )
     if (scrollMarginChanged) {
+      const newValue = this._globalSettings.scrollMargin
+      if (this.scrollPredictor) {
+        this.scrollPredictor.scrollMargin = newValue
+      }
       changedSettings.push({
         setting: "scrollMargin",
         oldValue: oldScrollMargin,
-        newValue: this._globalSettings.scrollMargin,
+        newValue: newValue,
       })
     }
 
@@ -397,14 +421,14 @@ export class ForesightManager {
       MAX_TAB_OFFSET
     )
     if (tabOffsetChanged) {
+      if (this.tabPredictor) {
+        this.tabPredictor.tabOffset = this._globalSettings.tabOffset
+      }
       changedSettings.push({
         setting: "tabOffset",
         oldValue: oldTabOffset,
         newValue: this._globalSettings.tabOffset,
       })
-      if (this.tabPredictor) {
-        this.tabPredictor.tabOffset = this._globalSettings.tabOffset
-      }
     }
 
     const oldEnableMousePrediction = this._globalSettings.enableMousePrediction
@@ -426,6 +450,22 @@ export class ForesightManager {
       "enableScrollPrediction"
     )
     if (enableScrollPredictionChanged) {
+      if (this._globalSettings.enableScrollPrediction) {
+        this.scrollPredictor = new ScrollPredictor({
+          dependencies: {
+            callCallback: this.callCallback.bind(this),
+            emit: this.emit.bind(this),
+            elements: this.elements,
+          },
+          settings: {
+            scrollMargin: this._globalSettings.scrollMargin,
+          },
+          trajectoryPositions: this.trajectoryPositions,
+        })
+      } else {
+        this.scrollPredictor?.cleanup()
+        this.scrollPredictor = null
+      }
       changedSettings.push({
         setting: "enableScrollPrediction",
         oldValue: oldEnableScrollPrediction,
@@ -445,16 +485,18 @@ export class ForesightManager {
         newValue: this._globalSettings.enableTabPrediction,
       })
       if (this._globalSettings.enableTabPrediction) {
-        this.tabPredictor = new TabPredictor(
-          this._globalSettings.tabOffset,
-          this.elements,
-          this.callCallback.bind(this),
-          this.emit.bind(this)
-        )
+        this.tabPredictor = new TabPredictor({
+          dependencies: {
+            callCallback: this.callCallback.bind(this),
+            emit: this.emit.bind(this),
+            elements: this.elements,
+          },
+          settings: {
+            tabOffset: this._globalSettings.tabOffset,
+          },
+        })
       } else {
-        if (this.tabPredictor) {
-          this.tabPredictor.cleanup()
-        }
+        this.tabPredictor?.cleanup()
         this.tabPredictor = null
       }
     }
@@ -533,6 +575,8 @@ export class ForesightManager {
   }
 
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
+    console.log(elementData.isRunningCallback)
+
     if (elementData.isRunningCallback) {
       return
     }
@@ -606,19 +650,41 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    // Start batch processing for scroll prediction
+    if (this._globalSettings.enableScrollPrediction) {
+      this.scrollPredictor?.startBatch()
+    }
+
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) {
         continue
       }
-
       // Always call handlePositionChangeDataUpdates before handleScrollPrefetch
       this.handlePositionChangeDataUpdates(elementData, entry)
-      this.handleScrollPrefetch(elementData, entry.boundingClientRect)
+
+      if (this._globalSettings.enableScrollPrediction) {
+        this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
+      } else {
+        // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
+        if (
+          isPointInRectangle(
+            this.trajectoryPositions.currentPoint,
+            elementData.elementBounds.expandedRect
+          )
+        ) {
+          this.callCallback(elementData, {
+            kind: "mouse",
+            subType: "hover",
+          })
+        }
+      }
     }
-    // Reset scroll prefetch
-    this.scrollDirection = null
-    this.predictedScrollPoint = null
+
+    // End batch processing for scroll prediction
+    if (this._globalSettings.enableScrollPrediction) {
+      this.scrollPredictor?.endBatch()
+    }
   }
 
   private handlePositionChangeDataUpdates = (
@@ -642,7 +708,7 @@ export class ForesightManager {
     // Handle bounds updates for intersecting elements
     if (isNowIntersecting) {
       updatedProps.push("bounds")
-      this.handleScrollPrefetch(updatedElementData, entry.boundingClientRect)
+      this.scrollPredictor?.handleScrollPrefetch(updatedElementData, entry.boundingClientRect)
       updatedElementData = {
         ...updatedElementData,
         elementBounds: {
@@ -657,67 +723,13 @@ export class ForesightManager {
     }
 
     // Update state and emit once
+
     this.elements.set(elementData.element, updatedElementData)
     if (updatedProps.length) {
       this.emit({
         type: "elementDataUpdated",
         elementData: updatedElementData,
         updatedProps,
-      })
-    }
-  }
-
-  private handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect) {
-    if (!elementData.isIntersectingWithViewport) {
-      return
-    }
-    if (!this._globalSettings.enableScrollPrediction) {
-      // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-      if (
-        isPointInRectangle(
-          this.mousePredictor.trajectoryPositions.currentPoint,
-          elementData.elementBounds.expandedRect
-        )
-      ) {
-        this.callCallback(elementData, {
-          kind: "mouse",
-          subType: "hover",
-        })
-      }
-    } else {
-      // ONCE per handlePositionChange batch we decide what the scroll direction is
-      this.scrollDirection =
-        this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
-      if (this.scrollDirection === "none") {
-        return
-      }
-      // ONCE per handlePositionChange batch we decide the predicted scroll point
-      this.predictedScrollPoint =
-        this.predictedScrollPoint ??
-        predictNextScrollPosition(
-          this.mousePredictor.trajectoryPositions.currentPoint,
-          this.scrollDirection,
-          this._globalSettings.scrollMargin
-        )
-
-      // Check if the scroll is going to intersect with an registered element
-      if (
-        lineSegmentIntersectsRect(
-          this.mousePredictor.trajectoryPositions.currentPoint,
-          this.predictedScrollPoint,
-          elementData.elementBounds.expandedRect
-        )
-      ) {
-        this.callCallback(elementData, {
-          kind: "scroll",
-          subType: this.scrollDirection,
-        })
-      }
-      this.emit({
-        type: "scrollTrajectoryUpdate",
-        currentPoint: this.mousePredictor.trajectoryPositions.currentPoint,
-        predictedPoint: this.predictedScrollPoint,
-        scrollDirection: this.scrollDirection,
       })
     }
   }

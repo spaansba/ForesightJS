@@ -1,39 +1,34 @@
-import { lineSegmentIntersectsRect } from "js.foresight/helpers/lineSigmentIntersectsRect"
-import { predictNextMousePosition } from "js.foresight/helpers/predictNextMousePosition"
-import { isPointInRectangle } from "js.foresight/helpers/rectAndHitSlop"
-import type {
-  CallCallbackFunction,
-  EmitFunction,
-  ForesightElement,
-  ForesightElementData,
-  TrajectoryPositions,
-} from "js.foresight/types/types"
-import { BasePredictor } from "./BasePredictor"
+import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
+import { isPointInRectangle } from "../helpers/rectAndHitSlop"
+import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
+import type { TrajectoryPositions } from "../types/types"
+
+export interface MousePredictorSettings {
+  enableMousePrediction: boolean
+  trajectoryPredictionTime: number
+  positionHistorySize: number
+}
+
+export interface MousePredictorConfig extends BasePredictorConfig {
+  settings: MousePredictorSettings
+  trajectoryPositions: TrajectoryPositions
+}
 
 export class MousePredictor extends BasePredictor {
   private pendingMouseEvent: MouseEvent | null = null
   private rafId: number | null = null
-  public trajectoryPositions: TrajectoryPositions = {
-    positions: [],
-    currentPoint: { x: 0, y: 0 },
-    predictedPoint: { x: 0, y: 0 },
-  }
   private enableMousePrediction: boolean
   public trajectoryPredictionTime: number
   public positionHistorySize: number
-
-  constructor(
-    initialEnableMousePrediction: boolean,
-    initialTrajectoryPredictionTime: number,
-    initialPositionHistorySize: number,
-    elements: ReadonlyMap<ForesightElement, ForesightElementData>,
-    callCallback: CallCallbackFunction,
-    emit: EmitFunction
-  ) {
-    super(elements, callCallback, emit)
-    this.enableMousePrediction = initialEnableMousePrediction
-    this.trajectoryPredictionTime = initialTrajectoryPredictionTime
-    this.positionHistorySize = initialPositionHistorySize
+  private trajectoryPositions: TrajectoryPositions
+  
+  constructor(config: MousePredictorConfig) {
+    super(config)
+    this.enableMousePrediction = config.settings.enableMousePrediction
+    this.trajectoryPredictionTime = config.settings.trajectoryPredictionTime
+    this.positionHistorySize = config.settings.positionHistorySize
+    this.trajectoryPositions = config.trajectoryPositions
     this.initializeListeners()
   }
   protected initializeListeners() {
@@ -68,45 +63,49 @@ export class MousePredictor extends BasePredictor {
   }
 
   public cleanup(): void {
-    super.abort()
+    this.abort()
     if (this.rafId) {
       cancelAnimationFrame(this.rafId)
       this.rafId = null
     }
     this.pendingMouseEvent = null
   }
-  private processMouseMovement(e: MouseEvent) {
-    this.updatePointerState(e)
+  private processMouseMovement(e: MouseEvent): void {
+    try {
+      this.updatePointerState(e)
 
-    // Use for...of instead of forEach for better performance in hot code path
-    // Avoids function call overhead and iterator creation on every mouse move
-    for (const currentData of this.elements.values()) {
-      if (!currentData.isIntersectingWithViewport) {
-        continue
-      }
-      const expandedRect = currentData.elementBounds.expandedRect
-
-      if (!this.enableMousePrediction) {
-        if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
-          this.callbackFunction(currentData, { kind: "mouse", subType: "hover" })
-          return
+      // Use for...of instead of forEach for better performance in hot code path
+      // Avoids function call overhead and iterator creation on every mouse move
+      for (const currentData of this.elements.values()) {
+        if (!currentData.isIntersectingWithViewport) {
+          continue
         }
-        // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
-      } else if (
-        lineSegmentIntersectsRect(
-          this.trajectoryPositions.currentPoint,
-          this.trajectoryPositions.predictedPoint,
-          expandedRect
-        )
-      ) {
-        this.callbackFunction(currentData, { kind: "mouse", subType: "trajectory" })
-      }
-    }
+        const expandedRect = currentData.elementBounds.expandedRect
 
-    this.emit({
-      type: "mouseTrajectoryUpdate",
-      predictionEnabled: this.enableMousePrediction,
-      trajectoryPositions: this.trajectoryPositions,
-    })
+        if (!this.enableMousePrediction) {
+          if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
+            this.callCallback(currentData, { kind: "mouse", subType: "hover" })
+            return
+          }
+          // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
+        } else if (
+          lineSegmentIntersectsRect(
+            this.trajectoryPositions.currentPoint,
+            this.trajectoryPositions.predictedPoint,
+            expandedRect
+          )
+        ) {
+          this.callCallback(currentData, { kind: "mouse", subType: "trajectory" })
+        }
+      }
+
+      this.emit({
+        type: "mouseTrajectoryUpdate",
+        predictionEnabled: this.enableMousePrediction,
+        trajectoryPositions: this.trajectoryPositions,
+      })
+    } catch (error) {
+      this.handleError(error, "processMouseMovement")
+    }
   }
 }
