@@ -21,4 +21,9 @@ export default defineConfig({
     "process.env.NODE_ENV": '"production"',
     PRODUCTION: "true",
   },
+  esbuildOptions: options => {
+    // Force resolution to production builds by excluding development condition
+    options.conditions = options.conditions?.filter(c => c !== "development") || ["default"]
+    return options
+  },
 })
