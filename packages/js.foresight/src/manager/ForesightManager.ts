@@ -20,7 +20,6 @@ import type {
   ForesightEventListener,
   UpdatedDataPropertyNames,
   UpdatedManagerSetting,
-  NumericSettingConfig,
 } from "../types/types"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -334,91 +333,147 @@ export class ForesightManager {
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     const changedSettings: UpdatedManagerSetting[] = []
-    const NUMERIC_SETTING_CONFIGS: readonly NumericSettingConfig[] = [
-      {
-        setting: "positionHistorySize",
-        min: MIN_POSITION_HISTORY_SIZE,
-        max: MAX_POSITION_HISTORY_SIZE,
-      },
-      {
-        setting: "trajectoryPredictionTime",
-        min: MIN_TRAJECTORY_PREDICTION_TIME,
-        max: MAX_TRAJECTORY_PREDICTION_TIME,
-      },
-      {
-        setting: "scrollMargin",
-        min: MIN_SCROLL_MARGIN,
-        max: MAX_SCROLL_MARGIN,
-      },
-      {
-        setting: "tabOffset",
-        min: MIN_TAB_OFFSET,
-        max: MAX_TAB_OFFSET,
-      },
-    ]
 
-    NUMERIC_SETTING_CONFIGS.forEach(({ setting, min, max }) => {
-      const newValue = props?.[setting]
-      if (newValue === undefined) return
-
-      const oldValue = this._globalSettings[setting]
-      const changed = this.updateNumericSettings(newValue, setting, min, max)
-
+    // trajectoryPredictionTime
+    if (props?.trajectoryPredictionTime !== undefined) {
+      const oldValue = this._globalSettings.trajectoryPredictionTime
+      const changed = this.updateNumericSettings(
+        props.trajectoryPredictionTime,
+        "trajectoryPredictionTime",
+        MIN_TRAJECTORY_PREDICTION_TIME,
+        MAX_TRAJECTORY_PREDICTION_TIME
+      )
       if (changed) {
         changedSettings.push({
-          setting,
+          setting: "trajectoryPredictionTime",
           oldValue,
-          newValue: this._globalSettings[setting],
+          newValue: this._globalSettings.trajectoryPredictionTime,
         })
+      }
+    }
 
-        if (
-          setting === "positionHistorySize" &&
-          this._globalSettings.positionHistorySize < oldValue
-        ) {
+    // positionHistorySize
+    if (props?.positionHistorySize !== undefined) {
+      const oldValue = this._globalSettings.positionHistorySize
+      const changed = this.updateNumericSettings(
+        props.positionHistorySize,
+        "positionHistorySize",
+        MIN_POSITION_HISTORY_SIZE,
+        MAX_POSITION_HISTORY_SIZE
+      )
+      if (changed) {
+        changedSettings.push({
+          setting: "positionHistorySize",
+          oldValue,
+          newValue: this._globalSettings.positionHistorySize,
+        })
+        // Handle position history size reduction
+        if (this._globalSettings.positionHistorySize < oldValue) {
           const newSize = this._globalSettings.positionHistorySize
           if (this.trajectoryPositions.positions.length > newSize) {
             this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(-newSize)
           }
         }
-
-        if (setting === "tabOffset" && this.tabPredictor) {
-          this.tabPredictor.tabOffset = newValue
-        }
       }
-    })
+    }
 
-    const booleanSettings: ManagerBooleanSettingKeys[] = [
-      "enableMousePrediction",
-      "enableScrollPrediction",
-      "enableTabPrediction",
-    ]
-
-    booleanSettings.forEach(setting => {
-      const newValue = props?.[setting]
-      if (newValue === undefined) return
-
-      const oldValue = this._globalSettings[setting]
-      const changed = this.updateBooleanSetting(newValue, setting)
-
+    // scrollMargin
+    if (props?.scrollMargin !== undefined) {
+      const oldValue = this._globalSettings.scrollMargin
+      const changed = this.updateNumericSettings(
+        props.scrollMargin,
+        "scrollMargin",
+        MIN_SCROLL_MARGIN,
+        MAX_SCROLL_MARGIN
+      )
       if (changed) {
-        changedSettings.push({ setting, oldValue, newValue: this._globalSettings[setting] })
-        if (setting === "enableTabPrediction") {
-          if (newValue) {
-            this.tabPredictor = new TabPredictor(
-              this._globalSettings.tabOffset,
-              this.elements,
-              this.callCallback.bind(this)
-            )
-          } else {
-            if (this.tabPredictor) {
-              this.tabPredictor.cleanup()
-            }
-            this.tabPredictor = null
-          }
+        changedSettings.push({
+          setting: "scrollMargin",
+          oldValue,
+          newValue: this._globalSettings.scrollMargin,
+        })
+      }
+    }
+
+    // tabOffset
+    if (props?.tabOffset !== undefined) {
+      const oldValue = this._globalSettings.tabOffset
+      const changed = this.updateNumericSettings(
+        props.tabOffset,
+        "tabOffset",
+        MIN_TAB_OFFSET,
+        MAX_TAB_OFFSET
+      )
+      if (changed) {
+        changedSettings.push({
+          setting: "tabOffset",
+          oldValue,
+          newValue: this._globalSettings.tabOffset,
+        })
+        if (this.tabPredictor) {
+          this.tabPredictor.tabOffset = props.tabOffset
         }
       }
-    })
+    }
 
+    // enableMousePrediction
+    if (props?.enableMousePrediction !== undefined) {
+      const oldValue = this._globalSettings.enableMousePrediction
+      const changed = this.updateBooleanSetting(
+        props.enableMousePrediction,
+        "enableMousePrediction"
+      )
+      if (changed) {
+        changedSettings.push({
+          setting: "enableMousePrediction",
+          oldValue,
+          newValue: this._globalSettings.enableMousePrediction,
+        })
+      }
+    }
+
+    // enableScrollPrediction
+    if (props?.enableScrollPrediction !== undefined) {
+      const oldValue = this._globalSettings.enableScrollPrediction
+      const changed = this.updateBooleanSetting(
+        props.enableScrollPrediction,
+        "enableScrollPrediction"
+      )
+      if (changed) {
+        changedSettings.push({
+          setting: "enableScrollPrediction",
+          oldValue,
+          newValue: this._globalSettings.enableScrollPrediction,
+        })
+      }
+    }
+
+    // enableTabPrediction
+    if (props?.enableTabPrediction !== undefined) {
+      const oldValue = this._globalSettings.enableTabPrediction
+      const changed = this.updateBooleanSetting(props.enableTabPrediction, "enableTabPrediction")
+      if (changed) {
+        changedSettings.push({
+          setting: "enableTabPrediction",
+          oldValue,
+          newValue: this._globalSettings.enableTabPrediction,
+        })
+        if (props.enableTabPrediction) {
+          this.tabPredictor = new TabPredictor(
+            this._globalSettings.tabOffset,
+            this.elements,
+            this.callCallback.bind(this)
+          )
+        } else {
+          if (this.tabPredictor) {
+            this.tabPredictor.cleanup()
+          }
+          this.tabPredictor = null
+        }
+      }
+    }
+
+    // defaultHitSlop
     if (props?.defaultHitSlop !== undefined) {
       const oldHitSlop = this._globalSettings.defaultHitSlop
       const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
