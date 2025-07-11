@@ -316,6 +316,7 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
   type: "elementUnregistered"
   elementData: ForesightElementData
   unregisterReason: ElementUnregisteredReason
+  wasLastElement: boolean
 }
 
 /**

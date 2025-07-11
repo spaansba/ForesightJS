@@ -276,7 +276,9 @@ export class ForesightManager {
     this.positionObserver?.unobserve(element)
     this.elements.delete(element)
 
-    if (this.elements.size === 0 && this.isSetup) {
+    const wasLastElement = this.elements.size === 0 && this.isSetup
+
+    if (wasLastElement) {
       this.removeGlobalListeners()
     }
 
@@ -286,6 +288,7 @@ export class ForesightManager {
         elementData: elementData,
         timestamp: Date.now(),
         unregisterReason: unregisterReason,
+        wasLastElement: wasLastElement,
       })
     }
   }

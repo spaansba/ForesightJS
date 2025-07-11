@@ -6,6 +6,7 @@ import {
   type MouseTrajectoryUpdateEvent,
   type ManagerSettingsChangedEvent,
 } from "js.foresight"
+import type { ElementUnregisteredEvent } from "packages/js.foresight/dist"
 
 export type Point = {
   x: number
@@ -74,6 +75,12 @@ export class MouseTrajectory extends LitElement {
     )
 
     ForesightManager.instance.addEventListener(
+      "elementUnregistered",
+      this.handleElementUnregistered,
+      { signal }
+    )
+
+    ForesightManager.instance.addEventListener(
       "scrollTrajectoryUpdate",
       () => {
         this._isVisible = false
@@ -93,8 +100,12 @@ export class MouseTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  // Removed firstUpdated - no longer needed for direct DOM access
-
+  // On last element make sure to remove any leftovers
+  private handleElementUnregistered = (e: ElementUnregisteredEvent) => {
+    if (e.wasLastElement) {
+      this._isVisible = false
+    }
+  }
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
     const isEnabled = e.managerData.globalSettings.enableMousePrediction
     this._mousePredictionIsEnabled = isEnabled
