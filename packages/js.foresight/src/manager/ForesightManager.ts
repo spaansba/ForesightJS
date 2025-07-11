@@ -334,146 +334,126 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     const changedSettings: UpdatedManagerSetting[] = []
 
-    // trajectoryPredictionTime
-    if (props?.trajectoryPredictionTime !== undefined) {
-      const oldValue = this._globalSettings.trajectoryPredictionTime
-      const changed = this.updateNumericSettings(
-        props.trajectoryPredictionTime,
-        "trajectoryPredictionTime",
-        MIN_TRAJECTORY_PREDICTION_TIME,
-        MAX_TRAJECTORY_PREDICTION_TIME
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "trajectoryPredictionTime",
-          oldValue,
-          newValue: this._globalSettings.trajectoryPredictionTime,
-        })
-      }
+    const oldTrajectoryPredictionTime = this._globalSettings.trajectoryPredictionTime
+    const trajectoryPredictionTimeChanged = this.updateNumericSettings(
+      props?.trajectoryPredictionTime,
+      "trajectoryPredictionTime",
+      MIN_TRAJECTORY_PREDICTION_TIME,
+      MAX_TRAJECTORY_PREDICTION_TIME
+    )
+    if (trajectoryPredictionTimeChanged) {
+      changedSettings.push({
+        setting: "trajectoryPredictionTime",
+        oldValue: oldTrajectoryPredictionTime,
+        newValue: this._globalSettings.trajectoryPredictionTime,
+      })
     }
 
-    // positionHistorySize
-    if (props?.positionHistorySize !== undefined) {
-      const oldValue = this._globalSettings.positionHistorySize
-      const changed = this.updateNumericSettings(
-        props.positionHistorySize,
-        "positionHistorySize",
-        MIN_POSITION_HISTORY_SIZE,
-        MAX_POSITION_HISTORY_SIZE
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "positionHistorySize",
-          oldValue,
-          newValue: this._globalSettings.positionHistorySize,
-        })
-        // Handle position history size reduction
-        if (this._globalSettings.positionHistorySize < oldValue) {
-          const newSize = this._globalSettings.positionHistorySize
-          if (this.trajectoryPositions.positions.length > newSize) {
-            this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(-newSize)
-          }
+    const oldPositionHistorySize = this._globalSettings.positionHistorySize
+    const positionHistorySizeChanged = this.updateNumericSettings(
+      props?.positionHistorySize,
+      "positionHistorySize",
+      MIN_POSITION_HISTORY_SIZE,
+      MAX_POSITION_HISTORY_SIZE
+    )
+    if (positionHistorySizeChanged) {
+      changedSettings.push({
+        setting: "positionHistorySize",
+        oldValue: oldPositionHistorySize,
+        newValue: this._globalSettings.positionHistorySize,
+      })
+      if (this._globalSettings.positionHistorySize < oldPositionHistorySize) {
+        const newSize = this._globalSettings.positionHistorySize
+        if (this.trajectoryPositions.positions.length > newSize) {
+          this.trajectoryPositions.positions = this.trajectoryPositions.positions.slice(-newSize)
         }
       }
     }
 
-    // scrollMargin
-    if (props?.scrollMargin !== undefined) {
-      const oldValue = this._globalSettings.scrollMargin
-      const changed = this.updateNumericSettings(
-        props.scrollMargin,
-        "scrollMargin",
-        MIN_SCROLL_MARGIN,
-        MAX_SCROLL_MARGIN
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "scrollMargin",
-          oldValue,
-          newValue: this._globalSettings.scrollMargin,
-        })
+    const oldScrollMargin = this._globalSettings.scrollMargin
+    const scrollMarginChanged = this.updateNumericSettings(
+      props?.scrollMargin,
+      "scrollMargin",
+      MIN_SCROLL_MARGIN,
+      MAX_SCROLL_MARGIN
+    )
+    if (scrollMarginChanged) {
+      changedSettings.push({
+        setting: "scrollMargin",
+        oldValue: oldScrollMargin,
+        newValue: this._globalSettings.scrollMargin,
+      })
+    }
+
+    const oldTabOffset = this._globalSettings.tabOffset
+    const tabOffsetChanged = this.updateNumericSettings(
+      props?.tabOffset,
+      "tabOffset",
+      MIN_TAB_OFFSET,
+      MAX_TAB_OFFSET
+    )
+    if (tabOffsetChanged) {
+      changedSettings.push({
+        setting: "tabOffset",
+        oldValue: oldTabOffset,
+        newValue: this._globalSettings.tabOffset,
+      })
+      if (this.tabPredictor) {
+        this.tabPredictor.tabOffset = this._globalSettings.tabOffset
       }
     }
 
-    // tabOffset
-    if (props?.tabOffset !== undefined) {
-      const oldValue = this._globalSettings.tabOffset
-      const changed = this.updateNumericSettings(
-        props.tabOffset,
-        "tabOffset",
-        MIN_TAB_OFFSET,
-        MAX_TAB_OFFSET
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "tabOffset",
-          oldValue,
-          newValue: this._globalSettings.tabOffset,
-        })
+    const oldEnableMousePrediction = this._globalSettings.enableMousePrediction
+    const enableMousePredictionChanged = this.updateBooleanSetting(
+      props?.enableMousePrediction,
+      "enableMousePrediction"
+    )
+    if (enableMousePredictionChanged) {
+      changedSettings.push({
+        setting: "enableMousePrediction",
+        oldValue: oldEnableMousePrediction,
+        newValue: this._globalSettings.enableMousePrediction,
+      })
+    }
+
+    const oldEnableScrollPrediction = this._globalSettings.enableScrollPrediction
+    const enableScrollPredictionChanged = this.updateBooleanSetting(
+      props?.enableScrollPrediction,
+      "enableScrollPrediction"
+    )
+    if (enableScrollPredictionChanged) {
+      changedSettings.push({
+        setting: "enableScrollPrediction",
+        oldValue: oldEnableScrollPrediction,
+        newValue: this._globalSettings.enableScrollPrediction,
+      })
+    }
+
+    const oldEnableTabPrediction = this._globalSettings.enableTabPrediction
+    const enableTabPredictionChanged = this.updateBooleanSetting(
+      props?.enableTabPrediction,
+      "enableTabPrediction"
+    )
+    if (enableTabPredictionChanged) {
+      changedSettings.push({
+        setting: "enableTabPrediction",
+        oldValue: oldEnableTabPrediction,
+        newValue: this._globalSettings.enableTabPrediction,
+      })
+      if (this._globalSettings.enableTabPrediction) {
+        this.tabPredictor = new TabPredictor(
+          this._globalSettings.tabOffset,
+          this.elements,
+          this.callCallback.bind(this)
+        )
+      } else {
         if (this.tabPredictor) {
-          this.tabPredictor.tabOffset = props.tabOffset
+          this.tabPredictor.cleanup()
         }
+        this.tabPredictor = null
       }
     }
 
-    // enableMousePrediction
-    if (props?.enableMousePrediction !== undefined) {
-      const oldValue = this._globalSettings.enableMousePrediction
-      const changed = this.updateBooleanSetting(
-        props.enableMousePrediction,
-        "enableMousePrediction"
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "enableMousePrediction",
-          oldValue,
-          newValue: this._globalSettings.enableMousePrediction,
-        })
-      }
-    }
-
-    // enableScrollPrediction
-    if (props?.enableScrollPrediction !== undefined) {
-      const oldValue = this._globalSettings.enableScrollPrediction
-      const changed = this.updateBooleanSetting(
-        props.enableScrollPrediction,
-        "enableScrollPrediction"
-      )
-      if (changed) {
-        changedSettings.push({
-          setting: "enableScrollPrediction",
-          oldValue,
-          newValue: this._globalSettings.enableScrollPrediction,
-        })
-      }
-    }
-
-    // enableTabPrediction
-    if (props?.enableTabPrediction !== undefined) {
-      const oldValue = this._globalSettings.enableTabPrediction
-      const changed = this.updateBooleanSetting(props.enableTabPrediction, "enableTabPrediction")
-      if (changed) {
-        changedSettings.push({
-          setting: "enableTabPrediction",
-          oldValue,
-          newValue: this._globalSettings.enableTabPrediction,
-        })
-        if (props.enableTabPrediction) {
-          this.tabPredictor = new TabPredictor(
-            this._globalSettings.tabOffset,
-            this.elements,
-            this.callCallback.bind(this)
-          )
-        } else {
-          if (this.tabPredictor) {
-            this.tabPredictor.cleanup()
-          }
-          this.tabPredictor = null
-        }
-      }
-    }
-
-    // defaultHitSlop
     if (props?.defaultHitSlop !== undefined) {
       const oldHitSlop = this._globalSettings.defaultHitSlop
       const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)

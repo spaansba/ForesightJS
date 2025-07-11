@@ -81,7 +81,6 @@ export class TabPredictor {
       this.tabbableElementsCache = tabbable(document.documentElement)
     }
 
-    // Determine the range of elements to check based on the tab direction and offset
     const isReversed = this.lastKeyDown.shiftKey
 
     const currentIndex: number = getFocusedElementIndex(
