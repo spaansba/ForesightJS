@@ -130,7 +130,7 @@ export class ForesightManager {
   private lastKeyDown: KeyboardEvent | null = null
 
   // AbortController for managing global event listeners
-  private globalListenersController: AbortController = new AbortController()
+  private globalListenersController: AbortController | null = null
 
   // RequestAnimationFrame throttling for mouse events
   private rafId: number | null = null
@@ -454,8 +454,8 @@ export class ForesightManager {
   }
 
   private handleMouseMove = (e: MouseEvent) => {
+    // console.log(e)
     this.pendingMouseEvent = e
-    // Throttle processing to animation frames for better performance
     if (this.rafId) return
 
     this.rafId = requestAnimationFrame(() => {
@@ -803,9 +803,8 @@ export class ForesightManager {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return
     }
-
+    this.globalListenersController = new AbortController()
     const { signal } = this.globalListenersController
-    //TODO only add event listeners when the events are enabled (mouse/tab)
     document.addEventListener("mousemove", this.handleMouseMove) // Dont add signal we still need to emit events even without elements
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
@@ -831,6 +830,7 @@ export class ForesightManager {
     this.isSetup = false
 
     this.globalListenersController?.abort() // Remove all event listeners only in non debug mode
+    this.globalListenersController = null
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
     this.domObserver?.disconnect()

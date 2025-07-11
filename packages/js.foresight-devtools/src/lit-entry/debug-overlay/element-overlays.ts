@@ -1,5 +1,7 @@
 import { LitElement, html, css } from "lit"
-import { customElement, state, query } from "lit/decorators.js"
+import { customElement, state } from "lit/decorators.js"
+import { styleMap } from "lit/directives/style-map.js"
+import { map } from "lit/directives/map.js"
 import {
   type ForesightElementData,
   type ForesightElement,
@@ -13,10 +15,13 @@ import type {
   ElementDataUpdatedEvent,
   ElementRegisteredEvent,
 } from "js.foresight"
-import { ForesightDevtools } from "../foresight-devtools"
-interface ElementOverlay {
-  expandedOverlay: HTMLElement
-  nameLabel: HTMLElement
+
+interface ElementOverlayData {
+  elementData: ForesightElementData
+  expandedStyles: { [key: string]: string }
+  nameLabelStyles: { [key: string]: string }
+  callbackClasses: string[]
+  showNameTag: boolean
 }
 
 interface CallbackAnimation {
@@ -26,9 +31,9 @@ interface CallbackAnimation {
 
 @customElement("element-overlays")
 export class ElementOverlays extends LitElement {
-  @state() private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
+  @state() private overlayDataMap: Map<ForesightElement, ElementOverlayData> = new Map()
   @state() private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
-  @query("#overlays-container") private containerElement!: HTMLElement
+  @state() private showNameTags: boolean = false
 
   static styles = [
     css`
@@ -47,9 +52,7 @@ export class ElementOverlays extends LitElement {
         will-change: transform, box-shadow;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
-        transition:
-          border-color 0.2s ease,
-          background-color 0.2s ease;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
       }
 
       .expanded-overlay.invoked-by-scroll {
@@ -164,56 +167,34 @@ export class ElementOverlays extends LitElement {
     )
   }
 
-  private createElementOverlays(elementData: ForesightElementData): ElementOverlay {
-    const expandedOverlay = document.createElement("div")
-    expandedOverlay.className = "expanded-overlay"
-    const nameLabel = document.createElement("div")
-    nameLabel.className = "name-label"
-    this.containerElement.appendChild(expandedOverlay)
-    this.containerElement.appendChild(nameLabel)
-    const overlays = { expandedOverlay, nameLabel }
-    this.overlayMap.set(elementData.element, overlays)
-    return overlays
-  }
-
-  private updateElementOverlays(overlays: ElementOverlay, elementData: ForesightElementData) {
-    const { expandedOverlay, nameLabel } = overlays
+  private createOrUpdateElementOverlay(elementData: ForesightElementData) {
     const { expandedRect } = elementData.elementBounds
-
     const expandedWidth = expandedRect.right - expandedRect.left
     const expandedHeight = expandedRect.bottom - expandedRect.top
-    expandedOverlay.style.width = `${expandedWidth}px`
-    expandedOverlay.style.height = `${expandedHeight}px`
-    expandedOverlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
 
-    if (!ForesightDevtools.instance.devtoolsSettings.showNameTags) {
-      nameLabel.style.display = "none"
-    } else {
-      nameLabel.textContent = elementData.name
-      nameLabel.style.display = "block"
-      nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${
-        expandedRect.top - 25
-      }px, 0)`
+    const overlayData: ElementOverlayData = {
+      elementData,
+      expandedStyles: {
+        width: `${expandedWidth}px`,
+        height: `${expandedHeight}px`,
+        transform: `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`,
+      },
+      nameLabelStyles: {
+        transform: `translate3d(${expandedRect.left}px, ${expandedRect.top - 25}px, 0)`,
+        display: this.showNameTags ? "block" : "none",
+      },
+      callbackClasses: [],
+      showNameTag: this.showNameTags,
     }
-  }
 
-  private createOrUpdateElementOverlay(elementData: ForesightElementData) {
-    let overlays = this.overlayMap.get(elementData.element)
-    if (!overlays) {
-      overlays = this.createElementOverlays(elementData)
-    }
-    this.updateElementOverlays(overlays, elementData)
+    this.overlayDataMap.set(elementData.element, overlayData)
+    this.requestUpdate()
   }
 
   private removeElementOverlay(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      overlays.expandedOverlay.remove()
-      overlays.nameLabel.remove()
-      this.overlayMap.delete(elementData.element)
-    }
-
+    this.overlayDataMap.delete(elementData.element)
     this.clearCallbackAnimationTimeout(elementData.element)
+    this.requestUpdate()
   }
 
   private clearCallbackAnimationTimeout(element: ForesightElement) {
@@ -225,32 +206,25 @@ export class ElementOverlays extends LitElement {
   }
 
   private highlightElementCallback(elementData: ForesightElementData, hitType: CallbackHitType) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
+    const overlayData = this.overlayDataMap.get(elementData.element)
+    if (overlayData) {
       this.clearCallbackAnimationTimeout(elementData.element)
 
-      switch (hitType.kind) {
-        case "mouse":
-          overlays.expandedOverlay.classList.add("invoked-by-mouse")
-          break
-        case "scroll":
-          overlays.expandedOverlay.classList.add("invoked-by-scroll")
-          break
-        case "tab":
-          overlays.expandedOverlay.classList.add("invoked-by-tab")
-          break
-        default:
-          hitType satisfies never
+      const callbackClass = `invoked-by-${hitType.kind}`
+      if (!overlayData.callbackClasses.includes(callbackClass)) {
+        overlayData.callbackClasses.push(callbackClass)
       }
+      this.requestUpdate()
     }
   }
 
   private unhighlightElementCallback(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
+    const overlayData = this.overlayDataMap.get(elementData.element)
+    if (overlayData) {
       const animationDelay = setTimeout(() => {
-        overlays.expandedOverlay.classList.remove("callback-invoked")
+        overlayData.callbackClasses = []
         this.callbackAnimations.delete(elementData.element)
+        this.requestUpdate()
       }, 400)
 
       this.callbackAnimations.set(elementData.element, {
@@ -261,24 +235,40 @@ export class ElementOverlays extends LitElement {
   }
 
   public updateNameTagVisibility(showNameTags: boolean) {
-    this.overlayMap.forEach(overlays => {
-      const nameLabel = overlays.nameLabel
-      if (!showNameTags) {
-        nameLabel.style.display = "none"
-      } else {
-        nameLabel.style.display = "block"
-      }
+    this.showNameTags = showNameTags
+    this.overlayDataMap.forEach(overlayData => {
+      overlayData.showNameTag = showNameTags
+      overlayData.nameLabelStyles.display = showNameTags ? "block" : "none"
     })
+    this.requestUpdate()
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
+    this.overlayDataMap.clear()
+    this.callbackAnimations.forEach(animation => clearTimeout(animation.timeoutId))
+    this.callbackAnimations.clear()
   }
 
   render() {
-    return html` <div id="overlays-container"></div> `
+    return html`
+      ${map(this.overlayDataMap.values(), overlayData => {
+        const { elementData, expandedStyles, nameLabelStyles, callbackClasses, showNameTag } =
+          overlayData
+        const overlayClasses = ["expanded-overlay", ...callbackClasses].join(" ")
+
+        return html`
+          <div class="${overlayClasses}" style=${styleMap(expandedStyles)}></div>
+          ${showNameTag
+            ? html`
+                <div class="name-label" style=${styleMap(nameLabelStyles)}>${elementData.name}</div>
+              `
+            : ""}
+        `
+      })}
+    `
   }
 }
 
