@@ -1,6 +1,6 @@
 {
   "name": "js.foresight-devtools",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "type": "module",
   "scripts": {
