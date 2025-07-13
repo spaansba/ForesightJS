@@ -2,6 +2,7 @@
   "name": "js.foresight-devtools",
   "version": "1.0.3",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
+  "type": "module",
   "scripts": {
     "build": "tsup --clean --minify",
     "dev": "tsup --watch",
@@ -12,16 +13,13 @@
     "lint": "eslint . --fix",
     "prepublishOnly": "pnpm lint && pnpm test:run && pnpm build"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "homepage": "https://foresightjs.com/docs/getting_started/development_tools",

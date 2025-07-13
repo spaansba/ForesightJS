@@ -22,7 +22,7 @@ export class MousePredictor extends BasePredictor {
   public trajectoryPredictionTime: number
   public positionHistorySize: number
   private trajectoryPositions: TrajectoryPositions
-  
+
   constructor(config: MousePredictorConfig) {
     super(config)
     this.enableMousePrediction = config.settings.enableMousePrediction
@@ -35,14 +35,17 @@ export class MousePredictor extends BasePredictor {
     const { signal } = this.abortController
     document.addEventListener("mousemove", this.handleMouseMove, { signal })
   }
+
   private handleMouseMove = (e: MouseEvent) => {
     this.pendingMouseEvent = e
     if (this.rafId) return
 
     this.rafId = requestAnimationFrame(() => {
       if (this.pendingMouseEvent) {
+        const start = performance.now()
         this.processMouseMovement(this.pendingMouseEvent)
         this.pendingMouseEvent = null
+        console.log(performance.now() - start)
       }
       this.rafId = null
     })
@@ -70,6 +73,7 @@ export class MousePredictor extends BasePredictor {
     }
     this.pendingMouseEvent = null
   }
+
   private processMouseMovement(e: MouseEvent): void {
     try {
       this.updatePointerState(e)
