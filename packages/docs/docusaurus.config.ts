@@ -54,7 +54,7 @@ const config: Config = {
       {
         siteTitle: "ForesightJS",
         siteDescription:
-          "Comprehensive guide to ForesightJS, the most modern way to prefetch your data",
+          "Comprehensive guide to ForesightJS, the most modern way to prefetch your data. Check out llms-full.txt for the full txt and llms.txt for an overview of the docs.",
         depth: 2,
         content: {
           includeBlog: false,

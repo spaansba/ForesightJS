@@ -77,6 +77,13 @@ export function Hero() {
                 >
                   Get Started
                 </Link>
+                <Link
+                  className={styles.primaryButton}
+                  to="https://foresightjs.com/llms-full.txt"
+                  onClick={turnOffDebugMode}
+                >
+                  Get LLM Context
+                </Link>
               </div>
 
               {(stats.githubStars > 0 || stats.npmDownloads > 0) && (
