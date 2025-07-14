@@ -224,38 +224,40 @@ export class ElementOverlays extends LitElement {
 
   private highlightElementCallback(elementData: ForesightElementData, hitType: CallbackHitType) {
     const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      this.clearCallbackAnimationTimeout(elementData.element)
+    if (!overlays) {
+      return
+    }
+    this.clearCallbackAnimationTimeout(elementData.element)
 
-      switch (hitType.kind) {
-        case "mouse":
-          overlays.expandedOverlay.classList.add("invoked-by-mouse")
-          break
-        case "scroll":
-          overlays.expandedOverlay.classList.add("invoked-by-scroll")
-          break
-        case "tab":
-          overlays.expandedOverlay.classList.add("invoked-by-tab")
-          break
-        default:
-          hitType satisfies never
-      }
+    switch (hitType.kind) {
+      case "mouse":
+        overlays.expandedOverlay.classList.add("invoked-by-mouse")
+        break
+      case "scroll":
+        overlays.expandedOverlay.classList.add("invoked-by-scroll")
+        break
+      case "tab":
+        overlays.expandedOverlay.classList.add("invoked-by-tab")
+        break
+      default:
+        hitType satisfies never
     }
   }
 
   private unhighlightElementCallback(elementData: ForesightElementData) {
     const overlays = this.overlayMap.get(elementData.element)
-    if (overlays) {
-      const animationDelay = setTimeout(() => {
-        overlays.expandedOverlay.classList.remove("callback-invoked")
-        this.callbackAnimations.delete(elementData.element)
-      }, 400)
-
-      this.callbackAnimations.set(elementData.element, {
-        element: elementData.element,
-        timeoutId: animationDelay,
-      })
+    if (!overlays) {
+      return
     }
+    const animationDelay = setTimeout(() => {
+      overlays.expandedOverlay.classList.remove("callback-invoked")
+      this.callbackAnimations.delete(elementData.element)
+    }, 400)
+
+    this.callbackAnimations.set(elementData.element, {
+      element: elementData.element,
+      timeoutId: animationDelay,
+    })
   }
 
   public updateNameTagVisibility(showNameTags: boolean) {

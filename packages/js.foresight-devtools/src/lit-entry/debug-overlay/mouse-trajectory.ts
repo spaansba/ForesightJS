@@ -109,6 +109,7 @@ export class MouseTrajectory extends LitElement {
     if (!isEnabled) {
       this._isVisible = false
     }
+    this.requestUpdate()
   }
 
   private handleTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
@@ -121,16 +122,11 @@ export class MouseTrajectory extends LitElement {
     const dy = predictedPoint.y - currentPoint.y
     const length = Math.sqrt(dx * dx + dy * dy)
 
-    if (length === 0) {
-      this._trajectoryStyles = { display: "none" }
-    } else {
-      const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-      this._trajectoryStyles = {
-        transform: `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`,
-        width: `${length}px`,
-      }
+    const angle = Math.atan2(dy, dx) * 57.29577951308232 // Pre-calculate rad to deg
+    this._trajectoryStyles = {
+      transform: `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`,
+      width: `${length}px`,
     }
-    this.requestUpdate()
   }
 
   render() {
