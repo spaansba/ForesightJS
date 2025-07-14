@@ -18,7 +18,6 @@ import {
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
 } from "../../../constants"
-import "../base-tab/chip"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"

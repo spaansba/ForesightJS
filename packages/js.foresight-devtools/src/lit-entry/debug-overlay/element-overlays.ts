@@ -273,6 +273,11 @@ export class ElementOverlays extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
+    this.callbackAnimations.forEach(animation => {
+      clearTimeout(animation.timeoutId)
+    })
+    this.callbackAnimations.clear()
+    this.overlayMap.clear()
     this._abortController?.abort()
     this._abortController = null
   }
