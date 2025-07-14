@@ -17,6 +17,7 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
+import { CircularBuffer } from "../helpers/CircularBuffer"
 import { clampNumber } from "../helpers/clampNumber"
 import { initialViewportState } from "../helpers/initialViewportState"
 import {
@@ -74,7 +75,7 @@ export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
   private trajectoryPositions: TrajectoryPositions = {
-    positions: [],
+    positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
@@ -181,6 +182,7 @@ export class ForesightManager {
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventListeners,
+      historyPositions: this.trajectoryPositions,
     }
   }
 
@@ -350,13 +352,7 @@ export class ForesightManager {
         oldValue: oldPositionHistorySize,
         newValue: this._globalSettings.positionHistorySize,
       })
-      if (this._globalSettings.positionHistorySize < oldPositionHistorySize) {
-        const newSize = this._globalSettings.positionHistorySize
-        const positions = this.trajectoryPositions.positions
-        if (positions.length > newSize) {
-          this.trajectoryPositions.positions = positions.slice(-newSize)
-        }
-      }
+      this.trajectoryPositions.positions.resize(this._globalSettings.positionHistorySize)
     }
 
     const oldScrollMargin = this._globalSettings.scrollMargin

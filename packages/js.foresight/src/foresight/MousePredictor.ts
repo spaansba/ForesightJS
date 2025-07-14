@@ -42,10 +42,7 @@ export class MousePredictor extends BasePredictor {
 
     this.rafId = requestAnimationFrame(() => {
       if (this.pendingMouseEvent) {
-        const start = performance.now()
         this.processMouseMovement(this.pendingMouseEvent)
-        this.pendingMouseEvent = null
-        console.log(performance.now() - start)
       }
       this.rafId = null
     })
@@ -57,7 +54,6 @@ export class MousePredictor extends BasePredictor {
       this.trajectoryPositions.predictedPoint = predictNextMousePosition(
         currentPoint,
         this.trajectoryPositions.positions,
-        this.positionHistorySize,
         this.trajectoryPredictionTime
       )
     } else {

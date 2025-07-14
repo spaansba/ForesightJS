@@ -1,16 +1,15 @@
 import type { MousePosition, Point } from "../types/types"
+import type { CircularBuffer } from "./CircularBuffer"
 
 /**
  * Predicts the next mouse position based on a history of recent movements.
  * It calculates velocity from the historical data and extrapolates a future point.
- * The `history` array is mutated by this function: the new `currentPoint` is added,
- * and if the history exceeds `positionHistorySize`, the oldest entry is removed.
+ * The `buffer` is mutated by this function: the new `currentPoint` is added,
+ * automatically overwriting the oldest entry when the buffer is full.
  *
  * @param currentPoint - The current actual mouse coordinates.
- * @param history - An array of previous mouse positions with timestamps.
- *                  This array will be modified by this function.
- * @param positionHistorySize - The maximum number of past positions to store and consider
- *                              for the prediction.
+ * @param buffer - A circular buffer of previous mouse positions with timestamps.
+ *                 This buffer will be modified by this function.
  * @param trajectoryPredictionTimeInMs - How far into the future (in milliseconds)
  *                                       to predict the mouse position.
  * @returns The predicted {@link Point} (x, y coordinates). If history is insufficient
@@ -18,25 +17,22 @@ import type { MousePosition, Point } from "../types/types"
  */
 export function predictNextMousePosition(
   currentPoint: Point,
-  history: MousePosition[],
-  positionHistorySize: number,
+  buffer: CircularBuffer<MousePosition>,
   trajectoryPredictionTimeInMs: number
 ): Point {
   const now = performance.now()
   const currentPosition: MousePosition = { point: currentPoint, time: now }
   const { x, y } = currentPoint
 
-  history.push(currentPosition)
-  if (history.length > positionHistorySize) {
-    history.shift()
-  }
+  buffer.add(currentPosition)
 
-  if (history.length < 2) {
+  if (buffer.length < 2) {
     return { x, y }
   }
 
-  const first = history[0]
-  const last = history[history.length - 1]
+  const positions = buffer.getItems()
+  const first = positions[0]
+  const last = positions[positions.length - 1]
   const dt = (last.time - first.time) / 1000
 
   if (dt === 0) {
