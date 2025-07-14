@@ -182,7 +182,6 @@ export class ForesightManager {
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventListeners,
-      historyPositions: this.trajectoryPositions,
     }
   }
 

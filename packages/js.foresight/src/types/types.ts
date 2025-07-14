@@ -34,7 +34,7 @@ export type Point = {
 }
 
 export type TrajectoryPositions = {
-  positions: import('../helpers/CircularBuffer').CircularBuffer<MousePosition>
+  positions: import("../helpers/CircularBuffer").CircularBuffer<MousePosition>
   currentPoint: Point
   predictedPoint: Point
 }
@@ -139,7 +139,6 @@ export type ForesightManagerData = {
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
-  historyPositions: TrajectoryPositions
 }
 
 type BaseForesightManagerSettings = {

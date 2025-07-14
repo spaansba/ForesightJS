@@ -5,9 +5,9 @@ import { customElement, property, state } from "lit/decorators.js"
 import { map } from "lit/directives/map.js"
 import {
   safeSerializeEventData,
+  safeSerializeManagerData,
   type SerializedEventData,
 } from "../../../helpers/safeSerializeEventData"
-import type { LogEvents, LoggingLocations } from "../../../types/types"
 import {
   BOTH_SVG,
   CLEAR_SVG,
@@ -15,16 +15,18 @@ import {
   CONTROL_PANEL_SVG,
   FILTER_SVG,
   NONE_SVG,
+  STATE_SVG,
   WARNING_SVG,
 } from "../../../svg/svg-icons"
+import type { LogEvents, LoggingLocations } from "../../../types/types"
+import { ForesightDevtools } from "../../foresight-devtools"
 import "../base-tab/chip"
-import "../dropdown/multi-select-dropdown"
-import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
+import "../dropdown/multi-select-dropdown"
+import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "./single-log"
-import { ForesightDevtools } from "../../foresight-devtools"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {
@@ -41,7 +43,7 @@ export class LogTab extends LitElement {
         gap: 4px;
       }
 
-      .clear-button {
+      .single-button {
         background: none;
         border: none;
         color: white;
@@ -54,31 +56,31 @@ export class LogTab extends LitElement {
         vertical-align: top;
       }
 
-      .clear-button svg {
+      .single-button svg {
         width: 16px;
         height: 16px;
         stroke: white;
         transition: stroke 0.2s;
       }
 
-      .clear-button:hover {
+      .single-button:hover {
         background-color: rgba(176, 196, 222, 0.1);
       }
 
-      .clear-button:hover svg {
+      .single-button:hover svg {
         stroke: #b0c4de;
       }
 
-      .clear-button:disabled {
+      .single-button:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
 
-      .clear-button:disabled:hover {
+      .single-button:disabled:hover {
         background: none;
       }
 
-      .clear-button:disabled svg {
+      .single-button:disabled svg {
         stroke: #666;
       }
 
@@ -129,7 +131,7 @@ export class LogTab extends LitElement {
   @state() private filterDropdown: DropdownOption[]
   @state() private logLocation: LoggingLocations
   @state() private eventsEnabled: LogEvents
-  @state() private logs: Array<SerializedEventData & { logId: string }> = []
+  @state() private logs: Array<SerializedEventData> = []
   @state() private expandedLogIds: Set<string> = new Set()
   private MAX_LOGS: number = 100
   private logIdCounter: number = 0
@@ -360,18 +362,41 @@ export class LogTab extends LitElement {
     }
   }
 
+  private addLog(log: SerializedEventData) {
+    this.logs.unshift(log)
+    if (this.logs.length > this.MAX_LOGS) {
+      this.logs.pop()
+    }
+    this.requestUpdate()
+  }
+
+  private logManagerData(): void {
+    if (this.logLocation === "none") {
+      return
+    }
+    if (this.logLocation === "console" || this.logLocation === "both") {
+      console.log(ForesightManager.instance.getManagerData)
+    }
+    if (this.logLocation === "controlPanel" || this.logLocation === "both") {
+      this.addManagerLog()
+    }
+  }
+
+  private addManagerLog(): void {
+    const log = safeSerializeManagerData(
+      ForesightManager.instance.getManagerData,
+      (++this.logIdCounter).toString()
+    )
+    this.addLog(log)
+  }
+
   private addEventLog<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
     const log = safeSerializeEventData(event, (++this.logIdCounter).toString())
     if (log.type === "serializationError") {
       console.error(log.error, log.errorMessage)
       return
     }
-    // More efficient: direct array manipulation
-    this.logs.unshift(log)
-    if (this.logs.length > this.MAX_LOGS) {
-      this.logs.pop()
-    }
-    this.requestUpdate()
+    this.addLog(log)
   }
 
   render() {
@@ -406,7 +431,14 @@ Consider using 'Control Panel' only for better performance."
             .onSelectionChange="${this.handleFilterChange}"
           ></multi-select-dropdown>
           <button
-            class="clear-button"
+            class="single-button"
+            title="Log the state from the manager"
+            @click="${this.logManagerData}"
+          >
+            ${STATE_SVG}
+          </button>
+          <button
+            class="single-button"
             title="Clear all logs"
             ?disabled="${this.logs.length === 0}"
             @click="${this.clearLogs}"

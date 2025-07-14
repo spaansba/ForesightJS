@@ -134,6 +134,7 @@ export class SingleLog extends LitElement {
       mouseTrajectoryUpdate: "Mouse",
       scrollTrajectoryUpdate: "Scroll",
       managerSettingsChanged: "Settings",
+      managerDataPayload: "ManagerData",
     }
     return eventNames[eventType] || eventType
   }

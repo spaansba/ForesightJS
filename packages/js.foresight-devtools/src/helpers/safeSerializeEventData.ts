@@ -1,16 +1,19 @@
 import type {
+  CallbackHits,
   CallbackHitType,
+  ForesightElementData,
   ForesightEvent,
   ForesightEventMap,
+  ForesightManagerData,
   ForesightManagerSettings,
   HitSlop,
   Point,
   ScrollDirection,
   UpdatedDataPropertyNames,
+  UpdatedManagerSetting,
 } from "js.foresight/types/types"
-import type { UpdatedManagerSetting } from "packages/js.foresight/dist"
 
-type SerializedEventType = ForesightEvent | "serializationError"
+type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
 export type ControlPanelLogEntry = {
   eventData: SerializedEventData
@@ -91,6 +94,15 @@ interface SerializationErrorPayload extends PayloadBase {
   errorMessage: string
 }
 
+interface ManagerDataPayload extends PayloadBase {
+  type: "managerDataPayload"
+  warning: string
+  globalCallbackHits: CallbackHits
+  eventListenerCount: Record<string, number>
+  managerSettings: ForesightManagerSettings
+  registeredElements: Array<Omit<ForesightElementData, "element"> & { elementInfo: string }>
+}
+
 export type SerializedEventData =
   | ElementRegisteredPayload
   | ElementUnregisteredPayload
@@ -100,7 +112,45 @@ export type SerializedEventData =
   | MouseTrajectoryUpdatePayload
   | ScrollTrajectoryUpdatePayload
   | ManagerSettingsChangedPayload
+  | ManagerDataPayload
   | SerializationErrorPayload
+
+export function safeSerializeManagerData(
+  data: ForesightManagerData,
+  logId: string
+): ManagerDataPayload {
+  const eventListeners: Record<string, number> = {}
+  data.eventListeners.forEach((listeners, eventType) => {
+    eventListeners[eventType] = listeners.length
+  })
+  const registeredElements: Array<Omit<ForesightElementData, "element"> & { elementInfo: string }> =
+    []
+  data.registeredElements.forEach((elementData, element) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { element: _, ...elementDataWithoutElement } = elementData
+    registeredElements.push({
+      ...elementDataWithoutElement,
+      elementInfo: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}${
+        element.className ? `.${element.className.replace(/\s+/g, ".")}` : ""
+      }`,
+    })
+  })
+
+  return {
+    type: "managerDataPayload",
+    warning: "this is a lot easier to view in the console",
+    logId: logId,
+    globalCallbackHits: data.globalCallbackHits,
+    localizedTimestamp: new Date().toLocaleTimeString(),
+    eventListenerCount: eventListeners,
+    managerSettings: data.globalSettings,
+    registeredElements: registeredElements,
+    summary: `${registeredElements.length} elements, ${
+      Object.values(eventListeners).flat().length
+    } listeners,
+  ${data.globalCallbackHits.total} hits`,
+  }
+}
 
 /**
  * Safely serializes ForesightJS event data into a JSON-serializable format
