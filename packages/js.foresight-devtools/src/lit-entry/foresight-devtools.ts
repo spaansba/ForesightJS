@@ -1,6 +1,6 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type { DeepPartial, DevtoolsSettings } from "../types/types"
+import type { DeepPartial, DevtoolsSettings, LogEvents } from "../types/types"
 
 import "./control-panel/control-panel"
 import "./debug-overlay/debug-overlay"
@@ -85,6 +85,15 @@ export class ForesightDevtools extends LitElement {
     return newValue !== undefined && newValue !== currentValue
   }
 
+  private updateLoggingSetting<K extends keyof LogEvents>(
+    key: K,
+    newValue: LogEvents[K] | undefined
+  ): void {
+    if (this.shouldUpdateSetting(newValue, this.devtoolsSettings.logging[key])) {
+      this.devtoolsSettings.logging[key] = newValue!
+    }
+  }
+
   public alterDevtoolsSettings(props?: DeepPartial<DevtoolsSettings>) {
     if (!props) return
 
@@ -125,70 +134,15 @@ export class ForesightDevtools extends LitElement {
       ) {
         this.devtoolsSettings.logging.logLocation = props.logging.logLocation
       }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.callbackCompleted,
-          this.devtoolsSettings.logging.callbackCompleted
-        )
-      ) {
-        this.devtoolsSettings.logging.callbackCompleted = props.logging.callbackCompleted
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.callbackInvoked,
-          this.devtoolsSettings.logging.callbackInvoked
-        )
-      ) {
-        this.devtoolsSettings.logging.callbackInvoked = props.logging.callbackInvoked
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.elementDataUpdated,
-          this.devtoolsSettings.logging.elementDataUpdated
-        )
-      ) {
-        this.devtoolsSettings.logging.elementDataUpdated = props.logging.elementDataUpdated
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.elementRegistered,
-          this.devtoolsSettings.logging.elementRegistered
-        )
-      ) {
-        this.devtoolsSettings.logging.elementRegistered = props.logging.elementRegistered
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.elementUnregistered,
-          this.devtoolsSettings.logging.elementUnregistered
-        )
-      ) {
-        this.devtoolsSettings.logging.elementUnregistered = props.logging.elementUnregistered
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.managerSettingsChanged,
-          this.devtoolsSettings.logging.managerSettingsChanged
-        )
-      ) {
-        this.devtoolsSettings.logging.managerSettingsChanged = props.logging.managerSettingsChanged
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.mouseTrajectoryUpdate,
-          this.devtoolsSettings.logging.mouseTrajectoryUpdate
-        )
-      ) {
-        this.devtoolsSettings.logging.mouseTrajectoryUpdate = props.logging.mouseTrajectoryUpdate
-      }
-      if (
-        this.shouldUpdateSetting(
-          props.logging.scrollTrajectoryUpdate,
-          this.devtoolsSettings.logging.scrollTrajectoryUpdate
-        )
-      ) {
-        this.devtoolsSettings.logging.scrollTrajectoryUpdate = props.logging.scrollTrajectoryUpdate
-      }
+      
+      this.updateLoggingSetting("callbackCompleted", props.logging.callbackCompleted)
+      this.updateLoggingSetting("callbackInvoked", props.logging.callbackInvoked)
+      this.updateLoggingSetting("elementDataUpdated", props.logging.elementDataUpdated)
+      this.updateLoggingSetting("elementRegistered", props.logging.elementRegistered)
+      this.updateLoggingSetting("elementUnregistered", props.logging.elementUnregistered)
+      this.updateLoggingSetting("managerSettingsChanged", props.logging.managerSettingsChanged)
+      this.updateLoggingSetting("mouseTrajectoryUpdate", props.logging.mouseTrajectoryUpdate)
+      this.updateLoggingSetting("scrollTrajectoryUpdate", props.logging.scrollTrajectoryUpdate)
     }
   }
 
