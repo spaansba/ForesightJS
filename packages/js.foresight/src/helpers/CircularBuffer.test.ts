@@ -23,11 +23,13 @@ describe("CircularBuffer", () => {
       
       buffer.add("first")
       expect(buffer.length).toBe(1)
-      expect(buffer.getItems()).toEqual(["first"])
+      expect(buffer.getFirst()).toBe("first")
+      expect(buffer.getLast()).toBe("first")
       
       buffer.add("second")
       expect(buffer.length).toBe(2)
-      expect(buffer.getItems()).toEqual(["first", "second"])
+      expect(buffer.getFirst()).toBe("first")
+      expect(buffer.getLast()).toBe("second")
     })
 
     it("should fill buffer to capacity", () => {
@@ -39,7 +41,8 @@ describe("CircularBuffer", () => {
       
       expect(buffer.length).toBe(3)
       expect(buffer.isFull).toBe(true)
-      expect(buffer.getItems()).toEqual([1, 2, 3])
+      expect(buffer.getFirst()).toBe(1)
+      expect(buffer.getLast()).toBe(3)
     })
 
     it("should overwrite oldest items when buffer is full", () => {
@@ -51,10 +54,12 @@ describe("CircularBuffer", () => {
       buffer.add(4)
       
       expect(buffer.length).toBe(3)
-      expect(buffer.getItems()).toEqual([2, 3, 4])
+      expect(buffer.getFirst()).toBe(2)
+      expect(buffer.getLast()).toBe(4)
       
       buffer.add(5)
-      expect(buffer.getItems()).toEqual([3, 4, 5])
+      expect(buffer.getFirst()).toBe(3)
+      expect(buffer.getLast()).toBe(5)
     })
 
     it("should maintain chronological order when wrapping", () => {
@@ -65,27 +70,28 @@ describe("CircularBuffer", () => {
       buffer.add("c")
       buffer.add("d")
       
-      expect(buffer.getItems()).toEqual(["c", "d"])
+      expect(buffer.getFirst()).toBe("c")
+      expect(buffer.getLast()).toBe("d")
     })
   })
 
-  describe("getItems", () => {
-    it("should return empty array for empty buffer", () => {
+  describe("getFirst", () => {
+    it("should return undefined for empty buffer", () => {
       const buffer = new CircularBuffer<number>(5)
-      expect(buffer.getItems()).toEqual([])
+      expect(buffer.getFirst()).toBeUndefined()
     })
 
-    it("should return items in chronological order (oldest first)", () => {
+    it("should return first item", () => {
       const buffer = new CircularBuffer<number>(4)
       
       buffer.add(10)
       buffer.add(20)
       buffer.add(30)
       
-      expect(buffer.getItems()).toEqual([10, 20, 30])
+      expect(buffer.getFirst()).toBe(10)
     })
 
-    it("should return items in correct order after wrapping", () => {
+    it("should return correct first item after wrapping", () => {
       const buffer = new CircularBuffer<number>(3)
       
       buffer.add(1)
@@ -94,7 +100,72 @@ describe("CircularBuffer", () => {
       buffer.add(4)
       buffer.add(5)
       
-      expect(buffer.getItems()).toEqual([3, 4, 5])
+      expect(buffer.getFirst()).toBe(3)
+    })
+  })
+
+  describe("getLast", () => {
+    it("should return undefined for empty buffer", () => {
+      const buffer = new CircularBuffer<number>(5)
+      expect(buffer.getLast()).toBeUndefined()
+    })
+
+    it("should return last item", () => {
+      const buffer = new CircularBuffer<number>(4)
+      
+      buffer.add(10)
+      buffer.add(20)
+      buffer.add(30)
+      
+      expect(buffer.getLast()).toBe(30)
+    })
+
+    it("should return correct last item after wrapping", () => {
+      const buffer = new CircularBuffer<number>(3)
+      
+      buffer.add(1)
+      buffer.add(2)
+      buffer.add(3)
+      buffer.add(4)
+      buffer.add(5)
+      
+      expect(buffer.getLast()).toBe(5)
+    })
+  })
+
+  describe("getFirstLast", () => {
+    it("should return [undefined, undefined] for empty buffer", () => {
+      const buffer = new CircularBuffer<number>(5)
+      expect(buffer.getFirstLast()).toEqual([undefined, undefined])
+    })
+
+    it("should return [item, item] for single item", () => {
+      const buffer = new CircularBuffer<number>(3)
+      buffer.add(42)
+      
+      expect(buffer.getFirstLast()).toEqual([42, 42])
+    })
+
+    it("should return [first, last] for multiple items", () => {
+      const buffer = new CircularBuffer<number>(4)
+      
+      buffer.add(10)
+      buffer.add(20)
+      buffer.add(30)
+      
+      expect(buffer.getFirstLast()).toEqual([10, 30])
+    })
+
+    it("should return correct [first, last] after wrapping", () => {
+      const buffer = new CircularBuffer<number>(3)
+      
+      buffer.add(1)
+      buffer.add(2)
+      buffer.add(3)
+      buffer.add(4)
+      buffer.add(5)
+      
+      expect(buffer.getFirstLast()).toEqual([3, 5])
     })
   })
 
@@ -108,11 +179,13 @@ describe("CircularBuffer", () => {
       
       expect(buffer.size).toBe(4)
       expect(buffer.length).toBe(2)
-      expect(buffer.getItems()).toEqual([1, 2])
+      expect(buffer.getFirst()).toBe(1)
+      expect(buffer.getLast()).toBe(2)
       
       buffer.add(3)
       buffer.add(4)
-      expect(buffer.getItems()).toEqual([1, 2, 3, 4])
+      expect(buffer.getFirst()).toBe(1)
+      expect(buffer.getLast()).toBe(4)
     })
 
     it("should handle resizing to smaller capacity", () => {
@@ -127,7 +200,8 @@ describe("CircularBuffer", () => {
       
       expect(buffer.size).toBe(3)
       expect(buffer.length).toBe(3)
-      expect(buffer.getItems()).toEqual([3, 4, 5])
+      expect(buffer.getFirst()).toBe(3)
+      expect(buffer.getLast()).toBe(5)
     })
 
     it("should handle resizing to same capacity", () => {
@@ -139,7 +213,8 @@ describe("CircularBuffer", () => {
       
       expect(buffer.size).toBe(3)
       expect(buffer.length).toBe(2)
-      expect(buffer.getItems()).toEqual([1, 2])
+      expect(buffer.getFirst()).toBe(1)
+      expect(buffer.getLast()).toBe(2)
     })
 
     it("should handle resizing with wrapped buffer", () => {
@@ -149,13 +224,15 @@ describe("CircularBuffer", () => {
       buffer.add(3)
       buffer.add(4)
       
-      expect(buffer.getItems()).toEqual([2, 3, 4])
+      expect(buffer.getFirst()).toBe(2)
+      expect(buffer.getLast()).toBe(4)
       
       buffer.resize(2)
       
       expect(buffer.size).toBe(2)
       expect(buffer.length).toBe(2)
-      expect(buffer.getItems()).toEqual([3, 4])
+      expect(buffer.getFirst()).toBe(3)
+      expect(buffer.getLast()).toBe(4)
     })
 
     it("should throw error for invalid capacity", () => {
@@ -172,7 +249,8 @@ describe("CircularBuffer", () => {
       
       expect(buffer.length).toBe(0)
       expect(buffer.isEmpty).toBe(true)
-      expect(buffer.getItems()).toEqual([])
+      expect(buffer.getFirst()).toBeUndefined()
+      expect(buffer.getLast()).toBeUndefined()
     })
 
     it("should clear partially filled buffer", () => {
@@ -184,7 +262,8 @@ describe("CircularBuffer", () => {
       
       expect(buffer.length).toBe(0)
       expect(buffer.isEmpty).toBe(true)
-      expect(buffer.getItems()).toEqual([])
+      expect(buffer.getFirst()).toBeUndefined()
+      expect(buffer.getLast()).toBeUndefined()
     })
 
     it("should clear full buffer", () => {
@@ -200,7 +279,8 @@ describe("CircularBuffer", () => {
       expect(buffer.length).toBe(0)
       expect(buffer.isEmpty).toBe(true)
       expect(buffer.isFull).toBe(false)
-      expect(buffer.getItems()).toEqual([])
+      expect(buffer.getFirst()).toBeUndefined()
+      expect(buffer.getLast()).toBeUndefined()
     })
   })
 
@@ -259,17 +339,20 @@ describe("CircularBuffer", () => {
       buffer.add(3)
       buffer.add(4)
       
-      expect(buffer.getItems()).toEqual([2, 3, 4])
+      expect(buffer.getFirst()).toBe(2)
+      expect(buffer.getLast()).toBe(4)
       
       buffer.resize(5)
       buffer.add(5)
       buffer.add(6)
       
-      expect(buffer.getItems()).toEqual([2, 3, 4, 5, 6])
+      expect(buffer.getFirst()).toBe(2)
+      expect(buffer.getLast()).toBe(6)
       
       buffer.resize(2)
       
-      expect(buffer.getItems()).toEqual([5, 6])
+      expect(buffer.getFirst()).toBe(5)
+      expect(buffer.getLast()).toBe(6)
     })
 
     it("should work with object types", () => {
@@ -280,10 +363,8 @@ describe("CircularBuffer", () => {
       buffer.add({ id: 2, name: "second" })
       buffer.add({ id: 3, name: "third" })
       
-      expect(buffer.getItems()).toEqual([
-        { id: 2, name: "second" },
-        { id: 3, name: "third" }
-      ])
+      expect(buffer.getFirst()).toEqual({ id: 2, name: "second" })
+      expect(buffer.getLast()).toEqual({ id: 3, name: "third" })
     })
 
     it("should handle rapid add/resize cycles", () => {
@@ -291,14 +372,16 @@ describe("CircularBuffer", () => {
       
       for (let i = 0; i < 10; i++) {
         buffer.add(i)
-        expect(buffer.getItems()).toEqual([i])
+        expect(buffer.getFirst()).toBe(i)
+        expect(buffer.getLast()).toBe(i)
       }
       
       buffer.resize(3)
       buffer.add(10)
       buffer.add(11)
       
-      expect(buffer.getItems()).toEqual([9, 10, 11])
+      expect(buffer.getFirst()).toBe(9)
+      expect(buffer.getLast()).toBe(11)
     })
   })
 })

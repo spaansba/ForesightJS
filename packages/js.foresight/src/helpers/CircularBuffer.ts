@@ -21,7 +21,74 @@ export class CircularBuffer<T> {
     }
   }
 
-  getItems(): T[] {
+  getFirst(): T | undefined {
+    if (this.count === 0) {
+      return undefined
+    }
+
+    if (this.count < this.capacity) {
+      return this.buffer[0]
+    } else {
+      return this.buffer[this.head]
+    }
+  }
+
+  getLast(): T | undefined {
+    if (this.count === 0) {
+      return undefined
+    }
+
+    if (this.count < this.capacity) {
+      return this.buffer[this.count - 1]
+    } else {
+      const lastIndex = (this.head - 1 + this.capacity) % this.capacity
+      return this.buffer[lastIndex]
+    }
+  }
+
+  getFirstLast(): [T | undefined, T | undefined] {
+    if (this.count === 0) {
+      return [undefined, undefined]
+    }
+
+    if (this.count === 1) {
+      const item = this.count < this.capacity ? this.buffer[0] : this.buffer[this.head]
+      return [item, item]
+    }
+
+    const first = this.getFirst()
+    const last = this.getLast()
+    return [first, last]
+  }
+
+  resize(newCapacity: number): void {
+    if (newCapacity <= 0) {
+      throw new Error('CircularBuffer capacity must be greater than 0')
+    }
+
+    if (newCapacity === this.capacity) {
+      return
+    }
+
+    const currentItems = this.getAllItems()
+    this.capacity = newCapacity
+    this.buffer = new Array(newCapacity)
+    this.head = 0
+    this.count = 0
+
+    if (currentItems.length > newCapacity) {
+      const itemsToKeep = currentItems.slice(-newCapacity)
+      for (const item of itemsToKeep) {
+        this.add(item)
+      }
+    } else {
+      for (const item of currentItems) {
+        this.add(item)
+      }
+    }
+  }
+
+  private getAllItems(): T[] {
     if (this.count === 0) {
       return []
     }
@@ -41,33 +108,6 @@ export class CircularBuffer<T> {
     }
     
     return result
-  }
-
-  resize(newCapacity: number): void {
-    if (newCapacity <= 0) {
-      throw new Error('CircularBuffer capacity must be greater than 0')
-    }
-
-    if (newCapacity === this.capacity) {
-      return
-    }
-
-    const currentItems = this.getItems()
-    this.capacity = newCapacity
-    this.buffer = new Array(newCapacity)
-    this.head = 0
-    this.count = 0
-
-    if (currentItems.length > newCapacity) {
-      const itemsToKeep = currentItems.slice(-newCapacity)
-      for (const item of itemsToKeep) {
-        this.add(item)
-      }
-    } else {
-      for (const item of currentItems) {
-        this.add(item)
-      }
-    }
   }
 
   clear(): void {

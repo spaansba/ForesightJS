@@ -30,10 +30,11 @@ export function predictNextMousePosition(
     return { x, y }
   }
 
-  const positions = buffer.getItems()
-  const first = positions[0]
-  const last = positions[positions.length - 1]
-  const dt = (last.time - first.time) / 1000
+  const [first, last] = buffer.getFirstLast()
+  if (!first || !last) {
+    return { x, y }
+  }
+  const dt = (last.time - first.time) * 0.001
 
   if (dt === 0) {
     return { x, y }
@@ -44,7 +45,7 @@ export function predictNextMousePosition(
   const vx = dx / dt
   const vy = dy / dt
 
-  const trajectoryPredictionTimeInSeconds = trajectoryPredictionTimeInMs / 1000
+  const trajectoryPredictionTimeInSeconds = trajectoryPredictionTimeInMs * 0.001
   const predictedX = x + vx * trajectoryPredictionTimeInSeconds
   const predictedY = y + vy * trajectoryPredictionTimeInSeconds
 

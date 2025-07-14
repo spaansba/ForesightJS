@@ -61,9 +61,6 @@ export class MouseTrajectory extends LitElement {
   @state()
   private _trajectoryStyles: { [key: string]: string } = {}
 
-  private _isUpdateScheduled = false
-  private _latestTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
-
   connectedCallback(): void {
     super.connectedCallback()
     const { signal } = this._abortController
@@ -118,21 +115,8 @@ export class MouseTrajectory extends LitElement {
     if (!this._mousePredictionIsEnabled) return
 
     this._isVisible = true
-    this._latestTrajectory = e.trajectoryPositions
 
-    if (!this._isUpdateScheduled) {
-      this._isUpdateScheduled = true
-      requestAnimationFrame(this.renderTrajectory)
-    }
-  }
-
-  private renderTrajectory = () => {
-    if (!this._latestTrajectory) {
-      this._isUpdateScheduled = false
-      return
-    }
-
-    const { currentPoint, predictedPoint } = this._latestTrajectory
+    const { currentPoint, predictedPoint } = e.trajectoryPositions
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
     const length = Math.sqrt(dx * dx + dy * dy)
@@ -146,8 +130,6 @@ export class MouseTrajectory extends LitElement {
         width: `${length}px`,
       }
     }
-
-    this._isUpdateScheduled = false
     this.requestUpdate()
   }
 
