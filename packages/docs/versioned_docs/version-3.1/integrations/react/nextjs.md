@@ -42,21 +42,15 @@ interface ForesightLinkProps
   className?: string
 }
 
-export function ForesightLink({
-  children,
-  className,
-  hitSlop = 0,
-  unregisterOnCallback = true,
-  name = "",
-  ...props
-}: ForesightLinkProps) {
+export function ForesightLink({ children, className, ...props }: ForesightLinkProps) {
   const router = useRouter() // import from "next/navigation" not "next/router"
-
   const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
-    callback: () => router.prefetch(props.href.toString()),
-    hitSlop: hitSlop,
-    name: name,
-    unregisterOnCallback: unregisterOnCallback,
+    callback: () => {
+      router.prefetch(props.href.toString())
+    },
+    hitSlop: props.hitSlop,
+    name: props.name,
+    meta: props.meta,
   })
 
   return (

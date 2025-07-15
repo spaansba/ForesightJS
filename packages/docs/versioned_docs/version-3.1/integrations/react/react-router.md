@@ -38,20 +38,15 @@ interface ForesightLinkProps
   className?: string
 }
 
-export function ForesightLink({
-  children,
-  className,
-  hitSlop = 0,
-  name = "",
-  ...props
-}: ForesightLinkProps) {
+export function ForesightLink({ children, className, ...props }: ForesightLinkProps) {
   const [shouldPrefetch, setShouldPrefetch] = useState(false)
   const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
     callback: () => {
       setShouldPrefetch(true)
     },
-    hitSlop: hitSlop,
-    name: name,
+    hitSlop: props.hitSlop,
+    name: props.name,
+    meta: props.meta,
   })
 
   return (
