@@ -35,7 +35,7 @@ function SmallButton({ index }: { index: number }) {
           }
         },
         hitSlop: 0,
-        unregisterOnCallback: true,
+        meta: { buttonNr: index },
       })
 
       return () => unregister()

@@ -23,7 +23,6 @@ export const ForesightCard = () => {
         callback,
         hitSlop: { left: 40, top: 50, right: 30, bottom: 50 },
         name: "foresight-card",
-        unregisterOnCallback: true,
       })
 
       return () => unregister()
