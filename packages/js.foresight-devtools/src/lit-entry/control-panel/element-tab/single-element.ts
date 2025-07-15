@@ -77,16 +77,18 @@ export class SingleElement extends LitElement {
   }
 
   private formatElementDetails(): string {
+    const elementData = this.elementData
     const details = {
-      tagName: this.elementData.element.tagName.toLowerCase(),
-      isIntersecting: this.elementData.isIntersectingWithViewport,
-      registerCount: this.elementData.registerCount,
+      tagName: elementData.element.tagName.toLowerCase(),
+      isIntersecting: elementData.isIntersectingWithViewport,
+      registerCount: elementData.registerCount,
       hitSlop: {
-        top: this.elementData.elementBounds.hitSlop.top,
-        right: this.elementData.elementBounds.hitSlop.right,
-        bottom: this.elementData.elementBounds.hitSlop.bottom,
-        left: this.elementData.elementBounds.hitSlop.left,
+        top: elementData.elementBounds.hitSlop.top,
+        right: elementData.elementBounds.hitSlop.right,
+        bottom: elementData.elementBounds.hitSlop.bottom,
+        left: elementData.elementBounds.hitSlop.left,
       },
+      meta: this.elementData.meta,
     }
 
     return JSON.stringify(details, null, 2)
