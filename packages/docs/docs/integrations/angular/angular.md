@@ -15,16 +15,18 @@ last_updated:
 
 
 ```bash
-npm install js.foresight js.foresight-devtools ngx-foresight
+npm install js.foresight ngx-foresight
+npm install -D js.foresight-devtools
 # or
-pnpm install js.foresight js.foresight-devtools ngx-foresight
+pnpm add js.foresight js.foresight-devtools ngx-foresight
+pnpm add -D js.foresight-devtools
 ```
 
 After that import the `ForesightjsDirective` to the components with `href` and `routerLink`, and use the `ForesightjsStrategy` as `preloadingStrategy` in the router's configuration. For example:
 
 ```ts
 import { ForesightManager } from 'js.foresight';
-import { ForesightDebugger } from 'js.foresight-devtools';
+import { ForesightDevtools } from 'js.foresight-devtools';
 import { ForesightjsDirective } from 'ngx-foresight';
 
 ForesightManager.initialize({
@@ -38,7 +40,7 @@ ForesightManager.initialize({
   scrollMargin: 150,
 });
 
-ForesightDebugger.initialize(ForesightManager.instance, {
+ForesightDevtools.initialize({
   showDebugger: true,
   isControlPanelDefaultMinimized: true, // optional setting which allows you to minimize the control panel on default
   showNameTags: true, // optional setting which shows the name of the element
@@ -48,13 +50,15 @@ ForesightDebugger.initialize(ForesightManager.instance, {
 
 ```html
 <div class="pill-group-horizontal">
-  <a href="/feature1" class="pill" foresightjs>Feature 1</a>
-  <a href="/feature2" class="pill" foresightjs>Feature 2</a>
-  <a href="/feature3" class="pill" foresightjs>Feature 3</a>
+  <a href="/feature1" class="pill" registerForesight="Feature 1">Feature 1</a>
+  <a href="/feature2" class="pill" registerForesight="Feature 2">Feature 2</a>
+  <a href="/feature3" class="pill" registerForesight="Feature 3">Feature 3</a>
 </div>
 ```
 
 ```ts
 // configure preloading strategy as per routes
-    provideRouter(routes, withPreloading(ForesightjsStrategy)),
+  provideRouter(routes, withPreloading(ForesightjsStrategy)),
+// for older versions
+  RouterModule.forRoot(routes, { preloadingStrategy: ForesightjsStrategy })
 ```
