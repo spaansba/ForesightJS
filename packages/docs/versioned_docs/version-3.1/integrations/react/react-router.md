@@ -7,9 +7,10 @@ keywords:
   - React Router
   - Routing
   - React
+  - PrefetchPageLinks
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
-  date: 2025-06-23
+  date: 2025-07-15
   author: Bart Spaans
 ---
 
@@ -25,10 +26,10 @@ Below is an example of creating an wrapper around the React Router `Link` compon
 
 ```tsx
 "use client"
-import { ForesightManager, type ForesightRect, ForesightRegisterOptions } from "js.foresight"
-import { useEffect, useRef, useState } from "react"
-import { Link, useFetcher, type LinkProps } from "react-router"
-import useForesight from "../hooks/useForesight"
+import type { ForesightRegisterOptions } from "js.foresight"
+import { useState } from "react"
+import { Link, PrefetchPageLinks, type LinkProps } from "react-router"
+import useForesight from "./useForesight"
 
 interface ForesightLinkProps
   extends Omit<LinkProps, "prefetch">,
@@ -41,32 +42,30 @@ export function ForesightLink({
   children,
   className,
   hitSlop = 0,
-  unregisterOnCallback = true,
   name = "",
   ...props
 }: ForesightLinkProps) {
-  const fetcher = useFetcher()
-
+  const [shouldPrefetch, setShouldPrefetch] = useState(false)
   const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
     callback: () => {
-      if (fetcher.state === "idle" && !fetcher.data) {
-        fetcher.load(props.to.toString())
-      }
+      setShouldPrefetch(true)
     },
     hitSlop: hitSlop,
     name: name,
-    unregisterOnCallback: unregisterOnCallback,
   })
 
   return (
-    <Link
-      {...props}
-      prefetch={registerResults?.isTouchDevice ? "render" : "none"}
-      ref={elementRef}
-      className={className}
-    >
-      {children}
-    </Link>
+    <>
+      {shouldPrefetch && <PrefetchPageLinks page={props.to.toString()} />}
+      <Link
+        {...props}
+        prefetch={registerResults?.isTouchDevice ? "render" : "none"}
+        ref={elementRef}
+        className={className}
+      >
+        {children}
+      </Link>
+    </>
   )
 }
 ```
