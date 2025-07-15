@@ -50,6 +50,7 @@ export function Hero() {
   const turnOffDebugMode = () => {
     ForesightDevtools.instance.alterDevtoolsSettings({
       showDebugger: false,
+      isControlPanelDefaultMinimized: true,
     })
   }
 
