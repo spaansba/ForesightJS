@@ -104,6 +104,10 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * For debugging, check if you are registering the same element multiple times.
    */
   registerCount: number
+  /**
+   * If set by user, stores additional information about the registered element
+   */
+  meta: Record<string, unknown>
 }
 
 export type MouseCallbackCounts = {
@@ -244,6 +248,10 @@ export type ForesightRegisterOptions = {
    */
   unregisterOnCallback?: boolean
   name?: string
+  /**
+   * If set by user, stores additional information about the registered element
+   */
+  meta?: Record<string, unknown>
 }
 
 /**

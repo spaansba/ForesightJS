@@ -202,6 +202,7 @@ export class ForesightManager {
     callback,
     hitSlop,
     name,
+    meta,
   }: ForesightRegisterOptions): ForesightRegisterResult {
     const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
     if (!shouldRegister) {
@@ -242,6 +243,7 @@ export class ForesightManager {
       isIntersectingWithViewport: initialViewportState(initialRect),
       isRunningCallback: false,
       registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
+      meta: meta ?? {},
     }
 
     this.elements.set(element, elementData)

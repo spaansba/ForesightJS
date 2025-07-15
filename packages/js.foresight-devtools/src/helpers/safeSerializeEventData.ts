@@ -32,6 +32,7 @@ interface ElementRegisteredPayload extends PayloadBase {
   id: string
   registerCount: number
   hitslop: HitSlop
+  meta: Record<string, unknown>
 }
 
 interface ElementUnregisteredPayload extends PayloadBase {
@@ -41,18 +42,21 @@ interface ElementUnregisteredPayload extends PayloadBase {
   registerCount: number
   unregisterReason: string
   wasLastElement: boolean
+  meta: Record<string, unknown>
 }
 interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
   name: string
   updatedProps: UpdatedDataPropertyNames[]
   isIntersecting: boolean
+  meta: Record<string, unknown>
 }
 
 interface CallbackInvokedPayload extends PayloadBase {
   type: "callbackInvoked"
   name: string
   hitType: CallbackHitType
+  meta: Record<string, unknown>
 }
 
 interface CallbackCompletedBasePayload extends PayloadBase {
@@ -62,6 +66,7 @@ interface CallbackCompletedBasePayload extends PayloadBase {
   callbackRunTimeRaw: number
   hitType: CallbackHitType
   status: "success" | "error"
+  meta: Record<string, unknown>
 }
 
 type CallbackCompletedPayload = CallbackCompletedBasePayload &
@@ -174,6 +179,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           registerCount: event.elementData.registerCount,
           hitslop: event.elementData.elementBounds.hitSlop,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          meta: event.elementData.meta,
           // if its the 2nd+ time of the element registering, give the user a heads up in the summary
           logId: logId,
           summary:
@@ -191,6 +197,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           registerCount: event.elementData.registerCount,
           unregisterReason: event.unregisterReason,
           wasLastElement: event.wasLastElement,
+          meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${event.unregisterReason}`,
@@ -201,6 +208,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           name: event.elementData.name,
           updatedProps: event.updatedProps || [],
           isIntersecting: event.elementData.isIntersectingWithViewport,
+          meta: event.elementData.meta,
           localizedTimestamp: new Date().toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${event.updatedProps.toString()}`,
@@ -210,6 +218,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "callbackInvoked",
           name: event.elementData.name,
           hitType: event.hitType,
+          meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${event.hitType.kind}`,
@@ -225,6 +234,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           hitType: event.hitType,
           callbackRunTimeFormatted: elapsed,
           callbackRunTimeRaw: event.elapsed,
+          meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${elapsed}`,

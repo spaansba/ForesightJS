@@ -18,6 +18,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       element: elementRef.current,
       ...options,
       callback: options.callback,
+      meta: { test: "message from useForesight" },
     })
 
     setRegisterResults(result)
