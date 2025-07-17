@@ -7,6 +7,7 @@ import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
 import type { ControllerTabs } from "../../types/types"
+import { ForesightDevtools } from "../foresight-devtools"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
@@ -26,9 +27,7 @@ export class ControlPanel extends LitElement {
       flex-direction: column;
       width: 450px;
       height: 450px;
-      transition:
-        width 0.3s ease,
-        height 0.3s ease;
+      transition: width 0.3s ease, height 0.3s ease;
       box-sizing: border-box;
     }
     .control-wrapper.minimized {
@@ -94,7 +93,8 @@ export class ControlPanel extends LitElement {
     }
   `
   @state() private activeTab: ControllerTabs
-  @state() private isMinimized: boolean = false
+  @state() private isMinimized: boolean =
+    ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
   @state() private visibleCount: number = 0
   @state() private totalCount: number = 0
 

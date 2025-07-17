@@ -61,10 +61,7 @@ export class ForesightDevtools extends LitElement {
 
     const devtools = ForesightDevtools._instance
     devtools.isInitialized = true
-
-    if (props !== undefined) {
-      devtools.alterDevtoolsSettings(props)
-    }
+    devtools.alterDevtoolsSettings(props)
 
     return devtools
   }
@@ -95,7 +92,7 @@ export class ForesightDevtools extends LitElement {
   }
 
   public alterDevtoolsSettings(props?: DeepPartial<DevtoolsSettings>) {
-    if (!props) return
+    if (props === undefined) return
 
     if (this.shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {
       this.devtoolsSettings.showNameTags = props.showNameTags!
@@ -134,7 +131,7 @@ export class ForesightDevtools extends LitElement {
       ) {
         this.devtoolsSettings.logging.logLocation = props.logging.logLocation
       }
-      
+
       this.updateLoggingSetting("callbackCompleted", props.logging.callbackCompleted)
       this.updateLoggingSetting("callbackInvoked", props.logging.callbackInvoked)
       this.updateLoggingSetting("elementDataUpdated", props.logging.elementDataUpdated)
