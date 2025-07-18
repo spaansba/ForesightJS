@@ -2,25 +2,25 @@ import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { map } from "lit/directives/map.js"
 
-import "../base-tab/tab-header"
-import "../base-tab/tab-content"
-import "../dropdown/single-select-dropdown"
-import "../base-tab/chip"
-import "../element-tab/single-element"
-import type { DropdownOption } from "../dropdown/single-select-dropdown"
-import { ForesightManager, type ForesightElement, type ForesightElementData } from "js.foresight"
 import type {
   CallbackCompletedEvent,
+  CallbackHits,
+  CallbackHitType,
   CallbackInvokedEvent,
   ElementDataUpdatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
 } from "js.foresight"
-import type { CallbackHits, CallbackHitType } from "js.foresight"
-import { ForesightDevtools } from "../../foresight-devtools"
+import { ForesightManager, type ForesightElement, type ForesightElementData } from "js.foresight"
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
-import type { ElementReactivatedEvent } from "packages/js.foresight/dist"
+import { ForesightDevtools } from "../../foresight-devtools"
+import "../base-tab/chip"
+import "../base-tab/tab-content"
+import "../base-tab/tab-header"
+import "../dropdown/single-select-dropdown"
+import type { DropdownOption } from "../dropdown/single-select-dropdown"
+import "../element-tab/single-element"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -226,18 +226,18 @@ export class ElementTab extends LitElement {
     )
 
     // TODO add:
-    ForesightManager.instance.addEventListener(
-      "elementReactivated",
-      (e: ElementReactivatedEvent) => {
-        // const elementWithId = {
-        //   ...e.elementData,
-        //   elementId: this.generateElementId(),
-        // }
-        // this.elementListItems.set(e.elementData.element, elementWithId)
-        // this.updateVisibilityCounts()
-      },
-      { signal }
-    )
+    // ForesightManager.instance.addEventListener(
+    //   "elementReactivated",
+    //   (e: ElementReactivatedEvent) => {
+    //     // const elementWithId = {
+    //     //   ...e.elementData,
+    //     //   elementId: this.generateElementId(),
+    //     // }
+    //     // this.elementListItems.set(e.elementData.element, elementWithId)
+    //     // this.updateVisibilityCounts()
+    //   },
+    //   { signal }
+    // )
 
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
