@@ -32,7 +32,7 @@ import { ForesightManager } from "js.foresight"
 function useForesightPrefetch<T extends HTMLElement = HTMLElement>(
   queryKey: string[],
   queryFn: () => Promise<any>,
-  options?: { hitSlop?: number; staleTime?: number }
+  options?: { hitSlop?: number; reactivateAfter?: number }
 ) {
   const elementRef = useRef<T>(null)
   const queryClient = useQueryClient()
@@ -46,7 +46,7 @@ function useForesightPrefetch<T extends HTMLElement = HTMLElement>(
         await queryClient.prefetchQuery({
           queryKey,
           queryFn,
-          staleTime: options?.staleTime || 5 * 60 * 1000,
+          reactivateAfter: options?.reactivateAfter || 5 * 60 * 1000,
         })
       },
       hitSlop: options?.hitSlop || 20,
@@ -73,7 +73,7 @@ function UserProfile({ userId }: { userId: string }) {
   const linkRef = useForesightPrefetch<HTMLAnchorElement>(
     ["user", userId],
     () => fetchUser(userId),
-    { hitSlop: 30, staleTime: 10 * 60 * 1000 }
+    { hitSlop: 30, reactivateAfter: 10 * 60 * 1000 }
   )
 
   if (isLoading) return <div>Loading...</div>

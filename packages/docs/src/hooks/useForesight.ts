@@ -18,7 +18,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       callback: options.callback,
       hitSlop: options.hitSlop,
       name: options.name,
-      staleTime: options.staleTime,
+      reactivateAfter: options.reactivateAfter,
     })
 
     return () => {

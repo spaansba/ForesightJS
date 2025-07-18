@@ -130,7 +130,7 @@ export type ElementCallbackInfo = {
   /**
    * Time in milliseconds after which the callback can be fired again
    */
-  staleTime: number
+  reactivateAfter: number
   /**
    * Whether the callback is currently active (within stale time period)
    */
@@ -288,7 +288,7 @@ export type ForesightRegisterOptions = {
    * Set to Infinity to prevent callback from firing again after first execution.
    * @default Infinity
    */
-  staleTime?: number
+  reactivateAfter?: number
 }
 
 /**

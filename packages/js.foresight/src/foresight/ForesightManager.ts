@@ -204,7 +204,7 @@ export class ForesightManager {
     hitSlop,
     name,
     meta,
-    staleTime,
+    reactivateAfter,
   }: ForesightRegisterOptions): ForesightRegisterResult {
     const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
     if (!shouldRegister) {
@@ -258,7 +258,7 @@ export class ForesightManager {
         callbackFiredCount: 0,
         lastCallbackFiredAt: undefined,
         lastCallbackRuntime: undefined,
-        staleTime: staleTime ?? DEFAULT_STALE_TIME,
+        reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
         isCallbackActive: true,
         isRunningCallback: false,
         lastCallbackStatus: undefined,
@@ -283,7 +283,7 @@ export class ForesightManager {
     }
   }
 
-  private unregister(element: ForesightElement, unregisterReason: ElementUnregisteredReason) {
+  public unregister(element: ForesightElement, unregisterReason: ElementUnregisteredReason) {
     if (!this.elements.has(element)) {
       return
     }
@@ -619,14 +619,14 @@ export class ForesightManager {
       // Reset running state
       elementData.callbackInfo.isRunningCallback = false
 
-      // Schedule element to become active again after staleTime
+      // Schedule element to become active again after reactivateAfter
       if (
-        elementData.callbackInfo.staleTime !== Infinity &&
-        elementData.callbackInfo.staleTime > 0
+        elementData.callbackInfo.reactivateAfter !== Infinity &&
+        elementData.callbackInfo.reactivateAfter > 0
       ) {
         setTimeout(() => {
           this.makeElementActive(elementData)
-        }, elementData.callbackInfo.staleTime)
+        }, elementData.callbackInfo.reactivateAfter)
       }
     }
     asyncCallbackWrapper()

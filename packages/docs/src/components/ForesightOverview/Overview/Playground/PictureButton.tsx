@@ -21,7 +21,7 @@ function PictureButton({ image }: PictureButtonProps) {
 
   const { elementRef } = useForesight<HTMLButtonElement>({
     callback: () => refetch(),
-    staleTime: 10000,
+    reactivateAfter: 10000,
   })
   const handleOnClick = () => {
     refetch()
