@@ -128,7 +128,7 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementDataUpdated",
       (e: ElementDataUpdatedEvent) => {
-        if (e.updatedProps.includes("bounds")) {
+        if (e.updatedProps.includes("bounds") && e.elementData.callbackInfo.isCallbackActive) {
           this.createOrUpdateElementOverlay(e.elementData)
         }
         if (e.updatedProps.includes("visibility")) {

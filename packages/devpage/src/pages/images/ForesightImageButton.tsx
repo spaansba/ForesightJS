@@ -12,7 +12,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
     queryKey: ["image", image.url],
     queryFn: async () => {
       const response = await fetch(image.url)
-      await new Promise(resolve => setTimeout(resolve, 10000))
+      await new Promise(resolve => setTimeout(resolve, 1000))
       if (!response.ok) throw new Error("Failed to fetch image")
       return response.blob()
     },
