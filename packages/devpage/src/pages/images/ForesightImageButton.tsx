@@ -1,61 +1,56 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ForesightImage } from "."
 import useForesight from "../../hooks/useForesight"
-
 interface ForesightImageButtonProps {
   image: ForesightImage
   setSelectedImage: React.Dispatch<React.SetStateAction<ForesightImage | null>>
 }
-
-const imageQueryOptions = (url: string, enabled: boolean) =>
+const STALE_TIME = 3000
+const imageQueryOptions = (
+  image: ForesightImage,
+  enabled: boolean,
+  dataUpdatedCount: number | undefined
+) =>
   queryOptions({
-    queryKey: ["image", url],
+    queryKey: ["image", image],
     queryFn: async () => {
-      const response = await fetch(url)
+      if (!dataUpdatedCount) {
+        dataUpdatedCount = 0
+      }
+      const isEven = dataUpdatedCount % 2 === 0
+      console.log(dataUpdatedCount)
+      const response = await fetch(isEven ? image.url : image.secondUrl)
       const blob = await response.blob()
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return blob
+      await new Promise(resolve => setTimeout(resolve, 400))
+      return { blob, fromUrl: isEven ? "first" : "second" }
     },
-    staleTime: 2000,
+    staleTime: STALE_TIME,
     enabled: enabled,
   })
 
 export function ForesightImageButton({ image, setSelectedImage }: ForesightImageButtonProps) {
   const queryClient = useQueryClient()
-  const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image.url, false))
+  const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image, false, 0))
 
   const { elementRef } = useForesight<HTMLButtonElement>({
     callback: async () => {
-      await queryClient.prefetchQuery(imageQueryOptions(image.url, true))
+      await queryClient.prefetchQuery(
+        imageQueryOptions(image, true, queryClient.getQueryState(["image", image])?.dataUpdateCount)
+      )
     },
-    reactivateAfter: 2000,
+    reactivateAfter: STALE_TIME,
     name: image.name,
   })
 
   const handleOnClick = async () => {
-    const result = await queryClient.ensureQueryData(imageQueryOptions(image.url, true))
-    if (result) {
-      setSelectedImage({
-        ...image,
-        blob: result,
-      })
-    }
-  }
+    const result = await queryClient.fetchQuery(
+      imageQueryOptions(image, true, queryClient.getQueryState(["image", image])?.dataUpdateCount)
+    )
 
-  const getStatusDisplay = () => {
-    if (isRefetching) {
-      return <div className="text-xs text-purple-500">Data is refetching</div>
-    }
-    if (isFetching) {
-      return <div className="text-xs text-blue-500">Data is fetching</div>
-    }
-    if (isStale) {
-      return <div className="text-xs text-orange-500">Data is stale</div>
-    }
-    if (data) {
-      return <div className="text-xs text-green-500">Data is fetched</div>
-    }
-    return null
+    setSelectedImage({
+      ...image,
+      blob: result.blob,
+    })
   }
 
   return (
@@ -63,21 +58,45 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
       <button
         ref={elementRef}
         onClick={handleOnClick}
-        className="p-4 rounded-lg border-2 transition-all duration-200 h-50 text-left hover:shadow-md cursor-pointer"
+        className="p-4 rounded-lg border-2 transition-all duration-200 h-60 text-left hover:shadow-md cursor-pointer"
       >
         <div className="space-y-2">
           <h3 className="font-semibold text-gray-900">{image.name}</h3>
-          <p className="text-sm text-gray-600">{image.description}</p>
           <div className="text-xs text-gray-400">ID: {image.id}</div>
-          {getStatusDisplay()}
+          <div className="text-xs space-y-1">
+            <div className="flex justify-between">
+              <span>Fetching:</span>
+              <span className={isFetching ? "text-blue-500" : "text-gray-400"}>
+                {isFetching.toString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Refetching:</span>
+              <span className={isRefetching ? "text-purple-500" : "text-gray-400"}>
+                {isRefetching.toString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Stale:</span>
+              <span className={isStale ? "text-orange-500" : "text-gray-400"}>
+                {isStale.toString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Has Data:</span>
+              <span className={data ? "text-green-500" : "text-gray-400"}>
+                {(!!data).toString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>From URL:</span>
+              <span className={data ? "text-indigo-500" : "text-gray-400"}>
+                {data?.fromUrl || "none"}
+              </span>
+            </div>
+          </div>
         </div>
       </button>
-      <button
-        className="size-5 bg-amber-900"
-        onClick={() => {
-          console.log({ data, isFetching, isRefetching, isStale })
-        }}
-      ></button>
     </>
   )
 }

@@ -8,6 +8,7 @@ import type {
   CallbackHitType,
   CallbackInvokedEvent,
   ElementDataUpdatedEvent,
+  ElementReactivatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
 } from "js.foresight"
@@ -93,6 +94,8 @@ export class ElementTab extends LitElement {
   private visibleElementsCount: number = 0
 
   @state()
+  private activeElementCallbacksCount: number = 0
+  @state()
   private totalElementsCount: number = 0
 
   @state() private sortDropdown: DropdownOption[]
@@ -102,7 +105,7 @@ export class ElementTab extends LitElement {
     ForesightElementData & { elementId: string }
   > = new Map()
   @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
-  @state() private activeCallbacks: Set<ForesightElement> = new Set()
+  @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
   private elementIdCounter: number = 0
   private _abortController: AbortController | null = null
@@ -150,15 +153,23 @@ export class ElementTab extends LitElement {
     this.expandedElementIds = newExpandedElementIds
   }
 
+  private updateActiveCallbackCount() {
+    let activeCount = 0
+    this.elementListItems.forEach(data => {
+      if (data.callbackInfo.isCallbackActive) {
+        activeCount++
+      }
+    })
+    this.activeElementCallbacksCount = activeCount
+  }
   private updateVisibilityCounts() {
     let visibleCount = 0
-    let totalCount = 0
     this.elementListItems.forEach(data => {
-      totalCount++
       if (data.isIntersectingWithViewport) {
         visibleCount++
       }
     })
+    const totalCount = this.elementListItems.size
     this.visibleElementsCount = visibleCount
     this.totalElementsCount = totalCount
 
@@ -203,6 +214,7 @@ export class ElementTab extends LitElement {
 
         this.elementListItems.set(e.elementData.element, elementWithId)
         this.updateVisibilityCounts()
+        this.updateActiveCallbackCount()
       },
       { signal }
     )
@@ -216,7 +228,6 @@ export class ElementTab extends LitElement {
             ...e.elementData,
             elementId: existingElementData.elementId,
           }
-          // Direct Map mutation is more efficient than creating new Map
           this.elementListItems.set(e.elementData.element, updatedElementWithId)
           this.updateVisibilityCounts()
           this.requestUpdate()
@@ -225,30 +236,34 @@ export class ElementTab extends LitElement {
       { signal }
     )
 
-    // TODO add:
-    // ForesightManager.instance.addEventListener(
-    //   "elementReactivated",
-    //   (e: ElementReactivatedEvent) => {
-    //     // const elementWithId = {
-    //     //   ...e.elementData,
-    //     //   elementId: this.generateElementId(),
-    //     // }
-    //     // this.elementListItems.set(e.elementData.element, elementWithId)
-    //     // this.updateVisibilityCounts()
-    //   },
-    //   { signal }
-    // )
+    ForesightManager.instance.addEventListener(
+      "elementReactivated",
+      (e: ElementReactivatedEvent) => {
+        const existingElementData = this.elementListItems.get(e.elementData.element)
+        if (existingElementData) {
+          const updatedElementWithId = {
+            ...e.elementData,
+            elementId: existingElementData.elementId,
+          }
+          this.elementListItems.set(e.elementData.element, updatedElementWithId)
+          this.requestUpdate()
+          this.updateActiveCallbackCount()
+        }
+      },
+      { signal }
+    )
 
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
         this.elementListItems.delete(e.elementData.element)
         this.updateVisibilityCounts()
+        this.updateActiveCallbackCount()
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
         this.requestUpdate()
-        this.activeCallbacks.delete(e.elementData.element)
+        this.runningCallbacks.delete(e.elementData.element)
       },
       { signal }
     )
@@ -256,7 +271,8 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
-        this.activeCallbacks.add(e.elementData.element)
+        this.runningCallbacks.add(e.elementData.element)
+
         this.requestUpdate()
       },
       { signal }
@@ -265,8 +281,9 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
+        this.updateActiveCallbackCount()
         this.handleCallbackCompleted(e.hitType)
-        this.activeCallbacks.delete(e.elementData.element)
+        this.runningCallbacks.delete(e.elementData.element)
       },
       { signal }
     )
@@ -357,6 +374,12 @@ export class ElementTab extends LitElement {
           <chip-element title="Number of visible registered elements / total registered elements">
             ${this.visibleElementsCount}/${this.totalElementsCount} visible
           </chip-element>
+          <chip-element title="Number of elements with running callbacks / total elements">
+            ${this.runningCallbacks.size}/${this.totalElementsCount} running
+          </chip-element>
+          <chip-element title="Number of elements with active callbacks / total elements">
+            ${this.activeElementCallbacksCount}/${this.totalElementsCount} active
+          </chip-element>
           <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">
             ${this.hitCount.total} hits
           </chip-element>
@@ -377,7 +400,7 @@ export class ElementTab extends LitElement {
           return html`
             <single-element
               .elementData=${elementData}
-              .isActive=${this.activeCallbacks.has(elementData.element)}
+              .isActive=${this.runningCallbacks.has(elementData.element)}
               .isExpanded=${this.expandedElementIds.has(elementData.elementId)}
               .onToggle=${this.handleElementToggle}
             ></single-element>

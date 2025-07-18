@@ -11,6 +11,10 @@ export class SingleElement extends LitElement {
         display: block;
       }
 
+      .element-wrapper {
+        display: block;
+      }
+
       .element-content {
         display: flex;
         align-items: center;
@@ -19,6 +23,7 @@ export class SingleElement extends LitElement {
       }
 
       .status-indicator {
+        margin-left: 2px;
         width: 8px;
         height: 8px;
         flex-shrink: 0;
@@ -40,6 +45,11 @@ export class SingleElement extends LitElement {
         box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
       }
 
+      .status-indicator.inactive {
+        background-color: #999;
+        box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
+      }
+
       .element-name {
         flex-grow: 1;
         white-space: nowrap;
@@ -54,6 +64,19 @@ export class SingleElement extends LitElement {
         color: #fff;
         font-weight: 600;
       }
+
+      .element-name.callback-inactive {
+        color: #999;
+        font-weight: 500;
+      }
+
+      :host(.not-visible) {
+        opacity: 0.5;
+      }
+
+      .element-wrapper.not-visible {
+        opacity: 0.5;
+      }
     `,
   ]
 
@@ -66,6 +89,9 @@ export class SingleElement extends LitElement {
     if (this.isActive) {
       return "#ffeb3b"
     }
+    if (!this.elementData.callbackInfo.isCallbackActive) {
+      return "#999"
+    }
     return this.elementData.isIntersectingWithViewport ? "#4caf50" : "#666"
   }
 
@@ -73,12 +99,26 @@ export class SingleElement extends LitElement {
     if (this.isActive) {
       return "prefetching"
     }
+    if (!this.elementData.callbackInfo.isCallbackActive) {
+      return "inactive"
+    }
     return this.elementData.isIntersectingWithViewport ? "visible" : "hidden"
+  }
+
+  private getStatusText(): string {
+    if (this.isActive) {
+      return "callback active"
+    }
+    if (!this.elementData.callbackInfo.isCallbackActive) {
+      return "callback inactive"
+    }
+    return this.elementData.isIntersectingWithViewport ? "in viewport" : "not in viewport"
   }
 
   private formatElementDetails(): string {
     const elementData = this.elementData
     const details = {
+      status: this.getStatusText(),
       tagName: elementData.element.tagName.toLowerCase(),
       isIntersecting: elementData.isIntersectingWithViewport,
       registerCount: elementData.registerCount,
@@ -88,6 +128,7 @@ export class SingleElement extends LitElement {
         bottom: elementData.elementBounds.hitSlop.bottom,
         left: elementData.elementBounds.hitSlop.left,
       },
+      callbackInfo: elementData.callbackInfo,
       meta: this.elementData.meta,
     }
 
@@ -95,22 +136,32 @@ export class SingleElement extends LitElement {
   }
 
   render() {
+    const isNotVisible = !this.elementData.isIntersectingWithViewport
+
     return html`
-      <expandable-item
-        .borderColor=${this.getBorderColor()}
-        .showCopyButton=${true}
-        .itemId=${this.elementData.elementId}
-        .isExpanded=${this.isExpanded}
-        .onToggle=${this.onToggle}
-      >
-        <div slot="content" class="element-content">
-          <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
-          <span class="element-name ${this.isActive ? "callback-active" : ""}">
-            ${this.elementData.name || "unnamed"}
-          </span>
-        </div>
-        <div slot="details">${this.formatElementDetails()}</div>
-      </expandable-item>
+      <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
+        <expandable-item
+          .borderColor=${this.getBorderColor()}
+          .showCopyButton=${true}
+          .itemId=${this.elementData.elementId}
+          .isExpanded=${this.isExpanded}
+          .onToggle=${this.onToggle}
+        >
+          <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
+            <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
+            <span
+              class="element-name ${this.isActive
+                ? "callback-active"
+                : !this.elementData.callbackInfo.isCallbackActive
+                ? "callback-inactive"
+                : ""}"
+            >
+              ${this.elementData.name || "unnamed"}
+            </span>
+          </div>
+          <div slot="details">${this.formatElementDetails()}</div>
+        </expandable-item>
+      </div>
     `
   }
 }
