@@ -13,7 +13,7 @@ import type {
   ElementRegisteredEvent,
 } from "js.foresight"
 import { ForesightDevtools } from "../foresight-devtools"
-import type { ElementReactivatedEvent } from "packages/js.foresight/dist"
+import type { ElementReactivatedEvent, ElementUnregisteredEvent } from "packages/js.foresight/dist"
 interface ElementOverlay {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
@@ -113,6 +113,13 @@ export class ElementOverlays extends LitElement {
         if (e.elementData.isIntersectingWithViewport) {
           this.createOrUpdateElementOverlay(e.elementData)
         }
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
+      "elementUnregistered",
+      (e: ElementUnregisteredEvent) => {
+        this.removeElementOverlay(e.elementData)
       },
       { signal }
     )
