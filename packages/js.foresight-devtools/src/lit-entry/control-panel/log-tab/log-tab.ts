@@ -189,9 +189,9 @@ export class LogTab extends LitElement {
         icon: FILTER_SVG,
       },
       {
-        value: "elementDataUpdated",
-        label: "Element Data Updated",
-        title: "Show element data update events",
+        value: "elementReactivated",
+        label: "Element Reactivated",
+        title: "Show when element gets reactivated after stale time has passed",
         icon: FILTER_SVG,
       },
       {
@@ -335,9 +335,11 @@ export class LogTab extends LitElement {
     this._eventListeners.clear()
   }
 
+  //TODO fix these events and in single-log
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
       elementRegistered: "#2196f3",
+      elementReactivated: "#ff9800",
       callbackInvoked: "#00bcd4",
       callbackCompleted: "#4caf50",
       elementDataUpdated: "#ffc107",

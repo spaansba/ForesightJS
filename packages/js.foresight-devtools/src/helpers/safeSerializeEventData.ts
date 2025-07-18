@@ -1,6 +1,7 @@
 import type {
   CallbackHits,
   CallbackHitType,
+  ElementCallbackInfo,
   ForesightElementData,
   ForesightEvent,
   ForesightEventMap,
@@ -12,7 +13,6 @@ import type {
   UpdatedDataPropertyNames,
   UpdatedManagerSetting,
 } from "js.foresight/types/types"
-import type { ElementCallbackInfo } from "packages/js.foresight/dist"
 
 type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
@@ -34,6 +34,10 @@ interface ElementRegisteredPayload extends PayloadBase {
   callbackInfo: ElementCallbackInfo
   hitslop: HitSlop
   meta: Record<string, unknown>
+}
+
+interface ElementUnregisteredEvent extends PayloadBase {
+  type: "elementUnregistered"
 }
 
 interface ElementReactivatedPayload extends PayloadBase {
@@ -111,6 +115,7 @@ interface ManagerDataPayload extends PayloadBase {
 
 export type SerializedEventData =
   | ElementRegisteredPayload
+  | ElementUnregisteredEvent
   | ElementReactivatedPayload
   | ElementDataUpdatedPayload
   | CallbackInvokedPayload
@@ -190,16 +195,33 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
                   event.elementData.registerCount
                 )} time`,
         }
-      // case "elementUnregistered":
-      //   return {
-      //     type: "elementUnregistered",
-      //     name: event.elementData.name,
-      //     id: event.elementData.element.id || "",
-      //     meta: event.elementData.meta,
-      //     localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-      //     logId: logId,
-      //     summary: `${event.elementData.name} - ${event.unregisterReason}`,
-      //   }
+      case "elementReactivated":
+        return {
+          type: "elementReactivated",
+          name: event.elementData.name,
+          id: event.elementData.element.id || "",
+          callbackInfo: event.elementData.callbackInfo,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          meta: event.elementData.meta,
+          // if its the 2nd+ time of the element registering, give the user a heads up in the summary
+          logId: logId,
+          summary:
+            event.elementData.registerCount === 1
+              ? event.elementData.name
+              : `${event.elementData.name} - ${getOrdinalSuffix(
+                  event.elementData.registerCount
+                )} time`,
+        }
+      case "elementUnregistered":
+        return {
+          type: "elementUnregistered",
+          // name: event.elementData.name,
+          // id: event.elementData.element.id || "",
+          // meta: event.elementData.meta,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
+          summary: `${event.elementData.name} - ${event.unregisterReason}`,
+        }
       case "elementDataUpdated":
         return {
           type: "elementDataUpdated",

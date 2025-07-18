@@ -27,6 +27,7 @@ export class ForesightDevtools extends LitElement {
     logging: {
       logLocation: "controlPanel",
       callbackCompleted: true,
+      elementReactivated: true,
       callbackInvoked: true,
       elementDataUpdated: false,
       elementRegistered: false,
