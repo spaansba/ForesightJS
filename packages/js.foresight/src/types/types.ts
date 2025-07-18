@@ -1,3 +1,5 @@
+import type { CircularBuffer } from "js.foresight/helpers/CircularBuffer"
+
 export type Rect = {
   top: number
   left: number
@@ -34,7 +36,7 @@ export type Point = {
 }
 
 export type TrajectoryPositions = {
-  positions: import("../helpers/CircularBuffer").CircularBuffer<MousePosition>
+  positions: CircularBuffer<MousePosition>
   currentPoint: Point
   predictedPoint: Point
 }
@@ -319,6 +321,7 @@ export type NumericSettingConfig = {
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
   elementRegistered: ElementRegisteredEvent
+  elementReactivated: ElementReactivatedEvent
   elementUnregistered: ElementUnregisteredEvent
   elementDataUpdated: ElementDataUpdatedEvent
   callbackInvoked: CallbackInvokedEvent
@@ -330,6 +333,7 @@ export interface ForesightEventMap {
 
 export type ForesightEvent =
   | "elementRegistered"
+  | "elementReactivated"
   | "elementUnregistered"
   | "elementDataUpdated"
   | "callbackInvoked"
@@ -340,6 +344,11 @@ export type ForesightEvent =
 
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
+  elementData: ForesightElementData
+}
+
+export interface ElementReactivatedEvent extends ForesightBaseEvent {
+  type: "elementReactivated"
   elementData: ForesightElementData
 }
 

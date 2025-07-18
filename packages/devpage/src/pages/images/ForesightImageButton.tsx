@@ -8,7 +8,7 @@ interface ForesightImageButtonProps {
 }
 
 export function ForesightImageButton({ image, setSelectedImage }: ForesightImageButtonProps) {
-  console.log("here")
+  console.log("imagebutton")
   const { data, refetch } = useQuery({
     queryKey: ["image", image.url],
     queryFn: async () => {

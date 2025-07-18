@@ -216,6 +216,7 @@ export class ForesightManager {
       }
     }
     if (this.elements.has(element)) {
+      console.log("here")
       return {
         isLimitedConnection,
         isTouchDevice,
@@ -274,9 +275,7 @@ export class ForesightManager {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => {
-        this.unregister(element, "apiCall")
-      },
+      unregister: () => {},
     }
   }
 
@@ -547,6 +546,7 @@ export class ForesightManager {
     console.log("here2")
     elementData.isCallbackActive = true
     this.positionObserver?.observe(elementData.element)
+    this.emit({ type: "elementReactivated", elementData: elementData, timestamp: Date.now() })
   }
 
   private makeElementUnactive(elementData: ForesightElementData) {
