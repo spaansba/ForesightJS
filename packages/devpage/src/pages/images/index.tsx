@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ForesightImageButton } from "./ForesightImageButton"
 import { Link } from "react-router-dom"
 
@@ -10,7 +10,7 @@ export type ForesightImage = {
   description: string
 }
 
-const IMAGES = [
+const IMAGES: ForesightImage[] = [
   {
     id: "mountains",
     name: "Mountains",
@@ -38,20 +38,33 @@ const IMAGES = [
 ]
 
 export default function ImageGallery() {
-  const [selectedImage, setSelectedImage] = useState<Blob | null>(null)
+  const [selectedImage, setSelectedImage] = useState<ForesightImage | null>(null)
   const [resetKey, setResetKey] = useState(0)
   const queryClient = useQueryClient()
+
+  // Query for the selected image that will handle loading state
+  const { data: selectedImageBlob, isFetching } = useQuery({
+    queryKey: ["image", selectedImage?.url],
+    queryFn: async () => {
+      if (!selectedImage) return null
+      const response = await fetch(selectedImage.url)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      if (!response.ok) throw new Error("Failed to fetch image")
+      return response.blob()
+    },
+    enabled: !!selectedImage,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const handleImageClick = (image: ForesightImage) => {
+    setSelectedImage(image)
+    // Don't set blob manually - let the useQuery handle it
+  }
 
   const handleReset = () => {
     setSelectedImage(null)
     queryClient.clear()
-
-    // Unregister all ForesightJS elements to reset button states
-    // ForesightManager.instance.unregisterAll()
-
-    // Force re-render of buttons to trigger re-registration
     setResetKey(prev => prev + 1)
-
     console.log("Cache cleared, ForesightJS buttons reset, and state reset")
   }
 
@@ -99,19 +112,38 @@ export default function ImageGallery() {
           </p>
         </div>
 
+        {/* Image Buttons */}
         <div key={resetKey} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {IMAGES.map(image => (
-            <ForesightImageButton image={image} setSelectedImage={setSelectedImage} />
+            <ForesightImageButton key={image.id} image={image} onImageClick={handleImageClick} />
           ))}
         </div>
 
+        {/* Selected Image Display */}
         {selectedImage && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="space-y-4">
-              <img
-                src={URL.createObjectURL(selectedImage)}
-                className="w-full h-96 object-cover rounded-lg shadow-md"
-              />
+              <h2 className="text-xl font-semibold text-gray-900">{selectedImage.name}</h2>
+              <p className="text-gray-600">{selectedImage.description}</p>
+
+              {isFetching ? (
+                <div className="w-full h-96 bg-gray-100 rounded-lg shadow-md flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading image...</p>
+                  </div>
+                </div>
+              ) : selectedImageBlob ? (
+                <img
+                  src={URL.createObjectURL(selectedImageBlob)}
+                  alt={selectedImage.name}
+                  className="w-full h-96 object-cover rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-full h-96 bg-red-100 rounded-lg shadow-md flex items-center justify-center">
+                  <p className="text-red-600">Failed to load image</p>
+                </div>
+              )}
             </div>
           </div>
         )}
