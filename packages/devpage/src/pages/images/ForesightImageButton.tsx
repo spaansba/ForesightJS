@@ -8,11 +8,11 @@ interface ForesightImageButtonProps {
 }
 
 export function ForesightImageButton({ image, setSelectedImage }: ForesightImageButtonProps) {
-  console.log("imagebutton")
   const { data, refetch } = useQuery({
     queryKey: ["image", image.url],
     queryFn: async () => {
       const response = await fetch(image.url)
+      await new Promise(resolve => setTimeout(resolve, 10000))
       if (!response.ok) throw new Error("Failed to fetch image")
       return response.blob()
     },
@@ -23,6 +23,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
   const { elementRef } = useForesight<HTMLButtonElement>({
     callback: () => refetch(),
     staleTime: 1000,
+    name: image.name,
   })
   const handleOnClick = () => {
     refetch()

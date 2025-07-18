@@ -8,7 +8,6 @@ type PictureButtonProps = {
 }
 
 function PictureButton({ image }: PictureButtonProps) {
-  console.log("here")
   const { refetch, isFetching } = useQuery({
     queryKey: ["image", image.url],
     queryFn: async () => {

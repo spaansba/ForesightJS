@@ -20,6 +20,7 @@ import type { CallbackHits, CallbackHitType } from "js.foresight"
 import { ForesightDevtools } from "../../foresight-devtools"
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
+import type { ElementReactivatedEvent } from "packages/js.foresight/dist"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -199,6 +200,7 @@ export class ElementTab extends LitElement {
           ...e.elementData,
           elementId: this.generateElementId(),
         }
+
         this.elementListItems.set(e.elementData.element, elementWithId)
         this.updateVisibilityCounts()
       },
@@ -219,6 +221,20 @@ export class ElementTab extends LitElement {
           this.updateVisibilityCounts()
           this.requestUpdate()
         }
+      },
+      { signal }
+    )
+
+    // TODO add:
+    ForesightManager.instance.addEventListener(
+      "elementReactivated",
+      (e: ElementReactivatedEvent) => {
+        // const elementWithId = {
+        //   ...e.elementData,
+        //   elementId: this.generateElementId(),
+        // }
+        // this.elementListItems.set(e.elementData.element, elementWithId)
+        // this.updateVisibilityCounts()
       },
       { signal }
     )

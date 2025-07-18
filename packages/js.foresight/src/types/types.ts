@@ -99,10 +99,6 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    */
   element: ForesightElement
   /**
-   * If the element is currently running its callback
-   */
-  isRunningCallback: boolean
-  /**
    * For debugging, check if you are registering the same element multiple times.
    */
   registerCount: number
@@ -139,6 +135,10 @@ export type ElementCallbackInfo = {
    * Whether the callback is currently active (within stale time period)
    */
   isCallbackActive: boolean
+  /**
+   * If the element is currently running its callback
+   */
+  isRunningCallback: boolean
 }
 
 export type MouseCallbackCounts = {

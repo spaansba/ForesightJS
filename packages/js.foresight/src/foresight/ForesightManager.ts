@@ -216,7 +216,6 @@ export class ForesightManager {
       }
     }
     if (this.elements.has(element)) {
-      console.log("here")
       return {
         isLimitedConnection,
         isTouchDevice,
@@ -252,7 +251,7 @@ export class ForesightManager {
       },
       name: name || element.id || "unnamed",
       isIntersectingWithViewport: initialViewportState(initialRect),
-      isRunningCallback: false,
+
       registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
       meta: meta ?? {},
       callbackInfo: {
@@ -261,6 +260,7 @@ export class ForesightManager {
         lastCallbackRuntime: undefined,
         staleTime: staleTime ?? DEFAULT_STALE_TIME,
         isCallbackActive: true,
+        isRunningCallback: false,
         lastCallbackStatus: undefined,
       },
     }
@@ -547,13 +547,18 @@ export class ForesightManager {
   }
 
   private makeElementActive(elementData: ForesightElementData) {
-    console.log("here2")
-    elementData.callbackInfo.isCallbackActive = true
-    this.positionObserver?.observe(elementData.element)
-    this.emit({ type: "elementReactivated", elementData: elementData, timestamp: Date.now() })
+    // Only reactivate if callback is not currently running
+    if (!elementData.callbackInfo.isRunningCallback) {
+      elementData.callbackInfo.isCallbackActive = true
+      this.positionObserver?.observe(elementData.element)
+      this.emit({ type: "elementReactivated", elementData: elementData, timestamp: Date.now() })
+    }
   }
 
   private makeElementUnactive(elementData: ForesightElementData) {
+    elementData.callbackInfo.callbackFiredCount++
+    elementData.callbackInfo.lastCallbackFiredAt = Date.now()
+    elementData.callbackInfo.isRunningCallback = true
     elementData.callbackInfo.isCallbackActive = false
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
@@ -565,13 +570,11 @@ export class ForesightManager {
   }
 
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    if (elementData.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
+    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
       return
     }
-    // Update callback tracking properties
-    elementData.callbackInfo.callbackFiredCount++
-    elementData.callbackInfo.lastCallbackFiredAt = Date.now()
 
+    this.makeElementUnactive(elementData)
     // We have this async wrapper so we can time exactly how long the callback takes
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType)
@@ -584,6 +587,8 @@ export class ForesightManager {
       const start = performance.now()
       try {
         await elementData.callback()
+        elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
+        elementData.callbackInfo.lastCallbackStatus = "success"
         this.emit({
           type: "callbackCompleted",
           timestamp: Date.now(),
@@ -599,6 +604,7 @@ export class ForesightManager {
           error
         )
         elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
+        elementData.callbackInfo.lastCallbackStatus = "error"
         this.emit({
           type: "callbackCompleted",
           timestamp: Date.now(),
@@ -611,7 +617,7 @@ export class ForesightManager {
       }
 
       // Reset running state
-      elementData.isRunningCallback = false
+      elementData.callbackInfo.isRunningCallback = false
 
       // Schedule element to become active again after staleTime
       if (
@@ -623,9 +629,7 @@ export class ForesightManager {
         }, elementData.callbackInfo.staleTime)
       }
     }
-    elementData.isRunningCallback = true
     asyncCallbackWrapper()
-    this.makeElementUnactive(elementData)
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
