@@ -4,6 +4,7 @@ import "./index.css"
 import App from "./App.tsx"
 import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -21,8 +22,12 @@ ForesightManager.initialize({
 
 ForesightDevtools.initialize()
 
+const queryClient = new QueryClient()
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </StrictMode>
 )
