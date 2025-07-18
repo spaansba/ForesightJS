@@ -20,7 +20,7 @@ The `useForesight` hook serves as the base for all ForesightJS usage with any Re
 ## useForesight
 
 ```tsx
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect } from "react"
 import {
   ForesightManager,
   type ForesightRegisterOptionsWithoutElement,
@@ -31,20 +31,20 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
   options: ForesightRegisterOptionsWithoutElement
 ) {
   const elementRef = useRef<T>(null)
-  const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
+  const registerResults = useRef<ForesightRegisterResult | null>(null)
 
   useEffect(() => {
     if (!elementRef.current) return
 
-    const result = ForesightManager.instance.register({
+    registerResults.current = ForesightManager.instance.register({
       element: elementRef.current,
-      ...options,
+      callback: options.callback,
+      hitSlop: options.hitSlop,
+      name: options.name,
     })
 
-    setRegisterResults(result)
-
     return () => {
-      result.unregister()
+      registerResults.current?.unregister()
     }
   }, [options])
 

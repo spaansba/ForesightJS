@@ -1,7 +1,14 @@
 import { useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { ForesightImageButton } from "./ForesightImageButton"
 import { Link } from "react-router-dom"
+
+export type ForesightImage = {
+  id: string
+  name: string
+  url: string
+  description: string
+}
 
 const IMAGES = [
   {
@@ -30,37 +37,10 @@ const IMAGES = [
   },
 ]
 
-async function fetchImage(url: string): Promise<string> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(url)
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
-    img.src = url
-  })
-}
-
 export default function ImageGallery() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<Blob | null>(null)
   const [resetKey, setResetKey] = useState(0)
   const queryClient = useQueryClient()
-
-  const {
-    data: imageUrl,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["image", selectedImage],
-    queryFn: () => fetchImage(selectedImage!),
-    enabled: !!selectedImage,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-
-  const handleImageClick = (imageId: string) => {
-    setSelectedImage(imageId)
-  }
 
   const handleReset = () => {
     setSelectedImage(null)
@@ -74,8 +54,6 @@ export default function ImageGallery() {
 
     console.log("Cache cleared, ForesightJS buttons reset, and state reset")
   }
-
-  const selectedImageData = IMAGES.find(img => img.id === selectedImage)
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -123,45 +101,18 @@ export default function ImageGallery() {
 
         <div key={resetKey} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {IMAGES.map(image => (
-            <ForesightImageButton
-              key={image.id}
-              imageId={image.id}
-              imageUrl={image.url}
-              name={image.name}
-              description={image.description}
-              onClick={() => handleImageClick(image.id)}
-              isSelected={selectedImage === image.id}
-            />
+            <ForesightImageButton image={image} setSelectedImage={setSelectedImage} />
           ))}
         </div>
 
         {selectedImage && (
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">{selectedImageData?.name}</h2>
-
-            {isLoading && (
-              <div className="flex items-center justify-center h-64 bg-gray-100 rounded">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading image...</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex items-center justify-center h-64 bg-red-50 rounded">
-                <span className="text-red-600">Failed to load image</span>
-              </div>
-            )}
-
-            {imageUrl && !isLoading && (
-              <div className="space-y-4">
-                <img
-                  src={imageUrl}
-                  alt={selectedImageData?.name}
-                  className="w-full h-96 object-cover rounded-lg shadow-md"
-                />
-                <p className="text-gray-600">{selectedImageData?.description}</p>
-              </div>
-            )}
+            <div className="space-y-4">
+              <img
+                src={URL.createObjectURL(selectedImage)}
+                className="w-full h-96 object-cover rounded-lg shadow-md"
+              />
+            </div>
           </div>
         )}
 

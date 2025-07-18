@@ -108,6 +108,22 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * If set by user, stores additional information about the registered element
    */
   meta: Record<string, unknown>
+  /**
+   * Number of times the callback has been fired for this element
+   */
+  callbackFiredCount: number
+  /**
+   * Timestamp when the callback was last fired
+   */
+  lastCallbackFiredAt: number
+  /**
+   * Time in milliseconds after which the callback can be fired again
+   */
+  staleTime: number
+  /**
+   * Whether the callback is currently active (within stale time period)
+   */
+  isCallbackActive: boolean
 }
 
 export type MouseCallbackCounts = {
@@ -252,6 +268,13 @@ export type ForesightRegisterOptions = {
    * If set by user, stores additional information about the registered element
    */
   meta?: Record<string, unknown>
+  /**
+   * Time in milliseconds after which the callback can be fired again.
+   * Set to Infinity to prevent callback from firing again after first execution.
+   * Set to 0 to allow callback to fire immediately again.
+   * @default Infinity
+   */
+  staleTime?: number
 }
 
 /**

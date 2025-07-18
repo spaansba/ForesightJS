@@ -6,6 +6,7 @@ import {
   DEFAULT_HITSLOP,
   DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_SCROLL_MARGIN,
+  DEFAULT_STALE_TIME,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
   MAX_POSITION_HISTORY_SIZE,
@@ -203,9 +204,18 @@ export class ForesightManager {
     hitSlop,
     name,
     meta,
+    staleTime,
   }: ForesightRegisterOptions): ForesightRegisterResult {
     const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
     if (!shouldRegister) {
+      return {
+        isLimitedConnection,
+        isTouchDevice,
+        isRegistered: false,
+        unregister: () => {},
+      }
+    }
+    if (this.elements.has(element)) {
       return {
         isLimitedConnection,
         isTouchDevice,
@@ -244,6 +254,10 @@ export class ForesightManager {
       isRunningCallback: false,
       registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
       meta: meta ?? {},
+      callbackFiredCount: 0,
+      lastCallbackFiredAt: 0,
+      staleTime: staleTime ?? DEFAULT_STALE_TIME,
+      isCallbackActive: true,
     }
 
     this.elements.set(element, elementData)
@@ -260,7 +274,9 @@ export class ForesightManager {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => this.unregister(element, "apiCall"),
+      unregister: () => {
+        this.unregister(element, "apiCall")
+      },
     }
   }
 
@@ -527,10 +543,31 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
+  private makeElementActive(elementData: ForesightElementData) {
+    console.log("here2")
+    elementData.isCallbackActive = true
+    this.positionObserver?.observe(elementData.element)
+  }
+
+  private makeElementUnactive(elementData: ForesightElementData) {
+    elementData.isCallbackActive = false
+    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
+    this.positionObserver?.unobserve(elementData.element)
+
+    // TODO Was last element check
+    // TODO emit element unactive
+  }
+
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    if (elementData.isRunningCallback) {
+    if (elementData.isRunningCallback || !elementData.isCallbackActive) {
       return
     }
+    // Update callback tracking properties
+    elementData.callbackFiredCount++
+    elementData.lastCallbackFiredAt = Date.now()
+
     // We have this async wrapper so we can time exactly how long the callback takes
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType)
@@ -567,10 +604,20 @@ export class ForesightManager {
           errorMessage,
         })
       }
-      this.unregister(elementData.element, "callbackHit")
+
+      // Reset running state
+      elementData.isRunningCallback = false
+
+      // Schedule element to become active again after staleTime
+      if (elementData.staleTime !== Infinity && elementData.staleTime > 0) {
+        setTimeout(() => {
+          this.makeElementActive(elementData)
+        }, elementData.staleTime)
+      }
     }
     elementData.isRunningCallback = true
     asyncCallbackWrapper()
+    this.makeElementUnactive(elementData)
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {

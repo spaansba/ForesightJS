@@ -26,3 +26,7 @@ export const SCROLL_MARGIN_UNIT: string = "px"
 export const DEFAULT_ENABLE_TAB_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_MOUSE_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_SCROLL_PREDICTION: boolean = true
+
+export const DEFAULT_STALE_TIME: number = Infinity
+export const MIN_STALE_TIME: number = 0
+export const STALE_TIME_UNIT: string = "ms"

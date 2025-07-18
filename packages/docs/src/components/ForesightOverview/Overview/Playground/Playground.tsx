@@ -3,18 +3,46 @@ import keyboardStyles from "../Keyboard/styles.module.css"
 import { ForesightCard } from "../Mouse/ForesightCard"
 import { HoverCard } from "../Mouse/HoverCard"
 import { RegularCard } from "../Mouse/RegularCard"
-import SmallButton from "../Keyboard/SmallButton"
 
 import ResetCardsButton from "../Mouse/ResetCardsButton"
 import DebugButton from "../../DebugButton"
 import { useState } from "react"
+import PictureButton from "./PictureButton"
+
+export type ForesightImage = {
+  id: string
+  name: string
+  url: string
+}
+
+const IMAGES: ForesightImage[] = [
+  {
+    id: "mountains",
+    name: "Mountains",
+    url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    url: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    id: "forest",
+    name: "Forest",
+    url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    id: "city",
+    name: "City",
+    url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2070&auto=format&fit=crop",
+  },
+]
 
 function Playground() {
   const [resetTrigger, setResetTrigger] = useState(0)
   const handleResetAll = () => {
     setResetTrigger(prev => prev + 1)
   }
-  const buttonIds = Array.from({ length: 27 }, (_, i) => `btn-${i + 1}`)
 
   return (
     <>
@@ -49,8 +77,9 @@ function Playground() {
       {/* Keyboard Navigation Section */}
       <div key={`playground-${resetTrigger}`} className={styles.keyboardSection}>
         <div className={keyboardStyles.buttonGrid}>
-          {buttonIds.map((id, index) => (
-            <SmallButton key={id} index={index} />
+          {IMAGES.map(image => (
+            // <SmallButton key={id} index={index} />
+            <PictureButton image={image} key={image.id} />
           ))}
         </div>
         <div className={styles.keyboardTip}>
