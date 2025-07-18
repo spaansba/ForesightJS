@@ -12,6 +12,7 @@ import type {
   UpdatedDataPropertyNames,
   UpdatedManagerSetting,
 } from "js.foresight/types/types"
+import type { ElementCallbackInfo } from "packages/js.foresight/dist"
 
 type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
@@ -30,24 +31,24 @@ interface ElementRegisteredPayload extends PayloadBase {
   type: "elementRegistered"
   name: string
   id: string
-  registerCount: number
+  callbackInfo: ElementCallbackInfo
   hitslop: HitSlop
   meta: Record<string, unknown>
 }
 
-interface ElementUnregisteredPayload extends PayloadBase {
-  type: "elementUnregistered"
+interface ElementReactivatedPayload extends PayloadBase {
+  type: "elementReactivated"
   name: string
   id: string
-  registerCount: number
-  unregisterReason: string
-  wasLastElement: boolean
+  callbackInfo: ElementCallbackInfo
   meta: Record<string, unknown>
 }
+
 interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
   name: string
   updatedProps: UpdatedDataPropertyNames[]
+  callbackInfo: ElementCallbackInfo
   isIntersecting: boolean
   meta: Record<string, unknown>
 }
@@ -56,16 +57,16 @@ interface CallbackInvokedPayload extends PayloadBase {
   type: "callbackInvoked"
   name: string
   hitType: CallbackHitType
+  callbackInfo: ElementCallbackInfo
   meta: Record<string, unknown>
 }
 
 interface CallbackCompletedBasePayload extends PayloadBase {
   type: "callbackCompleted"
   name: string
-  callbackRunTimeFormatted: string
-  callbackRunTimeRaw: number
   hitType: CallbackHitType
   status: "success" | "error"
+  callbackInfo: ElementCallbackInfo
   meta: Record<string, unknown>
 }
 
@@ -110,7 +111,7 @@ interface ManagerDataPayload extends PayloadBase {
 
 export type SerializedEventData =
   | ElementRegisteredPayload
-  | ElementUnregisteredPayload
+  | ElementReactivatedPayload
   | ElementDataUpdatedPayload
   | CallbackInvokedPayload
   | CallbackCompletedPayload
@@ -176,7 +177,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "elementRegistered",
           name: event.elementData.name,
           id: event.elementData.element.id || "",
-          registerCount: event.elementData.registerCount,
+          callbackInfo: event.elementData.callbackInfo,
           hitslop: event.elementData.elementBounds.hitSlop,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           meta: event.elementData.meta,
@@ -189,24 +190,22 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
                   event.elementData.registerCount
                 )} time`,
         }
-      case "elementUnregistered":
-        return {
-          type: "elementUnregistered",
-          name: event.elementData.name,
-          id: event.elementData.element.id || "",
-          registerCount: event.elementData.registerCount,
-          unregisterReason: event.unregisterReason,
-          wasLastElement: event.wasLastElement,
-          meta: event.elementData.meta,
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          logId: logId,
-          summary: `${event.elementData.name} - ${event.unregisterReason}`,
-        }
+      // case "elementUnregistered":
+      //   return {
+      //     type: "elementUnregistered",
+      //     name: event.elementData.name,
+      //     id: event.elementData.element.id || "",
+      //     meta: event.elementData.meta,
+      //     localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+      //     logId: logId,
+      //     summary: `${event.elementData.name} - ${event.unregisterReason}`,
+      //   }
       case "elementDataUpdated":
         return {
           type: "elementDataUpdated",
           name: event.elementData.name,
           updatedProps: event.updatedProps || [],
+          callbackInfo: event.elementData.callbackInfo,
           isIntersecting: event.elementData.isIntersectingWithViewport,
           meta: event.elementData.meta,
           localizedTimestamp: new Date().toLocaleTimeString(),
@@ -218,6 +217,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           type: "callbackInvoked",
           name: event.elementData.name,
           hitType: event.hitType,
+          callbackInfo: event.elementData.callbackInfo,
           meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
@@ -232,8 +232,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
             : { status: "success" }),
           name: event.elementData.name,
           hitType: event.hitType,
-          callbackRunTimeFormatted: elapsed,
-          callbackRunTimeRaw: event.elapsed,
+          callbackInfo: event.elementData.callbackInfo,
           meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,

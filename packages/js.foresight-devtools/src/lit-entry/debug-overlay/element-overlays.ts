@@ -5,7 +5,6 @@ import {
   type ForesightElement,
   type CallbackHitType,
   ForesightManager,
-  type ElementUnregisteredEvent,
 } from "js.foresight"
 import type {
   CallbackCompletedEvent,
@@ -14,6 +13,7 @@ import type {
   ElementRegisteredEvent,
 } from "js.foresight"
 import { ForesightDevtools } from "../foresight-devtools"
+import type { ElementReactivatedEvent } from "packages/js.foresight/dist"
 interface ElementOverlay {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
@@ -117,9 +117,11 @@ export class ElementOverlays extends LitElement {
       { signal }
     )
     ForesightManager.instance.addEventListener(
-      "elementUnregistered",
-      (e: ElementUnregisteredEvent) => {
-        this.removeElementOverlay(e.elementData)
+      "elementReactivated",
+      (e: ElementReactivatedEvent) => {
+        if (e.elementData.isIntersectingWithViewport) {
+          this.createOrUpdateElementOverlay(e.elementData)
+        }
       },
       { signal }
     )
@@ -148,6 +150,7 @@ export class ElementOverlays extends LitElement {
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
         this.unhighlightElementCallback(e.elementData)
+        this.removeElementOverlay(e.elementData)
       },
       { signal }
     )

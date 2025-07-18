@@ -10,6 +10,8 @@ export type {
   ForesightElementData,
   ForesightEvent,
   ElementRegisteredEvent,
+  ElementCallbackInfo,
+  ElementReactivatedEvent,
   ElementUnregisteredEvent,
   ElementDataUpdatedEvent,
   CallbackInvokedEvent,

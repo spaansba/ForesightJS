@@ -22,7 +22,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
 
   const { elementRef } = useForesight<HTMLButtonElement>({
     callback: () => refetch(),
-    staleTime: 10000,
+    staleTime: 1000,
   })
   const handleOnClick = () => {
     refetch()

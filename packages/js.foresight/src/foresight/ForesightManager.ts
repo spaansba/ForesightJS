@@ -255,10 +255,14 @@ export class ForesightManager {
       isRunningCallback: false,
       registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
       meta: meta ?? {},
-      callbackFiredCount: 0,
-      lastCallbackFiredAt: 0,
-      staleTime: staleTime ?? DEFAULT_STALE_TIME,
-      isCallbackActive: true,
+      callbackInfo: {
+        callbackFiredCount: 0,
+        lastCallbackFiredAt: undefined,
+        lastCallbackRuntime: undefined,
+        staleTime: staleTime ?? DEFAULT_STALE_TIME,
+        isCallbackActive: true,
+        lastCallbackStatus: undefined,
+      },
     }
 
     this.elements.set(element, elementData)
@@ -544,13 +548,13 @@ export class ForesightManager {
 
   private makeElementActive(elementData: ForesightElementData) {
     console.log("here2")
-    elementData.isCallbackActive = true
+    elementData.callbackInfo.isCallbackActive = true
     this.positionObserver?.observe(elementData.element)
     this.emit({ type: "elementReactivated", elementData: elementData, timestamp: Date.now() })
   }
 
   private makeElementUnactive(elementData: ForesightElementData) {
-    elementData.isCallbackActive = false
+    elementData.callbackInfo.isCallbackActive = false
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
@@ -561,12 +565,12 @@ export class ForesightManager {
   }
 
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    if (elementData.isRunningCallback || !elementData.isCallbackActive) {
+    if (elementData.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
       return
     }
     // Update callback tracking properties
-    elementData.callbackFiredCount++
-    elementData.lastCallbackFiredAt = Date.now()
+    elementData.callbackInfo.callbackFiredCount++
+    elementData.callbackInfo.lastCallbackFiredAt = Date.now()
 
     // We have this async wrapper so we can time exactly how long the callback takes
     const asyncCallbackWrapper = async () => {
@@ -594,12 +598,13 @@ export class ForesightManager {
           `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
           error
         )
+        elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
         this.emit({
           type: "callbackCompleted",
           timestamp: Date.now(),
           elementData,
           hitType: callbackHitType,
-          elapsed: performance.now() - start,
+          elapsed: elementData.callbackInfo.lastCallbackRuntime,
           status: "error",
           errorMessage,
         })
@@ -609,10 +614,13 @@ export class ForesightManager {
       elementData.isRunningCallback = false
 
       // Schedule element to become active again after staleTime
-      if (elementData.staleTime !== Infinity && elementData.staleTime > 0) {
+      if (
+        elementData.callbackInfo.staleTime !== Infinity &&
+        elementData.callbackInfo.staleTime > 0
+      ) {
         setTimeout(() => {
           this.makeElementActive(elementData)
-        }, elementData.staleTime)
+        }, elementData.callbackInfo.staleTime)
       }
     }
     elementData.isRunningCallback = true

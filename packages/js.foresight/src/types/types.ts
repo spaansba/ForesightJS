@@ -110,6 +110,11 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * If set by user, stores additional information about the registered element
    */
   meta: Record<string, unknown>
+
+  callbackInfo: ElementCallbackInfo
+}
+
+export type ElementCallbackInfo = {
   /**
    * Number of times the callback has been fired for this element
    */
@@ -117,7 +122,15 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
   /**
    * Timestamp when the callback was last fired
    */
-  lastCallbackFiredAt: number
+  lastCallbackFiredAt: number | undefined
+  /**
+   * Time in milliseconds it took for the last callback to go from invoked to complete.
+   */
+  lastCallbackRuntime: number | undefined
+  /**
+   * Status of the last ran callback
+   */
+  lastCallbackStatus: "error" | "success" | undefined
   /**
    * Time in milliseconds after which the callback can be fired again
    */
@@ -271,9 +284,8 @@ export type ForesightRegisterOptions = {
    */
   meta?: Record<string, unknown>
   /**
-   * Time in milliseconds after which the callback can be fired again.
+   * Time in milliseconds after which the callback can be fired again and we reactivate the element.
    * Set to Infinity to prevent callback from firing again after first execution.
-   * Set to 0 to allow callback to fire immediately again.
    * @default Infinity
    */
   staleTime?: number
