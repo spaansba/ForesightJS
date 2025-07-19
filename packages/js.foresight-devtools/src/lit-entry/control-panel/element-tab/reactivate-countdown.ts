@@ -1,4 +1,5 @@
-import { LitElement, html, css } from "lit"
+import { ForesightManager, type ForesightElementData } from "js.foresight"
+import { LitElement, css, html } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 
 @customElement("reactivate-countdown")
@@ -6,36 +7,52 @@ export class ReactivateCountdown extends LitElement {
   static styles = [
     css`
       :host {
-        display: block;
+        display: inline-block;
+      }
+
+      .reactivate-button {
+        all: unset;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 3px;
+        transition: background-color 0.2s ease;
+      }
+
+      .reactivate-button:hover {
+        background-color: rgba(255, 165, 0, 0.1);
       }
 
       .countdown-time {
-        color: #ffa500;
-        font-weight: bold;
+        color: #ffa726;
+        font-weight: 500;
+        font-size: 10px;
       }
 
       .countdown-time.infinity {
-        font-size: 1.2em;
-        font-weight: bold;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .countdown-time.clickable {
+        cursor: pointer;
       }
     `,
   ]
 
-  @property({ type: Number })
-  reactivateAfter: number = 0
+  @property() elementData!: ForesightElementData
 
   @state()
   private remainingTime: number = 0
 
   @state()
-  private isActive: boolean = false
+  private isCountdownActive: boolean = false
 
   private intervalId: number | null = null
   private startTime: number = 0
 
   connectedCallback() {
     super.connectedCallback()
-    this.startCountdown()
+    this.checkAndStartCountdown()
   }
 
   disconnectedCallback() {
@@ -44,33 +61,59 @@ export class ReactivateCountdown extends LitElement {
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>) {
-    if (changedProperties.has("reactivateAfter")) {
-      this.clearCountdown()
+    if (changedProperties.has("elementData")) {
+      this.checkAndStartCountdown()
+    }
+  }
+
+  private checkAndStartCountdown() {
+    const callbackInfo = this.elementData?.callbackInfo
+
+    // Show countdown whenever callback is inactive
+    if (!callbackInfo?.isCallbackActive) {
       this.startCountdown()
+    } else {
+      this.clearCountdown()
     }
   }
 
   private startCountdown() {
-    this.isActive = true
-    if (this.reactivateAfter === Infinity) {
+    this.clearCountdown()
+
+    const callbackInfo = this.elementData?.callbackInfo
+    if (!callbackInfo) {
+      return
+    }
+
+    this.isCountdownActive = true
+
+    if (callbackInfo.reactivateAfter === Infinity) {
       this.remainingTime = Infinity
       return
     }
 
-    this.startTime = Date.now()
-    this.remainingTime = this.reactivateAfter
+    const reactivateAfter = callbackInfo.reactivateAfter
+    const startTime = callbackInfo.lastCallbackCompletedAt || Date.now()
 
-    this.intervalId = window.setInterval(() => {
+    this.startTime = startTime
+
+    const updateCountdown = () => {
       const elapsed = Date.now() - this.startTime
-      const remaining = Math.max(0, this.reactivateAfter - elapsed)
+      const remaining = Math.max(0, reactivateAfter - elapsed)
 
       this.remainingTime = remaining
+      this.requestUpdate()
 
-      if (remaining <= 0) {
+      if (remaining <= 0 || this.elementData.callbackInfo.isCallbackActive) {
         this.clearCountdown()
-        this.isActive = false
       }
-    }, 100)
+    }
+
+    updateCountdown()
+
+    if (this.remainingTime > 0) {
+      this.intervalId = window.setInterval(updateCountdown, 100)
+    }
   }
 
   private clearCountdown() {
@@ -78,42 +121,73 @@ export class ReactivateCountdown extends LitElement {
       clearInterval(this.intervalId)
       this.intervalId = null
     }
+    this.isCountdownActive = false
+    this.remainingTime = 0
+  }
+
+  private handleTimerClick(e: MouseEvent) {
+    e.stopPropagation()
+    ForesightManager.instance.reactivate(this.elementData.element)
   }
 
   private formatTime(ms: number): string {
     if (ms === Infinity) {
       return "∞"
     }
-    
+
     const totalSeconds = Math.ceil(ms / 1000)
-    
+
     if (totalSeconds < 60) {
       return `${totalSeconds}s`
     }
-    
+
     const minutes = Math.floor(totalSeconds / 60)
     const seconds = totalSeconds % 60
-    
+
     if (minutes < 60) {
       return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`
     }
-    
+
     const hours = Math.floor(minutes / 60)
     const remainingMinutes = minutes % 60
-    
+
     if (remainingMinutes > 0) {
       return `${hours}h ${remainingMinutes}m`
     }
-    
+
     return `${hours}h`
   }
 
   render() {
-    if (!this.isActive || this.remainingTime === Infinity) {
+    if (!this.isCountdownActive) {
       return html``
     }
 
-    return html` <span class="countdown-time">${this.formatTime(this.remainingTime)}</span> `
+    if (this.remainingTime === Infinity) {
+      return html`
+        <button
+          class="reactivate-button"
+          @click="${this.handleTimerClick}"
+          title="Click to reactivate manually"
+        >
+          <span class="countdown-time infinity">∞</span>
+        </button>
+      `
+    }
+
+    if (this.remainingTime <= 0) {
+      return html``
+    }
+
+    return html`
+      <button
+        class="reactivate-button"
+        @click="${this.handleTimerClick}"
+        title="Click to reactivate immediately"
+      >
+        <span class="countdown-time clickable">${this.formatTime(this.remainingTime)}</span>
+      </button>
+    `
   }
 }
 

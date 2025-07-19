@@ -258,12 +258,13 @@ export class ForesightManager {
       meta: meta ?? {},
       callbackInfo: {
         callbackFiredCount: 0,
-        lastCallbackFiredAt: undefined,
+        lastCallbackInvokedAt: undefined,
+        lastCallbackCompletedAt: undefined,
         lastCallbackRuntime: undefined,
+        lastCallbackStatus: undefined,
         reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
         isCallbackActive: true,
         isRunningCallback: false,
-        lastCallbackStatus: undefined,
       },
     }
 
@@ -548,7 +549,11 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
-  private makeElementActive(elementData: ForesightElementData) {
+  public reactivate(element: ForesightElement) {
+    const elementData = this.elements.get(element)
+    if (!elementData) {
+      return
+    }
     // Only reactivate if callback is not currently running
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
@@ -559,7 +564,7 @@ export class ForesightManager {
 
   private makeElementUnactive(elementData: ForesightElementData) {
     elementData.callbackInfo.callbackFiredCount++
-    elementData.callbackInfo.lastCallbackFiredAt = Date.now()
+    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
     elementData.callbackInfo.isRunningCallback = true
     // dont set isCallbackActive to false here, only do that after the callback is finished running
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
@@ -589,6 +594,7 @@ export class ForesightManager {
       const start = performance.now()
       try {
         await elementData.callback()
+        elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
         elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
         elementData.callbackInfo.lastCallbackStatus = "success"
         this.emit({
@@ -605,6 +611,7 @@ export class ForesightManager {
           `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
           error
         )
+        elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
         elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
         elementData.callbackInfo.lastCallbackStatus = "error"
         this.emit({
@@ -628,7 +635,7 @@ export class ForesightManager {
         elementData.callbackInfo.reactivateAfter > 0
       ) {
         setTimeout(() => {
-          this.makeElementActive(elementData)
+          this.reactivate(elementData.element)
         }, elementData.callbackInfo.reactivateAfter)
       }
     }

@@ -2,7 +2,7 @@ import type { ForesightElementData } from "js.foresight"
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import "../base-tab/expandable-item"
-
+import "./reactivate-countdown"
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
@@ -170,7 +170,8 @@ export class SingleElement extends LitElement {
             >
               ${this.elementData.name || "unnamed"}
             </span>
-            <slot name="reactivate-countdown"></slot>
+            <reactivate-countdown .elementData=${this.elementData}>
+            </reactivate-countdown>
           </div>
           <div slot="details">${this.formatElementDetails()}</div>
         </expandable-item>

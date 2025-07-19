@@ -118,7 +118,11 @@ export type ElementCallbackInfo = {
   /**
    * Timestamp when the callback was last fired
    */
-  lastCallbackFiredAt: number | undefined
+  lastCallbackInvokedAt: number | undefined
+  /**
+   * Timestamp when the last callback was finished
+   */
+  lastCallbackCompletedAt: number | undefined
   /**
    * Time in milliseconds it took for the last callback to go from invoked to complete.
    */

@@ -238,6 +238,14 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
+        const existingElementData = this.elementListItems.get(e.elementData.element)
+        if (existingElementData) {
+          const updatedElementWithId = {
+            ...e.elementData,
+            elementId: existingElementData.elementId,
+          }
+          this.elementListItems.set(e.elementData.element, updatedElementWithId)
+        }
         this.updateActiveCallbackCount()
         this.handleCallbackCompleted(e.hitType)
         this.runningCallbacks.delete(e.elementData.element)
@@ -356,12 +364,6 @@ export class ElementTab extends LitElement {
               .isExpanded=${this.expandedElementIds.has(elementData.elementId)}
               .onToggle=${this.handleElementToggle}
             >
-              ${!elementData.callbackInfo.isCallbackActive ? html`
-                <reactivate-countdown 
-                  slot="reactivate-countdown"
-                  .reactivateAfter=${elementData.callbackInfo.reactivateAfter}
-                ></reactivate-countdown>
-              ` : ''}
             </single-element>
           `
         })}
