@@ -14,7 +14,6 @@ export class ReactivateCountdown extends LitElement {
         all: unset;
         cursor: pointer;
         padding: 2px 4px;
-        border-radius: 3px;
         transition: background-color 0.2s ease;
       }
 
@@ -39,8 +38,7 @@ export class ReactivateCountdown extends LitElement {
     `,
   ]
 
-  @property() elementData!: ForesightElementData
-
+  @property({ hasChanged: () => true }) elementData!: ForesightElementData
   @state()
   private remainingTime: number = 0
 
@@ -61,6 +59,7 @@ export class ReactivateCountdown extends LitElement {
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties)
     if (changedProperties.has("elementData")) {
       this.checkAndStartCountdown()
     }
@@ -69,8 +68,21 @@ export class ReactivateCountdown extends LitElement {
   private checkAndStartCountdown() {
     const callbackInfo = this.elementData?.callbackInfo
 
-    // Show countdown whenever callback is inactive
-    if (!callbackInfo?.isCallbackActive) {
+    if (!callbackInfo) {
+      this.clearCountdown()
+      return
+    }
+
+    // Show countdown when:
+    // 1. Callback is inactive (not currently active)
+    // 2. Callback has completed at least once (has lastCallbackCompletedAt OR lastCallbackInvokedAt)
+    // 3. reactivateAfter is not 0 (otherwise instant reactivation)
+    const hasCallbackHistory =
+      callbackInfo.lastCallbackCompletedAt || callbackInfo.lastCallbackInvokedAt
+    const shouldShowCountdown =
+      !callbackInfo.isCallbackActive && hasCallbackHistory && callbackInfo.reactivateAfter > 0
+
+    if (shouldShowCountdown) {
       this.startCountdown()
     } else {
       this.clearCountdown()
@@ -93,7 +105,13 @@ export class ReactivateCountdown extends LitElement {
     }
 
     const reactivateAfter = callbackInfo.reactivateAfter
-    const startTime = callbackInfo.lastCallbackCompletedAt || Date.now()
+    const startTime = callbackInfo.lastCallbackCompletedAt || callbackInfo.lastCallbackInvokedAt
+
+    if (!startTime) {
+      // No callback has been invoked yet, don't show countdown
+      this.clearCountdown()
+      return
+    }
 
     this.startTime = startTime
 
@@ -125,7 +143,7 @@ export class ReactivateCountdown extends LitElement {
     this.remainingTime = 0
   }
 
-  private handleTimerClick(e: MouseEvent) {
+  private handleTimerClick = (e: MouseEvent) => {
     e.stopPropagation()
     ForesightManager.instance.reactivate(this.elementData.element)
   }

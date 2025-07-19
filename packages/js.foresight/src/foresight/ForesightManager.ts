@@ -81,6 +81,7 @@ export class ForesightManager {
     predictedPoint: { x: 0, y: 0 },
   }
   private isSetup: boolean = false
+  private idCounter: number = 0
   private _globalCallbackHits: CallbackHits = {
     mouse: {
       hover: 0,
@@ -122,6 +123,10 @@ export class ForesightManager {
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor | null = null
   private constructor() {}
+
+  private generateId(): string {
+    return `foresight-${++this.idCounter}`
+  }
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
@@ -238,6 +243,7 @@ export class ForesightManager {
       : this._globalSettings.defaultHitSlop
 
     const elementData: ForesightElementData = {
+      id: this.generateId(),
       element: element,
       callback,
       elementBounds: {
@@ -265,6 +271,7 @@ export class ForesightManager {
         reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
         isCallbackActive: true,
         isRunningCallback: false,
+        reactivateTimeoutId: undefined,
       },
     }
 
@@ -286,16 +293,20 @@ export class ForesightManager {
     }
   }
 
-  public unregister(element: ForesightElement, unregisterReason: ElementUnregisteredReason) {
+  public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason) {
     if (!this.elements.has(element)) {
       return
     }
 
     const elementData = this.elements.get(element)
 
-    // Clear any pending trajectory expiration timeout
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
+
+    // Clear reactivation timeout if exists
+    if (elementData?.callbackInfo.reactivateTimeoutId) {
+      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
     }
 
     this.positionObserver?.unobserve(element)
@@ -312,7 +323,7 @@ export class ForesightManager {
         type: "elementUnregistered",
         elementData: elementData,
         timestamp: Date.now(),
-        unregisterReason: unregisterReason,
+        unregisterReason: unregisterReason ?? "by user",
         wasLastElement: wasLastElement,
       })
     }
@@ -554,6 +565,13 @@ export class ForesightManager {
     if (!elementData) {
       return
     }
+
+    // Clear any existing reactivation timeout
+    if (elementData.callbackInfo.reactivateTimeoutId) {
+      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+      elementData.callbackInfo.reactivateTimeoutId = undefined
+    }
+
     // Only reactivate if callback is not currently running
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
@@ -567,6 +585,13 @@ export class ForesightManager {
     elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
     elementData.callbackInfo.isRunningCallback = true
     // dont set isCallbackActive to false here, only do that after the callback is finished running
+
+    // Clear any existing reactivation timeout
+    if (elementData.callbackInfo.reactivateTimeoutId) {
+      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+      elementData.callbackInfo.reactivateTimeoutId = undefined
+    }
+
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
@@ -634,7 +659,7 @@ export class ForesightManager {
         elementData.callbackInfo.reactivateAfter !== Infinity &&
         elementData.callbackInfo.reactivateAfter > 0
       ) {
-        setTimeout(() => {
+        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
           this.reactivate(elementData.element)
         }, elementData.callbackInfo.reactivateAfter)
       }

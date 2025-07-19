@@ -53,11 +53,10 @@ export class ExpandableItem extends LitElement {
         justify-content: center;
         width: 16px;
         height: 16px;
-        margin-left: 4px;
+
         user-select: none;
         cursor: pointer;
         transition: all 0.2s ease;
-        border-radius: 2px;
       }
 
       .item-toggle:hover {
@@ -65,8 +64,8 @@ export class ExpandableItem extends LitElement {
       }
 
       .item-toggle svg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         fill: none;
         stroke: #b0c4de;
         stroke-width: 2;

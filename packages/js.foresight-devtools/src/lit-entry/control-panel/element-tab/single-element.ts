@@ -3,6 +3,8 @@ import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import "../base-tab/expandable-item"
 import "./reactivate-countdown"
+import { ForesightManager } from "js.foresight"
+import { UNREGISTER_SVG } from "../../../svg/svg-icons"
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
@@ -50,6 +52,23 @@ export class SingleElement extends LitElement {
         box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
       }
 
+      .unregister-button {
+        all: unset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        padding: 1px;
+        cursor: pointer;
+        color: #999;
+      }
+
+      .unregister-button:hover {
+        background-color: rgba(255, 107, 107, 0.1);
+        color: #ff6b6b;
+      }
+
       .element-name {
         flex-grow: 1;
         white-space: nowrap;
@@ -71,7 +90,7 @@ export class SingleElement extends LitElement {
       }
 
       .reactivate-countdown {
-        font-size: 10px;
+        font-size: 14px;
         color: #ffa726;
         font-weight: 500;
         min-width: 0;
@@ -92,11 +111,10 @@ export class SingleElement extends LitElement {
     `,
   ]
 
-  @property() elementData!: ForesightElementData & { elementId: string }
+  @property({ hasChanged: () => true }) elementData!: ForesightElementData
   @property() isActive: boolean = false
   @property() isExpanded: boolean = false
   @property() onToggle: ((elementId: string) => void) | undefined
-
   private getBorderColor(): string {
     if (this.isActive) {
       return "#ffeb3b"
@@ -147,6 +165,11 @@ export class SingleElement extends LitElement {
     return JSON.stringify(details, null, 2)
   }
 
+  private handleUnregister = (e: MouseEvent) => {
+    e.stopPropagation()
+    ForesightManager.instance.unregister(this.elementData.element, "devtools")
+  }
+
   render() {
     const isNotVisible = !this.elementData.isIntersectingWithViewport
 
@@ -155,7 +178,7 @@ export class SingleElement extends LitElement {
         <expandable-item
           .borderColor=${this.getBorderColor()}
           .showCopyButton=${true}
-          .itemId=${this.elementData.elementId}
+          .itemId=${this.elementData.id}
           .isExpanded=${this.isExpanded}
           .onToggle=${this.onToggle}
         >
@@ -170,8 +193,14 @@ export class SingleElement extends LitElement {
             >
               ${this.elementData.name || "unnamed"}
             </span>
-            <reactivate-countdown .elementData=${this.elementData}>
-            </reactivate-countdown>
+            <reactivate-countdown .elementData=${this.elementData}> </reactivate-countdown>
+            <button
+              class="unregister-button"
+              @click="${this.handleUnregister}"
+              title="Unregister element"
+            >
+              ${UNREGISTER_SVG}
+            </button>
           </div>
           <div slot="details">${this.formatElementDetails()}</div>
         </expandable-item>

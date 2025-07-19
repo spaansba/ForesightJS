@@ -81,6 +81,8 @@ export type ForesightRegisterResult = {
  * Represents the data associated with a registered foresight element.
  */
 export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "callback" | "name">> & {
+  /** Unique identifier assigned during registration */
+  id: string
   /** The boundary information for the element. */
   elementBounds: ElementBounds
   /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
@@ -143,6 +145,10 @@ export type ElementCallbackInfo = {
    * If the element is currently running its callback
    */
   isRunningCallback: boolean
+  /**
+   * Timeout ID for the scheduled reactivation, if any
+   */
+  reactivateTimeoutId?: ReturnType<typeof setTimeout>
 }
 
 export type MouseCallbackCounts = {
@@ -381,7 +387,12 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
  * - `disconnected`: The element was automatically unregistered because it was removed from the DOM.
  * - `apiCall`: The developer manually called the `unregister()` function for the element.
  */
-export type ElementUnregisteredReason = "callbackHit" | "disconnected" | "apiCall"
+export type ElementUnregisteredReason =
+  | "callbackHit"
+  | "disconnected"
+  | "apiCall"
+  | "devtools"
+  | (string & {})
 
 export interface ElementDataUpdatedEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "elementDataUpdated"
