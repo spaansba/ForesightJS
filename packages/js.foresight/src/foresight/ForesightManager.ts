@@ -53,6 +53,7 @@ import type { PredictorDependencies } from "./BasePredictor"
 import { MousePredictor } from "./MousePredictor"
 import { ScrollPredictor } from "./ScrollPredictor"
 import { TabPredictor } from "./TabPredictor"
+import type { EmitFunction } from "./BasePredictor"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -119,6 +120,15 @@ export class ForesightManager {
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
+  private hasElementRegisteredListeners = false
+  private hasElementReactivatedListeners = false
+  private hasElementUnregisteredListeners = false
+  private hasElementDataUpdatedListeners = false
+  private hasCallbackInvokedListeners = false
+  private hasCallbackCompletedListeners = false
+  private hasMouseTrajectoryUpdateListeners = false
+  private hasScrollTrajectoryUpdateListeners = false
+  private hasManagerSettingsChangedListeners = false
   private mousePredictor: MousePredictor | null = null
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor | null = null
@@ -126,6 +136,38 @@ export class ForesightManager {
 
   private generateId(): string {
     return `foresight-${++this.idCounter}`
+  }
+
+  private updateListenerFlag(eventType: ForesightEvent, hasListeners: boolean): void {
+    switch (eventType) {
+      case "elementRegistered":
+        this.hasElementRegisteredListeners = hasListeners
+        break
+      case "elementReactivated":
+        this.hasElementReactivatedListeners = hasListeners
+        break
+      case "elementUnregistered":
+        this.hasElementUnregisteredListeners = hasListeners
+        break
+      case "elementDataUpdated":
+        this.hasElementDataUpdatedListeners = hasListeners
+        break
+      case "callbackInvoked":
+        this.hasCallbackInvokedListeners = hasListeners
+        break
+      case "callbackCompleted":
+        this.hasCallbackCompletedListeners = hasListeners
+        break
+      case "mouseTrajectoryUpdate":
+        this.hasMouseTrajectoryUpdateListeners = hasListeners
+        break
+      case "scrollTrajectoryUpdate":
+        this.hasScrollTrajectoryUpdateListeners = hasListeners
+        break
+      case "managerSettingsChanged":
+        this.hasManagerSettingsChangedListeners = hasListeners
+        break
+    }
   }
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
@@ -150,6 +192,7 @@ export class ForesightManager {
     const listeners = this.eventListeners.get(eventType) ?? []
     listeners.push(listener as ForesightEventListener)
     this.eventListeners.set(eventType, listeners)
+    this.updateListenerFlag(eventType, true)
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
@@ -164,6 +207,7 @@ export class ForesightManager {
     const index = listeners.indexOf(listener as ForesightEventListener)
     if (index > -1) {
       listeners.splice(index, 1)
+      this.updateListenerFlag(eventType, listeners.length > 0)
     }
   }
 
@@ -178,6 +222,57 @@ export class ForesightManager {
         listeners[i](event)
       } catch (error) {
         console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
+      }
+    }
+  }
+
+  private emitIfListeners<K extends ForesightEvent>(
+    eventType: K,
+    eventDataFactory: () => Omit<ForesightEventMap[K], 'type'>
+  ): void {
+    const hasListeners = this.getHasListenersFlag(eventType)
+    if (!hasListeners) {
+      return
+    }
+    
+    const event = {
+      type: eventType,
+      ...eventDataFactory(),
+    } as ForesightEventMap[K]
+    
+    this.emit(event)
+  }
+
+  private getHasListenersFlag(eventType: ForesightEvent): boolean {
+    switch (eventType) {
+      case "elementRegistered":
+        return this.hasElementRegisteredListeners
+      case "elementReactivated":
+        return this.hasElementReactivatedListeners
+      case "elementUnregistered":
+        return this.hasElementUnregisteredListeners
+      case "elementDataUpdated":
+        return this.hasElementDataUpdatedListeners
+      case "callbackInvoked":
+        return this.hasCallbackInvokedListeners
+      case "callbackCompleted":
+        return this.hasCallbackCompletedListeners
+      case "mouseTrajectoryUpdate":
+        return this.hasMouseTrajectoryUpdateListeners
+      case "scrollTrajectoryUpdate":
+        return this.hasScrollTrajectoryUpdateListeners
+      case "managerSettingsChanged":
+        return this.hasManagerSettingsChangedListeners
+      default:
+        return false
+    }
+  }
+
+  private createOptimizedEmit(): EmitFunction {
+    return <K extends ForesightEvent>(event: ForesightEventMap[K]) => {
+      const hasListeners = this.getHasListenersFlag(event.type)
+      if (hasListeners) {
+        this.emit(event)
       }
     }
   }
@@ -279,17 +374,16 @@ export class ForesightManager {
 
     this.positionObserver?.observe(element)
 
-    this.emit({
-      type: "elementRegistered",
+    this.emitIfListeners("elementRegistered", () => ({
       timestamp: Date.now(),
       elementData,
-    })
+    }))
 
     return {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => {},
+      unregister: () => this.unregister(element),
     }
   }
 
@@ -318,13 +412,12 @@ export class ForesightManager {
     }
 
     if (elementData) {
-      this.emit({
-        type: "elementUnregistered",
+      this.emitIfListeners("elementUnregistered", () => ({
         elementData: elementData,
         timestamp: Date.now(),
         unregisterReason: unregisterReason ?? "by user",
         wasLastElement: wasLastElement,
-      })
+      }))
     }
   }
 
@@ -511,12 +604,11 @@ export class ForesightManager {
     }
 
     if (changedSettings.length > 0) {
-      this.emit({
-        type: "managerSettingsChanged",
+      this.emitIfListeners("managerSettingsChanged", () => ({
         timestamp: Date.now(),
         managerData: this.getManagerData,
         updatedSettings: changedSettings,
-      })
+      }))
     }
   }
 
@@ -575,7 +667,7 @@ export class ForesightManager {
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
       this.positionObserver?.observe(elementData.element)
-      this.emit({ type: "elementReactivated", elementData: elementData, timestamp: Date.now() })
+      this.emitIfListeners("elementReactivated", () => ({ elementData: elementData, timestamp: Date.now() }))
     }
   }
 
@@ -609,26 +701,24 @@ export class ForesightManager {
     // We have this async wrapper so we can time exactly how long the callback takes
     const asyncCallbackWrapper = async () => {
       this.updateHitCounters(callbackHitType)
-      this.emit({
-        type: "callbackInvoked",
+      this.emitIfListeners("callbackInvoked", () => ({
         timestamp: Date.now(),
         elementData,
         hitType: callbackHitType,
-      })
+      }))
       const start = performance.now()
       try {
         await elementData.callback()
         elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
         elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
         elementData.callbackInfo.lastCallbackStatus = "success"
-        this.emit({
-          type: "callbackCompleted",
+        this.emitIfListeners("callbackCompleted", () => ({
           timestamp: Date.now(),
           elementData,
           hitType: callbackHitType,
           elapsed: performance.now() - start,
-          status: "success",
-        })
+          status: "success" as const,
+        }))
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
         console.error(
@@ -638,15 +728,14 @@ export class ForesightManager {
         elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
         elementData.callbackInfo.lastCallbackRuntime = performance.now() - start
         elementData.callbackInfo.lastCallbackStatus = "error"
-        this.emit({
-          type: "callbackCompleted",
+        this.emitIfListeners("callbackCompleted", () => ({
           timestamp: Date.now(),
           elementData,
           hitType: callbackHitType,
-          elapsed: elementData.callbackInfo.lastCallbackRuntime,
-          status: "error",
+          elapsed: elementData.callbackInfo.lastCallbackRuntime ?? 0,
+          status: "error" as const,
           errorMessage,
-        })
+        }))
       }
 
       // Reset running state
@@ -722,11 +811,10 @@ export class ForesightManager {
       }
     }
     if (updatedProps.length) {
-      this.emit({
-        type: "elementDataUpdated",
+      this.emitIfListeners("elementDataUpdated", () => ({
         elementData: elementData,
         updatedProps,
-      })
+      }))
     }
   }
 
@@ -742,7 +830,7 @@ export class ForesightManager {
     const settings = this._globalSettings
     const dependencies: PredictorDependencies = {
       callCallback: this.callCallback.bind(this),
-      emit: this.emit.bind(this),
+      emit: this.createOptimizedEmit(),
       elements: this.elements,
     }
 
@@ -831,11 +919,10 @@ export class ForesightManager {
 
       this.elements.set(elementData.element, updatedElementData)
 
-      this.emit({
-        type: "elementDataUpdated",
+      this.emitIfListeners("elementDataUpdated", () => ({
         elementData: updatedElementData,
-        updatedProps: ["bounds"],
-      })
+        updatedProps: ["bounds" as const],
+      }))
     }
   }
 }
