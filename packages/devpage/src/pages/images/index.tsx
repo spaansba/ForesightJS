@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { ForesightDevtools } from "js.foresight-devtools"
 import { ForesightImageButton } from "./ForesightImageButton"
+import { SimpleNavigation } from "../../components/SimpleNavigation"
 export type ForesightImage = {
   id: string
   name: string
@@ -44,8 +45,9 @@ export default function ImageGallery() {
   const [selectedImage, setSelectedImage] = useState<ForesightImage | null>(null)
   ForesightDevtools.initialize()
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 font-sans">
+      <SimpleNavigation />
+      <div className="max-w-4xl mx-auto p-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {IMAGES.map(image => (
             <ForesightImageButton

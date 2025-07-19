@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import styles from "./hero.module.css"
 import { PackageManagerTabs } from "./PackageManagerTabs"
 import { ForesightDevtools } from "js.foresight-devtools"
+
 export function Hero() {
   const [stats, setStats] = useState({
     githubStars: 0,
@@ -42,7 +43,9 @@ export function Hero() {
   })
 
   ForesightDevtools.initialize({
-    showDebugger: !(window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
+    showDebugger:
+      typeof window !== "undefined" &&
+      !(window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
     showNameTags: false,
     isControlPanelDefaultMinimized: true,
     logging: { callbackCompleted: true, callbackInvoked: true, managerSettingsChanged: true },

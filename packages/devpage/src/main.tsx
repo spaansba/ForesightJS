@@ -20,7 +20,7 @@ ForesightManager.initialize({
   tabOffset: 2,
 })
 
-ForesightDevtools.initialize()
+ForesightDevtools.initialize({})
 
 const queryClient = new QueryClient()
 

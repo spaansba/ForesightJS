@@ -1,7 +1,7 @@
 import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Link } from "react-router-dom"
+import { SimpleNavigation } from "../../components/SimpleNavigation"
 
 function Mass() {
   const [resetKey, setResetKey] = useState(0)
@@ -31,36 +31,16 @@ function Mass() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100">
-      {/* Header Section */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/60 sticky top-0 z-20 shadow-sm">
+      <SimpleNavigation />
+      
+      {/* Hit Counter Section */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link 
-                to="/" 
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Home
-              </Link>
-              <div className="flex gap-3">
-                <Link 
-                  to="/images" 
-                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                >
-                  Images
-                </Link>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl px-6 py-3 shadow-lg">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{hitCount}</div>
-                  <div className="text-xs text-green-100 font-medium">Callbacks Hit</div>
-                </div>
+          <div className="flex items-center justify-center">
+            <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl px-6 py-3 shadow-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">{hitCount}</div>
+                <div className="text-xs text-green-100 font-medium">Callbacks Hit</div>
               </div>
             </div>
           </div>
