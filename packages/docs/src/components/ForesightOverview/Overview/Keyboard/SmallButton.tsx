@@ -1,4 +1,4 @@
-import { ForesightManager } from "js.foresight"
+import { ForesightManager, type ElementReactivatedEvent } from "js.foresight"
 import React, { useEffect, useRef, useState } from "react"
 import styles from "./styles.module.css"
 function SmallButton({ index }: { index: number }) {
@@ -20,6 +20,19 @@ function SmallButton({ index }: { index: number }) {
     return "Element"
   }
 
+  function handleElementReactivated(e: ElementReactivatedEvent) {
+    if (e.elementData.element === cardRef.current) {
+      setIsLoaded(false)
+      setIsLoading(false)
+    }
+  }
+  useEffect(() => {
+    ForesightManager.instance.addEventListener("elementReactivated", handleElementReactivated)
+    return () => {
+      ForesightManager.instance.removeEventListener("elementReactivated", handleElementReactivated)
+    }
+  }, [])
+
   useEffect(() => {
     if (cardRef.current) {
       const { unregister } = ForesightManager.instance.register({
@@ -35,7 +48,7 @@ function SmallButton({ index }: { index: number }) {
           }
         },
         hitSlop: 0,
-        // reactivateAfter: 10000,
+        reactivateAfter: 8000,
         meta: { buttonNr: index },
       })
 
