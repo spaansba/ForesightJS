@@ -173,13 +173,13 @@ export class ForesightManager {
       return
     }
 
-    listeners.forEach((listener, index) => {
+    for (let i = 0; i < listeners.length; i++) {
       try {
-        listener(event)
+        listeners[i](event)
       } catch (error) {
-        console.error(`Error in ForesightManager event listener ${index} for ${event.type}:`, error)
+        console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
       }
-    })
+    }
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
@@ -294,11 +294,10 @@ export class ForesightManager {
   }
 
   public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason) {
-    if (!this.elements.has(element)) {
+    const elementData = this.elements.get(element)
+    if (!elementData) {
       return
     }
-
-    const elementData = this.elements.get(element)
 
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
@@ -668,12 +667,13 @@ export class ForesightManager {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    const enableScrollPosition = this._globalSettings.enableScrollPrediction
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) {
         continue
       }
-      if (this._globalSettings.enableScrollPrediction) {
+      if (enableScrollPosition) {
         this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
       } else {
         // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
