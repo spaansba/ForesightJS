@@ -18,7 +18,6 @@ const imageQueryOptions = (
         dataUpdatedCount = 0
       }
       const isEven = dataUpdatedCount % 2 === 0
-      console.log(dataUpdatedCount)
       const response = await fetch(isEven ? image.url : image.secondUrl)
       const blob = await response.blob()
       await new Promise(resolve => setTimeout(resolve, 400))

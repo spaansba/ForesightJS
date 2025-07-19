@@ -100,16 +100,19 @@ export class TabPredictor extends BasePredictor {
           elementsToPredict.push(element)
         }
       }
-
-      elementsToPredict.forEach(element => {
+      for (const element of elementsToPredict) {
         const elementData = this.elements.get(element)
-        if (elementData) {
+        if (
+          elementData &&
+          !elementData.callbackInfo.isRunningCallback &&
+          elementData.callbackInfo.isCallbackActive
+        ) {
           this.callCallback(elementData, {
             kind: "tab",
             subType: isReversed ? "reverse" : "forwards",
           })
         }
-      })
+      }
     } catch (error) {
       this.handleError(error, "handleFocusIn")
     }

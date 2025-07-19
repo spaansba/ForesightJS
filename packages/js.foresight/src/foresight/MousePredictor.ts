@@ -77,9 +77,14 @@ export class MousePredictor extends BasePredictor {
       // Use for...of instead of forEach for better performance in hot code path
       // Avoids function call overhead and iterator creation on every mouse move
       for (const currentData of this.elements.values()) {
-        if (!currentData.isIntersectingWithViewport) {
+        if (
+          !currentData.isIntersectingWithViewport ||
+          !currentData.callbackInfo.isCallbackActive ||
+          currentData.callbackInfo.isRunningCallback
+        ) {
           continue
         }
+
         const expandedRect = currentData.elementBounds.expandedRect
 
         if (!this.enableMousePrediction) {

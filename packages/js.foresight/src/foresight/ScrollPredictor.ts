@@ -46,7 +46,11 @@ export class ScrollPredictor extends BasePredictor {
   }
 
   public handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect): void {
-    if (!elementData.isIntersectingWithViewport) {
+    if (
+      !elementData.isIntersectingWithViewport ||
+      elementData.callbackInfo.isRunningCallback ||
+      !elementData.callbackInfo.isCallbackActive
+    ) {
       return
     }
 
