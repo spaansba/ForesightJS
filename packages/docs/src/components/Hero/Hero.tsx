@@ -42,6 +42,7 @@ export function Hero() {
   })
 
   ForesightDevtools.initialize({
+    showDebugger: !(window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
     showNameTags: false,
     isControlPanelDefaultMinimized: true,
     logging: { callbackCompleted: true, callbackInvoked: true, managerSettingsChanged: true },
@@ -50,7 +51,6 @@ export function Hero() {
   const turnOffDebugMode = () => {
     ForesightDevtools.instance.alterDevtoolsSettings({
       showDebugger: false,
-      isControlPanelDefaultMinimized: true,
     })
   }
 
