@@ -73,7 +73,9 @@ export type ForesightRegisterResult = {
   isLimitedConnection: boolean
   /** Whether ForesightJS will actively track this element. False if touch device or limited connection, true otherwise */
   isRegistered: boolean
-  /** Function to unregister the element */
+  /** Function to unregister the element
+   * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
+   */
   unregister: () => void
 }
 
@@ -108,7 +110,9 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * If set by user, stores additional information about the registered element
    */
   meta: Record<string, unknown>
-
+  /**
+   * Callbackinfo for debugging purposes
+   */
   callbackInfo: ElementCallbackInfo
 }
 
