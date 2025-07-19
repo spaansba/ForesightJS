@@ -48,11 +48,6 @@ export class ControlPanel extends LitElement {
       font-size: 15px;
     }
 
-    .title-element-count {
-      font-size: 14px;
-      text-align: right;
-    }
-
     .minimize-button {
       background: none;
       border: none;
@@ -95,8 +90,6 @@ export class ControlPanel extends LitElement {
   @state() private activeTab: ControllerTabs
   @state() private isMinimized: boolean =
     ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
-  @state() private visibleCount: number = 0
-  @state() private totalCount: number = 0
 
   private localStorageSelectedTabKey = "foresight-devtools-control-panel-tab"
   constructor() {
@@ -109,22 +102,6 @@ export class ControlPanel extends LitElement {
     localStorage.setItem(this.localStorageSelectedTabKey, this.activeTab)
   }
 
-  private _handleVisibilityCountChange = (event: Event) => {
-    const customEvent = event as CustomEvent<{ visibleCount: number; totalCount: number }>
-    this.visibleCount = customEvent.detail.visibleCount
-    this.totalCount = customEvent.detail.totalCount
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback()
-    this.addEventListener("visibility-count-updated", this._handleVisibilityCountChange)
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback()
-    this.removeEventListener("visibility-count-updated", this._handleVisibilityCountChange)
-  }
-
   protected render() {
     return html`
       <div class="control-wrapper ${this.isMinimized ? "minimized" : ""}">
@@ -133,11 +110,7 @@ export class ControlPanel extends LitElement {
             -
           </button>
           <h1>Foresight DevTools</h1>
-          <span
-            title="Number of visible registered elements / total registered elements"
-            class="title-element-count"
-            >${this.visibleCount}/${this.totalCount}</span
-          >
+          <div></div>
         </div>
 
         <div class="tab-container ${this.isMinimized ? "hidden" : ""}">

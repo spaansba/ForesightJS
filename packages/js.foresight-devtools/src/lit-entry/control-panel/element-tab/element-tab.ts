@@ -37,6 +37,28 @@ export class ElementTab extends LitElement {
       display: flex;
       gap: 8px;
     }
+
+    .element-section {
+      margin-bottom: 16px;
+    }
+
+    .element-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      margin: 4px 0 4px 0;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .section-header.active {
+      color: #e8e8e8;
+    }
+
+    .section-header.inactive {
+      color: #999;
+    }
   `
 
   @state()
@@ -46,14 +68,6 @@ export class ElementTab extends LitElement {
     tab: { forwards: 0, reverse: 0 },
     total: 0,
   }
-
-  @state()
-  private visibleElementsCount: number = 0
-
-  @state()
-  private activeElementCallbacksCount: number = 0
-  @state()
-  private totalElementsCount: number = 0
 
   @state() private sortDropdown: DropdownOption[]
   @state() private sortOrder: SortElementList
@@ -102,33 +116,6 @@ export class ElementTab extends LitElement {
     this.expandedElementIds = newExpandedElementIds
   }
 
-  private updateActiveCallbackCount() {
-    // Simply use the size of runningCallbacks Set
-    const activeCount = this.runningCallbacks.size
-    this.activeElementCallbacksCount = activeCount
-    this.requestUpdate()
-  }
-
-  private updateVisibilityCounts() {
-    let visibleCount = 0
-    this.elementListItems.forEach(data => {
-      if (data.isIntersectingWithViewport) {
-        visibleCount++
-      }
-    })
-    const totalCount = this.elementListItems.size
-    this.visibleElementsCount = visibleCount
-    this.totalElementsCount = totalCount
-
-    this.dispatchEvent(
-      new CustomEvent("visibility-count-updated", {
-        detail: { visibleCount, totalCount },
-        bubbles: true,
-        composed: true,
-      })
-    )
-  }
-
   private _generateHitsChipTitle(hitCounts: CallbackHits): string {
     const lines: string[] = []
 
@@ -149,15 +136,11 @@ export class ElementTab extends LitElement {
     this._abortController = new AbortController()
     const { signal } = this._abortController
     this.updateElementListFromManager()
-    this.updateVisibilityCounts()
-    this.updateActiveCallbackCount()
 
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.elementData.element, e.elementData)
-        this.updateVisibilityCounts()
-        this.updateActiveCallbackCount()
       },
       { signal }
     )
@@ -168,8 +151,6 @@ export class ElementTab extends LitElement {
         const existingElementData = this.elementListItems.get(e.elementData.element)
         if (existingElementData) {
           this.elementListItems.set(e.elementData.element, e.elementData)
-          this.updateVisibilityCounts()
-          this.updateActiveCallbackCount()
           this.requestUpdate()
         }
       },
@@ -183,7 +164,6 @@ export class ElementTab extends LitElement {
         if (existingElementData) {
           this.elementListItems.set(e.elementData.element, e.elementData)
           this.requestUpdate()
-          this.updateActiveCallbackCount()
         }
       },
       { signal }
@@ -193,8 +173,6 @@ export class ElementTab extends LitElement {
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
         this.elementListItems.delete(e.elementData.element)
-        this.updateVisibilityCounts()
-        this.updateActiveCallbackCount()
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
@@ -212,7 +190,6 @@ export class ElementTab extends LitElement {
           this.elementListItems.set(e.elementData.element, e.elementData)
         }
         this.runningCallbacks.add(e.elementData.element)
-        this.updateActiveCallbackCount()
         this.requestUpdate()
       },
       { signal }
@@ -225,7 +202,6 @@ export class ElementTab extends LitElement {
         if (existingElementData) {
           this.elementListItems.set(e.elementData.element, e.elementData)
         }
-        this.updateActiveCallbackCount()
         this.handleCallbackCompleted(e.hitType)
         this.runningCallbacks.delete(e.elementData.element)
         this.requestUpdate()
@@ -284,6 +260,14 @@ export class ElementTab extends LitElement {
     }
   }
 
+  private getActiveElements(): ForesightElementData[] {
+    return this.getSortedElements().filter(data => data.callbackInfo.isCallbackActive)
+  }
+
+  private getInactiveElements(): ForesightElementData[] {
+    return this.getSortedElements().filter(data => !data.callbackInfo.isCallbackActive)
+  }
+
   private sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
     const position = a.element.compareDocumentPosition(b.element)
     if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
@@ -292,23 +276,9 @@ export class ElementTab extends LitElement {
   }
 
   render() {
-    // Calculate active count directly in render based on isCallbackActive
-    let currentActiveCount = 0
-    this.elementListItems.forEach(data => {
-      if (data.callbackInfo.isCallbackActive) {
-        currentActiveCount++
-      }
-    })
-
     return html`
       <tab-header>
         <div slot="chips" class="chips-container">
-          <chip-element title="Number of visible registered elements / total registered elements">
-            ${this.visibleElementsCount}/${this.totalElementsCount} visible
-          </chip-element>
-          <chip-element title="Number of elements with active callbacks / total elements">
-            ${currentActiveCount}/${this.totalElementsCount} active
-          </chip-element>
           <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">
             ${this.hitCount.total} hits
           </chip-element>
@@ -325,17 +295,46 @@ export class ElementTab extends LitElement {
         .noContentMessage=${this.noContentMessage}
         .hasContent=${!!this.elementListItems.size}
       >
-        ${map(this.getSortedElements(), elementData => {
-          return html`
-            <single-element
-              .elementData=${elementData}
-              .isActive=${this.runningCallbacks.has(elementData.element)}
-              .isExpanded=${this.expandedElementIds.has(elementData.id)}
-              .onToggle=${this.handleElementToggle}
-            >
-            </single-element>
-          `
-        })}
+        ${this.getActiveElements().length > 0
+          ? html`
+              <div class="element-section">
+                <h3 class="section-header active">
+                  Active Elements (${this.getActiveElements().length})
+                </h3>
+                ${map(this.getActiveElements(), elementData => {
+                  return html`
+                    <single-element
+                      .elementData=${elementData}
+                      .isActive=${this.runningCallbacks.has(elementData.element)}
+                      .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                      .onToggle=${this.handleElementToggle}
+                    >
+                    </single-element>
+                  `
+                })}
+              </div>
+            `
+          : ""}
+        ${this.getInactiveElements().length > 0
+          ? html`
+              <div class="element-section">
+                <h3 class="section-header inactive">
+                  Inactive Elements (${this.getInactiveElements().length})
+                </h3>
+                ${map(this.getInactiveElements(), elementData => {
+                  return html`
+                    <single-element
+                      .elementData=${elementData}
+                      .isActive=${this.runningCallbacks.has(elementData.element)}
+                      .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                      .onToggle=${this.handleElementToggle}
+                    >
+                    </single-element>
+                  `
+                })}
+              </div>
+            `
+          : ""}
       </tab-content>
     `
   }
