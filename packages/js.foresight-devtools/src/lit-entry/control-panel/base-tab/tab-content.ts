@@ -27,6 +27,7 @@ export class TabContent extends LitElement {
       }
 
       .content-container {
+        scrollbar-gutter: stable;
         height: 100%;
         min-height: 150px;
         overflow-y: auto;

@@ -215,7 +215,9 @@ export class ForesightManager {
         unregister: () => {},
       }
     }
-    if (this.elements.has(element)) {
+    const previousElementData = this.elements.get(element)
+    if (previousElementData) {
+      previousElementData.registerCount++
       return {
         isLimitedConnection,
         isTouchDevice,
@@ -252,7 +254,7 @@ export class ForesightManager {
       name: name || element.id || "unnamed",
       isIntersectingWithViewport: initialViewportState(initialRect),
 
-      registerCount: (this.registeredElements.get(element)?.registerCount ?? 0) + 1,
+      registerCount: 1,
       meta: meta ?? {},
       callbackInfo: {
         callbackFiredCount: 0,
@@ -559,7 +561,7 @@ export class ForesightManager {
     elementData.callbackInfo.callbackFiredCount++
     elementData.callbackInfo.lastCallbackFiredAt = Date.now()
     elementData.callbackInfo.isRunningCallback = true
-    elementData.callbackInfo.isCallbackActive = false
+    // dont set isCallbackActive to false here, only do that after the callback is finished running
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
@@ -618,6 +620,7 @@ export class ForesightManager {
 
       // Reset running state
       elementData.callbackInfo.isRunningCallback = false
+      elementData.callbackInfo.isCallbackActive = false
 
       // Schedule element to become active again after reactivateAfter
       if (

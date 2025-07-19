@@ -70,6 +70,18 @@ export class SingleElement extends LitElement {
         font-weight: 500;
       }
 
+      .reactivate-countdown {
+        font-size: 10px;
+        color: #ffa726;
+        font-weight: 500;
+        min-width: 0;
+        white-space: nowrap;
+      }
+
+      .reactivate-countdown:empty {
+        display: none;
+      }
+
       :host(.not-visible) {
         opacity: 0.5;
       }
@@ -158,6 +170,7 @@ export class SingleElement extends LitElement {
             >
               ${this.elementData.name || "unnamed"}
             </span>
+            <slot name="reactivate-countdown"></slot>
           </div>
           <div slot="details">${this.formatElementDetails()}</div>
         </expandable-item>

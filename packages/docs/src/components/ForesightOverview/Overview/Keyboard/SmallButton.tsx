@@ -35,7 +35,7 @@ function SmallButton({ index }: { index: number }) {
           }
         },
         hitSlop: 0,
-        reactivateAfter: 10000,
+        // reactivateAfter: 10000,
         meta: { buttonNr: index },
       })
 

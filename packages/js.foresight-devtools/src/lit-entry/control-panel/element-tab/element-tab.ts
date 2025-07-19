@@ -22,6 +22,7 @@ import "../base-tab/tab-header"
 import "../dropdown/single-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../element-tab/single-element"
+import "./reactivate-countdown"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -35,50 +36,6 @@ export class ElementTab extends LitElement {
     .chips-container {
       display: flex;
       gap: 8px;
-    }
-
-    .element-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      flex-shrink: 0;
-      transition: all 0.3s ease;
-    }
-
-    .status-indicator.visible {
-      background-color: #4caf50;
-      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
-    }
-
-    .status-indicator.hidden {
-      background-color: #666;
-      box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
-    }
-
-    .status-indicator.prefetching {
-      background-color: #ffeb3b;
-      box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
-    }
-
-    .element-name {
-      flex-grow: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 11px;
-      font-weight: 500;
-      color: #e8e8e8;
-    }
-
-    .element-name.callback-active {
-      color: #fff;
-      font-weight: 600;
     }
   `
 
@@ -162,6 +119,7 @@ export class ElementTab extends LitElement {
     })
     this.activeElementCallbacksCount = activeCount
   }
+
   private updateVisibilityCounts() {
     let visibleCount = 0
     this.elementListItems.forEach(data => {
@@ -262,8 +220,8 @@ export class ElementTab extends LitElement {
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
-        this.requestUpdate()
         this.runningCallbacks.delete(e.elementData.element)
+        this.requestUpdate()
       },
       { signal }
     )
@@ -272,7 +230,6 @@ export class ElementTab extends LitElement {
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
         this.runningCallbacks.add(e.elementData.element)
-
         this.requestUpdate()
       },
       { signal }
@@ -284,6 +241,7 @@ export class ElementTab extends LitElement {
         this.updateActiveCallbackCount()
         this.handleCallbackCompleted(e.hitType)
         this.runningCallbacks.delete(e.elementData.element)
+        this.requestUpdate()
       },
       { signal }
     )
@@ -310,7 +268,6 @@ export class ElementTab extends LitElement {
   }
 
   private handleCallbackCompleted(hitType: CallbackHitType) {
-    // Direct mutation is more efficient than object spreading
     switch (hitType.kind) {
       case "mouse":
         this.hitCount.mouse[hitType.subType]++
@@ -326,8 +283,6 @@ export class ElementTab extends LitElement {
     }
 
     this.hitCount.total++
-
-    // Trigger LIT's reactive update
     this.requestUpdate()
   }
 
@@ -374,9 +329,6 @@ export class ElementTab extends LitElement {
           <chip-element title="Number of visible registered elements / total registered elements">
             ${this.visibleElementsCount}/${this.totalElementsCount} visible
           </chip-element>
-          <chip-element title="Number of elements with running callbacks / total elements">
-            ${this.runningCallbacks.size}/${this.totalElementsCount} running
-          </chip-element>
           <chip-element title="Number of elements with active callbacks / total elements">
             ${this.activeElementCallbacksCount}/${this.totalElementsCount} active
           </chip-element>
@@ -403,7 +355,14 @@ export class ElementTab extends LitElement {
               .isActive=${this.runningCallbacks.has(elementData.element)}
               .isExpanded=${this.expandedElementIds.has(elementData.elementId)}
               .onToggle=${this.handleElementToggle}
-            ></single-element>
+            >
+              ${!elementData.callbackInfo.isCallbackActive ? html`
+                <reactivate-countdown 
+                  slot="reactivate-countdown"
+                  .reactivateAfter=${elementData.callbackInfo.reactivateAfter}
+                ></reactivate-countdown>
+              ` : ''}
+            </single-element>
           `
         })}
       </tab-content>
