@@ -136,7 +136,11 @@ export type ElementCallbackInfo = {
   /**
    * Status of the last ran callback
    */
-  lastCallbackStatus: callbackStatus
+  lastCallbackStatus: callbackStatus | undefined
+  /**
+   * Last callback error message
+   */
+  lastCallbackErrorMessage: string | undefined | null
   /**
    * Time in milliseconds after which the callback can be fired again
    */
@@ -423,7 +427,7 @@ interface CallbackCompletedEventBase extends ForesightBaseEvent {
 
 export type CallbackCompletedEvent = CallbackCompletedEventBase & {
   status: callbackStatus
-  errorMessage: string | null
+  errorMessage: string | undefined | null
 }
 
 export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {

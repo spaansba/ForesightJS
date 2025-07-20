@@ -278,6 +278,7 @@ export class ForesightManager {
         lastCallbackCompletedAt: undefined,
         lastCallbackRuntime: undefined,
         lastCallbackStatus: undefined,
+        lastCallbackErrorMessage: undefined,
         reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
         isCallbackActive: true,
         isRunningCallback: false,
@@ -644,7 +645,7 @@ export class ForesightManager {
           error
         )
       }
-      elementData.callbackInfo.lastCallbackStatus = status
+
       elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
       this.emit({
         type: "callbackCompleted",
@@ -652,12 +653,14 @@ export class ForesightManager {
         elementData,
         hitType: callbackHitType,
         elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - start),
-        status: status,
-        errorMessage: errorMessage,
+        status: (elementData.callbackInfo.lastCallbackStatus = status),
+        errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
       })
 
       // Reset running state
       elementData.callbackInfo.isRunningCallback = false
+
+      //Only make the callback unactive AFTER the callback is finished running
       elementData.callbackInfo.isCallbackActive = false
 
       // Schedule element to become active again after reactivateAfter
