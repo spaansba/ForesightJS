@@ -73,41 +73,37 @@ When registering elements with the ForesightManager, you can provide configurati
 ```javascript
 const myElement = document.getElementById("my-element")
 
-const { unregister, isTouchDevice } = ForesightManager.instance.register({
+const { isTouchDevice } = ForesightManager.instance.register({
   element: myElement, // The element to monitor
   callback: () => {
     console.log("prefetching")
   }, // Function that executes when interaction is predicted or occurs
   hitSlop: { top: 10, left: 50, right: 50, bottom: 100 }, // Fully invisible "slop" around the element. Basically increases the hover hitbox
   name: "My button name", // A descriptive name, useful for development tools
-  unregisterOnCallback: false, // Should the callback be ran more than ones?
+  meta: { route: "/about" }, // Additional info
+  reactivateAfter: 60 * 1000 * 5, // 5 minutes
 })
-
-// its best practice to unregister the element if you are done with it (return of an useEffect in React for example)
-unregister(element)
 ```
 
 ### Element Registration Parameters
 
 **Typescript Type:** `ForesightRegisterOptions` or `ForesightRegisterOptionsWithoutElement` if you want to omit the `element`
 
-| Parameter  | Type                      | Required | Description                                                                                                                                                                                                      | Default                             |
-| ---------- | ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `element`  | HTMLElement               | Yes      | The DOM element to monitor                                                                                                                                                                                       |                                     |
-| `callback` | function                  | Yes      | Function that executes when interaction is predicted or occurs                                                                                                                                                   |                                     |
-| `hitSlop`  | number \| Rect            | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox                                                                                                                                  | 0 or defaultHitSlop from initialize |
-| `name`     | string                    | No       | A descriptive name for the element, useful for development tools.                                                                                                                                                | element.id or "" if there is no id  |
-| `meta`     | `Record<string, unknown>` | No       | Stores additional information about the registered element (e.g. The path). Visible in all element related [events](/docs/getting_started/events) and in the [devtools](/docs/getting_started/development_tools) | `{}`                                |
+| Parameter         | Type                      | Required | Description                                                                                                                                                                                                      | Default                             |
+| ----------------- | ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `element`         | HTMLElement               | Yes      | The DOM element to monitor                                                                                                                                                                                       |                                     |
+| `callback`        | function                  | Yes      | Function that executes when interaction is predicted or occurs                                                                                                                                                   |                                     |
+| `hitSlop`         | number \| Rect            | No       | Fully invisible "slop" around the element. Basically increases the hover hitbox                                                                                                                                  | 0 or defaultHitSlop from initialize |
+| `name`            | string                    | No       | A descriptive name for the element, useful for development tools.                                                                                                                                                | element.id or "" if there is no id  |
+| `meta`            | `Record<string, unknown>` | No       | Stores additional information about the registered element (e.g. The path). Visible in all element related [events](/docs/getting_started/events) and in the [devtools](/docs/getting_started/development_tools) | `{}`                                |
+| `reactivateAfter` | `number`                  | No       | Time in milliseconds after which the callback can be fired again, match with `staleTime` in [tanstack query](https://tanstack.com/query/latest) for example                                                      | infinity                            |
 
 ### Return Value of register()
 
-The `ForesightManager.instance.register()` method returns an object with the following properties:
-
 **Typescript Type:** `ForesightRegisterResult`
 
-| Property              | Type     | Description                                                                                                                                                                                 |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isTouchDevice`       | boolean  | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started/#what-about-touch-devices-and-slow-connections)       |
-| `isLimitedConnection` | boolean  | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                          |
-| `isRegistered`        | boolean  | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                              |
-| `unregister`          | function | A function that can be called to remove the element from tracking when no longer needed. When `unregisterOnCallback` is true this will be done automatically ones the callback is ran ones. |
+| Property              | Type    | Description                                                                                                                                                                           |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isTouchDevice`       | boolean | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started/#what-about-touch-devices-and-slow-connections) |
+| `isLimitedConnection` | boolean | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                    |
+| `isRegistered`        | boolean | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                        |

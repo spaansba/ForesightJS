@@ -120,15 +120,6 @@ export class ForesightManager {
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
-  private hasElementRegisteredListeners = false
-  private hasElementReactivatedListeners = false
-  private hasElementUnregisteredListeners = false
-  private hasElementDataUpdatedListeners = false
-  private hasCallbackInvokedListeners = false
-  private hasCallbackCompletedListeners = false
-  private hasMouseTrajectoryUpdateListeners = false
-  private hasScrollTrajectoryUpdateListeners = false
-  private hasManagerSettingsChangedListeners = false
   private mousePredictor: MousePredictor | null = null
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor | null = null
@@ -261,7 +252,6 @@ export class ForesightManager {
         expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
         hitSlop: normalizedHitSlop,
       },
-      isHovering: false,
       trajectoryHitData: {
         isTrajectoryHit: false,
         trajectoryHitTime: 0,
@@ -609,8 +599,6 @@ export class ForesightManager {
     if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
       clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
     }
-    this.positionObserver?.unobserve(elementData.element)
-
     // TODO Was last element check
     // TODO emit element unactive
   }
@@ -660,8 +648,9 @@ export class ForesightManager {
       // Reset running state
       elementData.callbackInfo.isRunningCallback = false
 
-      //Only make the callback unactive AFTER the callback is finished running
+      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
       elementData.callbackInfo.isCallbackActive = false
+      this.positionObserver?.unobserve(elementData.element)
 
       // Schedule element to become active again after reactivateAfter
       if (

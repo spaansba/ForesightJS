@@ -44,7 +44,35 @@ When a target element becomes visible, the system activates a `ResizeObserver` t
 
 This smart rootMargin transforms the observer from "observing against viewport" to "observing against the target element". By calculating the rootMargin values, the system creates target-specific observation regions. Other elements on the page are observed by these target-specific IntersectionObservers, and when any element moves and intersects or overlaps with a target, callbacks fire. This enables tracking any position changes affecting the target elements without constantly polling `getBoundingClientRect()` on every element.
 
-With the observer foundation in place, we can now examine how ForesightJS implements its three core prediction mechanisms, starting with mouse trajectory prediction.
+## Element Lifecycle
+
+Understanding the lifecycle of registered elements is crucial for effective use of ForesightJS. Each registered element follows a predictable lifecycle from registration to potential cleanup:
+
+### Registration Flow
+
+1. **Element Registration:** When `ForesightManager.instance.register(element, options)` is called, the element is added to the internal Map with its configuration and initial state.
+
+2. **Callback Execution:** When prediction algorithms detect user intent (mouse trajectory, tab navigation, or scroll prediction), the element's registered callback function is triggered.
+
+3. **Callback Deactivation:** After a callback executes, the element's `isCallbackActive` property is automatically set to `false`, preventing the callback from firing again immediately.
+
+4. **Reactivation Wait:** The element remains in this deactivated state for a duration specified by the `reactivateAfter` option (defaults to infinity, meaning the callback won't reactivate unless manually triggered).
+
+5. **Callback Reactivation:** Once the `reactivateAfter` duration elapses, `isCallbackActive` is set back to `true`, allowing the callback to fire again when user intent is detected.
+
+6. **Lifecycle Continuation:** The element returns to step 2, ready to detect and respond to user intent again.
+
+### Element Cleanup
+
+Elements can be removed from ForesightJS tracking in several ways:
+
+- **Manual Unregistration:** Developers can explicitly remove elements using `ForesightManager.instance.unregister(element)`.
+- **Automatic DOM Cleanup:** When elements are removed from the DOM, the `MutationObserver` automatically detects this change and unregisters them, preventing memory leaks.
+- **Auto-unregistration:** If the `autoUnregister` option is set to `true` during registration, the element will be automatically unregistered after its callback executes once.
+
+This lifecycle ensures efficient memory management while providing developers with fine-grained control over element behavior and cleanup.
+
+With the observer foundation and element lifecycle in place, we can now examine how ForesightJS implements its three core prediction mechanisms, starting with mouse trajectory prediction.
 
 ## Mouse Prediction
 

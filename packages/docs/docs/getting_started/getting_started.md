@@ -75,25 +75,17 @@ This basic example is in vanilla JS, ofcourse most people will use ForesightJS w
 ```javascript
 import { ForesightManager } from "foresightjs"
 
-// Initialize the manager if you want custom global settings (do this once at app startup)
-// If you dont want global settings, you dont have to initialize the manager
-ForesightManager.initialize({
-  trajectoryPredictionTime: 80, // How far ahead (in milliseconds) to predict the mouse trajectory
-})
-
 // Register an element to be tracked
 const myButton = document.getElementById("my-button")
 
-const { isTouchDevice, unregister } = ForesightManager.instance.register({
+// isTouchDevice can be used to change prefetch behaviour if the user is on a touch device
+const { isTouchDevice } = ForesightManager.instance.register({
   element: myButton,
   callback: () => {
     // This is where your prefetching logic goes
   },
   hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
 })
-
-// Later, when done with this element:
-unregister()
 ```
 
 ## Integrations
@@ -116,8 +108,7 @@ npm install js.foresight-devtools
 import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize development tools
-ForesightDevtools.initialize(ForesightManager.instance, {
-  showDebugger: true,
+ForesightDevtools.initialize({
   showNameTags: true,
   sortElementList: "visibility",
 })

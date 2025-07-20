@@ -15,10 +15,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
 
     registerResults.current = ForesightManager.instance.register({
       element: elementRef.current,
-      callback: options.callback,
-      hitSlop: options.hitSlop,
-      name: options.name,
-      reactivateAfter: options.reactivateAfter,
+      ...options,
     })
   }, [options])
 

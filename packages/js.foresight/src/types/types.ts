@@ -82,13 +82,13 @@ export type ForesightRegisterResult = {
 /**
  * Represents the data associated with a registered foresight element.
  */
-export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "callback" | "name">> & {
+export type ForesightElementData = Required<
+  Pick<ForesightRegisterOptions, "callback" | "name" | "meta">
+> & {
   /** Unique identifier assigned during registration */
   id: string
   /** The boundary information for the element. */
   elementBounds: ElementBounds
-  /** True if the mouse cursor is currently hovering over the element's expanded bounds. */
-  isHovering: boolean
   /**
    * Represents trajectory hit related data for a foresight element. Only used for the manager
    */
@@ -106,10 +106,6 @@ export type ForesightElementData = Required<Pick<ForesightRegisterOptions, "call
    * For debugging, check if you are registering the same element multiple times.
    */
   registerCount: number
-  /**
-   * If set by user, stores additional information about the registered element
-   */
-  meta: Record<string, unknown>
   /**
    * Callbackinfo for debugging purposes
    */
@@ -136,7 +132,7 @@ export type ElementCallbackInfo = {
   /**
    * Status of the last ran callback
    */
-  lastCallbackStatus: callbackStatus | undefined
+  lastCallbackStatus: callbackStatus
   /**
    * Last callback error message
    */
@@ -396,6 +392,8 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
  * - `callbackHit`: The element was automatically unregistered after its callback fired.
  * - `disconnected`: The element was automatically unregistered because it was removed from the DOM.
  * - `apiCall`: The developer manually called the `unregister()` function for the element.
+ * - `devtools`: When clicking the trash icon in the devtools element tab
+ * - any other string
  */
 export type ElementUnregisteredReason =
   | "callbackHit"

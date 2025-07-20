@@ -67,6 +67,13 @@ type CallbackInvokedEvent = {
 }
 ```
 
+#### Extra Type Info
+
+[`CallbackHitType`](/docs/getting_started/typescript#callbackhittype)
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+
+---
+
 #### `callbackCompleted`
 
 Fired **_after_** an element's callback is executed.
@@ -76,23 +83,17 @@ type CallbackCompletedEvent = {
   type: "callbackCompleted"
   timestamp: number
   elementData: ForesightElementData
-  hitType: HitType
+  hitType: CallbackHitType
   elapsed: number // Time between callbackInvoked and callbackCompleted
-  status: "success" | "error"
-  errorMessage?: string
+  status: "success" | "error" | undefined
+  errorMessage: string | undefined | null
 }
 ```
 
-**HitType structure**:
+#### Extra Type Info
 
-```typescript
-type HitType =
-  | { kind: "mouse"; subType: "hover" | "trajectory" }
-  | { kind: "tab"; subType: "forwards" | "reverse" }
-  | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
-```
-
----
+[`CallbackHitType`](/docs/getting_started/typescript#callbackhittype)
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
 
 ### Element Lifecycle Events
 
@@ -108,33 +109,53 @@ type ElementRegisteredEvent = {
 }
 ```
 
+#### Extra Type Info
+
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+
+---
+
+#### `elementReactivated`
+
+Fired when the element is reactivated again after its callback has been hit already. This can happen programmatically by hitting `ForesightManager.instance.reactivate(element)` or when the [`reactivateAfter`](/docs/getting_started/config#element-registration-parameters) time runs out on an element.
+
+```typescript
+type ElementUnregisteredEvent = {
+  type: "elementReactivated"
+  timestamp: number
+  elementData: ForesightElementData
+}
+```
+
+#### Extra Type Info
+
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+
 ---
 
 #### `elementUnregistered`
 
-Fired when an element is removed from ForesightManager tracking.
+Fired when an element is removed from ForesightManager's tracking. Can be hit programmatically with `ForesightManager.instance.unregister(element)` or when the element is removed from the DOM.
 
 ```typescript
 type ElementUnregisteredEvent = {
   type: "elementUnregistered"
   timestamp: number
   elementData: ForesightElementData
-  unregisterReason: "callbackHit" | "disconnected" | "apiCall"
+  unregisterReason: "callbackHit" | "disconnected" | "apiCall" | "devtools" | (string & {})
   wasLastElement: boolean
 }
 ```
 
-**Unregister reasons**:
+#### Extra Type Info
 
-- `callbackHit`: Element was automatically unregistered after its callback fired
-- `disconnected`: Element was removed from the DOM
-- `apiCall`: Manually unregistered via `manager.unregister()`
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
 
 ---
 
 #### `elementDataUpdated`
 
-Fired when tracked element data changes (bounds or visibility).
+Fired when tracked element data changes. This only tracks bound/visibility and not callback information, for callback information check `callbackInvoked` / `callbackCompleted`.
 
 ```typescript
 type ElementDataUpdatedEvent = {
@@ -144,11 +165,15 @@ type ElementDataUpdatedEvent = {
 }
 ```
 
+#### Extra Type Info
+
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+
 ### Prediction Events
 
 #### `mouseTrajectoryUpdate`
 
-Fired during mouse movement.
+Fired during mouse movement, is also fired if `enableMousePrediction` is false since when this is false we fallback to `onHover` over trajectory based.
 
 ```typescript
 type MouseTrajectoryUpdateEvent = {
@@ -165,7 +190,7 @@ type MouseTrajectoryUpdateEvent = {
 
 #### `scrollTrajectoryUpdate`
 
-Fired during scroll events when scroll prediction is active.
+Fired during scroll events when `enableScrollPrediction` is active.
 
 ```typescript
 type ScrollTrajectoryUpdateEvent = {
@@ -193,7 +218,8 @@ type ManagerSettingsChangedEvent = {
 }
 ```
 
-**managerData**
-see [getManagerData](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata)
+#### Extra Type Info
+
+[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
 
 ---

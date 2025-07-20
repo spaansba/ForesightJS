@@ -101,6 +101,10 @@ export class MouseTrajectory extends LitElement {
   private handleElementUnregistered = (e: ElementUnregisteredEvent) => {
     if (e.wasLastElement) {
       this._isVisible = false
+      this._trajectoryStyles = {
+        transform: `translate3d(0px, 0px, 0) rotate(0deg)`,
+        width: `0px`,
+      }
     }
   }
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {

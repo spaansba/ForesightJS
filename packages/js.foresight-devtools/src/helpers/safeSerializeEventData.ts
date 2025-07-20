@@ -65,17 +65,15 @@ interface CallbackInvokedPayload extends PayloadBase {
   meta: Record<string, unknown>
 }
 
-interface CallbackCompletedBasePayload extends PayloadBase {
+interface CallbackCompletedPayload extends PayloadBase {
   type: "callbackCompleted"
   name: string
   hitType: CallbackHitType
-  status: "success" | "error"
+  status: "success" | "error" | undefined
+  errorMessage: string | undefined | null
   callbackInfo: ElementCallbackInfo
   meta: Record<string, unknown>
 }
-
-type CallbackCompletedPayload = CallbackCompletedBasePayload &
-  ({ status: "success" } | { status: "error"; errorMessage: string })
 
 interface MouseTrajectoryUpdatePayload extends PayloadBase {
   type: "mouseTrajectoryUpdate"
@@ -249,15 +247,14 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
         const elapsed = formatElapsed(event.elapsed)
         return {
           type: "callbackCompleted",
-          ...(event.status === "error"
-            ? { status: "error", errorMessage: event.errorMessage }
-            : { status: "success" }),
           name: event.elementData.name,
           hitType: event.hitType,
           callbackInfo: event.elementData.callbackInfo,
           meta: event.elementData.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
+          status: event.elementData.callbackInfo.lastCallbackStatus,
+          errorMessage: event.elementData.callbackInfo.lastCallbackErrorMessage,
           summary: `${event.elementData.name} - ${elapsed}`,
         }
       }
