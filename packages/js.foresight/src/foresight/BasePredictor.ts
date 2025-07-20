@@ -30,21 +30,21 @@ export abstract class BasePredictor {
   protected elements: ReadonlyMap<ForesightElement, ForesightElementData>
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
-  
+
   constructor(config: BasePredictorConfig) {
     this.elements = config.dependencies.elements
     this.callCallback = config.dependencies.callCallback
     this.emit = config.dependencies.emit
     this.abortController = new AbortController()
   }
-  
+
   protected abort(): void {
     this.abortController.abort()
   }
 
   public abstract cleanup(): void
   protected abstract initializeListeners(): void
-  
+
   protected handleError(error: unknown, context: string): void {
     console.error(`${this.constructor.name} error in ${context}:`, error)
   }

@@ -136,7 +136,7 @@ export type ElementCallbackInfo = {
   /**
    * Status of the last ran callback
    */
-  lastCallbackStatus: "error" | "success" | undefined
+  lastCallbackStatus: callbackStatus
   /**
    * Time in milliseconds after which the callback can be fired again
    */
@@ -154,6 +154,8 @@ export type ElementCallbackInfo = {
    */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
 }
+
+export type callbackStatus = "error" | "success" | undefined
 
 export type MouseCallbackCounts = {
   hover: number
@@ -419,8 +421,10 @@ interface CallbackCompletedEventBase extends ForesightBaseEvent {
   elapsed: number
 }
 
-export type CallbackCompletedEvent = CallbackCompletedEventBase &
-  ({ status: "success" } | { status: "error"; errorMessage: string })
+export type CallbackCompletedEvent = CallbackCompletedEventBase & {
+  status: callbackStatus
+  errorMessage: string | null
+}
 
 export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "mouseTrajectoryUpdate"
