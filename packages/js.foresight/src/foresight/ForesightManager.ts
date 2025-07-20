@@ -300,7 +300,7 @@ export class ForesightManager {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => this.unregister(element),
+      unregister: () => {},
     }
   }
 

@@ -20,10 +20,6 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
       name: options.name,
       reactivateAfter: options.reactivateAfter,
     })
-
-    return () => {
-      registerResults.current?.unregister()
-    }
   }, [options])
 
   return { elementRef, registerResults }
