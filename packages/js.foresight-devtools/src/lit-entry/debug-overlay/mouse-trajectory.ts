@@ -6,7 +6,7 @@ import {
   type MouseTrajectoryUpdateEvent,
   type ManagerSettingsChangedEvent,
 } from "js.foresight"
-import type { ElementUnregisteredEvent } from "packages/js.foresight/dist"
+import type { ElementUnregisteredEvent } from "js.foresight"
 
 export type Point = {
   x: number

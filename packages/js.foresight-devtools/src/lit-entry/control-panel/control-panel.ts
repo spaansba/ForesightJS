@@ -94,12 +94,30 @@ export class ControlPanel extends LitElement {
   private localStorageSelectedTabKey = "foresight-devtools-control-panel-tab"
   constructor() {
     super()
-    const tab = localStorage.getItem(this.localStorageSelectedTabKey)
-    this.activeTab = (tab as ControllerTabs) || "logs"
+    this.activeTab = this.getStoredTab()
+  }
+
+  private getStoredTab(): ControllerTabs {
+    try {
+      const tab = localStorage.getItem(this.localStorageSelectedTabKey)
+      return (tab as ControllerTabs) || "logs"
+    } catch (error) {
+      console.error(error)
+      return "logs"
+    }
   }
   private _handleTabChange(event: CustomEvent) {
     this.activeTab = event.detail.tab
-    localStorage.setItem(this.localStorageSelectedTabKey, this.activeTab)
+    this.setStoredTab(this.activeTab)
+  }
+
+  private setStoredTab(tab: ControllerTabs): void {
+    try {
+      localStorage.setItem(this.localStorageSelectedTabKey, tab)
+    } catch (error) {
+      // Silently fail - localStorage may be disabled (private browsing, etc.)
+      console.warn("ForesightDevtools: Failed to save tab preference to localStorage:", error)
+    }
   }
 
   protected render() {
@@ -130,8 +148,4 @@ export class ControlPanel extends LitElement {
       </div>
     `
   }
-}
-
-if (!customElements.get("control-panel")) {
-  customElements.define("control-panel", ControlPanel)
 }

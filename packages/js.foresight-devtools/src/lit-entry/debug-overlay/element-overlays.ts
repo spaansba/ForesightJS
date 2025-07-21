@@ -10,10 +10,11 @@ import type {
   CallbackCompletedEvent,
   CallbackInvokedEvent,
   ElementDataUpdatedEvent,
+  ElementReactivatedEvent,
   ElementRegisteredEvent,
+  ElementUnregisteredEvent,
 } from "js.foresight"
 import { ForesightDevtools } from "../foresight-devtools"
-import type { ElementReactivatedEvent, ElementUnregisteredEvent } from "packages/js.foresight/dist"
 interface ElementOverlay {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
