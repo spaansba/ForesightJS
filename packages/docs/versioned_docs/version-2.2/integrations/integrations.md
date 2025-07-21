@@ -21,7 +21,3 @@ Explore framework-specific guides and routing integrations:
 - [React Router](./react/react-router.md)
 - [Next.js](./react/nextjs.md)
 - [useForesight Hook](./react/useForesight.md)
-
-## TanStack
-
-- [TanStack Router](./tanstack.md)

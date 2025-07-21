@@ -17,12 +17,11 @@ last_updated:
 Explore framework-specific guides and routing integrations:
 
 ## React
+
 - [React Router](./react/react-router.md)
 - [Next.js](./react/nextjs.md)
 - [useForesight Hook](./react/useForesight.md)
 
 ## Vue
-- [Vue](./vue/vue.md)
 
-## TanStack
-- [TanStack Router](./tanstack.md)
+- [Vue](./vue/vue.md)
