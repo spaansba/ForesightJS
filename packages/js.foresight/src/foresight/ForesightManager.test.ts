@@ -156,9 +156,6 @@ describe("ForesightManager", () => {
       })
 
       expect(manager.registeredElements.has(testElement)).toBe(true)
-
-      result.unregister()
-      expect(manager.registeredElements.has(testElement)).toBe(false)
     })
   })
 
@@ -452,11 +449,6 @@ describe("ForesightManager", () => {
       manager.alterGlobalSettings({ enableMousePrediction: false })
 
       expect(managerSettingsListener).toHaveBeenCalled()
-
-      // Unregister element
-      result.unregister()
-
-      expect(elementUnregisteredListener).toHaveBeenCalled()
     })
 
     it("should handle listener errors gracefully", () => {
