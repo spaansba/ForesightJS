@@ -169,7 +169,7 @@ export class ForesightManager {
   }
 
   private emit<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
-    const listeners = this.eventListeners.get(event.type)
+    const listeners = this.eventListeners.get(event.type)?.slice()
     if (!listeners) {
       return
     }
