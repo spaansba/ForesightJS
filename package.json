@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "pnpm --parallel --filter \"./packages/**\" dev",
     "build": "pnpm --filter js.foresight* build",
+    "build:prod": "pnpm --filter js.foresight* build:prod",
     "docs:start": "pnpm --filter docs start",
     "docs:build": "pnpm --filter docs build",
     "fsinfo": "node ./scripts/list-packages.js",

@@ -9,7 +9,6 @@ export default defineConfig({
       declarationMap: true,
     },
   },
-  sourcemap: true,
   clean: true,
   minify: true,
   outDir: "dist",
