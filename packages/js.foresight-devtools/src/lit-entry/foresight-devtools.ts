@@ -35,6 +35,7 @@ export class ForesightDevtools extends LitElement {
       managerSettingsChanged: true,
       mouseTrajectoryUpdate: false,
       scrollTrajectoryUpdate: false,
+      deviceStrategyChanged: true,
     },
   }
 
@@ -141,6 +142,7 @@ export class ForesightDevtools extends LitElement {
       this.updateLoggingSetting("managerSettingsChanged", props.logging.managerSettingsChanged)
       this.updateLoggingSetting("mouseTrajectoryUpdate", props.logging.mouseTrajectoryUpdate)
       this.updateLoggingSetting("scrollTrajectoryUpdate", props.logging.scrollTrajectoryUpdate)
+      this.updateLoggingSetting("deviceStrategyChanged", props.logging.deviceStrategyChanged)
     }
   }
 

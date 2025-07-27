@@ -1,8 +1,10 @@
 import { LitElement, css, html } from "lit"
-import { customElement } from "lit/decorators.js"
+import { customElement, state } from "lit/decorators.js"
 import "./element-overlays"
 import "./mouse-trajectory"
 import "./scroll-trajectory"
+import { ForesightManager } from "js.foresight"
+import type { DeviceStrategyChangedEvent } from "packages/js.foresight/dist"
 
 @customElement("debug-overlay")
 export class DebugOverlay extends LitElement {
@@ -21,12 +23,44 @@ export class DebugOverlay extends LitElement {
     `,
   ]
 
+  private _abortController: AbortController | null = null
+  @state()
+  private _strategy: "mouse" | "touch" | "pen" =
+    ForesightManager.instance.getManagerData.currentDeviceStrategy
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+
+    ForesightManager.instance.addEventListener(
+      "deviceStrategyChanged",
+      this.handleDeviceStrategyChange,
+      { signal }
+    )
+  }
+
+  private handleDeviceStrategyChange = (event: DeviceStrategyChangedEvent) => {
+    const { newStrategy, oldStrategy } = event
+    console.log(`Device strategy changed from ${oldStrategy} to ${newStrategy}`)
+    this._strategy = newStrategy
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+  }
+
   render() {
     return html`
       <div id="overlay-container">
-        <mouse-trajectory></mouse-trajectory>
-        <scroll-trajectory></scroll-trajectory>
-        <element-overlays></element-overlays>
+        ${this._strategy === "mouse"
+          ? html`
+              <mouse-trajectory></mouse-trajectory>
+              <scroll-trajectory></scroll-trajectory>
+              <element-overlays></element-overlays>
+            `
+          : ""}
       </div>
     `
   }

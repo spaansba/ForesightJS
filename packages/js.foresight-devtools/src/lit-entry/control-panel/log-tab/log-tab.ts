@@ -224,6 +224,12 @@ export class LogTab extends LitElement {
         title: "Show manager settings change events",
         icon: FILTER_SVG,
       },
+      {
+        value: "deviceStrategyChanged",
+        label: "Strategy Changed",
+        title: "Show strategy change events",
+        icon: FILTER_SVG,
+      },
     ]
   }
 
@@ -347,6 +353,7 @@ export class LogTab extends LitElement {
       managerSettingsChanged: "#f44336",
       mouseTrajectoryUpdate: "#78909c",
       scrollTrajectoryUpdate: "#607d8b",
+      deviceStrategyChanged: "#9c27b0",
     }
     return colorMap[eventType] || "#ffffff"
   }

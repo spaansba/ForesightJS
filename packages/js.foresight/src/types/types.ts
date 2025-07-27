@@ -375,6 +375,7 @@ export interface ForesightEventMap {
   mouseTrajectoryUpdate: MouseTrajectoryUpdateEvent
   scrollTrajectoryUpdate: ScrollTrajectoryUpdateEvent
   managerSettingsChanged: ManagerSettingsChangedEvent
+  deviceStrategyChanged: DeviceStrategyChangedEvent
 }
 
 export type ForesightEvent =
@@ -387,6 +388,13 @@ export type ForesightEvent =
   | "mouseTrajectoryUpdate"
   | "scrollTrajectoryUpdate"
   | "managerSettingsChanged"
+  | "deviceStrategyChanged"
+
+export interface DeviceStrategyChangedEvent extends ForesightBaseEvent {
+  type: "deviceStrategyChanged"
+  newStrategy: CurrentDeviceStrategy
+  oldStrategy: CurrentDeviceStrategy
+}
 
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"

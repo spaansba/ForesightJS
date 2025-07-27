@@ -96,6 +96,12 @@ interface ManagerSettingsChangedPayload extends PayloadBase {
   settingsChanged: UpdatedManagerSetting[]
 }
 
+interface DeviceStrategyChangedPayload extends PayloadBase {
+  type: "deviceStrategyChanged"
+  oldStrategy: string
+  newStrategy: string
+}
+
 interface SerializationErrorPayload extends PayloadBase {
   type: "serializationError"
   error: "Failed to serialize event data"
@@ -121,6 +127,7 @@ export type SerializedEventData =
   | MouseTrajectoryUpdatePayload
   | ScrollTrajectoryUpdatePayload
   | ManagerSettingsChangedPayload
+  | DeviceStrategyChangedPayload
   | ManagerDataPayload
   | SerializationErrorPayload
 
@@ -287,6 +294,15 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: event.updatedSettings.map(setting => setting.setting).join(", "),
+        }
+      case "deviceStrategyChanged":
+        return {
+          type: "deviceStrategyChanged",
+          oldStrategy: event.oldStrategy,
+          newStrategy: event.newStrategy,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          logId: logId,
+          summary: `${event.oldStrategy} → ${event.newStrategy}`,
         }
       default: {
         const _exhaustiveCheck: never = event

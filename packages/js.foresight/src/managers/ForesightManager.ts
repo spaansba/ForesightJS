@@ -462,6 +462,12 @@ export class ForesightManager {
 
   private handlePointerMove = (e: PointerEvent) => {
     if (e.pointerType != this.currentDeviceStrategy) {
+      this.emit({
+        type: "deviceStrategyChanged",
+        timestamp: Date.now(),
+        newStrategy: e.pointerType as CurrentDeviceStrategy,
+        oldStrategy: this.currentDeviceStrategy,
+      })
       this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
     }
     this.pendingPointerEvent = e

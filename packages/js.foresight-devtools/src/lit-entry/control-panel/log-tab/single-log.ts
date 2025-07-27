@@ -121,6 +121,7 @@ export class SingleLog extends LitElement {
       managerSettingsChanged: "#f44336",
       mouseTrajectoryUpdate: "#78909c",
       scrollTrajectoryUpdate: "#607d8b",
+      deviceStrategyChanged: "#9c27b0",
     }
     return colorMap[logType] || "#555"
   }
@@ -137,6 +138,7 @@ export class SingleLog extends LitElement {
       scrollTrajectoryUpdate: "Scroll",
       managerSettingsChanged: "Settings",
       managerDataPayload: "ManagerData",
+      deviceStrategyChanged: "Strategy",
     }
     return eventNames[eventType] || eventType
   }
