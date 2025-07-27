@@ -27,12 +27,13 @@ import {
   isPointInRectangle,
   normalizeHitSlop,
 } from "../helpers/rectAndHitSlop"
-import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
+import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 import type {
   CallbackHits,
   CallbackHitType,
   callbackStatus,
+  CurrentDeviceStrategy,
   ElementUnregisteredReason,
   ForesightElement,
   ForesightElementData,
@@ -54,7 +55,7 @@ import type { PredictorDependencies } from "./BasePredictor"
 import { MousePredictor } from "./MousePredictor"
 import { ScrollPredictor } from "./ScrollPredictor"
 import { TabPredictor } from "./TabPredictor"
-
+import { TouchDevicePredictor } from "./TouchDevicePredictor"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -98,6 +99,8 @@ export class ForesightManager {
       right: 0,
       up: 0,
     },
+    touch: 0,
+    viewport: 0,
     total: 0,
   }
   private _globalSettings: ForesightManagerSettings = {
@@ -115,7 +118,11 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
+    touchDeviceStrategy: "onTouchStart",
   }
+
+  private pendingPointerEvent: PointerEvent | null = null
+  private rafId: number | null = null
 
   private domObserver: MutationObserver | null = null
   private positionObserver: PositionObserver | null = null
@@ -123,7 +130,14 @@ export class ForesightManager {
   private mousePredictor: MousePredictor | null = null
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor | null = null
-  private constructor() {}
+  private touchDevicePredictor: TouchDevicePredictor | null = null
+  private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
+  private constructor() {
+    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
+    if (!this.isSetup) {
+      this.initializeGlobalListeners()
+    }
+  }
 
   private generateId(): string {
     return `foresight-${++this.idCounter}`
@@ -189,6 +203,7 @@ export class ForesightManager {
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventListeners,
+      currentDeviceStrategy: this.currentDeviceStrategy,
     }
   }
 
@@ -212,15 +227,15 @@ export class ForesightManager {
     meta,
     reactivateAfter,
   }: ForesightRegisterOptions): ForesightRegisterResult {
-    const { shouldRegister, isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
-    if (!shouldRegister) {
-      return {
-        isLimitedConnection,
-        isTouchDevice,
-        isRegistered: false,
-        unregister: () => {},
-      }
-    }
+    const { isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
+    // if (!shouldRegister) {
+    //   return {
+    //     isLimitedConnection,
+    //     isTouchDevice,
+    //     isRegistered: false,
+    //     unregister: () => {},
+    //   }
+    // }
     const previousElementData = this.elements.get(element)
     if (previousElementData) {
       previousElementData.registerCount++
@@ -230,11 +245,6 @@ export class ForesightManager {
         isRegistered: false,
         unregister: () => {},
       }
-    }
-
-    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
     }
 
     const initialRect = element.getBoundingClientRect()
@@ -277,9 +287,7 @@ export class ForesightManager {
     }
 
     this.elements.set(element, elementData)
-
-    this.positionObserver?.observe(element)
-
+    this.observeElement(element)
     this.emit({
       type: "elementRegistered",
       timestamp: Date.now(),
@@ -291,6 +299,14 @@ export class ForesightManager {
       isLimitedConnection,
       isRegistered: true,
       unregister: () => {},
+    }
+  }
+
+  private observeElement(element: ForesightElement): void {
+    if (this.currentDeviceStrategy === "mouse") {
+      this.positionObserver?.observe(element)
+    } else {
+      this.touchDevicePredictor?.observeElement(element)
     }
   }
 
@@ -314,9 +330,9 @@ export class ForesightManager {
 
     const wasLastElement = this.elements.size === 0 && this.isSetup
 
-    if (wasLastElement) {
-      this.removeGlobalListeners()
-    }
+    // if (wasLastElement) {
+    //   this.removeGlobalListeners()
+    // }
 
     if (elementData) {
       this.emit({
@@ -329,6 +345,383 @@ export class ForesightManager {
     }
   }
 
+  private updateHitCounters(callbackHitType: CallbackHitType) {
+    switch (callbackHitType.kind) {
+      case "mouse":
+        this._globalCallbackHits.mouse[callbackHitType.subType]++
+        break
+      case "tab":
+        this._globalCallbackHits.tab[callbackHitType.subType]++
+        break
+      case "scroll":
+        this._globalCallbackHits.scroll[callbackHitType.subType]++
+        break
+      case "touch":
+        this._globalCallbackHits.touch++
+        break
+      case "viewport":
+        this._globalCallbackHits.viewport++
+        break
+      default:
+        callbackHitType satisfies never
+    }
+    this._globalCallbackHits.total++
+  }
+
+  public reactivate(element: ForesightElement) {
+    const elementData = this.elements.get(element)
+    if (!elementData) {
+      return
+    }
+
+    // Clear any existing reactivation timeout
+    if (elementData.callbackInfo.reactivateTimeoutId) {
+      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+      elementData.callbackInfo.reactivateTimeoutId = undefined
+    }
+
+    // Only reactivate if callback is not currently running
+    if (!elementData.callbackInfo.isRunningCallback) {
+      elementData.callbackInfo.isCallbackActive = true
+      this.observeElement(element)
+      this.emit({
+        type: "elementReactivated",
+        elementData: elementData,
+        timestamp: Date.now(),
+      })
+    }
+  }
+
+  private makeElementUnactive(elementData: ForesightElementData) {
+    elementData.callbackInfo.callbackFiredCount++
+    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
+    elementData.callbackInfo.isRunningCallback = true
+    // dont set isCallbackActive to false here, only do that after the callback is finished running
+
+    // Clear any existing reactivation timeout
+    if (elementData.callbackInfo.reactivateTimeoutId) {
+      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+      elementData.callbackInfo.reactivateTimeoutId = undefined
+    }
+
+    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
+      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
+    }
+    // TODO Was last element check
+    // TODO emit element unactive
+  }
+
+  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
+    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
+      return
+    }
+
+    this.makeElementUnactive(elementData)
+    // We have this async wrapper so we can time exactly how long the callback takes
+    const asyncCallbackWrapper = async () => {
+      this.updateHitCounters(callbackHitType)
+      this.emit({
+        type: "callbackInvoked",
+        timestamp: Date.now(),
+        elementData,
+        hitType: callbackHitType,
+      })
+
+      const start = performance.now()
+      let status: callbackStatus = undefined
+      let errorMessage = null
+      try {
+        await elementData.callback()
+        status = "success"
+      } catch (error) {
+        errorMessage = error instanceof Error ? error.message : String(error)
+        status = "error"
+        console.error(
+          `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
+          error
+        )
+      }
+
+      elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
+      this.emit({
+        type: "callbackCompleted",
+        timestamp: Date.now(),
+        elementData,
+        hitType: callbackHitType,
+        elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - start),
+        status: (elementData.callbackInfo.lastCallbackStatus = status),
+        errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
+      })
+
+      // Reset running state
+      elementData.callbackInfo.isRunningCallback = false
+
+      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
+      elementData.callbackInfo.isCallbackActive = false
+      this.positionObserver?.unobserve(elementData.element)
+
+      // Schedule element to become active again after reactivateAfter
+      if (
+        elementData.callbackInfo.reactivateAfter !== Infinity &&
+        elementData.callbackInfo.reactivateAfter > 0
+      ) {
+        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
+          this.reactivate(elementData.element)
+        }, elementData.callbackInfo.reactivateAfter)
+      }
+    }
+    asyncCallbackWrapper()
+  }
+
+  private handlePositionChange = (entries: PositionObserverEntry[]) => {
+    const enableScrollPosition = this._globalSettings.enableScrollPrediction
+    for (const entry of entries) {
+      const elementData = this.elements.get(entry.target)
+      if (!elementData) {
+        continue
+      }
+      if (enableScrollPosition) {
+        this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
+      } else {
+        // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
+        if (
+          isPointInRectangle(
+            this.trajectoryPositions.currentPoint,
+            elementData.elementBounds.expandedRect
+          )
+        ) {
+          this.callCallback(elementData, {
+            kind: "mouse",
+            subType: "hover",
+          })
+        }
+      }
+      // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
+      this.handlePositionChangeDataUpdates(elementData, entry)
+    }
+
+    // End batch processing for scroll prediction
+    if (this._globalSettings.enableScrollPrediction) {
+      this.scrollPredictor?.resetScrollProps()
+    }
+  }
+
+  private handlePositionChangeDataUpdates = (
+    elementData: ForesightElementData,
+    entry: PositionObserverEntry
+  ) => {
+    const updatedProps: UpdatedDataPropertyNames[] = []
+    const isNowIntersecting = entry.isIntersecting
+
+    // Track visibility changes
+    if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
+      updatedProps.push("visibility")
+      elementData.isIntersectingWithViewport = isNowIntersecting
+    }
+
+    // Handle bounds updates for intersecting elements
+    if (isNowIntersecting) {
+      updatedProps.push("bounds")
+      elementData.elementBounds = {
+        hitSlop: elementData.elementBounds.hitSlop,
+        originalRect: entry.boundingClientRect,
+        expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
+      }
+    }
+    if (updatedProps.length) {
+      this.emit({
+        type: "elementDataUpdated",
+        elementData: elementData,
+        updatedProps,
+      })
+    }
+  }
+
+  private initializeDesktopPredictors() {
+    const settings = this._globalSettings
+    const dependencies: PredictorDependencies = {
+      callCallback: this.callCallback.bind(this),
+      emit: this.emit.bind(this),
+      elements: this.elements,
+    }
+
+    if (settings.enableTabPrediction && !this.tabPredictor) {
+      this.tabPredictor = new TabPredictor({
+        dependencies,
+        settings: {
+          tabOffset: settings.tabOffset,
+        },
+      })
+    }
+
+    if (settings.enableScrollPrediction && !this.scrollPredictor) {
+      this.scrollPredictor = new ScrollPredictor({
+        dependencies,
+        settings: {
+          scrollMargin: settings.scrollMargin,
+        },
+        trajectoryPositions: this.trajectoryPositions,
+      })
+    }
+
+    this.mousePredictor = new MousePredictor({
+      dependencies,
+      settings: {
+        enableMousePrediction: settings.enableMousePrediction,
+        trajectoryPredictionTime: settings.trajectoryPredictionTime,
+        positionHistorySize: settings.positionHistorySize,
+      },
+      trajectoryPositions: this.trajectoryPositions,
+    })
+
+    this.positionObserver = new PositionObserver(this.handlePositionChange)
+    for (const element of this.elements.keys()) {
+      this.positionObserver.observe(element)
+    }
+  }
+
+  private setDeviceStrategy(strategy: CurrentDeviceStrategy) {
+    if (strategy === "mouse") {
+      this.removeTouchDevicePredictor()
+      this.initializeDesktopPredictors()
+    } else {
+      this.removeDesktopPredictors()
+      this.initializeTouchDevicePredictor()
+    }
+  }
+
+  private handlePointerMove = (e: PointerEvent) => {
+    if (e.pointerType != this.currentDeviceStrategy) {
+      this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
+    }
+    if (e.pointerType !== "mouse") {
+      return
+    }
+    this.pendingPointerEvent = e
+    if (this.rafId) {
+      return
+    }
+    this.rafId = requestAnimationFrame(() => {
+      if (this.pendingPointerEvent) {
+        this.mousePredictor?.processMouseMovement(this.pendingPointerEvent)
+      }
+      this.rafId = null
+    })
+  }
+
+  private initializeTouchDevicePredictor() {
+    this.touchDevicePredictor = new TouchDevicePredictor({
+      dependencies: {
+        callCallback: this.callCallback.bind(this),
+        emit: this.emit.bind(this),
+        elements: this.elements,
+      },
+      touchDeviceStrategy: this._globalSettings.touchDeviceStrategy,
+    })
+  }
+
+  private initializeGlobalListeners() {
+    if (this.isSetup) {
+      return
+    }
+    this.setDeviceStrategy(this.currentDeviceStrategy)
+
+    document.addEventListener("pointermove", this.handlePointerMove)
+    this.domObserver = new MutationObserver(this.handleDomMutations)
+    this.domObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+    })
+
+    this.isSetup = true
+  }
+
+  private removeTouchDevicePredictor() {
+    this.touchDevicePredictor?.cleanup()
+    this.touchDevicePredictor = null
+  }
+
+  private removeDesktopPredictors() {
+    this.mousePredictor?.cleanup()
+    this.mousePredictor = null
+    this.tabPredictor?.cleanup()
+    this.tabPredictor = null
+    this.scrollPredictor?.cleanup()
+    this.scrollPredictor = null
+    this.positionObserver?.disconnect()
+    this.positionObserver = null
+  }
+
+  private removeGlobalListeners() {
+    this.isSetup = false
+    this.domObserver?.disconnect()
+    this.domObserver = null
+
+    this.removeDesktopPredictors()
+
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingPointerEvent = null
+  }
+  /**
+   * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
+   *
+   * @param mutationsList - Array of MutationRecord objects describing the DOM changes
+   *
+   */
+  private handleDomMutations = (mutationsList: MutationRecord[]) => {
+    // Invalidate tabbale elements cache
+    if (mutationsList.length) {
+      this.tabPredictor?.invalidateCache()
+    }
+    for (const mutation of mutationsList) {
+      if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
+        for (const element of this.elements.keys()) {
+          if (!element.isConnected) {
+            this.unregister(element, "disconnected")
+          }
+        }
+      }
+    }
+  }
+
+  private forceUpdateAllElementBounds() {
+    for (const [, elementData] of this.elements) {
+      if (elementData.isIntersectingWithViewport) {
+        this.forceUpdateElementBounds(elementData)
+      }
+    }
+  }
+  /**
+   * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
+   * We need an observer for that
+   */
+  private forceUpdateElementBounds(elementData: ForesightElementData) {
+    const newOriginalRect = elementData.element.getBoundingClientRect()
+    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
+
+    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
+      const updatedElementData = {
+        ...elementData,
+        elementBounds: {
+          ...elementData.elementBounds,
+          originalRect: newOriginalRect,
+          expandedRect,
+        },
+      }
+
+      this.elements.set(elementData.element, updatedElementData)
+
+      this.emit({
+        type: "elementDataUpdated",
+        elementData: updatedElementData,
+        updatedProps: ["bounds" as const],
+      })
+    }
+  }
   private updateNumericSettings(
     newValue: number | undefined,
     setting: NumericSettingKeys,
@@ -511,329 +904,33 @@ export class ForesightManager {
       }
     }
 
+    if (props?.touchDeviceStrategy !== undefined) {
+      const oldTouchDeviceStrategy = this._globalSettings.touchDeviceStrategy
+      const newTouchDeviceStrategy = props.touchDeviceStrategy
+      this._globalSettings.touchDeviceStrategy = newTouchDeviceStrategy
+      changedSettings.push({
+        setting: "touchDeviceStrategy",
+        oldValue: oldTouchDeviceStrategy,
+        newValue: newTouchDeviceStrategy,
+      })
+      this.touchDevicePredictor?.cleanup()
+      this.touchDevicePredictor = null
+      this.touchDevicePredictor = new TouchDevicePredictor({
+        dependencies: {
+          callCallback: this.callCallback.bind(this),
+          emit: this.emit.bind(this),
+          elements: this.elements,
+        },
+        touchDeviceStrategy: newTouchDeviceStrategy,
+      })
+    }
+
     if (changedSettings.length > 0) {
       this.emit({
         type: "managerSettingsChanged",
         timestamp: Date.now(),
         managerData: this.getManagerData,
         updatedSettings: changedSettings,
-      })
-    }
-  }
-
-  /**
-   * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
-   *
-   * @param mutationsList - Array of MutationRecord objects describing the DOM changes
-   *
-   */
-  private handleDomMutations = (mutationsList: MutationRecord[]) => {
-    // Invalidate tabbale elements cache
-    if (mutationsList.length) {
-      this.tabPredictor?.invalidateCache()
-    }
-    for (const mutation of mutationsList) {
-      if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        for (const element of this.elements.keys()) {
-          if (!element.isConnected) {
-            this.unregister(element, "disconnected")
-          }
-        }
-      }
-    }
-  }
-
-  private updateHitCounters(callbackHitType: CallbackHitType) {
-    switch (callbackHitType.kind) {
-      case "mouse":
-        this._globalCallbackHits.mouse[callbackHitType.subType]++
-        break
-      case "tab":
-        this._globalCallbackHits.tab[callbackHitType.subType]++
-        break
-      case "scroll":
-        this._globalCallbackHits.scroll[callbackHitType.subType]++
-        break
-      default:
-        callbackHitType satisfies never
-    }
-    this._globalCallbackHits.total++
-  }
-
-  public reactivate(element: ForesightElement) {
-    const elementData = this.elements.get(element)
-    if (!elementData) {
-      return
-    }
-
-    // Clear any existing reactivation timeout
-    if (elementData.callbackInfo.reactivateTimeoutId) {
-      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-      elementData.callbackInfo.reactivateTimeoutId = undefined
-    }
-
-    // Only reactivate if callback is not currently running
-    if (!elementData.callbackInfo.isRunningCallback) {
-      elementData.callbackInfo.isCallbackActive = true
-      this.positionObserver?.observe(elementData.element)
-      this.emit({
-        type: "elementReactivated",
-        elementData: elementData,
-        timestamp: Date.now(),
-      })
-    }
-  }
-
-  private makeElementUnactive(elementData: ForesightElementData) {
-    elementData.callbackInfo.callbackFiredCount++
-    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
-    elementData.callbackInfo.isRunningCallback = true
-    // dont set isCallbackActive to false here, only do that after the callback is finished running
-
-    // Clear any existing reactivation timeout
-    if (elementData.callbackInfo.reactivateTimeoutId) {
-      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-      elementData.callbackInfo.reactivateTimeoutId = undefined
-    }
-
-    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-    }
-    // TODO Was last element check
-    // TODO emit element unactive
-  }
-
-  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
-      return
-    }
-
-    this.makeElementUnactive(elementData)
-    // We have this async wrapper so we can time exactly how long the callback takes
-    const asyncCallbackWrapper = async () => {
-      this.updateHitCounters(callbackHitType)
-      this.emit({
-        type: "callbackInvoked",
-        timestamp: Date.now(),
-        elementData,
-        hitType: callbackHitType,
-      })
-
-      const start = performance.now()
-      let status: callbackStatus = undefined
-      let errorMessage = null
-      try {
-        await elementData.callback()
-        status = "success"
-      } catch (error) {
-        errorMessage = error instanceof Error ? error.message : String(error)
-        status = "error"
-        console.error(
-          `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
-          error
-        )
-      }
-
-      elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
-      this.emit({
-        type: "callbackCompleted",
-        timestamp: Date.now(),
-        elementData,
-        hitType: callbackHitType,
-        elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - start),
-        status: (elementData.callbackInfo.lastCallbackStatus = status),
-        errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
-      })
-
-      // Reset running state
-      elementData.callbackInfo.isRunningCallback = false
-
-      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
-      elementData.callbackInfo.isCallbackActive = false
-      this.positionObserver?.unobserve(elementData.element)
-
-      // Schedule element to become active again after reactivateAfter
-      if (
-        elementData.callbackInfo.reactivateAfter !== Infinity &&
-        elementData.callbackInfo.reactivateAfter > 0
-      ) {
-        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
-          this.reactivate(elementData.element)
-        }, elementData.callbackInfo.reactivateAfter)
-      }
-    }
-    asyncCallbackWrapper()
-  }
-
-  private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    const enableScrollPosition = this._globalSettings.enableScrollPrediction
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
-      if (!elementData) {
-        continue
-      }
-      if (enableScrollPosition) {
-        this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
-      } else {
-        // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-        if (
-          isPointInRectangle(
-            this.trajectoryPositions.currentPoint,
-            elementData.elementBounds.expandedRect
-          )
-        ) {
-          this.callCallback(elementData, {
-            kind: "mouse",
-            subType: "hover",
-          })
-        }
-      }
-      // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
-      this.handlePositionChangeDataUpdates(elementData, entry)
-    }
-
-    // End batch processing for scroll prediction
-    if (this._globalSettings.enableScrollPrediction) {
-      this.scrollPredictor?.resetScrollProps()
-    }
-  }
-
-  private handlePositionChangeDataUpdates = (
-    elementData: ForesightElementData,
-    entry: PositionObserverEntry
-  ) => {
-    const updatedProps: UpdatedDataPropertyNames[] = []
-    const isNowIntersecting = entry.isIntersecting
-
-    // Track visibility changes
-    if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
-      updatedProps.push("visibility")
-      elementData.isIntersectingWithViewport = isNowIntersecting
-    }
-
-    // Handle bounds updates for intersecting elements
-    if (isNowIntersecting) {
-      updatedProps.push("bounds")
-      elementData.elementBounds = {
-        hitSlop: elementData.elementBounds.hitSlop,
-        originalRect: entry.boundingClientRect,
-        expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
-      }
-    }
-    if (updatedProps.length) {
-      this.emit({
-        type: "elementDataUpdated",
-        elementData: elementData,
-        updatedProps,
-      })
-    }
-  }
-
-  private initializeGlobalListeners() {
-    if (this.isSetup) {
-      return
-    }
-    // To avoid setting up listeners while ssr
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return
-    }
-
-    const settings = this._globalSettings
-    const dependencies: PredictorDependencies = {
-      callCallback: this.callCallback.bind(this),
-      emit: this.emit.bind(this),
-      elements: this.elements,
-    }
-
-    if (settings.enableTabPrediction) {
-      this.tabPredictor = new TabPredictor({
-        dependencies,
-        settings: {
-          tabOffset: settings.tabOffset,
-        },
-      })
-    }
-
-    if (settings.enableScrollPrediction) {
-      this.scrollPredictor = new ScrollPredictor({
-        dependencies,
-        settings: {
-          scrollMargin: settings.scrollMargin,
-        },
-        trajectoryPositions: this.trajectoryPositions,
-      })
-    }
-
-    // Always initialize mouse since if its not enabled we still check for hover and need it for scroll
-    this.mousePredictor = new MousePredictor({
-      dependencies,
-      settings: {
-        enableMousePrediction: settings.enableMousePrediction,
-        trajectoryPredictionTime: settings.trajectoryPredictionTime,
-        positionHistorySize: settings.positionHistorySize,
-      },
-      trajectoryPositions: this.trajectoryPositions,
-    })
-
-    //Mutation observer is to automatically unregister elements when they leave the DOM. Its a fail-safe for if the user forgets to do it.
-    this.domObserver = new MutationObserver(this.handleDomMutations)
-    this.domObserver.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-      attributes: false,
-    })
-
-    // Handles all position based changes and update the rects of the elements. completely async to avoid dirtying the main thread.
-    // Handles resize of elements
-    // Handles resize of viewport
-    // Handles scrolling
-    this.positionObserver = new PositionObserver(this.handlePositionChange)
-
-    this.isSetup = true
-  }
-
-  private removeGlobalListeners() {
-    this.isSetup = false
-    this.domObserver?.disconnect()
-    this.domObserver = null
-    this.positionObserver?.disconnect()
-    this.positionObserver = null
-    this.mousePredictor?.cleanup()
-    this.tabPredictor?.cleanup()
-    this.scrollPredictor?.cleanup()
-  }
-
-  private forceUpdateAllElementBounds() {
-    for (const [, elementData] of this.elements) {
-      if (elementData.isIntersectingWithViewport) {
-        this.forceUpdateElementBounds(elementData)
-      }
-    }
-  }
-  /**
-   * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
-   * We need an observer for that
-   */
-  private forceUpdateElementBounds(elementData: ForesightElementData) {
-    const newOriginalRect = elementData.element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
-
-    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
-      const updatedElementData = {
-        ...elementData,
-        elementBounds: {
-          ...elementData.elementBounds,
-          originalRect: newOriginalRect,
-          expandedRect,
-        },
-      }
-
-      this.elements.set(elementData.element, updatedElementData)
-
-      this.emit({
-        type: "elementDataUpdated",
-        elementData: updatedElementData,
-        updatedProps: ["bounds" as const],
       })
     }
   }

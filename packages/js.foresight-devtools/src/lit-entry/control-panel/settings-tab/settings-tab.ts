@@ -1,4 +1,8 @@
-import type { ForesightManagerSettings, UpdatedManagerSetting } from "js.foresight"
+import type {
+  ForesightManagerSettings,
+  TouchDeviceStrategy,
+  UpdatedManagerSetting,
+} from "js.foresight"
 import { ForesightManager } from "js.foresight"
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
@@ -23,6 +27,9 @@ import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
 import "./setting-item/setting-item-checkbox"
 import "./setting-item/setting-item-range"
+import "./setting-item/setting-item"
+import "../dropdown/single-select-dropdown"
+import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../base-tab/chip"
 import { ForesightDevtools } from "../../foresight-devtools"
 
@@ -77,6 +84,26 @@ export class SettingsTab extends LitElement {
   }>
   @state() private devtoolsSettings: DevtoolsSettings
   @state() private changedSettings: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[] = []
+  @state() private touchDeviceStrategyOptions: DropdownOption[] = [
+    {
+      value: "onTouchStart",
+      label: "On Touch Start",
+      title: "Execute callbacks when user touches registered elements",
+      icon: html`<span>Touch</span>`,
+    },
+    {
+      value: "viewport",
+      label: "Viewport Entry",
+      title: "Execute callbacks when registered elements enter the viewport",
+      icon: html`<span>Viewport</span>`,
+    },
+    {
+      value: "none",
+      label: "None",
+      title: "Disable touch device prediction",
+      icon: html`<span>None</span>`,
+    },
+  ]
 
   private _abortController: AbortController | null = null
 
@@ -135,6 +162,7 @@ export class SettingsTab extends LitElement {
       "positionHistorySize",
       "tabOffset",
       "scrollMargin",
+      "touchDeviceStrategy",
     ]
 
     for (const key of managerKeys) {
@@ -181,6 +209,12 @@ export class SettingsTab extends LitElement {
     }
   }
 
+  private _handleTouchDeviceStrategyChange = (value: string): void => {
+    ForesightManager.instance.alterGlobalSettings({
+      touchDeviceStrategy: value as TouchDeviceStrategy,
+    })
+  }
+
   private async handleCopySettings(): Promise<void> {
     if (!this.managerSettings) {
       return
@@ -205,6 +239,7 @@ export class SettingsTab extends LitElement {
       trajectoryPredictionTime: settings.trajectoryPredictionTime,
       tabOffset: settings.tabOffset,
       scrollMargin: settings.scrollMargin,
+      touchDeviceStrategy: settings.touchDeviceStrategy,
     }
 
     return `ForesightManager.initialize(${JSON.stringify(settingsObject, null, 2)})`
@@ -314,6 +349,21 @@ export class SettingsTab extends LitElement {
                 description="Pixel distance to check from mouse position in scroll direction"
                 setting="scrollMargin"
               ></setting-item-range>
+            </div>
+
+            <div class="settings-group">
+              <h4>Touch Device</h4>
+              <setting-item
+                header="Touch Device Strategy"
+                description="How to handle prediction on touch devices"
+              >
+                <single-select-dropdown
+                  slot="controls"
+                  .dropdownOptions=${this.touchDeviceStrategyOptions}
+                  .selectedOptionValue=${settings.touchDeviceStrategy}
+                  .onSelectionChange=${this._handleTouchDeviceStrategyChange}
+                ></single-select-dropdown>
+              </setting-item>
             </div>
 
             <!-- Developer Tools Group -->

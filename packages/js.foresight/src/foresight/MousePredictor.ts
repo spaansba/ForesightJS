@@ -16,8 +16,6 @@ export interface MousePredictorConfig extends BasePredictorConfig {
 }
 
 export class MousePredictor extends BasePredictor {
-  private pendingMouseEvent: MouseEvent | null = null
-  private rafId: number | null = null
   private enableMousePrediction: boolean
   public trajectoryPredictionTime: number
   public positionHistorySize: number
@@ -31,22 +29,8 @@ export class MousePredictor extends BasePredictor {
     this.trajectoryPositions = config.trajectoryPositions
     this.initializeListeners()
   }
-  protected initializeListeners() {
-    const { signal } = this.abortController
-    document.addEventListener("mousemove", this.handleMouseMove, { signal })
-  }
-
-  private handleMouseMove = (e: MouseEvent) => {
-    this.pendingMouseEvent = e
-    if (this.rafId) return
-
-    this.rafId = requestAnimationFrame(() => {
-      if (this.pendingMouseEvent) {
-        this.processMouseMovement(this.pendingMouseEvent)
-      }
-      this.rafId = null
-    })
-  }
+  protected initializeListeners() {}
+  public cleanup(): void {}
   private updatePointerState(e: MouseEvent): void {
     const currentPoint = { x: e.clientX, y: e.clientY }
     this.trajectoryPositions.currentPoint = currentPoint
@@ -61,21 +45,10 @@ export class MousePredictor extends BasePredictor {
     }
   }
 
-  public cleanup(): void {
-    this.abort()
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
-    this.pendingMouseEvent = null
-  }
-
-  private processMouseMovement(e: MouseEvent): void {
+  public processMouseMovement(e: MouseEvent): void {
     try {
       this.updatePointerState(e)
 
-      // Use for...of instead of forEach for better performance in hot code path
-      // Avoids function call overhead and iterator creation on every mouse move
       for (const currentData of this.elements.values()) {
         if (
           !currentData.isIntersectingWithViewport ||

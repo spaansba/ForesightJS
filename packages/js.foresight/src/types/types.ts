@@ -175,12 +175,16 @@ export type CallbackHits = {
   mouse: MouseCallbackCounts
   tab: TabCallbackCounts
   scroll: ScrollCallbackCounts
+  touch: number
+  viewport: number
 }
 
 export type CallbackHitType =
   | { kind: "mouse"; subType: keyof MouseCallbackCounts }
   | { kind: "tab"; subType: keyof TabCallbackCounts }
   | { kind: "scroll"; subType: keyof ScrollCallbackCounts }
+  | { kind: "touch"; subType?: string }
+  | { kind: "viewport"; subType?: string }
 
 /**
  * Snapshot of the current ForesightManager state
@@ -190,7 +194,10 @@ export type ForesightManagerData = {
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
+  currentDeviceStrategy: CurrentDeviceStrategy
 }
+
+export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
 
 type BaseForesightManagerSettings = {
   /**
@@ -265,7 +272,18 @@ type BaseForesightManagerSettings = {
    * @default 2
    */
   tabOffset: number
+
+  /**
+   * The prefetch strategy used for touch devices.
+   * - `none`: No prefetching is done on touch devices.
+   * - `viewport`: Prefetching is done based on the viewport, meaning elements in the viewport are preloaded.
+   * - `onTouchStart`: Prefetching is done when the user touches the element
+   * @default onTouchStart
+   */
+  touchDeviceStrategy: TouchDeviceStrategy
 }
+
+export type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
 
 /**
  * Configuration options for the ForesightManager

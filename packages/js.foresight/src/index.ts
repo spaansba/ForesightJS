@@ -23,4 +23,5 @@ export type {
   HitSlop,
   CallbackHitType,
   CallbackHits,
+  TouchDeviceStrategy,
 } from "./types/types"

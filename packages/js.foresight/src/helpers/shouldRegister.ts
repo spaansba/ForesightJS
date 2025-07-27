@@ -17,7 +17,7 @@ export function evaluateRegistrationConditions(): ShouldRegister {
  *
  * @returns `true` if the device is likely touch-enabled, `false` otherwise.
  */
-function userUsesTouchDevice(): boolean {
+export function userUsesTouchDevice(): boolean {
   return window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0
 }
 
