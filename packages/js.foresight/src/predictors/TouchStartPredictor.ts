@@ -1,16 +1,35 @@
+import type { ForesightElement } from "js.foresight/types/types"
 import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
 
 export class TouchStartPredictor extends BasePredictor {
-  private intersectionObserver: IntersectionObserver | null = null
-
   constructor(dependencies: PredictorDependencies) {
     super(dependencies)
   }
-  protected initializeListeners(): void {
-    // This predictor does not need to initialize any listeners
-    // as it is used for touch start predictions only
+
+  public connect(): void {
+    this.createNewAbortController()
   }
-  public connect(): void {}
-  public disconnect(): void {}
-  public cleanup(): void {}
+  public disconnect(): void {
+    this.abort()
+  }
+  public observeElement(element: ForesightElement): void {
+    element.addEventListener("touchstart", this.handleTouchStart, {
+      signal: this.abortController.signal,
+    })
+  }
+  public unobserveElement(element: ForesightElement): void {
+    element.removeEventListener("touchstart", this.handleTouchStart)
+  }
+
+  protected handleTouchStart = (e: Event): void => {
+    const touchEvent = e as TouchEvent
+    const target = touchEvent.target as ForesightElement
+    const data = this.elements.get(target)
+    if (data) {
+      this.callCallback(data, {
+        kind: "touch",
+      })
+      this.unobserveElement(target)
+    }
+  }
 }

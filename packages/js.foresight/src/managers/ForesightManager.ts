@@ -104,7 +104,7 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
-    touchDeviceStrategy: "onTouchStart",
+    touchDeviceStrategy: "viewport",
   }
 
   private pendingPointerEvent: PointerEvent | null = null
@@ -114,9 +114,6 @@ export class ForesightManager {
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
   private constructor() {
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
-    }
     const dependencies = {
       elements: this.elements,
       callCallback: this.callCallback.bind(this),
@@ -127,6 +124,8 @@ export class ForesightManager {
     this.touchDeviceHandler = new TouchDeviceHandler(dependencies)
     this.handler =
       this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
+
+    this.initializeGlobalListeners()
   }
 
   private generateId(): string {
@@ -456,31 +455,26 @@ export class ForesightManager {
   }
 
   private setDeviceStrategy(strategy: CurrentDeviceStrategy) {
-    if (strategy === "mouse") {
-      this.touchDeviceHandler.disconnect()
-      this.desktopHandler.connect()
-      this.handler = this.desktopHandler
-    } else {
-      this.desktopHandler.disconnect()
-      this.touchDeviceHandler.connect()
-      this.handler = this.touchDeviceHandler
-    }
+    this.handler.disconnect()
+    this.handler = strategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
+    this.handler.connect()
   }
 
   private handlePointerMove = (e: PointerEvent) => {
     if (e.pointerType != this.currentDeviceStrategy) {
       this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
     }
-    if (e.pointerType !== "mouse") {
-      return
-    }
     this.pendingPointerEvent = e
     if (this.rafId) {
       return
     }
     this.rafId = requestAnimationFrame(() => {
+      if (this.handler instanceof TouchDeviceHandler) {
+        this.rafId = null
+        return
+      }
       if (this.pendingPointerEvent) {
-        // this.desktopHandler.mousePredictor?.processMouseMovement(this.pendingPointerEvent)
+        this.handler.processMouseMovement(this.pendingPointerEvent)
       }
       this.rafId = null
     })
@@ -753,6 +747,9 @@ export class ForesightManager {
         oldValue: oldTouchDeviceStrategy,
         newValue: newTouchDeviceStrategy,
       })
+      if (this.handler instanceof TouchDeviceHandler) {
+        this.handler.setTouchPredictor()
+      }
     }
 
     if (changedSettings.length > 0) {

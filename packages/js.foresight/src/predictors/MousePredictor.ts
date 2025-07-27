@@ -25,12 +25,12 @@ export class MousePredictor extends BasePredictor {
   constructor(config: MousePredictorConfig) {
     super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
-    this.initializeListeners()
   }
-  protected initializeListeners() {}
-  public cleanup(): void {}
+
   public disconnect(): void {}
+
   public connect(): void {}
+
   private updatePointerState(e: MouseEvent): void {
     const currentPoint = { x: e.clientX, y: e.clientY }
     this.trajectoryPositions.currentPoint = currentPoint

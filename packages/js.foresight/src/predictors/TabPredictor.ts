@@ -24,17 +24,18 @@ export class TabPredictor extends BasePredictor {
     super(config)
   }
 
-  protected initializeListeners(): void {
+  public invalidateCache() {
+    this.tabbableElementsCache = []
+    this.lastFocusedIndex = null
+  }
+
+  public connect(): void {
+    this.createNewAbortController()
     const { signal } = this.abortController
     document.addEventListener("keydown", this.handleKeyDown, { signal })
     document.addEventListener("focusin", this.handleFocusIn, { signal })
   }
 
-  public invalidateCache() {
-    this.tabbableElementsCache = []
-    this.lastFocusedIndex = null
-  }
-  public connect(): void {}
   public disconnect(): void {
     this.abort()
     this.tabbableElementsCache = []

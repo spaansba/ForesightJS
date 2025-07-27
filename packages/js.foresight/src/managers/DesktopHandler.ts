@@ -15,24 +15,36 @@ import { CircularBuffer } from "js.foresight/helpers/CircularBuffer"
 import { DEFAULT_POSITION_HISTORY_SIZE } from "js.foresight/constants"
 
 export class DesktopHandler extends BaseHandler {
-  private mousePredictor: MousePredictor | null = null
-  private tabPredictor: TabPredictor | null = null
-  private scrollPredictor: ScrollPredictor | null = null
+  private mousePredictor: MousePredictor
+  private tabPredictor: TabPredictor
+  private scrollPredictor: ScrollPredictor
   private positionObserver: PositionObserver | null = null
   public trajectoryPositions: TrajectoryPositions = {
     positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
-  public enableScrollPrediction: boolean = true
+
   constructor(config: PredictorDependencies) {
     super(config)
+    this.tabPredictor = new TabPredictor(config)
+    this.scrollPredictor = new ScrollPredictor({
+      dependencies: config,
+      trajectoryPositions: this.trajectoryPositions,
+    })
+    this.mousePredictor = new MousePredictor({
+      dependencies: config,
+      trajectoryPositions: this.trajectoryPositions,
+    })
   }
 
   public invalidateTabCache(): void {
     this.tabPredictor?.invalidateCache()
   }
 
+  public processMouseMovement(event: PointerEvent): void {
+    this.mousePredictor.processMouseMovement(event)
+  }
   public connect(): void {
     this.connectTabPredictor()
     this.connectScrollPredictor()
@@ -60,66 +72,29 @@ export class DesktopHandler extends BaseHandler {
   }
 
   public connectTabPredictor(): void {
-    if (this.settings.enableTabPrediction && !this.tabPredictor) {
-      this.tabPredictor = new TabPredictor({
-        dependencies: {
-          elements: this.elements,
-          callCallback: this.callCallback,
-          emit: this.emit,
-        },
-        settings: {
-          tabOffset: this.settings.tabOffset,
-        },
-      })
-    }
+    this.tabPredictor.connect()
   }
 
   public connectScrollPredictor(): void {
-    if (this.settings.enableScrollPrediction && !this.scrollPredictor) {
-      this.scrollPredictor = new ScrollPredictor({
-        dependencies: {
-          elements: this.elements,
-          callCallback: this.callCallback,
-          emit: this.emit,
-        },
-        settings: {
-          scrollMargin: this.settings.scrollMargin,
-        },
-        trajectoryPositions: this.trajectoryPositions,
-      })
-    }
+    this.scrollPredictor.connect()
   }
 
   public connectMousePredictor(): void {
-    if (this.settings.enableMousePrediction && !this.mousePredictor) {
-      this.mousePredictor = new MousePredictor({
-        dependencies: {
-          elements: this.elements,
-          callCallback: this.callCallback,
-          emit: this.emit,
-        },
-        settings: {
-          trajectoryPredictionTime: this.settings.trajectoryPredictionTime,
-          positionHistorySize: this.settings.positionHistorySize,
-          enableMousePrediction: this.settings.enableMousePrediction,
-        },
-        trajectoryPositions: this.trajectoryPositions,
-      })
-    }
+    this.mousePredictor.connect()
   }
 
   public disconnectTabPredictor(): void {
-    this.tabPredictor?.cleanup()
+    this.tabPredictor.disconnect()
   }
   public disconnectScrollPredictor(): void {
-    this.scrollPredictor?.cleanup()
+    this.scrollPredictor.disconnect()
   }
   public disconnectMousePredictor(): void {
-    this.mousePredictor?.cleanup()
+    this.mousePredictor.disconnect()
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    const enableScrollPosition = this.enableScrollPrediction
+    const enableScrollPosition = this.settings.enableScrollPrediction
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
       if (!elementData) {
@@ -150,6 +125,7 @@ export class DesktopHandler extends BaseHandler {
       this.scrollPredictor?.resetScrollProps()
     }
   }
+
   private handlePositionChangeDataUpdates = (
     elementData: ForesightElementData,
     entry: PositionObserverEntry

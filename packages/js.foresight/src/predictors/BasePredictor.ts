@@ -44,10 +44,14 @@ export abstract class BasePredictor {
 
   public abstract connect(): void
   public abstract disconnect(): void
+
   protected abort(): void {
     this.abortController.abort()
   }
-  protected abstract initializeListeners(): void
+
+  protected createNewAbortController(): void {
+    this.abortController = new AbortController()
+  }
 
   protected handleError(error: unknown, context: string): void {
     console.error(`${this.constructor.name} error in ${context}:`, error)

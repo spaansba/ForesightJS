@@ -34,7 +34,6 @@ export class ScrollPredictor extends BasePredictor {
   }
   public connect(): void {}
   public disconnect(): void {
-    this.abort()
     this.resetScrollProps()
   }
 

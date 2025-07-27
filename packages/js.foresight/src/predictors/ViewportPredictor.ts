@@ -1,24 +1,25 @@
-import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
+import type { ForesightElement } from "js.foresight/types/types"
+import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
 
 export class ViewportPredictor extends BasePredictor {
   private intersectionObserver: IntersectionObserver | null = null
-  constructor(dependencies: BasePredictorConfig) {
+  constructor(dependencies: PredictorDependencies) {
     super(dependencies)
-  }
-  protected initializeListeners(): void {
-    // This predictor does not need to initialize any listeners
-    // as it is used for viewport-based predictions only
-  }
-  public cleanup(): void {
-    this.intersectionObserver?.disconnect()
-    this.intersectionObserver = null
   }
 
   public connect(): void {
     this.intersectionObserver = new IntersectionObserver(this.handleViewportEnter.bind(this))
   }
-  public disconnect(): void {}
-
+  public disconnect(): void {
+    this.intersectionObserver?.disconnect()
+    this.intersectionObserver = null
+  }
+  public observeElement(element: ForesightElement): void {
+    this.intersectionObserver?.observe(element)
+  }
+  public unobserveElement(element: ForesightElement): void {
+    this.intersectionObserver?.unobserve(element)
+  }
   protected handleViewportEnter(entries: IntersectionObserverEntry[]): void {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
