@@ -1,7 +1,11 @@
 import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
 import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { isPointInRectangle } from "../helpers/rectAndHitSlop"
-import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
+import {
+  BasePredictor,
+  type BasePredictorConfig,
+  type PredictorDependencies,
+} from "./BasePredictor"
 import type { TrajectoryPositions } from "../types/types"
 
 export interface MousePredictorSettings {
@@ -11,34 +15,30 @@ export interface MousePredictorSettings {
 }
 
 export interface MousePredictorConfig extends BasePredictorConfig {
-  settings: MousePredictorSettings
+  dependencies: PredictorDependencies
   trajectoryPositions: TrajectoryPositions
 }
 
 export class MousePredictor extends BasePredictor {
-  private enableMousePrediction: boolean
-  public trajectoryPredictionTime: number
-  public positionHistorySize: number
   private trajectoryPositions: TrajectoryPositions
 
   constructor(config: MousePredictorConfig) {
-    super(config)
-    this.enableMousePrediction = config.settings.enableMousePrediction
-    this.trajectoryPredictionTime = config.settings.trajectoryPredictionTime
-    this.positionHistorySize = config.settings.positionHistorySize
+    super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
     this.initializeListeners()
   }
   protected initializeListeners() {}
   public cleanup(): void {}
+  public disconnect(): void {}
+  public connect(): void {}
   private updatePointerState(e: MouseEvent): void {
     const currentPoint = { x: e.clientX, y: e.clientY }
     this.trajectoryPositions.currentPoint = currentPoint
-    if (this.enableMousePrediction) {
+    if (this.settings.enableMousePrediction) {
       this.trajectoryPositions.predictedPoint = predictNextMousePosition(
         currentPoint,
         this.trajectoryPositions.positions,
-        this.trajectoryPredictionTime
+        this.settings.trajectoryPredictionTime
       )
     } else {
       this.trajectoryPositions.predictedPoint = currentPoint
@@ -60,7 +60,7 @@ export class MousePredictor extends BasePredictor {
 
         const expandedRect = currentData.elementBounds.expandedRect
 
-        if (!this.enableMousePrediction) {
+        if (!this.settings.enableMousePrediction) {
           if (isPointInRectangle(this.trajectoryPositions.currentPoint, expandedRect)) {
             this.callCallback(currentData, { kind: "mouse", subType: "hover" })
             return
@@ -79,7 +79,7 @@ export class MousePredictor extends BasePredictor {
 
       this.emit({
         type: "mouseTrajectoryUpdate",
-        predictionEnabled: this.enableMousePrediction,
+        predictionEnabled: this.settings.enableMousePrediction,
         trajectoryPositions: this.trajectoryPositions,
       })
     } catch (error) {

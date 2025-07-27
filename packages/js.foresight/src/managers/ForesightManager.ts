@@ -1,4 +1,3 @@
-import { PositionObserver, PositionObserverEntry } from "position-observer"
 import {
   DEFAULT_ENABLE_MOUSE_PREDICTION,
   DEFAULT_ENABLE_SCROLL_PREDICTION,
@@ -18,15 +17,9 @@ import {
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
-import { CircularBuffer } from "../helpers/CircularBuffer"
 import { clampNumber } from "../helpers/clampNumber"
 import { initialViewportState } from "../helpers/initialViewportState"
-import {
-  areRectsEqual,
-  getExpandedRect,
-  isPointInRectangle,
-  normalizeHitSlop,
-} from "../helpers/rectAndHitSlop"
+import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 import type {
@@ -46,16 +39,11 @@ import type {
   ForesightRegisterResult,
   ManagerBooleanSettingKeys,
   NumericSettingKeys,
-  TrajectoryPositions,
-  UpdatedDataPropertyNames,
   UpdatedManagerSetting,
   UpdateForsightManagerSettings,
 } from "../types/types"
-import type { PredictorDependencies } from "./BasePredictor"
-import { MousePredictor } from "./MousePredictor"
-import { ScrollPredictor } from "./ScrollPredictor"
-import { TabPredictor } from "./TabPredictor"
-import { TouchDevicePredictor } from "./TouchDevicePredictor"
+import { DesktopHandler } from "./DesktopHandler"
+import { TouchDeviceHandler } from "./TouchDeviceHandler"
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -77,11 +65,9 @@ import { TouchDevicePredictor } from "./TouchDevicePredictor"
 export class ForesightManager {
   private static manager: ForesightManager
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
-  private trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
-    currentPoint: { x: 0, y: 0 },
-    predictedPoint: { x: 0, y: 0 },
-  }
+  private desktopHandler: DesktopHandler
+  private touchDeviceHandler: TouchDeviceHandler
+  private handler: DesktopHandler | TouchDeviceHandler
   private isSetup: boolean = false
   private idCounter: number = 0
   private _globalCallbackHits: CallbackHits = {
@@ -125,18 +111,22 @@ export class ForesightManager {
   private rafId: number | null = null
 
   private domObserver: MutationObserver | null = null
-  private positionObserver: PositionObserver | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
-  private mousePredictor: MousePredictor | null = null
-  private tabPredictor: TabPredictor | null = null
-  private scrollPredictor: ScrollPredictor | null = null
-  private touchDevicePredictor: TouchDevicePredictor | null = null
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
   private constructor() {
-    // Setup global listeners on every first element added to the manager. It gets removed again when the map is emptied
     if (!this.isSetup) {
       this.initializeGlobalListeners()
     }
+    const dependencies = {
+      elements: this.elements,
+      callCallback: this.callCallback.bind(this),
+      emit: this.emit.bind(this),
+      settings: this._globalSettings,
+    }
+    this.desktopHandler = new DesktopHandler(dependencies)
+    this.touchDeviceHandler = new TouchDeviceHandler(dependencies)
+    this.handler =
+      this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
   }
 
   private generateId(): string {
@@ -287,7 +277,7 @@ export class ForesightManager {
     }
 
     this.elements.set(element, elementData)
-    this.observeElement(element)
+    this.handler.observeElement(element)
     this.emit({
       type: "elementRegistered",
       timestamp: Date.now(),
@@ -299,14 +289,6 @@ export class ForesightManager {
       isLimitedConnection,
       isRegistered: true,
       unregister: () => {},
-    }
-  }
-
-  private observeElement(element: ForesightElement): void {
-    if (this.currentDeviceStrategy === "mouse") {
-      this.positionObserver?.observe(element)
-    } else {
-      this.touchDevicePredictor?.observeElement(element)
     }
   }
 
@@ -325,7 +307,7 @@ export class ForesightManager {
       clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
     }
 
-    this.positionObserver?.unobserve(element)
+    this.handler.unobserveElement(element)
     this.elements.delete(element)
 
     const wasLastElement = this.elements.size === 0 && this.isSetup
@@ -383,7 +365,7 @@ export class ForesightManager {
     // Only reactivate if callback is not currently running
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
-      this.observeElement(element)
+      this.handler.observeElement(element)
       this.emit({
         type: "elementReactivated",
         elementData: elementData,
@@ -458,7 +440,7 @@ export class ForesightManager {
 
       //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
       elementData.callbackInfo.isCallbackActive = false
-      this.positionObserver?.unobserve(elementData.element)
+      this.handler.unobserveElement(elementData.element)
 
       // Schedule element to become active again after reactivateAfter
       if (
@@ -473,120 +455,15 @@ export class ForesightManager {
     asyncCallbackWrapper()
   }
 
-  private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    const enableScrollPosition = this._globalSettings.enableScrollPrediction
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
-      if (!elementData) {
-        continue
-      }
-      if (enableScrollPosition) {
-        this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
-      } else {
-        // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-        if (
-          isPointInRectangle(
-            this.trajectoryPositions.currentPoint,
-            elementData.elementBounds.expandedRect
-          )
-        ) {
-          this.callCallback(elementData, {
-            kind: "mouse",
-            subType: "hover",
-          })
-        }
-      }
-      // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
-      this.handlePositionChangeDataUpdates(elementData, entry)
-    }
-
-    // End batch processing for scroll prediction
-    if (this._globalSettings.enableScrollPrediction) {
-      this.scrollPredictor?.resetScrollProps()
-    }
-  }
-
-  private handlePositionChangeDataUpdates = (
-    elementData: ForesightElementData,
-    entry: PositionObserverEntry
-  ) => {
-    const updatedProps: UpdatedDataPropertyNames[] = []
-    const isNowIntersecting = entry.isIntersecting
-
-    // Track visibility changes
-    if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
-      updatedProps.push("visibility")
-      elementData.isIntersectingWithViewport = isNowIntersecting
-    }
-
-    // Handle bounds updates for intersecting elements
-    if (isNowIntersecting) {
-      updatedProps.push("bounds")
-      elementData.elementBounds = {
-        hitSlop: elementData.elementBounds.hitSlop,
-        originalRect: entry.boundingClientRect,
-        expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
-      }
-    }
-    if (updatedProps.length) {
-      this.emit({
-        type: "elementDataUpdated",
-        elementData: elementData,
-        updatedProps,
-      })
-    }
-  }
-
-  private initializeDesktopPredictors() {
-    const settings = this._globalSettings
-    const dependencies: PredictorDependencies = {
-      callCallback: this.callCallback.bind(this),
-      emit: this.emit.bind(this),
-      elements: this.elements,
-    }
-
-    if (settings.enableTabPrediction && !this.tabPredictor) {
-      this.tabPredictor = new TabPredictor({
-        dependencies,
-        settings: {
-          tabOffset: settings.tabOffset,
-        },
-      })
-    }
-
-    if (settings.enableScrollPrediction && !this.scrollPredictor) {
-      this.scrollPredictor = new ScrollPredictor({
-        dependencies,
-        settings: {
-          scrollMargin: settings.scrollMargin,
-        },
-        trajectoryPositions: this.trajectoryPositions,
-      })
-    }
-
-    this.mousePredictor = new MousePredictor({
-      dependencies,
-      settings: {
-        enableMousePrediction: settings.enableMousePrediction,
-        trajectoryPredictionTime: settings.trajectoryPredictionTime,
-        positionHistorySize: settings.positionHistorySize,
-      },
-      trajectoryPositions: this.trajectoryPositions,
-    })
-
-    this.positionObserver = new PositionObserver(this.handlePositionChange)
-    for (const element of this.elements.keys()) {
-      this.positionObserver.observe(element)
-    }
-  }
-
   private setDeviceStrategy(strategy: CurrentDeviceStrategy) {
     if (strategy === "mouse") {
-      this.removeTouchDevicePredictor()
-      this.initializeDesktopPredictors()
+      this.touchDeviceHandler.disconnect()
+      this.desktopHandler.connect()
+      this.handler = this.desktopHandler
     } else {
-      this.removeDesktopPredictors()
-      this.initializeTouchDevicePredictor()
+      this.desktopHandler.disconnect()
+      this.touchDeviceHandler.connect()
+      this.handler = this.touchDeviceHandler
     }
   }
 
@@ -603,20 +480,9 @@ export class ForesightManager {
     }
     this.rafId = requestAnimationFrame(() => {
       if (this.pendingPointerEvent) {
-        this.mousePredictor?.processMouseMovement(this.pendingPointerEvent)
+        // this.desktopHandler.mousePredictor?.processMouseMovement(this.pendingPointerEvent)
       }
       this.rafId = null
-    })
-  }
-
-  private initializeTouchDevicePredictor() {
-    this.touchDevicePredictor = new TouchDevicePredictor({
-      dependencies: {
-        callCallback: this.callCallback.bind(this),
-        emit: this.emit.bind(this),
-        elements: this.elements,
-      },
-      touchDeviceStrategy: this._globalSettings.touchDeviceStrategy,
     })
   }
 
@@ -637,28 +503,10 @@ export class ForesightManager {
     this.isSetup = true
   }
 
-  private removeTouchDevicePredictor() {
-    this.touchDevicePredictor?.cleanup()
-    this.touchDevicePredictor = null
-  }
-
-  private removeDesktopPredictors() {
-    this.mousePredictor?.cleanup()
-    this.mousePredictor = null
-    this.tabPredictor?.cleanup()
-    this.tabPredictor = null
-    this.scrollPredictor?.cleanup()
-    this.scrollPredictor = null
-    this.positionObserver?.disconnect()
-    this.positionObserver = null
-  }
-
   private removeGlobalListeners() {
     this.isSetup = false
     this.domObserver?.disconnect()
     this.domObserver = null
-
-    this.removeDesktopPredictors()
 
     if (this.rafId) {
       cancelAnimationFrame(this.rafId)
@@ -675,7 +523,7 @@ export class ForesightManager {
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
     // Invalidate tabbale elements cache
     if (mutationsList.length) {
-      this.tabPredictor?.invalidateCache()
+      this.desktopHandler?.invalidateTabCache()
     }
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
@@ -779,7 +627,9 @@ export class ForesightManager {
         oldValue: oldPositionHistorySize,
         newValue: this._globalSettings.positionHistorySize,
       })
-      this.trajectoryPositions.positions.resize(this._globalSettings.positionHistorySize)
+      this.desktopHandler.trajectoryPositions.positions.resize(
+        this._globalSettings.positionHistorySize
+      )
     }
 
     const oldScrollMargin = this._globalSettings.scrollMargin
@@ -791,9 +641,9 @@ export class ForesightManager {
     )
     if (scrollMarginChanged) {
       const newValue = this._globalSettings.scrollMargin
-      if (this.scrollPredictor) {
-        this.scrollPredictor.scrollMargin = newValue
-      }
+      // if (this.scrollPredictor) {
+      //   this.scrollPredictor.scrollMargin = newValue
+      // }
       changedSettings.push({
         setting: "scrollMargin",
         oldValue: oldScrollMargin,
@@ -809,9 +659,15 @@ export class ForesightManager {
       MAX_TAB_OFFSET
     )
     if (tabOffsetChanged) {
-      if (this.tabPredictor) {
-        this.tabPredictor.tabOffset = this._globalSettings.tabOffset
-      }
+      this._globalSettings.tabOffset = clampNumber(
+        props!.tabOffset!,
+        MIN_TAB_OFFSET,
+        MAX_TAB_OFFSET,
+        "tabOffset"
+      )
+      // if (this.tabPredictor) {
+      //   this.tabPredictor.tabOffset = this._globalSettings.tabOffset
+      // }
       changedSettings.push({
         setting: "tabOffset",
         oldValue: oldTabOffset,
@@ -838,21 +694,12 @@ export class ForesightManager {
       "enableScrollPrediction"
     )
     if (enableScrollPredictionChanged) {
-      if (this._globalSettings.enableScrollPrediction) {
-        this.scrollPredictor = new ScrollPredictor({
-          dependencies: {
-            callCallback: this.callCallback.bind(this),
-            emit: this.emit.bind(this),
-            elements: this.elements,
-          },
-          settings: {
-            scrollMargin: this._globalSettings.scrollMargin,
-          },
-          trajectoryPositions: this.trajectoryPositions,
-        })
-      } else {
-        this.scrollPredictor?.cleanup()
-        this.scrollPredictor = null
+      if (this.handler instanceof DesktopHandler) {
+        if (this._globalSettings.enableScrollPrediction) {
+          this.handler.connectScrollPredictor()
+        } else {
+          this.handler.disconnectScrollPredictor()
+        }
       }
       changedSettings.push({
         setting: "enableScrollPrediction",
@@ -866,27 +713,20 @@ export class ForesightManager {
       props?.enableTabPrediction,
       "enableTabPrediction"
     )
+
     if (enableTabPredictionChanged) {
+      if (this.handler instanceof DesktopHandler) {
+        if (this._globalSettings.enableTabPrediction) {
+          this.handler.connectTabPredictor()
+        } else {
+          this.handler.disconnectTabPredictor()
+        }
+      }
       changedSettings.push({
         setting: "enableTabPrediction",
         oldValue: oldEnableTabPrediction,
         newValue: this._globalSettings.enableTabPrediction,
       })
-      if (this._globalSettings.enableTabPrediction) {
-        this.tabPredictor = new TabPredictor({
-          dependencies: {
-            callCallback: this.callCallback.bind(this),
-            emit: this.emit.bind(this),
-            elements: this.elements,
-          },
-          settings: {
-            tabOffset: this._globalSettings.tabOffset,
-          },
-        })
-      } else {
-        this.tabPredictor?.cleanup()
-        this.tabPredictor = null
-      }
     }
 
     if (props?.defaultHitSlop !== undefined) {
@@ -912,16 +752,6 @@ export class ForesightManager {
         setting: "touchDeviceStrategy",
         oldValue: oldTouchDeviceStrategy,
         newValue: newTouchDeviceStrategy,
-      })
-      this.touchDevicePredictor?.cleanup()
-      this.touchDevicePredictor = null
-      this.touchDevicePredictor = new TouchDevicePredictor({
-        dependencies: {
-          callCallback: this.callCallback.bind(this),
-          emit: this.emit.bind(this),
-          elements: this.elements,
-        },
-        touchDeviceStrategy: newTouchDeviceStrategy,
       })
     }
 

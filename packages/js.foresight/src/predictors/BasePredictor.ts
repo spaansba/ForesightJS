@@ -4,6 +4,7 @@ import type {
   ForesightElementData,
   ForesightEvent,
   ForesightEventMap,
+  ForesightManagerSettings,
 } from "../types/types"
 
 export type CallCallbackFunction = (
@@ -17,6 +18,7 @@ export type PredictorDependencies = {
   elements: ReadonlyMap<ForesightElement, ForesightElementData>
   callCallback: CallCallbackFunction
   emit: EmitFunction
+  settings: ForesightManagerSettings
 }
 
 export interface BasePredictorConfig {
@@ -30,19 +32,21 @@ export abstract class BasePredictor {
   protected elements: ReadonlyMap<ForesightElement, ForesightElementData>
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
+  protected settings: ForesightManagerSettings
 
-  constructor(config: BasePredictorConfig) {
-    this.elements = config.dependencies.elements
-    this.callCallback = config.dependencies.callCallback
-    this.emit = config.dependencies.emit
+  constructor(dependencies: PredictorDependencies) {
+    this.elements = dependencies.elements
+    this.callCallback = dependencies.callCallback
+    this.emit = dependencies.emit
+    this.settings = dependencies.settings
     this.abortController = new AbortController()
   }
 
+  public abstract connect(): void
+  public abstract disconnect(): void
   protected abort(): void {
     this.abortController.abort()
   }
-
-  public abstract cleanup(): void
   protected abstract initializeListeners(): void
 
   protected handleError(error: unknown, context: string): void {

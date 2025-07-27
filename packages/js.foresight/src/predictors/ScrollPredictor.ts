@@ -1,20 +1,20 @@
+import { getScrollDirection } from "../helpers/getScrollDirection"
+import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import type {
   ForesightElementData,
   Point,
   ScrollDirection,
   TrajectoryPositions,
 } from "../types/types"
-import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
-import { getScrollDirection } from "../helpers/getScrollDirection"
-import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
-import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
-
-export interface ScrollPredictorSettings {
-  scrollMargin: number
-}
+import {
+  BasePredictor,
+  type BasePredictorConfig,
+  type PredictorDependencies,
+} from "./BasePredictor"
 
 export interface ScrollPredictorConfig extends BasePredictorConfig {
-  settings: ScrollPredictorSettings
+  dependencies: PredictorDependencies
   trajectoryPositions: Readonly<TrajectoryPositions>
 }
 
@@ -26,16 +26,14 @@ export class ScrollPredictor extends BasePredictor {
 
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
-  public scrollMargin: number
   private trajectoryPositions: Readonly<TrajectoryPositions>
 
   constructor(config: ScrollPredictorConfig) {
-    super(config)
-    this.scrollMargin = config.settings.scrollMargin
+    super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
   }
-
-  public cleanup(): void {
+  public connect(): void {}
+  public disconnect(): void {
     this.abort()
     this.resetScrollProps()
   }
@@ -69,7 +67,7 @@ export class ScrollPredictor extends BasePredictor {
         predictNextScrollPosition(
           this.trajectoryPositions.currentPoint,
           this.scrollDirection,
-          this.scrollMargin
+          this.settings.scrollMargin
         )
 
       // Check if the scroll is going to intersect with an registered element

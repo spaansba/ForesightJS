@@ -1,15 +1,7 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
 import type { ForesightElement } from "../types/types"
-import { BasePredictor, type BasePredictorConfig } from "./BasePredictor"
-
-export interface TabPredictorSettings {
-  tabOffset: number
-}
-
-export interface TabPredictorConfig extends BasePredictorConfig {
-  settings: TabPredictorSettings
-}
+import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
 
 /**
  * Manages the prediction of user intent based on Tab key navigation.
@@ -27,12 +19,9 @@ export class TabPredictor extends BasePredictor {
   private lastKeyDown: KeyboardEvent | null = null
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
-  public tabOffset: number
 
-  constructor(config: TabPredictorConfig) {
+  constructor(config: PredictorDependencies) {
     super(config)
-    this.tabOffset = config.settings.tabOffset
-    this.initializeListeners()
   }
 
   protected initializeListeners(): void {
@@ -45,8 +34,8 @@ export class TabPredictor extends BasePredictor {
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
   }
-
-  public cleanup(): void {
+  public connect(): void {}
+  public disconnect(): void {
     this.abort()
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
@@ -91,7 +80,7 @@ export class TabPredictor extends BasePredictor {
 
       this.lastKeyDown = null
       const elementsToPredict: ForesightElement[] = []
-      for (let i = 0; i <= this.tabOffset; i++) {
+      for (let i = 0; i <= this.settings.tabOffset; i++) {
         const elementIndex = isReversed ? currentIndex - i : currentIndex + i
         const element = this.tabbableElementsCache[elementIndex]
 
