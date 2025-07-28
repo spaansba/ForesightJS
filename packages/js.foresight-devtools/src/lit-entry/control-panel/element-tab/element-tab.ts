@@ -66,6 +66,8 @@ export class ElementTab extends LitElement {
     mouse: { hover: 0, trajectory: 0 },
     scroll: { down: 0, left: 0, right: 0, up: 0 },
     tab: { forwards: 0, reverse: 0 },
+    touch: 0,
+    viewport: 0,
     total: 0,
   }
 
@@ -119,14 +121,62 @@ export class ElementTab extends LitElement {
   private _generateHitsChipTitle(hitCounts: CallbackHits): string {
     const lines: string[] = []
 
-    lines.push(`Total Hits: ${hitCounts.total}`)
+    // Header with total
+    lines.push(`Total Callback Hits: ${hitCounts.total}`)
     lines.push("")
 
-    lines.push(`Mouse: Trajectory: ${hitCounts.mouse.trajectory}, Hover: ${hitCounts.mouse.hover}`)
-    lines.push(
-      `Scroll: Up: ${hitCounts.scroll.up}, Down: ${hitCounts.scroll.down}, Left: ${hitCounts.scroll.left}, Right: ${hitCounts.scroll.right}`
-    )
-    lines.push(`Tab: Forwards: ${hitCounts.tab.forwards}, Reverse: ${hitCounts.tab.reverse}`)
+    // Desktop Strategy Section
+    const mouseTotal = hitCounts.mouse.trajectory + hitCounts.mouse.hover
+    const scrollTotal =
+      hitCounts.scroll.up + hitCounts.scroll.down + hitCounts.scroll.left + hitCounts.scroll.right
+    const tabTotal = hitCounts.tab.forwards + hitCounts.tab.reverse
+
+    lines.push("Desktop Strategy")
+    if (mouseTotal > 0) {
+      lines.push(
+        `   Mouse (${mouseTotal}): ${hitCounts.mouse.trajectory} trajectory, ${hitCounts.mouse.hover} hover`
+      )
+    } else {
+      lines.push("   Mouse: No hits")
+    }
+
+    if (scrollTotal > 0) {
+      lines.push(
+        `   Scroll (${scrollTotal}): Up ${hitCounts.scroll.up}, Down ${hitCounts.scroll.down}, Left ${hitCounts.scroll.left}, Right ${hitCounts.scroll.right}`
+      )
+    } else {
+      lines.push("   Scroll: No hits")
+    }
+
+    if (tabTotal > 0) {
+      lines.push(
+        `   Tab (${tabTotal}): ${hitCounts.tab.forwards} forward, ${hitCounts.tab.reverse} reverse`
+      )
+    } else {
+      lines.push("   Tab: No hits")
+    }
+
+    lines.push("")
+
+    // Touch Strategy Section
+    const touchStrategyTotal = hitCounts.touch + hitCounts.viewport
+    lines.push("Touch Strategy")
+    if (hitCounts.touch > 0) {
+      lines.push(`   Touch Start: ${hitCounts.touch}`)
+    } else {
+      lines.push("   Touch Start: No hits")
+    }
+
+    if (hitCounts.viewport > 0) {
+      lines.push(`   Viewport Enter: ${hitCounts.viewport}`)
+    } else {
+      lines.push("   Viewport Enter: No hits")
+    }
+
+    if (touchStrategyTotal === 0 && mouseTotal + scrollTotal + tabTotal === 0) {
+      lines.push("")
+      lines.push("Interact with registered elements to see callback statistics")
+    }
 
     return lines.join("\n")
   }
@@ -230,6 +280,12 @@ export class ElementTab extends LitElement {
         break
       case "scroll":
         this.hitCount.scroll[hitType.subType]++
+        break
+      case "touch":
+        this.hitCount.touch++
+        break
+      case "viewport":
+        this.hitCount.viewport++
         break
       default:
         hitType satisfies never

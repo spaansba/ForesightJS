@@ -1,8 +1,7 @@
-import { getExpandedRect, isPointInRectangle } from "js.foresight/helpers/rectAndHitSlop"
-import type { PredictorDependencies } from "js.foresight/predictors/BasePredictor"
-import { MousePredictor } from "js.foresight/predictors/MousePredictor"
-import { ScrollPredictor } from "js.foresight/predictors/ScrollPredictor"
-import { TabPredictor } from "js.foresight/predictors/TabPredictor"
+import type { PredictorDependencies } from "../predictors/BasePredictor"
+import { MousePredictor } from "../predictors/MousePredictor"
+import { ScrollPredictor } from "../predictors/ScrollPredictor"
+import { TabPredictor } from "../predictors/TabPredictor"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 import { BaseHandler } from "./BaseHandler"
 import type {
@@ -10,9 +9,10 @@ import type {
   ForesightElementData,
   TrajectoryPositions,
   UpdatedDataPropertyNames,
-} from "js.foresight/types/types"
-import { CircularBuffer } from "js.foresight/helpers/CircularBuffer"
-import { DEFAULT_POSITION_HISTORY_SIZE } from "js.foresight/constants"
+} from "../types/types"
+import { CircularBuffer } from "../helpers/CircularBuffer"
+import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
+import { getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
 export class DesktopHandler extends BaseHandler {
   private mousePredictor: MousePredictor

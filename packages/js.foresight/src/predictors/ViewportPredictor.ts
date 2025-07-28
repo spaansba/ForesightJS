@@ -1,4 +1,4 @@
-import type { ForesightElement } from "js.foresight/types/types"
+import type { ForesightElement } from "../types/types"
 import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
 
 export class ViewportPredictor extends BasePredictor {

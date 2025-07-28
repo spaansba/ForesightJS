@@ -2,12 +2,12 @@ import type {
   CallCallbackFunction,
   EmitFunction,
   PredictorDependencies,
-} from "js.foresight/predictors/BasePredictor"
+} from "../predictors/BasePredictor"
 import type {
   ForesightElement,
   ForesightElementData,
   ForesightManagerSettings,
-} from "js.foresight/types/types"
+} from "../types/types"
 
 export abstract class BaseHandler {
   protected elements: ReadonlyMap<ForesightElement, ForesightElementData>

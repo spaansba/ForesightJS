@@ -1,4 +1,4 @@
-import type { CircularBuffer } from "js.foresight/helpers/CircularBuffer"
+import type { CircularBuffer } from "../helpers/CircularBuffer"
 
 export type Rect = {
   top: number

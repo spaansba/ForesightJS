@@ -1,8 +1,8 @@
-import type { ForesightElement } from "js.foresight/types/types"
+import type { ForesightElement } from "../types/types"
 import { type PredictorDependencies } from "../predictors/BasePredictor"
 import { BaseHandler } from "./BaseHandler"
-import { ViewportPredictor } from "js.foresight/predictors/ViewportPredictor"
-import { TouchStartPredictor } from "js.foresight/predictors/TouchStartPredictor"
+import { ViewportPredictor } from "../predictors/ViewportPredictor"
+import { TouchStartPredictor } from "../predictors/TouchStartPredictor"
 
 export class TouchDeviceHandler extends BaseHandler {
   private viewportPredictor: ViewportPredictor
