@@ -16,7 +16,7 @@ import { BaseForesightModule, type ForesightModuleDependencies } from "../core/B
  */
 export class TabPredictor extends BaseForesightModule {
   protected readonly moduleName = "TabPredictor"
-  
+
   // Internal state for tab prediction
   private lastKeyDown: KeyboardEvent | null = null
   private tabbableElementsCache: FocusableElement[] = []
@@ -35,9 +35,11 @@ export class TabPredictor extends BaseForesightModule {
     this.createAbortController()
     document.addEventListener("keydown", this.handleKeyDown, {
       signal: this.abortController?.signal,
+      passive: true,
     })
     document.addEventListener("focusin", this.handleFocusIn, {
       signal: this.abortController?.signal,
+      passive: true,
     })
   }
 

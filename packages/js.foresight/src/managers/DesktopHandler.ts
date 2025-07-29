@@ -46,52 +46,19 @@ export class DesktopHandler extends BaseForesightModule {
   public processMouseMovement(event: PointerEvent): void {
     this.mousePredictor.processMouseMovement(event)
   }
+
   protected onConnect(): void {
-    this.connectTabPredictor()
-    this.connectScrollPredictor()
-    this.connectMousePredictor()
+    if (this.settings.enableTabPrediction) {
+      this.connectTabPredictor()
+    }
+    if (this.settings.enableScrollPrediction) {
+      this.connectScrollPredictor()
+    }
+    this.connectMousePredictor() // We always connect the mouse predictor
     this.positionObserver = new PositionObserver(this.handlePositionChange)
     for (const element of this.elements.keys()) {
       this.positionObserver.observe(element)
     }
-  }
-
-  protected onDisconnect(): void {
-    this.disconnectMousePredictor()
-    this.disconnectTabPredictor()
-    this.disconnectScrollPredictor()
-    this.positionObserver?.disconnect()
-    this.positionObserver = null
-  }
-
-  public observeElement(element: ForesightElement): void {
-    this.positionObserver?.observe(element)
-  }
-
-  public unobserveElement(element: ForesightElement): void {
-    this.positionObserver?.unobserve(element)
-  }
-
-  public connectTabPredictor(): void {
-    this.tabPredictor.connect()
-  }
-
-  public connectScrollPredictor(): void {
-    this.scrollPredictor.connect()
-  }
-
-  public connectMousePredictor(): void {
-    this.mousePredictor.connect()
-  }
-
-  public disconnectTabPredictor(): void {
-    this.tabPredictor.disconnect()
-  }
-  public disconnectScrollPredictor(): void {
-    this.scrollPredictor.disconnect()
-  }
-  public disconnectMousePredictor(): void {
-    this.mousePredictor.disconnect()
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
@@ -156,5 +123,45 @@ export class DesktopHandler extends BaseForesightModule {
         updatedProps,
       })
     }
+  }
+
+  protected onDisconnect(): void {
+    this.disconnectMousePredictor()
+    this.disconnectTabPredictor()
+    this.disconnectScrollPredictor()
+    this.positionObserver?.disconnect()
+    this.positionObserver = null
+  }
+
+  public observeElement(element: ForesightElement): void {
+    this.positionObserver?.observe(element)
+  }
+
+  public unobserveElement(element: ForesightElement): void {
+    this.positionObserver?.unobserve(element)
+  }
+
+  public connectTabPredictor(): void {
+    this.tabPredictor.connect()
+  }
+
+  public connectScrollPredictor(): void {
+    this.scrollPredictor.connect()
+  }
+
+  public connectMousePredictor(): void {
+    this.mousePredictor.connect()
+  }
+
+  public disconnectTabPredictor(): void {
+    this.tabPredictor.disconnect()
+  }
+
+  public disconnectScrollPredictor(): void {
+    this.scrollPredictor.disconnect()
+  }
+
+  public disconnectMousePredictor(): void {
+    this.mousePredictor.disconnect()
   }
 }

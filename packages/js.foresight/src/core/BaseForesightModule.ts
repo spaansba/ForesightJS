@@ -27,6 +27,10 @@ export abstract class BaseForesightModule {
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
   protected settings: ForesightManagerSettings
+  private _isConnected = false
+  public get isConnected(): boolean {
+    return this._isConnected
+  }
   protected abstract readonly moduleName: string // Name of the implementor class for debugging purposes
 
   constructor(dependencies: ForesightModuleDependencies) {
@@ -37,11 +41,15 @@ export abstract class BaseForesightModule {
   }
 
   public disconnect(): void {
+    if (!this.isConnected) {
+      return
+    }
     if (process.env.NODE_ENV === "development") {
       console.log(`🔌 ${this.moduleName} disconnecting...`)
     }
     this.abortController?.abort(`${this.moduleName} module disconnected`)
     this.onDisconnect()
+    this._isConnected = false
   }
 
   public connect(): void {
@@ -49,6 +57,7 @@ export abstract class BaseForesightModule {
       console.log(`🔌 ${this.moduleName} connecting...`)
     }
     this.onConnect()
+    this._isConnected = true
   }
 
   protected abstract onConnect(): void

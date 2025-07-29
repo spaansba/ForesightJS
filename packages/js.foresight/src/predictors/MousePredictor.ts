@@ -17,7 +17,7 @@ export interface MousePredictorConfig {
 
 export class MousePredictor extends BaseForesightModule {
   protected readonly moduleName = "MousePredictor"
-  
+
   private trajectoryPositions: TrajectoryPositions
 
   constructor(config: MousePredictorConfig) {

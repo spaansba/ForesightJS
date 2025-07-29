@@ -12,9 +12,7 @@ export class TouchStartPredictor extends BaseForesightModule {
     this.createAbortController()
   }
 
-  protected onDisconnect(): void {
-    // Cleanup handled by base class
-  }
+  protected onDisconnect(): void {}
 
   public observeElement(element: ForesightElement): void {
     if (element instanceof HTMLElement) {

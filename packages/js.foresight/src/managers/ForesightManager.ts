@@ -113,7 +113,11 @@ export class ForesightManager {
   private domObserver: MutationObserver | null = null
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
-  private constructor() {
+  private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
+    if (initialSettings !== undefined) {
+      this.initializeManagerSettings(initialSettings)
+    }
+
     const dependencies = {
       elements: this.elements,
       callCallback: this.callCallback.bind(this),
@@ -134,10 +138,7 @@ export class ForesightManager {
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
-      ForesightManager.manager = new ForesightManager()
-    }
-    if (props !== undefined) {
-      ForesightManager.manager.alterGlobalSettings(props)
+      ForesightManager.manager = new ForesightManager(props)
     }
 
     return ForesightManager.manager
@@ -570,6 +571,50 @@ export class ForesightManager {
       })
     }
   }
+
+  private initializeManagerSettings(props: Partial<UpdateForsightManagerSettings>): void {
+    // Apply settings without emitting events or triggering handlers (used during construction)
+    this.updateNumericSettings(
+      props.trajectoryPredictionTime,
+      "trajectoryPredictionTime",
+      MIN_TRAJECTORY_PREDICTION_TIME,
+      MAX_TRAJECTORY_PREDICTION_TIME
+    )
+
+    this.updateNumericSettings(
+      props.positionHistorySize,
+      "positionHistorySize",
+      MIN_POSITION_HISTORY_SIZE,
+      MAX_POSITION_HISTORY_SIZE
+    )
+
+    this.updateNumericSettings(
+      props.scrollMargin,
+      "scrollMargin",
+      MIN_SCROLL_MARGIN,
+      MAX_SCROLL_MARGIN
+    )
+
+    this.updateNumericSettings(props.tabOffset, "tabOffset", MIN_TAB_OFFSET, MAX_TAB_OFFSET)
+
+    this.updateBooleanSetting(props.enableMousePrediction, "enableMousePrediction")
+    this.updateBooleanSetting(props.enableScrollPrediction, "enableScrollPrediction")
+    this.updateBooleanSetting(props.enableTabPrediction, "enableTabPrediction")
+
+    if (props.defaultHitSlop !== undefined) {
+      this._globalSettings.defaultHitSlop = normalizeHitSlop(props.defaultHitSlop)
+    }
+
+    if (props.touchDeviceStrategy !== undefined) {
+      this._globalSettings.touchDeviceStrategy = props.touchDeviceStrategy
+    }
+
+    if (props.debug !== undefined) {
+      this._globalSettings.debug = props.debug
+    }
+    console.log(this._globalSettings)
+  }
+
   private updateNumericSettings(
     newValue: number | undefined,
     setting: NumericSettingKeys,

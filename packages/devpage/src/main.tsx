@@ -16,7 +16,7 @@ ForesightManager.initialize({
     right: 10,
     bottom: 10,
   },
-  enableTabPrediction: true,
+  enableTabPrediction: false,
   tabOffset: 2,
 })
 
