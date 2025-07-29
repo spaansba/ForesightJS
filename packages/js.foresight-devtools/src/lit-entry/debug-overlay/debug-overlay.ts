@@ -40,11 +40,8 @@ export class DebugOverlay extends LitElement {
     )
   }
 
-  private handleDeviceStrategyChange = (event: DeviceStrategyChangedEvent) => {
-    const { newStrategy, oldStrategy } = event
-    console.log(`Device strategy changed from ${oldStrategy} to ${newStrategy}`)
-    this._strategy = newStrategy
-  }
+  private handleDeviceStrategyChange = (event: DeviceStrategyChangedEvent) =>
+    (this._strategy = event.newStrategy)
 
   disconnectedCallback(): void {
     super.disconnectedCallback()

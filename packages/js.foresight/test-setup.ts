@@ -50,6 +50,7 @@ vi.mock("./src/helpers/shouldRegister", () => ({
     isTouchDevice: false,
     isLimitedConnection: false,
   })),
+  userUsesTouchDevice: vi.fn(() => false),
 }))
 
 // Mock performance.now for consistent timing in tests
@@ -154,6 +155,31 @@ export const simulateScrollEvent = (
   element.dispatchEvent(event)
   return event
 }
+
+// Mock PointerEvent
+global.PointerEvent = class PointerEvent extends Event {
+  clientX: number
+  clientY: number
+  pointerType: string
+
+  constructor(type: string, init: any = {}) {
+    super(type, init)
+    this.clientX = init.clientX || 0
+    this.clientY = init.clientY || 0
+    this.pointerType = init.pointerType || "mouse"
+  }
+} as any
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  callback: IntersectionObserverCallback
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any
 
 // Mock matchMedia
 global.matchMedia = vi.fn().mockImplementation(query => ({

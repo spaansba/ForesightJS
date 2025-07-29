@@ -1,18 +1,19 @@
 import type { ForesightElement } from "../types/types"
-import { type PredictorDependencies } from "../predictors/BasePredictor"
-import { BaseHandler } from "./BaseHandler"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ViewportPredictor } from "../predictors/ViewportPredictor"
 import { TouchStartPredictor } from "../predictors/TouchStartPredictor"
 
-export class TouchDeviceHandler extends BaseHandler {
+export class TouchDeviceHandler extends BaseForesightModule {
+  protected readonly moduleName = "TouchDeviceHandler"
+  
   private viewportPredictor: ViewportPredictor
   private touchStartPredictor: TouchStartPredictor
   private predictor: ViewportPredictor | TouchStartPredictor
 
-  constructor(config: PredictorDependencies) {
-    super(config)
-    this.viewportPredictor = new ViewportPredictor(config)
-    this.touchStartPredictor = new TouchStartPredictor(config)
+  constructor(dependencies: ForesightModuleDependencies) {
+    super(dependencies)
+    this.viewportPredictor = new ViewportPredictor(dependencies)
+    this.touchStartPredictor = new TouchStartPredictor(dependencies)
     this.predictor = this.viewportPredictor
   }
 
@@ -29,12 +30,11 @@ export class TouchDeviceHandler extends BaseHandler {
     }
   }
 
-  public disconnect(): void {
-    this.viewportPredictor.disconnect()
-    this.touchStartPredictor.disconnect()
+  protected onDisconnect(): void {
+    this.predictor.disconnect()
   }
 
-  public connect(): void {
+  protected onConnect(): void {
     this.setTouchPredictor()
   }
 

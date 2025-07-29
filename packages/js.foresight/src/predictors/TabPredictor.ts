@@ -1,7 +1,7 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
 import type { ForesightElement } from "../types/types"
-import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 
 /**
  * Manages the prediction of user intent based on Tab key navigation.
@@ -14,14 +14,16 @@ import { BasePredictor, type PredictorDependencies } from "./BasePredictor"
  * - Predicting which registered elements the user is about to focus.
  * - Calling a provided callback when a prediction is made.
  */
-export class TabPredictor extends BasePredictor {
+export class TabPredictor extends BaseForesightModule {
+  protected readonly moduleName = "TabPredictor"
+  
   // Internal state for tab prediction
   private lastKeyDown: KeyboardEvent | null = null
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
 
-  constructor(config: PredictorDependencies) {
-    super(config)
+  constructor(dependencies: ForesightModuleDependencies) {
+    super(dependencies)
   }
 
   public invalidateCache() {
@@ -29,15 +31,17 @@ export class TabPredictor extends BasePredictor {
     this.lastFocusedIndex = null
   }
 
-  public connect(): void {
-    this.createNewAbortController()
-    const { signal } = this.abortController
-    document.addEventListener("keydown", this.handleKeyDown, { signal })
-    document.addEventListener("focusin", this.handleFocusIn, { signal })
+  protected onConnect(): void {
+    this.createAbortController()
+    document.addEventListener("keydown", this.handleKeyDown, {
+      signal: this.abortController?.signal,
+    })
+    document.addEventListener("focusin", this.handleFocusIn, {
+      signal: this.abortController?.signal,
+    })
   }
 
-  public disconnect(): void {
-    this.abort()
+  protected onDisconnect(): void {
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
     this.lastKeyDown = null

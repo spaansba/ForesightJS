@@ -250,6 +250,10 @@ export class ElementOverlays extends LitElement {
       case "tab":
         overlays.expandedOverlay.classList.add("invoked-by-tab")
         break
+      case "touch":
+        break
+      case "viewport":
+        break
       default:
         hitType satisfies never
     }

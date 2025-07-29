@@ -1,11 +1,7 @@
 import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
 import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { isPointInRectangle } from "../helpers/rectAndHitSlop"
-import {
-  BasePredictor,
-  type BasePredictorConfig,
-  type PredictorDependencies,
-} from "./BasePredictor"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { TrajectoryPositions } from "../types/types"
 
 export interface MousePredictorSettings {
@@ -14,12 +10,14 @@ export interface MousePredictorSettings {
   positionHistorySize: number
 }
 
-export interface MousePredictorConfig extends BasePredictorConfig {
-  dependencies: PredictorDependencies
+export interface MousePredictorConfig {
+  dependencies: ForesightModuleDependencies
   trajectoryPositions: TrajectoryPositions
 }
 
-export class MousePredictor extends BasePredictor {
+export class MousePredictor extends BaseForesightModule {
+  protected readonly moduleName = "MousePredictor"
+  
   private trajectoryPositions: TrajectoryPositions
 
   constructor(config: MousePredictorConfig) {
@@ -27,9 +25,9 @@ export class MousePredictor extends BasePredictor {
     this.trajectoryPositions = config.trajectoryPositions
   }
 
-  public disconnect(): void {}
+  protected onDisconnect(): void {}
 
-  public connect(): void {}
+  protected onConnect(): void {}
 
   private updatePointerState(e: MouseEvent): void {
     const currentPoint = { x: e.clientX, y: e.clientY }

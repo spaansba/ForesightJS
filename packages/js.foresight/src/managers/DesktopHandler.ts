@@ -1,9 +1,8 @@
-import type { PredictorDependencies } from "../predictors/BasePredictor"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { MousePredictor } from "../predictors/MousePredictor"
 import { ScrollPredictor } from "../predictors/ScrollPredictor"
 import { TabPredictor } from "../predictors/TabPredictor"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
-import { BaseHandler } from "./BaseHandler"
 import type {
   ForesightElement,
   ForesightElementData,
@@ -14,7 +13,9 @@ import { CircularBuffer } from "../helpers/CircularBuffer"
 import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
 import { getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
-export class DesktopHandler extends BaseHandler {
+export class DesktopHandler extends BaseForesightModule {
+  protected readonly moduleName = "DesktopHandler"
+
   private mousePredictor: MousePredictor
   private tabPredictor: TabPredictor
   private scrollPredictor: ScrollPredictor
@@ -25,15 +26,15 @@ export class DesktopHandler extends BaseHandler {
     predictedPoint: { x: 0, y: 0 },
   }
 
-  constructor(config: PredictorDependencies) {
-    super(config)
-    this.tabPredictor = new TabPredictor(config)
+  constructor(dependencies: ForesightModuleDependencies) {
+    super(dependencies)
+    this.tabPredictor = new TabPredictor(dependencies)
     this.scrollPredictor = new ScrollPredictor({
-      dependencies: config,
+      dependencies,
       trajectoryPositions: this.trajectoryPositions,
     })
     this.mousePredictor = new MousePredictor({
-      dependencies: config,
+      dependencies,
       trajectoryPositions: this.trajectoryPositions,
     })
   }
@@ -45,7 +46,7 @@ export class DesktopHandler extends BaseHandler {
   public processMouseMovement(event: PointerEvent): void {
     this.mousePredictor.processMouseMovement(event)
   }
-  public connect(): void {
+  protected onConnect(): void {
     this.connectTabPredictor()
     this.connectScrollPredictor()
     this.connectMousePredictor()
@@ -55,7 +56,7 @@ export class DesktopHandler extends BaseHandler {
     }
   }
 
-  public disconnect(): void {
+  protected onDisconnect(): void {
     this.disconnectMousePredictor()
     this.disconnectTabPredictor()
     this.disconnectScrollPredictor()

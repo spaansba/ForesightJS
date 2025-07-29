@@ -7,23 +7,16 @@ import type {
   ScrollDirection,
   TrajectoryPositions,
 } from "../types/types"
-import {
-  BasePredictor,
-  type BasePredictorConfig,
-  type PredictorDependencies,
-} from "./BasePredictor"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 
-export interface ScrollPredictorConfig extends BasePredictorConfig {
-  dependencies: PredictorDependencies
+export interface ScrollPredictorConfig {
+  dependencies: ForesightModuleDependencies
   trajectoryPositions: Readonly<TrajectoryPositions>
 }
 
-export class ScrollPredictor extends BasePredictor {
-  protected initializeListeners(): void {
-    // ScrollPredictor doesn't need direct event listeners
-    // as it's called by the ForesightManager during position changes
-  }
-
+export class ScrollPredictor extends BaseForesightModule {
+  protected readonly moduleName = "ScrollPredictor"
+  
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
   private trajectoryPositions: Readonly<TrajectoryPositions>
@@ -32,8 +25,8 @@ export class ScrollPredictor extends BasePredictor {
     super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
   }
-  public connect(): void {}
-  public disconnect(): void {
+  protected onConnect(): void {}
+  protected onDisconnect(): void {
     this.resetScrollProps()
   }
 
