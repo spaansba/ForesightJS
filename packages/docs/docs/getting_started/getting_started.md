@@ -6,10 +6,11 @@ keywords:
   - ForesightManager
   - mouse prediction
   - tab prediction
-  - Introduction
+  - mobile prefetching
+  - desktop prefetching
 description: Introduction to ForesightJS, an lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
-  date: 2025-06-06
+  date: 2025-07-31
   author: Bart Spaans
 ---
 
@@ -27,7 +28,7 @@ last_updated:
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com#playground)
 
-ForesightJS is a lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements, scroll and keyboard navigation. By analyzing cursor/scroll trajectory and tab sequences, it anticipates which elements a user is likely to interact with, allowing developers to trigger actions before the actual hover or click occurs (for example prefetching).
+ForesightJS is a lightweight JavaScript library that predicts user intent to prefetch content before it's needed. **It works completely out of the box without configuration**, supporting both desktop and mobile devices with different prediction strategies.
 
 ### Understanding ForesightJS's Role:
 
@@ -49,6 +50,28 @@ npm install js.foresight
 # or
 yarn add js.foresight
 ```
+
+## Prediction Strategies
+
+ForesightJS uses different prediction strategies depending on the device type. For limited connections (2G or data-saver mode), we respect the user's preference to minimize data usage and skip registration.
+
+### Keyboard/Mouse Users
+
+Pick and choose multiple prediction strategies:
+
+- **Mouse Trajectory** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Analyzes cursor movement patterns to predict which links users are heading towards and prefetches content before they arrive
+- **Keyboard Navigation** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Tracks tab key usage and focus states to preload content for keyboard users navigating through your site
+- **Scroll** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Prefetches content when users scroll towards registered elements, predicting which elements will be reached based on scroll direction
+
+### Touch Devices (v3.3.0+)
+
+ForesightJS now supports touch devices through the configurable `touchDeviceStrategy`. See the [TouchDeviceStrategy configuration](/docs/getting_started/config#touch-device-strategy-v330) for details.
+
+Available strategies:
+
+- **Viewport Enter** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Detects when registered elements enter the viewport and prefetches their content based on scroll behavior and visibility
+- **onTouchStart** - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **None** - Disables ForesightJS on touch devices (previous behavior)
 
 ## Which problems does ForesightJS solve?
 
@@ -115,19 +138,6 @@ ForesightDevtools.initialize({
 ```
 
 This is particularly helpful when setting up ForesightJS for the first time or when fine-tuning for specific UI components.
-
-## What About Touch Devices and Slow Connections?
-
-Since ForesightJS relies on the keyboard/mouse it will not register elements for touch devices. For limited connections (2G or data-saver mode), we respect the user's preference to minimize data usage and skip registration aswell.
-
-The `ForesightManager.instance.register()` method returns these properties:
-
-- `isTouchDevice` - true if user is on a touch device
-- `isLimitedConnection` - true when user is on a 2G connection or has data-saver enabled
-- `isRegistered` - true if element was actually registered
-
-With these properties you could create your own fallback prefetching methods if required. For example if the user is on a touch device you could prefetch based on viewport.
-An example of this can be found in the [Next.js](/docs/integrations/react/nextjs) or [React Router](/docs/integrations/react/react-router) ForesightLink components.
 
 ## How Does ForesightJS Work?
 

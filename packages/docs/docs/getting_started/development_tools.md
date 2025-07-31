@@ -9,9 +9,11 @@ keywords:
   - mouse prediction
   - tab prediction
   - Debugger
+  - mobile prefetching
+  - desktop prefetching
 description: Documentation on how to use the ForesightJS debugger
 last_updated:
-  date: 2025-06-30
+  date: 2025-07-31
   author: Bart Spaans
 ---
 
@@ -21,7 +23,7 @@ last_updated:
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-ForesightJS offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how ForesightJS works within your application. This standalone development package is helpful when setting up ForesightJS for the first time and understanding what each configurable parameter does.
+ForesightJS offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how ForesightJS works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
 These tools are built entirely using ForesightJS's [built-in events](/docs/getting_started/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
@@ -56,14 +58,16 @@ ForesightDevtools.initialize({
   sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
   logging: {
     logLocation: "controlPanel", // Where to log the Foresight Events
-    callbackCompleted: false,
-    callbackInvoked: false,
+    callbackCompleted: true,
+    elementReactivated: true,
+    callbackInvoked: true,
     elementDataUpdated: false,
     elementRegistered: false,
     elementUnregistered: false,
-    managerSettingsChanged: false,
-    mouseTrajectoryUpdate: false,
-    scrollTrajectoryUpdate: false,
+    managerSettingsChanged: true,
+    mouseTrajectoryUpdate: false, // dont log this to the devtools
+    scrollTrajectoryUpdate: false, // dont log this to the devtools
+    deviceStrategyChanged: true,
   },
 })
 ```
@@ -88,4 +92,8 @@ This section displays a timeline of emitted enabled Foresight [events](/docs/get
 
 :::caution
 Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.
+:::
+
+:::note
+Element overlay visualization and visibility sorting in the control panel only work with desktop/mouse prediction strategies. When debugging `touchDeviceStrategy` configurations, these features are not available as touch strategies don't track the same positioning data.
 :::

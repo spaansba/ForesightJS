@@ -7,9 +7,11 @@ keywords:
   - configuration
   - mouse prediction
   - tab prediction
+  - mobile prefetching
+  - desktop prefetching
 description: Configuration documenation for the ForesightJS library
 last_updated:
-  date: 2025-06-30
+  date: 2025-07-31
   author: Bart Spaans
 ---
 
@@ -51,16 +53,31 @@ ForesightManager.initialize({
 All numeric settings are clamped to their specified Min/Max values to prevent invalid configurations.
 :::
 
-| Setting                    | Type               | Default                                  | Min/Max | Description                                                                                                                |
-| -------------------------- | ------------------ | ---------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `enableMousePrediction`    | `boolean`          | `true`                                   | -       | Toggles whether trajectory prediction is active. If `false`, only direct hovers will trigger the callback for mouse users. |
-| `positionHistorySize`      | `number`           | 8                                        | 0/30    | Number of mouse positions to keep in history for velocity calculations                                                     |
-| `trajectoryPredictionTime` | `number`           | 120                                      | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                            |
-| `defaultHitSlop`           | `number` \| `Rect` | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox           |
-| `enableTabPrediction`      | `boolean`          | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                                  |
-| `tabOffset`                | `number`           | 2                                        | 0/20    | Tab stops away from an element to trigger callback                                                                         |
-| `enableScrollPrediction`   | `boolean`          | `true`                                   | -       | Toggles whether scroll prediction is on on                                                                                 |
-| `scrollMargin`             | `number`           | 150                                      | 30/300  | Sets the pixel distance to check from the mouse position in the scroll direction callback                                  |
+| Setting                    | Type                  | Default                                  | Min/Max | Description                                                                                                                |
+| -------------------------- | --------------------- | ---------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `enableMousePrediction`    | `boolean`             | `true`                                   | -       | Toggles whether trajectory prediction is active. If `false`, only direct hovers will trigger the callback for mouse users. |
+| `positionHistorySize`      | `number`              | 8                                        | 0/30    | Number of mouse positions to keep in history for velocity calculations                                                     |
+| `trajectoryPredictionTime` | `number`              | 120                                      | 10/200  | How far ahead (in milliseconds) to predict the mouse trajectory                                                            |
+| `defaultHitSlop`           | `number` \| `Rect`    | `{top: 0, left: 0, right: 0, bottom: 0}` | 0/2000  | Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox           |
+| `enableTabPrediction`      | `boolean`             | `true`                                   | -       | Toggles whether keyboard prediction is on                                                                                  |
+| `tabOffset`                | `number`              | 2                                        | 0/20    | Tab stops away from an element to trigger callback                                                                         |
+| `enableScrollPrediction`   | `boolean`             | `true`                                   | -       | Toggles whether scroll prediction is on on                                                                                 |
+| `scrollMargin`             | `number`              | 150                                      | 30/300  | Sets the pixel distance to check from the mouse position in the scroll direction callback                                  |
+| `touchDeviceStrategy`      | `TouchDeviceStrategy` | `"viewport"`                             | -       | Strategy to use on touch devices. Options: `"none"`, `"viewport"`, `"onTouchStart"` (v3.3.0+)                              |
+
+### Touch Device Strategy (v3.3.0+)
+
+The `touchDeviceStrategy` setting determines how ForesightJS behaves on touch devices:
+
+- **`"viewport"`** (default) - Detects when registered elements enter the viewport and prefetches their content based on visibility
+- **`"onTouchStart"`** - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **`"none"`** - Disables ForesightJS on touch devices
+
+```javascript
+ForesightManager.initialize({
+  touchDeviceStrategy: "onTouchStart", // or "viewport" or "none"
+})
+```
 
 :::note Development Tools
 Visual development tools are now available as a separate package. See the [development tools documentation](/docs/getting_started/development_tools) for details on installing and configuring the `js.foresight-devtools` package.
@@ -102,8 +119,8 @@ const { isTouchDevice } = ForesightManager.instance.register({
 
 **Typescript Type:** `ForesightRegisterResult`
 
-| Property              | Type    | Description                                                                                                                                                                           |
-| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isTouchDevice`       | boolean | Indicates whether the current device is a touch device. Elements will not be registered on touch devices. [See](/docs/getting_started/#what-about-touch-devices-and-slow-connections) |
-| `isLimitedConnection` | boolean | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                                    |
-| `isRegistered`        | boolean | If either `isTouchDevice` or `isLimitedConnection` is `true` this will become `false`. Usefull for implementing alternative prefetching logic.                                        |
+| Property              | Type    | Description                                                                                                                                                         |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isTouchDevice`       | boolean | Indicates whether the current device is a touch device. On mobile devices ForesightJS uses the configured `touchDeviceStrategy`. [See](#touch-device-strategy-v330) |
+| `isLimitedConnection` | boolean | Is true when the user is on a 2g connection or has data-saver enabled. Elements will not be registered when connection is limited.                                  |
+| `isRegistered`        | boolean | If `isLimitedConnection` is `true` this will become `false`.                                                                                                        |

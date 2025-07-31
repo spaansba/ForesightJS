@@ -421,12 +421,7 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
  * - `devtools`: When clicking the trash icon in the devtools element tab
  * - any other string
  */
-export type ElementUnregisteredReason =
-  | "callbackHit"
-  | "disconnected"
-  | "apiCall"
-  | "devtools"
-  | (string & {})
+export type ElementUnregisteredReason = "disconnected" | "apiCall" | "devtools" | (string & {})
 
 export interface ElementDataUpdatedEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "elementDataUpdated"

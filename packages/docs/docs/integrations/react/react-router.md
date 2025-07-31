@@ -22,7 +22,7 @@ React Router DOM (v6.4+) uses no prefetching by default. While you can enable pr
 
 ## ForesightLink Component
 
-Below is an example of creating an wrapper around the React Router `Link` component that prefetches with ForesightJS. Since ForesightJS does nothing on touch devices we use the return of the `register()` function to use the default React Router prefetch mode. This implementation uses the `useForesight` react hook which can be found [here](/docs/integrations/react/useForesight).
+Below is an example of creating an wrapper around the React Router `Link` component that prefetches with ForesightJS. On mobile devices ForesightJS uses the configured [`touchDeviceStrategy`](/docs/getting_started/config#touch-device-strategy-v330). This implementation uses the `useForesight` react hook which can be found [here](/docs/integrations/react/useForesight).
 
 ```tsx
 "use client"
