@@ -50,6 +50,8 @@
   ],
   "author": "Bart Spaans",
   "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

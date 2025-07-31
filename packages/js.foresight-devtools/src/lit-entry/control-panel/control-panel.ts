@@ -1,6 +1,7 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
+import { ForesightManager } from "js.foresight"
 
 import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
@@ -86,15 +87,87 @@ export class ControlPanel extends LitElement {
       width: 100%;
       height: 100%;
     }
+
+    .touch-device-warning {
+      background-color: rgba(255, 193, 7, 0.9);
+      color: #000;
+      padding: 8px 12px;
+      margin: 8px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .touch-device-warning.hidden {
+      display: none;
+    }
+
+    .warning-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .warning-icon {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .dismiss-button {
+      background: none;
+      border: none;
+      color: #000;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      font-weight: bold;
+    }
+
+    .dismiss-button:hover {
+      opacity: 0.7;
+    }
   `
   @state() private activeTab: ControllerTabs
   @state() private isMinimized: boolean =
     ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
+  @state() private isTouchDevice: boolean = false
+  @state() private isWarningDismissed: boolean = false
 
   private localStorageSelectedTabKey = "foresight-devtools-control-panel-tab"
+  private _abortController: AbortController | null = null
+
   constructor() {
     super()
     this.activeTab = this.getStoredTab()
+    this.isTouchDevice = ForesightManager.instance.getManagerData.currentDeviceStrategy === "touch"
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+
+    ForesightManager.instance.addEventListener(
+      "deviceStrategyChanged",
+      e => {
+        this.isTouchDevice = e.newStrategy === "touch"
+        if (e.newStrategy === "touch") {
+          this.isWarningDismissed = false
+        }
+      },
+      { signal }
+    )
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
   }
 
   private getStoredTab(): ControllerTabs {
@@ -120,6 +193,10 @@ export class ControlPanel extends LitElement {
     }
   }
 
+  private dismissWarning(): void {
+    this.isWarningDismissed = true
+  }
+
   protected render() {
     return html`
       <div class="control-wrapper ${this.isMinimized ? "minimized" : ""}">
@@ -129,6 +206,22 @@ export class ControlPanel extends LitElement {
           </button>
           <h1>Foresight DevTools</h1>
           <div></div>
+        </div>
+
+        <div
+          class="touch-device-warning ${this.isMinimized ||
+          !this.isTouchDevice ||
+          this.isWarningDismissed
+            ? "hidden"
+            : ""}"
+        >
+          <div class="warning-content">
+            <span class="warning-icon">⚠️</span>
+            <span>Touch device mode: Overlays and visibility sorting not available</span>
+          </div>
+          <button @click="${this.dismissWarning}" class="dismiss-button" title="Dismiss warning">
+            ×
+          </button>
         </div>
 
         <div class="tab-container ${this.isMinimized ? "hidden" : ""}">

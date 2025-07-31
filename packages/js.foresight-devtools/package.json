@@ -45,6 +45,8 @@
   ],
   "author": "Bart Spaans",
   "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
   "peerDependencies": {
     "js.foresight": "^3.3.0-beta.1"
   },
