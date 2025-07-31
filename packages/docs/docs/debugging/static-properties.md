@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -51,21 +51,21 @@ Gets a Map of all currently registered elements and their associated data. This 
 
 ## ForesightManager.instance.isInitiated
 
-Checks whether the ForesightManager has been initialized. Useful for conditional logic or debugging.
+Checks whether the ForesightManager has been initialized.
 
 **Returns:** `Readonly<boolean>`
 
 ## ForesightManager.instance.getManagerData
 
-Snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+Snapshot of the current `ForesightManager` state, including all [global settings](/docs/configuration/global-settings), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
 
 **Properties:**
 
-- `registeredElements` - Map of all currently registered elements and their associated data
-- `eventListeners` - Map of all event listeners listening to [ForesightManager Events](/docs/getting_started/events).
-- `globalSettings` - Current [global configuration](/docs/getting_started/config#global-configuration) settings
-- `globalCallbackHits` - Total callback execution counts by interaction type (mouse/tab/scroll) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
-- `positionObserverElements` - Elements currently being tracked by the position observer (a.k.a elements that are currently visible)
+- `registeredElements` - `Map` of all currently registered elements and their associated data
+- `eventListeners` - `Map` of all event listeners listening to [ForesightManager Events](/docs/events).
+- `globalSettings` - Current [global configuration](/docs/configuration/global-settings) settings
+- `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
+- `currentDeviceStrategy` - Which strategy is being used. Can be either `touch` or `mouse`, this changes dynamically
 
 **Returns:** `Readonly<ForesightManagerData>`
 
@@ -77,6 +77,7 @@ The return will look something like this:
     "size": 7,
     "entries": "<all your currently registered elements>"
   },
+  "currentDeviceStrategy": "mouse",
   "eventListeners": {
     "0": {
       "elementRegistered": []
@@ -131,6 +132,8 @@ The return will look something like this:
       "forwards": 3,
       "reverse": 0
     },
+    "touch": 0,
+    "viewport": 0,
     "total": 8
   }
 }

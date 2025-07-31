@@ -50,7 +50,7 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
 The hook returns an object containing:
 
 - `elementRef` - To attach to your target element
-- [`registerResults`](/docs/getting_started/config#return-value-of-register) - Registration details like `isRegistered`
+- [`registerResults`](/docs/configuration/element-settings#return-properties) - Registration details like `isRegistered`
 
 **Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
 

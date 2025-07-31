@@ -1,73 +1,18 @@
 ---
-sidebar_position: 6
-slug: Behind_the_Scenes
+sidebar_position: 3
 keywords:
   - ForesightJS
-  - JS.Foresight
-  - user intent prediction
   - mouse prediction
-  - tab prediction
-  - prefetching
+  - keyboard navigation
+  - trajectory
   - Liang-Barsky
-  - internal architecture
-description: A technical deep-dive into the internal workings of ForesightJS, explaining its architecture, how it predicts mouse movements using linear extrapolation and the Liang-Barsky algorithm, and how it predicts tab navigation.
+description: How ForesightJS predicts mouse movements and keyboard navigation
 last_updated:
-  date: 2025-06-04
+  date: 2025-07-31
   author: Bart Spaans
 ---
 
-# Behind the Scenes
-
-:::note
-Reading this is not necessary to use the library; this is just for understanding how ForesightJS works.
-:::
-
-This document delves into the internal workings of ForesightJS, offering a look "behind the scenes" at its architecture and prediction logic. While understanding these details isn't necessary for using the library, it provides insight into how ForesightJS manages elements, observes changes, and predicts user interactions like mouse movements and tab navigation. The following sections explore the core `ForesightManager`, the observers it employs, and the algorithms behind its predictive capabilities.
-
-### ForesightManager Structure
-
-ForesightJS employs a singleton pattern, ensuring only one instance of `ForesightManager` exists. This central instance manages all prediction logic, registered elements, and global settings. Elements are stored in a `Map`, where the key is the registered element itself. Calling `ForesightManager.instance.register()` multiple times with the same element overwrites the existing entry rather than creating a duplicate.
-
-Since the DOM and registered elements might change position, and we want to keep the DOM clean, we require the [`element.getBoundingClientRect`](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) for each element on each update. However, calling this function can trigger [reflows](https://developer.mozilla.org/en-US/docs/Glossary/Reflow), which we want to avoid. To obtain this rect and manage registered element state, we use observers instead.
-
-### Observer Architecture
-
-ForesightJS utilizes both browser-native observers and a third-party observer library to monitor element positions and DOM changes:
-
-- **`MutationObserver`:** This browser-native observer detects when registered elements are removed from the DOM, leading to their automatic unregistration. This provides a safety net if developers forget to manually unregister elements on removal.
-
-- **[`PositionObserver`](https://github.com/Shopify/position-observer/):** Created by [Shopify](https://github.com/Shopify), this library uses browser-native observers under the hood to asynchronously monitor changes in the position of registered elements without polling.
-
-The `PositionObserver` works by using a layered approach to track element position changes across the page. It uses an internal `VisibilityObserver` built on the native `IntersectionObserver` to determine if target elements are visible in the viewport. This optimization means only visible targets are monitored for position changes.
-
-When a target element becomes visible, the system activates a `ResizeObserver` to track size changes of the target element itself. Next to that each target gets its own `PositionIntersectionObserverOptions` containing an internal `IntersectionObserver` with smart rootMargin calculations.
-
-This smart rootMargin transforms the observer from "observing against viewport" to "observing against the target element". By calculating the rootMargin values, the system creates target-specific observation regions. Other elements on the page are observed by these target-specific IntersectionObservers, and when any element moves and intersects or overlaps with a target, callbacks fire. This enables tracking any position changes affecting the target elements without constantly polling `getBoundingClientRect()` on every element.
-
-## Element Lifecycle
-
-Understanding the lifecycle of registered elements is crucial for effective use of ForesightJS. Each registered element follows a predictable lifecycle from registration to potential cleanup:
-
-### Registration Flow
-
-1. **Element Registration:** When `ForesightManager.instance.register(element, options)` is called, the element is added to the internal Map with its configuration and initial state.
-
-2. **Callback Execution:** When user intent is detected (mouse trajectory, tab navigation, or scroll prediction), the element's registered callback function is triggered.
-
-3. **Callback Deactivation:** After a callback executes, the element's `isCallbackActive` property is automatically set to `false`, preventing the callback from firing again immediately.
-
-4. **Reactivation Wait:** The element remains in this deactivated state for a duration specified by the `reactivateAfter` option (defaults to infinity, meaning the callback won't reactivate unless manually triggered).
-
-5. **Callback Reactivation:** Once the `reactivateAfter` duration elapses, `isCallbackActive` is set back to `true`, allowing the callback to fire again when user intent is detected.
-
-6. **Lifecycle Continuation:** The element returns to step 2, ready to detect and respond to user intent again.
-
-### Element Cleanup
-
-Elements can be removed from ForesightJS tracking in several ways:
-
-- **Manual Unregistration:** Developers can explicitly remove elements using `ForesightManager.instance.unregister(element)`.
-- **Automatic DOM Cleanup:** When elements are removed from the DOM, the `MutationObserver` automatically detects this change and unregisters them.
+# Mouse & Keyboard Prediction
 
 ## Mouse Prediction
 

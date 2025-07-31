@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -25,7 +25,7 @@ last_updated:
 
 ForesightJS offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how ForesightJS works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
-These tools are built entirely using ForesightJS's [built-in events](/docs/getting_started/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
+These tools are built entirely using ForesightJS's [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
 ## Installation
 
@@ -78,7 +78,7 @@ Once enabled, the ForesightJS Development Tools add several visual layers to you
 
 ### Control Panel
 
-This panel allows you to change all available [Global Configurations](/docs/getting_started/config#global-configuration). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior.
+This panel allows you to change all available [Global Configurations](/docs/configuration/global-settings). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior.
 
 In addition to configuration controls, the panel provides two extra key views: one for registered elements and another for displaying emitted event logs.
 
@@ -88,7 +88,7 @@ The control panel also shows an overview of the currently registered elements. N
 
 #### View emitted event logs
 
-This section displays a timeline of emitted enabled Foresight [events](/docs/getting_started/events), helping you track and understand how the system responds to user interactions and state changes in real time.
+This section displays a timeline of emitted enabled Foresight [events](/docs/events), helping you track and understand how the system responds to user interactions and state changes in real time.
 
 :::caution
 Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.

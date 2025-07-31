@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 6
 keywords:
   - ForesightJS
   - js.foresight
@@ -14,11 +14,11 @@ last_updated:
 
 # Events
 
-ForesightManager emits various events during to provide insight into element registration, prediction activities, and callback executions. These events are primarily used by the [ForesightJS DevTools](/docs/getting_started/development_tools) for visual debugging and monitoring, but can also be leveraged for telemetry, analytics, and performance monitoring in your applications.
+ForesightManager emits various events during to provide insight into element registration, prediction activities, and callback executions. These events are primarily used by the [ForesightJS DevTools](/docs/debugging/devtools) for visual debugging and monitoring, but can also be leveraged for telemetry, analytics, and performance monitoring in your applications.
 
 ## Usage
 
-All events are visible in the logs tab of the [devtools](/docs/getting_started/development_tools). However for tracking/analytics in production, implementing them in your own code is straightforward with the standard `addEventListener` pattern.
+All events are visible in the logs tab of the [devtools](/docs/debugging/devtools). However for tracking/analytics in production, implementing them in your own code is straightforward with the standard `addEventListener` pattern.
 
 ```typescript
 import { ForesightManager } from "js.foresight"
@@ -70,7 +70,7 @@ type CallbackInvokedEvent = {
 }
 ```
 
-**Related Types:** [`CallbackHitType`](/docs/getting_started/typescript#callbackhittype) • [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`CallbackHitType`](/docs/getting-started/typescript#callbackhittype) • [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ---
 
@@ -90,7 +90,7 @@ type CallbackCompletedEvent = {
 }
 ```
 
-**Related Types:** [`CallbackHitType`](/docs/getting_started/typescript#callbackhittype) • [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`CallbackHitType`](/docs/getting-started/typescript#callbackhittype) • [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ### Element Lifecycle Events
 
@@ -110,7 +110,7 @@ type ElementRegisteredEvent = {
 }
 ```
 
-**Related Types:** [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ---
 
@@ -126,7 +126,7 @@ type ElementReactivatedEvent = {
 }
 ```
 
-**Related Types:** [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ---
 
@@ -144,7 +144,7 @@ type ElementUnregisteredEvent = {
 }
 ```
 
-**Related Types:** [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ---
 
@@ -160,7 +160,7 @@ type ElementDataUpdatedEvent = {
 }
 ```
 
-**Related Types:** [`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+**Related Types:** [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ### Prediction Events
 
@@ -208,7 +208,7 @@ Events fired when ForesightManager configuration changes.
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f59e0b', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>managerSettingsChanged</code>
 
-Fired when [global](/docs/next/getting_started/config#global-configuration) `ForesightManager` settings are updated via the [devtools](/docs/next/getting_started/development_tools) or via `foresightmanager.instance.alterGlobalSettings()`.
+Fired when [global](/docs/configuration/global-settings) `ForesightManager` settings are updated via the [devtools](/docs/debugging/devtools) or via `foresightmanager.instance.alterGlobalSettings()`.
 
 ```typescript
 type ManagerSettingsChangedEvent = {
@@ -221,7 +221,7 @@ type ManagerSettingsChangedEvent = {
 
 #### Extra Type Info
 
-[`ForesightElementData`](/docs/getting_started/typescript#foresightelementdata)
+[`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata)
 
 ---
 

@@ -18,7 +18,7 @@ ForesightJS is fully written in `TypeScript` to make sure your development exper
 
 ### ForesightElementData
 
-This is the main type used in ForesightJS as it gathers all information about a registered element. `ForesightElementData` is returned in most [events](/docs/getting_started/events) as `elementData`
+This is the main type used in ForesightJS as it gathers all information about a registered element. `ForesightElementData` is returned in most [events](/docs/events) as `elementData`
 
 ```TS
 type ForesightElementData = {
@@ -61,9 +61,9 @@ type CallbackHitType =
 
 ### ForesightManagerData
 
-Snapshot of the current ForesightManager state, including all [global settings](/docs/getting_started/config#global-configuration), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+Snapshot of the current ForesightManager state, including all [global settings](/docs/configuration/global-settings), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
 
-This data is returned in the [`managerSettingsChanged`](/docs/getting_started/events) event or by calling [`ForesightManager.instance.getManagerData`](/docs/getting_started/Static_Properties#foresightmanagerinstancegetmanagerdata) manually.
+This data is returned in the [`managerSettingsChanged`](/docs/events) event or by calling [`ForesightManager.instance.getManagerData`](/docs/debugging/static-properties#foresightmanagerinstancegetmanagerdata) manually.
 
 ```TS
 type ForesightManagerData = {
@@ -80,7 +80,7 @@ type ForesightManagerData = {
 
 Usefull for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
 
-This type is used in the [`useForesight`](/docs/next/integrations/react/useForesight) hook for React.
+This type is used in the [`useForesight`](/docs/integrations/react/useForesight) hook for React.
 
 ```typescript
 type ForesightButtonProps = {
