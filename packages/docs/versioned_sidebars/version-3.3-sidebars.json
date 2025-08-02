@@ -1,0 +1,50 @@
+{
+  "tutorialSidebar": [
+    {
+      "type": "category",
+      "label": "Getting Started",
+      "items": [
+        "getting-started/what-is-foresightjs",
+        "getting-started/initialize-the-manager",
+        "getting-started/your-first-element",
+        "getting-started/typescript"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Configuration",
+      "items": [
+        "configuration/global-settings",
+        "configuration/element-settings"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Integrations",
+      "items": [
+        {
+          "type": "category",
+          "label": "React",
+          "items": [
+            "integrations/react/useForesight",
+            "integrations/react/nextjs",
+            "integrations/react/react-router"
+          ]
+        },
+        "integrations/vue",
+        "integrations/angular"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Debugging",
+      "items": [
+        "debugging/devtools",
+        "debugging/static-properties"
+      ]
+    },
+    "events",
+    "behind-the-scenes",
+    "ai-context"
+  ]
+}

@@ -32,6 +32,10 @@ export class TabPredictor extends BaseForesightModule {
   }
 
   protected onConnect(): void {
+    if (typeof document === "undefined") {
+      return
+    }
+
     this.createAbortController()
 
     document.addEventListener("keydown", this.handleKeyDown, {

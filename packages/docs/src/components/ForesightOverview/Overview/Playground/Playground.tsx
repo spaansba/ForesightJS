@@ -59,7 +59,7 @@ function Playground() {
         </div>
         <div className={styles.keyboardTip}>
           <strong>TIP:</strong> Install{" "}
-          <a href="/docs/getting_started/development_tools" style={{ color: "#7dd3fc" }}>
+          <a href="/docs/debugging/devtools" style={{ color: "#7dd3fc" }}>
             Development Tools
           </a>{" "}
           for visual feedback and real-time tuning

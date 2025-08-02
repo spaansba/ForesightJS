@@ -16,7 +16,7 @@ function DemoWrapper() {
             See predictions trigger in real-time with the official{" "}
             <a
               style={{ color: "#7dd3fc" }}
-              href="/docs/getting_started/development_tools"
+              href="/docs/debugging/devtools"
               target="_blank"
             >
               Development Tools

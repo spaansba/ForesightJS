@@ -76,7 +76,7 @@ export function Hero() {
               <div className={styles.heroActions}>
                 <Link
                   className={styles.primaryButton}
-                  to="/docs/getting_started"
+                  to="/docs/getting-started/what-is-foresightjs"
                   onClick={turnOffDebugMode}
                 >
                   Get Started

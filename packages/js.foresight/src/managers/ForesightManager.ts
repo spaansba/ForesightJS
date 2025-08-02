@@ -518,7 +518,7 @@ export class ForesightManager {
   }
 
   private initializeGlobalListeners() {
-    if (this.isSetup) {
+    if (this.isSetup || typeof document === "undefined") {
       return
     }
 
@@ -537,6 +537,10 @@ export class ForesightManager {
   }
 
   private removeGlobalListeners() {
+    if (typeof document === "undefined") {
+      return
+    }
+
     this.isSetup = false
     this.domObserver?.disconnect()
     this.domObserver = null

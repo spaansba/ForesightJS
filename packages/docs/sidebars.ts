@@ -45,20 +45,8 @@ const sidebars: SidebarsConfig = {
             'integrations/react/react-router',
           ],
         },
-        {
-          type: 'category',
-          label: 'Vue',
-          items: [
-            'integrations/vue/vue',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Angular',
-          items: [
-            'integrations/angular/angular',
-          ],
-        },
+        'integrations/vue',
+        'integrations/angular',
       ],
     },
     {

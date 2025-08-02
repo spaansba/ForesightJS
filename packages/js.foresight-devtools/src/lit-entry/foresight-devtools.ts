@@ -52,6 +52,10 @@ export class ForesightDevtools extends LitElement {
   }
 
   public static initialize(props?: DeepPartial<DevtoolsSettings>): ForesightDevtools {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return null as any
+    }
+
     if (!ForesightDevtools._instance) {
       ForesightDevtools.createAndAppendInstance()
     }
@@ -69,6 +73,9 @@ export class ForesightDevtools extends LitElement {
   }
 
   public static get instance(): ForesightDevtools {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return null as any
+    }
     if (!ForesightDevtools._instance) {
       return ForesightDevtools.initialize()
     }

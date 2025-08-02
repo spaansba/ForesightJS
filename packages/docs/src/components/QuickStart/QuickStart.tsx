@@ -73,10 +73,10 @@ ForesightManager.instance.register({
 
 
             <div className={styles.actions}>
-              <Link to="/docs/getting_started" className="button button--primary">
+              <Link to="/docs/getting-started/what-is-foresightjs" className="button button--primary">
                 Full Documentation
               </Link>
-              <Link to="/docs/getting_started/config" className="button button--secondary">
+              <Link to="/docs/configuration/global-settings" className="button button--secondary">
                 Configuration
               </Link>
             </div>
