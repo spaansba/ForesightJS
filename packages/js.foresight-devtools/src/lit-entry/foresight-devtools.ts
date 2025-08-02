@@ -52,15 +52,10 @@ export class ForesightDevtools extends LitElement {
   }
 
   public static initialize(props?: DeepPartial<DevtoolsSettings>): ForesightDevtools {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return null as any
-    }
-
     if (!ForesightDevtools._instance) {
       ForesightDevtools.createAndAppendInstance()
     }
 
-    // If still no instance after create attempt (SSR case), return early
     if (!ForesightDevtools._instance) {
       return ForesightDevtools._instance!
     }
@@ -73,9 +68,6 @@ export class ForesightDevtools extends LitElement {
   }
 
   public static get instance(): ForesightDevtools {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return null as any
-    }
     if (!ForesightDevtools._instance) {
       return ForesightDevtools.initialize()
     }
