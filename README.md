@@ -44,12 +44,12 @@ ForesightManager.initialize({
 // Register an element to be tracked
 const myButton = document.getElementById("my-button")
 
-const { isTouchDevice } = ForesightManager.instance.register({
+ForesightManager.instance.register({
   element: myButton,
   callback: () => {
     // This is where your prefetching logic goes
   },
-  hitSlop: 20, // Optional: "hit slop" in pixels. Overwrites defaultHitSlop
+  hitSlop: 20, // Optional: "hit slop" in pixels.
   // other optional props (see configuration)
 })
 ```
