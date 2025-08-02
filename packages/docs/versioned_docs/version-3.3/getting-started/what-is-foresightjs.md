@@ -60,7 +60,7 @@ ForesightJS uses different prediction strategies depending on the device type. F
 Pick and choose multiple prediction strategies. All are enabled by default, but you can disable any of them when [initializing](/docs/getting-started/initialize-the-manager) the `ForesightManager`.
 
 - **Mouse Trajectory** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Analyzes cursor movement patterns to predict which links users are heading towards and prefetches content before they arrive
-- **Keyboard Navigation** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Tracks tab key usage and focus states to preload content for keyboard users navigating through your site
+- **Keyboard Navigation** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Tracks tab key usage to prefetch when the user is N tab stops away from your registered element
 - **Scroll** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Prefetches content when users scroll towards registered elements, predicting which elements will be reached based on scroll direction
 
 ### Touch Devices (v3.3.0+)
