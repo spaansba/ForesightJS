@@ -55,7 +55,9 @@ export type ElementBounds = {
 }
 
 export type ForesightRegisterResult = {
-  /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
+  /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently
+   * @deprecated As of version 3.3, ForesightJS handles touch devices internally with dedicated touch strategies
+   */
   isTouchDevice: boolean
   /** Whether the user has connection limitations (slow network (2g) or data saver enabled) that should prevent prefetching */
   isLimitedConnection: boolean

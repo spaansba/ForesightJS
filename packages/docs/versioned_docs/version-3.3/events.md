@@ -87,6 +87,7 @@ type CallbackCompletedEvent = {
   elapsed: number // Time between callbackInvoked and callbackCompleted
   status: "success" | "error" | undefined
   errorMessage: string | undefined | null
+  wasLastActiveElement: boolean
 }
 ```
 
@@ -140,7 +141,7 @@ type ElementUnregisteredEvent = {
   timestamp: number
   elementData: ForesightElementData
   unregisterReason: "disconnected" | "apiCall" | "devtools" | (string & {})
-  wasLastElement: boolean
+  wasLastRegisteredElement: boolean
 }
 ```
 

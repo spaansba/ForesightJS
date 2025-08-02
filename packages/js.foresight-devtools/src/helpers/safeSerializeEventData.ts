@@ -38,6 +38,11 @@ interface ElementRegisteredPayload extends PayloadBase {
 
 interface ElementUnregisteredEvent extends PayloadBase {
   type: "elementUnregistered"
+  name: string
+  id: string
+  callbackInfo: ElementCallbackInfo
+  meta: Record<string, unknown>
+  wasLastRegisteredElement: boolean
 }
 
 interface ElementReactivatedPayload extends PayloadBase {
@@ -67,11 +72,13 @@ interface CallbackInvokedPayload extends PayloadBase {
 
 interface CallbackCompletedPayload extends PayloadBase {
   type: "callbackCompleted"
+  elapsed: string
   name: string
   hitType: CallbackHitType
   status: "success" | "error" | undefined
   errorMessage: string | undefined | null
   callbackInfo: ElementCallbackInfo
+  wasLastActiveElement: boolean
   meta: Record<string, unknown>
 }
 
@@ -220,9 +227,11 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       case "elementUnregistered":
         return {
           type: "elementUnregistered",
-          // name: event.elementData.name,
-          // id: event.elementData.element.id || "",
-          // meta: event.elementData.meta,
+          name: event.elementData.name,
+          id: event.elementData.element.id || "",
+          meta: event.elementData.meta,
+          callbackInfo: event.elementData.callbackInfo,
+          wasLastRegisteredElement: event.wasLastRegisteredElement,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.elementData.name} - ${event.unregisterReason}`,
@@ -251,13 +260,15 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           summary: `${event.elementData.name} - ${event.hitType.kind}`,
         }
       case "callbackCompleted": {
-        const elapsed = formatElapsed(event.elapsed)
+        const elapsed = formatElapsed(event.elementData.callbackInfo.lastCallbackRuntime || 0)
         return {
           type: "callbackCompleted",
           name: event.elementData.name,
           hitType: event.hitType,
           callbackInfo: event.elementData.callbackInfo,
           meta: event.elementData.meta,
+          wasLastActiveElement: event.wasLastActiveElement,
+          elapsed: elapsed,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           status: event.elementData.callbackInfo.lastCallbackStatus,
