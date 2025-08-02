@@ -80,10 +80,6 @@ ForesightJS uses different prediction strategies depending on the device type:
 
 **Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`](https://foresightjs.com/docs/getting_started/config#touch-device-strategy-v330))
 
-## How Does ForesightJS Work?
-
-For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
-
 ## Providing Context to AI Tools
 
 ForesightJS is a newer library, so most AI assistants and LLMs may not have much built-in knowledge about it. To improve their responses, you can provide the following context:

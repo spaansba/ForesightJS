@@ -36,6 +36,7 @@ ForesightManager.initialize({
   tabOffset: 3,
   enableScrollPrediction: true,
   scrollMargin: 150,
+  touchDeviceStrategy: "onTouchStart",
 })
 ```
 

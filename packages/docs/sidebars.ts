@@ -70,16 +70,7 @@ const sidebars: SidebarsConfig = {
       ],
     },
     'events',
-    {
-      type: 'category',
-      label: 'Behind the Scenes',
-      items: [
-        'behind-the-scenes/architecture',
-        'behind-the-scenes/element-lifecycle',
-        'behind-the-scenes/mouse-keyboard',
-        'behind-the-scenes/touch-devices',
-      ],
-    },
+    'behind-the-scenes',
     'ai-context',
   ],
 }

@@ -3,6 +3,7 @@ dist
 notes.txt
 /src/test
 CLAUDE.md
+.env
 .claude
 PositionObserver
 pop.md
