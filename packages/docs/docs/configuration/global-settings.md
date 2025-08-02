@@ -36,7 +36,7 @@ ForesightManager.initialize({
   tabOffset: 3,
   enableScrollPrediction: true,
   scrollMargin: 150,
-  touchDeviceStrategy: "onTouchStart",
+  touchDeviceStrategy: "viewport",
 })
 ```
 
@@ -191,20 +191,20 @@ ForesightManager.initialize({
 #### `touchDeviceStrategy`
 
 - **Type:** `TouchDeviceStrategy`
-- **Default:** `"viewport"`
+- **Default:** `"onTouchStart"`
 - **Options:** `"none"`, `"viewport"`, `"onTouchStart"`
 - **Description:** Strategy to use for touch devices (mobile / pen users).
 
 ```javascript
 ForesightManager.initialize({
-  touchDeviceStrategy: "onTouchStart", // Trigger on touch start
+  touchDeviceStrategy: "viewport",
 })
 ```
 
 **Available strategies:**
 
-- **`"viewport"`** (default) - Detects when registered elements enter the viewport and prefetches their content based on visibility
 - **`"onTouchStart"`** - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **`"viewport"`** - Detects when registered elements enter the viewport and prefetches their content based on visibility
 - **`"none"`** - Disables ForesightJS on touch devices
 
 ## Runtime Configuration Changes

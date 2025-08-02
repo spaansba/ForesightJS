@@ -65,12 +65,12 @@ Pick and choose multiple prediction strategies:
 
 ### Touch Devices (v3.3.0+)
 
-ForesightJS now supports touch devices through the configurable `touchDeviceStrategy`. See the [TouchDeviceStrategy configuration](/docs/configuration/global-settings#touch-device-strategy-v330) for details.
+While desktop systems use multiple concurrent prediction strategies, touch devices operate with a single active strategy that can be configured while initializing the `ForesightManager`
 
 Available strategies:
 
-- **Viewport Enter** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Detects when registered elements enter the viewport and prefetches their content based on scroll behavior and visibility
-- **onTouchStart** - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **onTouchStart** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **Viewport Enter** - Detects when registered elements enter the viewport and prefetches their content based on scroll behavior and visibility
 - **None** - Disables ForesightJS on touch devices (previous behavior)
 
 ## Why ForesightJS?

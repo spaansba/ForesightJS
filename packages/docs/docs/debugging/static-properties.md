@@ -66,6 +66,7 @@ Snapshot of the current `ForesightManager` state, including all [global settings
 - `globalSettings` - Current [global configuration](/docs/configuration/global-settings) settings
 - `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
 - `currentDeviceStrategy` - Which strategy is being used. Can be either `touch` or `mouse`, this changes dynamically
+- `activeElementCount` - Amount of elements currently active (not the same as registered)
 
 **Returns:** `Readonly<ForesightManagerData>`
 
@@ -77,6 +78,7 @@ The return will look something like this:
     "size": 7,
     "entries": "<all your currently registered elements>"
   },
+  "activeElementCount": 5,
   "currentDeviceStrategy": "mouse",
   "eventListeners": {
     "0": {

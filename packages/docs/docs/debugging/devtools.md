@@ -23,13 +23,13 @@ last_updated:
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-ForesightJS offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how ForesightJS works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
+`ForesightJS` offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how `ForesightJS` works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
-These tools are built entirely using ForesightJS's [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
+These tools are built entirely using `ForesightJS`'s [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
 ## Installation
 
-To install the ForesightJS Development Tools package, use your preferred package manager:
+To install the `ForesightJS` Development Tools package, use your preferred package manager:
 
 ```bash
 pnpm add -D js.foresight-devtools
@@ -40,8 +40,6 @@ yarn add -D js.foresight-devtools
 ```
 
 ## Enabling Development Tools
-
-The development tools are a separate package that integrate with your ForesightJS setup:
 
 ```javascript
 import { ForesightManager } from "js.foresight"
@@ -74,21 +72,33 @@ ForesightDevtools.initialize({
 
 ## Development Tools Features
 
-Once enabled, the ForesightJS Development Tools add several visual layers to your application, including mouse and scroll trajectories and element hitboxes. A control panel also appears in the bottom-right corner of the screen.
+Once enabled, the `ForesightJS` Development Tools add several visual layers to your application, including mouse and scroll trajectories and element hitboxes. A control panel also appears in the bottom-right corner of the screen.
 
 ### Control Panel
 
-This panel allows you to change all available [Global Configurations](/docs/configuration/global-settings). These controls affect the `ForesightManager` configuration in real-time, allowing you to see how different settings impact its behavior.
+The control panel provides three main tabs for debugging and configuration. Each tab serves a specific purpose in understanding and tuning ForesightJS behavior.
 
-In addition to configuration controls, the panel provides two extra key views: one for registered elements and another for displaying emitted event logs.
+#### Settings Tab
 
-#### View currently registered elements
+The Settings tab provides real-time controls for all [Global Configurations](/docs/configuration/global-settings). Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
 
-The control panel also shows an overview of the currently registered elements. Next to each element's visibility the element will also show when its currently prefetching and when its done prefetching. If you need more detailed information about the prefetching of elements, or the inner workings of Foresight you can change to the logs tab.
+#### Elements Tab
 
-#### View emitted event logs
+The Elements tab displays a overview of all currently registered elements within the `ForesightManage`r. Each element entry shows its current status through color-coded indicators:
 
-This section displays a timeline of emitted enabled Foresight [events](/docs/events), helping you track and understand how the system responds to user interactions and state changes in real time.
+- 🟢 **Green** - Active visible elements in desktop mode
+- ⚫ **Grey** - Active invisible elements in desktop mode
+- 🟣 **Purple** - Active elements while in touch device mode (all elements, we dont track visibility in this mode)
+- 🟡 **Yellow** - Elements which callbacks are currently executing
+- 🔘 **Light Gray** - Inactive elements
+
+Each element can also be expanded to reveal its [`ForesightElementData`](/docs/next/getting-started/typescript#foresightelementdata) information including settings, callback status, and metadata. A countdown timer appears for elements in their reactivation cooldown period (`reactivateAfter`), clicking this timer will instantly reactivate the element.
+
+#### Log Tab
+
+The Log tab displays real-time [events](/docs/events) emitted by `ForesightJS`. You can see callback execution times, the full element's lifecycle and other system events. Events can be filtered through the devtools initialization configuration or in the control panel itself.
+
+You can also print out the complete [`ForesightManager.instance.getManagerData`](/docs/debugging/static-properties#foresightmanagerinstancegetmanagerdata) state without having to call it from your code.
 
 :::caution
 Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.

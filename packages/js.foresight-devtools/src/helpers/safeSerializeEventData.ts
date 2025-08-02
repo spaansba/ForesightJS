@@ -146,7 +146,7 @@ export function safeSerializeManagerData(
     const { element: _, ...elementDataWithoutElement } = elementData
     registeredElements.push({
       ...elementDataWithoutElement,
-      elementInfo: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}${
+      elementInfo: `${element.id ? `#${element.id}` : ""}${
         element.className ? `.${element.className.replace(/\s+/g, ".")}` : ""
       }`,
     })

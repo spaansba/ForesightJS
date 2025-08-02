@@ -110,7 +110,7 @@ export class ForesightManager {
     },
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
-    touchDeviceStrategy: "viewport",
+    touchDeviceStrategy: "onTouchStart",
   }
 
   private pendingPointerEvent: PointerEvent | null = null
@@ -440,10 +440,7 @@ export class ForesightManager {
       } catch (error) {
         errorMessage = error instanceof Error ? error.message : String(error)
         status = "error"
-        console.error(
-          `Error in callback for element ${elementData.name} (${elementData.element.tagName}):`,
-          error
-        )
+        console.error(`Error in callback for element ${elementData.name}:`, error)
       }
 
       elementData.callbackInfo.lastCallbackCompletedAt = Date.now()

@@ -1,24 +1,16 @@
-# ForesightJS Development Tools
+# js.foresight-devtools
 
 [![npm version](https://img.shields.io/npm/v/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Visual development tools for [ForesightJS](https://foresightjs.com/) - a library that predicts user intent by analyzing mouse movements, scroll behavior, and keyboard navigation to enable proactive actions like prefetching.
+`ForesightJS` offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how `ForesightJS` works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
-## What are the ForesightJS Development Tools?
-
-The ForesightJS Development Tools are a companion development package that provides visual development capabilities for ForesightJS implementations. They help developers understand and tune how ForesightJS is working in their applications by providing real-time visualization of:
-
-- **Mouse trajectory predictions** - See predicted cursor paths and intersection points
-- **Element bounds and hit slop areas** - Visualize registered elements and their interaction zones
-- **Keyboard navigation sequences** - Track tab-based navigation predictions
-- **Callback execution** - Monitor when and why prediction callbacks fire
-- **Real-time settings control** - Adjust ForesightJS parameters on the fly
-
-![ForesightJS Development Tools Demo](https://github.com/user-attachments/assets/36c81a82-fee7-43d6-ba1e-c48214136f90)
+These tools are built entirely using `ForesightJS`'s [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
 ## Installation
+
+To install the `ForesightJS` Development Tools package, use your preferred package manager:
 
 ```bash
 pnpm add -D js.foresight-devtools
@@ -28,142 +20,71 @@ npm install -D js.foresight-devtools
 yarn add -D js.foresight-devtools
 ```
 
-## Basic Usage
+## Enabling Development Tools
 
 ```javascript
 import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
-ForesightManager.initialize()
+ForesightManager.initialize({})
 
-// Initialize development tools
-ForesightDevtools.initialize()
-```
-
-## Configuration Options
-
-```typescript
-type DevelopmentToolsSettings = {
-  showDebugger?: boolean
-  isControlPanelDefaultMinimized?: boolean
-  showNameTags?: boolean // Show element names on overlays
-  sortElementList?: "documentOrder" | "visibility" | "insertionOrder" // Control panel sorting
-  logging: {
-    logLocation: "controlPanel" | "console" | "both" | "none" // Where to log the Foresight Events
-    callbackCompleted: boolean
-    callbackInvoked: boolean
-    elementDataUpdated: boolean
-    elementRegistered: boolean
-    elementUnregistered: boolean
-    managerSettingsChanged: boolean
-    mouseTrajectoryUpdate: boolean
-    scrollTrajectoryUpdate: boolean
-  }
-}
-```
-
-### Available Development Tools Settings
-
-**TypeScript Type:** `DevelopmentToolsSettings`
-
-| Setting                          | Type              | Default      | Description                                                                                                                                                                       |
-| -------------------------------- | ----------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `showDebugger`                   | `boolean`         | `true`       | Controls whether the development tools are visible and active                                                                                                                     |
-| `isControlPanelDefaultMinimized` | `boolean`         | `false`      | When true, the development tools control panel will be minimized on page load                                                                                                     |
-| `showNameTags`                   | `boolean`         | `true`       | Shows the element `name` (or `id` if no `name` is given) above registered elements                                                                                                |
-| `sortElementList`                | `SortElementList` | `visibility` | Controls element sorting in control panel: `visibility` sorts by viewport visibility, `documentOrder` sorts by HTML structure order, `insertionOrder` sorts by registration order |
-
-### Logging Configuration
-
-**TypeScript Type:** `LogEvents & { logLocation: LoggingLocations }`
-
-| Setting                  | Type                                                    | Default          | Description                                                                                    |
-| ------------------------ | ------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
-| `logLocation`            | `"controlPanel"` \| `"console"` \| `"both"` \| `"none"` | `"controlPanel"` | Where to output the ForesightJS event logs                                                     |
-| `callbackCompleted`      | `boolean`                                               | `false`          | Log when element callbacks finish executing (includes success/error status and execution time) |
-| `callbackInvoked`        | `boolean`                                               | `false`          | Log when element callbacks are triggered (includes hit type: mouse/keyboard/scroll)            |
-| `elementDataUpdated`     | `boolean`                                               | `false`          | Log when element data changes (bounds updates, visibility changes)                             |
-| `elementRegistered`      | `boolean`                                               | `false`          | Log when new elements are registered with ForesightJS                                          |
-| `elementUnregistered`    | `boolean`                                               | `false`          | Log when elements are unregistered (includes reason: callbackHit/disconnected/apiCall)         |
-| `managerSettingsChanged` | `boolean`                                               | `false`          | Log when ForesightManager global settings are modified                                         |
-| `mouseTrajectoryUpdate`  | `boolean`                                               | `false`          | Log real-time mouse trajectory predictions (high frequency - use with caution)                 |
-| `scrollTrajectoryUpdate` | `boolean`                                               | `false`          | Log scroll direction predictions and trajectory updates                                        |
-
-### Usage Example with All Options
-
-```javascript
-import { ForesightManager } from "js.foresight"
-import { ForesightDevtools } from "js.foresight-devtools"
-
-// Initialize ForesightJS
-ForesightManager.initialize({
-  trajectoryPredictionTime: 100,
-  defaultHitSlop: { top: 10, right: 10, bottom: 10, left: 10 },
-  enableMousePrediction: true,
-  enableTabPrediction: true,
-  enableScrollPrediction: true,
-})
-
-// Initialize development tools with custom settings
+// Initialize the development tools (all options are optional)
 ForesightDevtools.initialize({
   showDebugger: true,
-  isControlPanelDefaultMinimized: false,
-  showNameTags: true,
-  sortElementList: "visibility",
+  isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
+  showNameTags: true, // optional setting which shows the name of the element
+  sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
   logging: {
-    logLocation: "controlPanel",
+    logLocation: "controlPanel", // Where to log the Foresight Events
     callbackCompleted: true,
+    elementReactivated: true,
     callbackInvoked: true,
-    elementRegistered: true,
-    elementUnregistered: true,
-    elementDataUpdated: false, // High frequency - keep disabled for performance
+    elementDataUpdated: false,
+    elementRegistered: false,
+    elementUnregistered: false,
     managerSettingsChanged: true,
-    mouseTrajectoryUpdate: false, // High frequency - keep disabled for performance
-    scrollTrajectoryUpdate: false, // High frequency - keep disabled for performance
+    mouseTrajectoryUpdate: false, // dont log this to the devtools
+    scrollTrajectoryUpdate: false, // dont log this to the devtools
+    deviceStrategyChanged: true,
   },
-})
-
-// Register elements as usual
-ForesightManager.instance.register({
-  element: document.getElementById("my-button"),
-  callback: () => {
-    console.log("Prediction triggered!")
-  },
-  name: "my-button", // This name will appear in the development tools
 })
 ```
 
-## Development Workflow
+## Development Tools Features
 
-The development tools are particularly useful when:
+Once enabled, the `ForesightJS` Development Tools add several visual layers to your application, including mouse and scroll trajectories and element hitboxes. A control panel also appears in the bottom-right corner of the screen.
 
-1. **Setting up ForesightJS** for the first time in an application
-2. **Fine-tuning prediction parameters** for specific UI components
-3. **Debugging callback execution** issues or unexpected behavior
-4. **Optimizing hit slop areas** for better user experience
-5. **Understanding prediction accuracy** across different interaction patterns
+### Control Panel
 
-## Framework Integration
+The control panel provides three main tabs for debugging and configuration. Each tab serves a specific purpose in understanding and tuning ForesightJS behavior.
 
-Since both ForesightJS and the development tools are framework-agnostic, you can use them together in any JavaScript environment:
+#### Settings Tab
 
-- React / Next.js
-- Vue / Nuxt
-- Angular
-- Svelte / SvelteKit
-- Vanilla JavaScript
+The Settings tab provides real-time controls for all [Global Configurations](/docs/configuration/global-settings). Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
 
-## Requirements
+#### Elements Tab
 
-- **js.foresight** ^3.0.0 (peer dependency)
+The Elements tab displays a overview of all currently registered elements within the `ForesightManage`r. Each element entry shows its current status through color-coded indicators:
 
-## License
+- 🟢 **Green** - Active visible elements in desktop mode
+- ⚫ **Grey** - Active invisible elements in desktop mode
+- 🟣 **Purple** - Active elements while in touch device mode (all elements, we dont track visibility in this mode)
+- 🟡 **Yellow** - Elements which callbacks are currently executing
+- 🔘 **Light Gray** - Inactive elements
 
-MIT © [Bart Spaans](https://github.com/spaansba)
+Each element can also be expanded to reveal its [`ForesightElementData`](/docs/next/getting-started/typescript#foresightelementdata) information including settings, callback status, and metadata. A countdown timer appears for elements in their reactivation cooldown period (`reactivateAfter`), clicking this timer will instantly reactivate the element.
 
-## Related
+#### Log Tab
 
-- [ForesightJS](https://foresightjs.com/) - The main prediction library
-- [Documentation](https://foresightjs.com/docs) - Comprehensive guides and API reference
-- [GitHub](https://github.com/spaansba/ForesightJS) - Source code and issues
+The Log tab displays real-time [events](/docs/events) emitted by `ForesightJS`. You can see callback execution times, the full element's lifecycle and other system events. Events can be filtered through the devtools initialization configuration or in the control panel itself.
+
+You can also print out the complete [`ForesightManager.instance.getManagerData`](/docs/debugging/static-properties#foresightmanagerinstancegetmanagerdata) state without having to call it from your code.
+
+:::caution
+Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.
+:::
+
+:::note
+Element overlay visualization and visibility sorting in the control panel only work with desktop/mouse prediction strategies. When debugging `touchDeviceStrategy` configurations, these features are not available as touch strategies don't track the same positioning data.
+:::

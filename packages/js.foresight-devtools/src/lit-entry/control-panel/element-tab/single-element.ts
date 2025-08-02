@@ -1,6 +1,6 @@
-import type { ForesightElementData } from "js.foresight"
+import type { ForesightElementData, DeviceStrategyChangedEvent } from "js.foresight"
 import { LitElement, html, css } from "lit"
-import { customElement, property } from "lit/decorators.js"
+import { customElement, property, state } from "lit/decorators.js"
 import "../base-tab/expandable-item"
 import "./reactivate-countdown"
 import { ForesightManager } from "js.foresight"
@@ -50,6 +50,11 @@ export class SingleElement extends LitElement {
       .status-indicator.inactive {
         background-color: #999;
         box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
+      }
+
+      .status-indicator.touch-device {
+        background-color: #ba68c8;
+        box-shadow: 0 0 0 2px rgba(186, 104, 200, 0.4);
       }
 
       .unregister-button {
@@ -115,6 +120,33 @@ export class SingleElement extends LitElement {
   @property() isActive: boolean = false
   @property() isExpanded: boolean = false
   @property() onToggle: ((elementId: string) => void) | undefined
+
+  @state() private currentDeviceStrategy: string = "mouse"
+  private _abortController: AbortController | null = null
+  connectedCallback() {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    const { signal } = this._abortController
+
+    // Initialize current device strategy
+    this.currentDeviceStrategy = ForesightManager.instance.getManagerData.currentDeviceStrategy
+
+    // Listen for device strategy changes
+    ForesightManager.instance.addEventListener(
+      "deviceStrategyChanged",
+      (e: DeviceStrategyChangedEvent) => {
+        this.currentDeviceStrategy = e.newStrategy
+      },
+      { signal }
+    )
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
+  }
+
   private getBorderColor(): string {
     if (this.isActive) {
       return "#ffeb3b"
@@ -122,6 +154,13 @@ export class SingleElement extends LitElement {
     if (!this.elementData.callbackInfo.isCallbackActive) {
       return "#999"
     }
+
+    // Use purple for touch devices when active (no opacity variation)
+    if (this.currentDeviceStrategy === "touch") {
+      return "#ba68c8"
+    }
+
+    // Use green for desktop devices when active
     return this.elementData.isIntersectingWithViewport ? "#4caf50" : "#666"
   }
 
@@ -132,6 +171,12 @@ export class SingleElement extends LitElement {
     if (!this.elementData.callbackInfo.isCallbackActive) {
       return "inactive"
     }
+
+    // Use purple indicator for touch devices (no visibility distinction)
+    if (this.currentDeviceStrategy === "touch") {
+      return "touch-device"
+    }
+
     return this.elementData.isIntersectingWithViewport ? "visible" : "hidden"
   }
 
@@ -142,14 +187,19 @@ export class SingleElement extends LitElement {
     if (!this.elementData.callbackInfo.isCallbackActive) {
       return "callback inactive"
     }
-    return this.elementData.isIntersectingWithViewport ? "in viewport" : "not in viewport"
+
+    const baseStatus = this.elementData.isIntersectingWithViewport
+      ? "in viewport"
+      : "not in viewport"
+    const deviceStatus = this.currentDeviceStrategy === "touch" ? " (touch device)" : ""
+
+    return baseStatus + deviceStatus
   }
 
   private formatElementDetails(): string {
     const elementData = this.elementData
     const details = {
       status: this.getStatusText(),
-      tagName: elementData.element.tagName.toLowerCase(),
       isIntersecting: elementData.isIntersectingWithViewport,
       registerCount: elementData.registerCount,
       hitSlop: {
@@ -171,7 +221,9 @@ export class SingleElement extends LitElement {
   }
 
   render() {
-    const isNotVisible = !this.elementData.isIntersectingWithViewport
+    // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
+    const isNotVisible =
+      !this.elementData.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
 
     return html`
       <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
