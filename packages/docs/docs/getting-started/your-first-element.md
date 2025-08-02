@@ -67,7 +67,7 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 - [Next.js](/docs/integrations/react/nextjs)
 - [React Router](/docs/integrations/react/react-router)
-- [Angular](/docs/integrations/angular/angular)
+- [Angular](/docs/integrations/angular)
 
 ## Development Tools
 
