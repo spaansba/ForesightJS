@@ -16,7 +16,7 @@ export interface ScrollPredictorConfig {
 
 export class ScrollPredictor extends BaseForesightModule {
   protected readonly moduleName = "ScrollPredictor"
-  
+
   private predictedScrollPoint: Point | null = null
   private scrollDirection: ScrollDirection | null = null
   private trajectoryPositions: Readonly<TrajectoryPositions>
@@ -24,10 +24,6 @@ export class ScrollPredictor extends BaseForesightModule {
   constructor(config: ScrollPredictorConfig) {
     super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
-  }
-  protected onConnect(): void {}
-  protected onDisconnect(): void {
-    this.resetScrollProps()
   }
 
   public resetScrollProps(): void {
@@ -44,58 +40,45 @@ export class ScrollPredictor extends BaseForesightModule {
       return
     }
 
-    try {
-      // ONCE per handlePositionChange batch we decide what the scroll direction is
-      this.scrollDirection =
-        this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
+    // ONCE per handlePositionChange batch we decide what the scroll direction is
+    this.scrollDirection =
+      this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
 
-      if (this.scrollDirection === "none") {
-        return
-      }
-
-      // ONCE per handlePositionChange batch we decide the predicted scroll point
-      this.predictedScrollPoint =
-        this.predictedScrollPoint ??
-        predictNextScrollPosition(
-          this.trajectoryPositions.currentPoint,
-          this.scrollDirection,
-          this.settings.scrollMargin
-        )
-
-      // Check if the scroll is going to intersect with an registered element
-      if (
-        lineSegmentIntersectsRect(
-          this.trajectoryPositions.currentPoint,
-          this.predictedScrollPoint,
-          elementData.elementBounds.expandedRect
-        )
-      ) {
-        this.callCallback(elementData, {
-          kind: "scroll",
-          subType: this.scrollDirection,
-        })
-      }
-
-      this.emit({
-        type: "scrollTrajectoryUpdate",
-        currentPoint: this.trajectoryPositions.currentPoint,
-        predictedPoint: this.predictedScrollPoint,
-        scrollDirection: this.scrollDirection,
-      })
-    } catch (error) {
-      this.handleError(error, "handleScrollPrefetch")
+    if (this.scrollDirection === "none") {
+      return
     }
-  }
 
-  protected handleError(error: unknown, context: string): void {
-    super.handleError(error, context)
+    // ONCE per handlePositionChange batch we decide the predicted scroll point
+    this.predictedScrollPoint =
+      this.predictedScrollPoint ??
+      predictNextScrollPosition(
+        this.trajectoryPositions.currentPoint,
+        this.scrollDirection,
+        this.settings.scrollMargin
+      )
 
-    // Emit fallback event on error
+    // Check if the scroll is going to intersect with an registered element
+    if (
+      lineSegmentIntersectsRect(
+        this.trajectoryPositions.currentPoint,
+        this.predictedScrollPoint,
+        elementData.elementBounds.expandedRect
+      )
+    ) {
+      this.callCallback(elementData, {
+        kind: "scroll",
+        subType: this.scrollDirection,
+      })
+    }
+
     this.emit({
       type: "scrollTrajectoryUpdate",
       currentPoint: this.trajectoryPositions.currentPoint,
-      predictedPoint: this.trajectoryPositions.currentPoint,
-      scrollDirection: "none",
+      predictedPoint: this.predictedScrollPoint,
+      scrollDirection: this.scrollDirection,
     })
   }
+
+  protected onConnect() {}
+  protected onDisconnect = () => this.resetScrollProps()
 }

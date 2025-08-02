@@ -44,20 +44,23 @@ export abstract class BaseForesightModule {
     if (!this.isConnected) {
       return
     }
-    if (process.env.NODE_ENV === "development") {
-      console.log(`🔌 ${this.moduleName} disconnecting...`)
-    }
+
+    this.devLog(`Disconnecting ${this.moduleName}...`)
     this.abortController?.abort(`${this.moduleName} module disconnected`)
     this.onDisconnect()
     this._isConnected = false
   }
 
   public connect(): void {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`🔌 ${this.moduleName} connecting...`)
-    }
+    this.devLog(`Connecting ${this.moduleName}...`)
     this.onConnect()
     this._isConnected = true
+  }
+
+  public devLog(message: string): void {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`🛠️ ${this.moduleName}: ${message}`)
+    }
   }
 
   protected abstract onConnect(): void
@@ -70,12 +73,6 @@ export abstract class BaseForesightModule {
 
     this.abortController = new AbortController()
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(`🎛️ ${this.moduleName} created new AbortController`)
-    }
-  }
-
-  protected handleError(error: unknown, context: string): void {
-    console.error(`${this.moduleName} error in ${context}:`, error)
+    this.devLog(`Created new AbortController for ${this.moduleName}`)
   }
 }

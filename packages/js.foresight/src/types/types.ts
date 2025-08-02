@@ -54,18 +54,6 @@ export type ElementBounds = {
   hitSlop: Exclude<HitSlop, number>
 }
 
-/**
- * Represents trajectory hit related data for a foresight element.
- */
-export type TrajectoryHitData = {
-  /** True if the predicted mouse trajectory has intersected the element's expanded bounds. */
-  isTrajectoryHit: boolean
-  /** The timestamp when the last trajectory hit occurred. */
-  trajectoryHitTime: number
-  /** Timeout ID for expiring the trajectory hit state. */
-  trajectoryHitExpirationTimeoutId?: ReturnType<typeof setTimeout>
-}
-
 export type ForesightRegisterResult = {
   /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently  */
   isTouchDevice: boolean
@@ -89,10 +77,6 @@ export type ForesightElementData = Required<
   id: string
   /** The boundary information for the element. */
   elementBounds: ElementBounds
-  /**
-   * Represents trajectory hit related data for a foresight element. Only used for the manager
-   */
-  trajectoryHitData: TrajectoryHitData
   /**
    * Is the element intersecting with the viewport, usefull to track which element we should observe or not
    * Can be @undefined in the split second the element is registering
@@ -195,6 +179,7 @@ export type ForesightManagerData = {
   globalCallbackHits: Readonly<CallbackHits>
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
   currentDeviceStrategy: CurrentDeviceStrategy
+  activeElementCount: number
 }
 
 export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
@@ -410,7 +395,7 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
   type: "elementUnregistered"
   elementData: ForesightElementData
   unregisterReason: ElementUnregisteredReason
-  wasLastElement: boolean
+  wasLastRegisteredElement: boolean
 }
 
 /**
@@ -442,6 +427,7 @@ interface CallbackCompletedEventBase extends ForesightBaseEvent {
   elementData: ForesightElementData
   hitType: CallbackHitType
   elapsed: number
+  wasLastActiveElement: boolean
 }
 
 export type CallbackCompletedEvent = CallbackCompletedEventBase & {

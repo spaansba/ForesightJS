@@ -64,12 +64,17 @@ import { TouchDeviceHandler } from "./TouchDeviceHandler"
 
 export class ForesightManager {
   private static manager: ForesightManager
+
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
+  private idCounter: number = 0
+  private activeElementCount: number = 0
+
   private desktopHandler: DesktopHandler
   private touchDeviceHandler: TouchDeviceHandler
   private handler: DesktopHandler | TouchDeviceHandler
+
   private isSetup: boolean = false
-  private idCounter: number = 0
+
   private _globalCallbackHits: CallbackHits = {
     mouse: {
       hover: 0,
@@ -89,6 +94,7 @@ export class ForesightManager {
     viewport: 0,
     total: 0,
   }
+
   private _globalSettings: ForesightManagerSettings = {
     debug: false,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
@@ -111,8 +117,11 @@ export class ForesightManager {
   private rafId: number | null = null
 
   private domObserver: MutationObserver | null = null
+
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
+
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
+
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
     if (initialSettings !== undefined) {
       this.initializeManagerSettings(initialSettings)
@@ -124,8 +133,11 @@ export class ForesightManager {
       emit: this.emit.bind(this),
       settings: this._globalSettings,
     }
+
     this.desktopHandler = new DesktopHandler(dependencies)
+
     this.touchDeviceHandler = new TouchDeviceHandler(dependencies)
+
     this.handler =
       this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
 
@@ -152,9 +164,11 @@ export class ForesightManager {
     if (options?.signal?.aborted) {
       return () => {}
     }
+
     const listeners = this.eventListeners.get(eventType) ?? []
     listeners.push(listener as ForesightEventListener)
     this.eventListeners.set(eventType, listeners)
+
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
@@ -163,9 +177,11 @@ export class ForesightManager {
     listener: ForesightEventListener<K>
   ): void {
     const listeners = this.eventListeners.get(eventType)
+
     if (!listeners) {
       return
     }
+
     const index = listeners.indexOf(listener as ForesightEventListener)
     if (index > -1) {
       listeners.splice(index, 1)
@@ -174,6 +190,7 @@ export class ForesightManager {
 
   private emit<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
     const listeners = this.eventListeners.get(event.type)?.slice()
+
     if (!listeners) {
       return
     }
@@ -194,6 +211,7 @@ export class ForesightManager {
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventListeners,
       currentDeviceStrategy: this.currentDeviceStrategy,
+      activeElementCount: this.activeElementCount,
     }
   }
 
@@ -217,24 +235,32 @@ export class ForesightManager {
     meta,
     reactivateAfter,
   }: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isTouchDevice, isLimitedConnection } = evaluateRegistrationConditions()
-    // if (!shouldRegister) {
-    //   return {
-    //     isLimitedConnection,
-    //     isTouchDevice,
-    //     isRegistered: false,
-    //     unregister: () => {},
-    //   }
-    // }
-    const previousElementData = this.elements.get(element)
-    if (previousElementData) {
-      previousElementData.registerCount++
+    const { isTouchDevice, isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
+
+    if (!shouldRegister) {
       return {
         isLimitedConnection,
         isTouchDevice,
         isRegistered: false,
         unregister: () => {},
       }
+    }
+
+    const previousElementData = this.elements.get(element)
+
+    if (previousElementData) {
+      previousElementData.registerCount++
+
+      return {
+        isLimitedConnection,
+        isTouchDevice,
+        isRegistered: false,
+        unregister: () => {},
+      }
+    }
+
+    if (!this.isSetup) {
+      this.initializeGlobalListeners()
     }
 
     const initialRect = element.getBoundingClientRect()
@@ -252,14 +278,8 @@ export class ForesightManager {
         expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
         hitSlop: normalizedHitSlop,
       },
-      trajectoryHitData: {
-        isTrajectoryHit: false,
-        trajectoryHitTime: 0,
-        trajectoryHitExpirationTimeoutId: undefined,
-      },
       name: name || element.id || "unnamed",
       isIntersectingWithViewport: initialViewportState(initialRect),
-
       registerCount: 1,
       meta: meta ?? {},
       callbackInfo: {
@@ -277,7 +297,9 @@ export class ForesightManager {
     }
 
     this.elements.set(element, elementData)
+    this.activeElementCount++
     this.handler.observeElement(element)
+
     this.emit({
       type: "elementRegistered",
       timestamp: Date.now(),
@@ -288,33 +310,33 @@ export class ForesightManager {
       isTouchDevice,
       isLimitedConnection,
       isRegistered: true,
-      unregister: () => {},
+      unregister: () => {
+        this.unregister(element)
+      },
     }
   }
 
   public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason) {
     const elementData = this.elements.get(element)
+
     if (!elementData) {
       return
     }
 
-    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-    }
-
-    // Clear reactivation timeout if exists
-    if (elementData?.callbackInfo.reactivateTimeoutId) {
-      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-    }
+    this.clearReactivateTimeout(elementData)
 
     this.handler.unobserveElement(element)
     this.elements.delete(element)
 
-    const wasLastElement = this.elements.size === 0 && this.isSetup
+    if (elementData.callbackInfo.isCallbackActive) {
+      this.activeElementCount--
+    }
 
-    // if (wasLastElement) {
-    //   this.removeGlobalListeners()
-    // }
+    const wasLastRegisteredElement = this.elements.size === 0 && this.isSetup
+
+    if (wasLastRegisteredElement) {
+      this.removeGlobalListeners()
+    }
 
     if (elementData) {
       this.emit({
@@ -322,7 +344,7 @@ export class ForesightManager {
         elementData: elementData,
         timestamp: Date.now(),
         unregisterReason: unregisterReason ?? "by user",
-        wasLastElement: wasLastElement,
+        wasLastRegisteredElement: wasLastRegisteredElement,
       })
     }
   }
@@ -347,24 +369,27 @@ export class ForesightManager {
       default:
         callbackHitType satisfies never
     }
+
     this._globalCallbackHits.total++
   }
 
   public reactivate(element: ForesightElement) {
     const elementData = this.elements.get(element)
+
     if (!elementData) {
       return
     }
 
-    // Clear any existing reactivation timeout
-    if (elementData.callbackInfo.reactivateTimeoutId) {
-      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-      elementData.callbackInfo.reactivateTimeoutId = undefined
+    if (!this.isSetup) {
+      this.initializeGlobalListeners()
     }
+
+    this.clearReactivateTimeout(elementData)
 
     // Only reactivate if callback is not currently running
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
+      this.activeElementCount++
       this.handler.observeElement(element)
       this.emit({
         type: "elementReactivated",
@@ -374,23 +399,18 @@ export class ForesightManager {
     }
   }
 
+  private clearReactivateTimeout(elementData: ForesightElementData) {
+    clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+    elementData.callbackInfo.reactivateTimeoutId = undefined
+  }
+
   private makeElementUnactive(elementData: ForesightElementData) {
     elementData.callbackInfo.callbackFiredCount++
     elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
     elementData.callbackInfo.isRunningCallback = true
     // dont set isCallbackActive to false here, only do that after the callback is finished running
 
-    // Clear any existing reactivation timeout
-    if (elementData.callbackInfo.reactivateTimeoutId) {
-      clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-      elementData.callbackInfo.reactivateTimeoutId = undefined
-    }
-
-    if (elementData?.trajectoryHitData.trajectoryHitExpirationTimeoutId) {
-      clearTimeout(elementData.trajectoryHitData.trajectoryHitExpirationTimeoutId)
-    }
-    // TODO Was last element check
-    // TODO emit element unactive
+    this.clearReactivateTimeout(elementData)
   }
 
   private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
@@ -410,8 +430,10 @@ export class ForesightManager {
       })
 
       const start = performance.now()
+
       let status: callbackStatus = undefined
       let errorMessage = null
+
       try {
         await elementData.callback()
         status = "success"
@@ -425,6 +447,27 @@ export class ForesightManager {
       }
 
       elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
+
+      elementData.callbackInfo.isRunningCallback = false
+
+      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
+      elementData.callbackInfo.isCallbackActive = false
+      this.activeElementCount--
+      this.handler.unobserveElement(elementData.element)
+
+      // Schedule element to become active again after approximately reactivateAfter (not perfect since we are using setTimeout)
+      if (elementData.callbackInfo.reactivateAfter !== Infinity) {
+        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
+          this.reactivate(elementData.element)
+        }, elementData.callbackInfo.reactivateAfter)
+      }
+
+      const isLastActiveElement = this.activeElementCount === 0
+
+      if (isLastActiveElement) {
+        this.removeGlobalListeners()
+      }
+
       this.emit({
         type: "callbackCompleted",
         timestamp: Date.now(),
@@ -433,24 +476,8 @@ export class ForesightManager {
         elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - start),
         status: (elementData.callbackInfo.lastCallbackStatus = status),
         errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
+        wasLastActiveElement: isLastActiveElement,
       })
-
-      // Reset running state
-      elementData.callbackInfo.isRunningCallback = false
-
-      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
-      elementData.callbackInfo.isCallbackActive = false
-      this.handler.unobserveElement(elementData.element)
-
-      // Schedule element to become active again after reactivateAfter
-      if (
-        elementData.callbackInfo.reactivateAfter !== Infinity &&
-        elementData.callbackInfo.reactivateAfter > 0
-      ) {
-        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
-          this.reactivate(elementData.element)
-        }, elementData.callbackInfo.reactivateAfter)
-      }
     }
     asyncCallbackWrapper()
   }
@@ -462,6 +489,8 @@ export class ForesightManager {
   }
 
   private handlePointerMove = (e: PointerEvent) => {
+    this.pendingPointerEvent = e
+
     if (e.pointerType != this.currentDeviceStrategy) {
       this.emit({
         type: "deviceStrategyChanged",
@@ -469,20 +498,24 @@ export class ForesightManager {
         newStrategy: e.pointerType as CurrentDeviceStrategy,
         oldStrategy: this.currentDeviceStrategy,
       })
+
       this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
     }
-    this.pendingPointerEvent = e
+
     if (this.rafId) {
       return
     }
+
     this.rafId = requestAnimationFrame(() => {
       if (this.handler instanceof TouchDeviceHandler) {
         this.rafId = null
         return
       }
+
       if (this.pendingPointerEvent) {
         this.handler.processMouseMovement(this.pendingPointerEvent)
       }
+
       this.rafId = null
     })
   }
@@ -491,9 +524,11 @@ export class ForesightManager {
     if (this.isSetup) {
       return
     }
+
     this.setDeviceStrategy(this.currentDeviceStrategy)
 
     document.addEventListener("pointermove", this.handlePointerMove)
+
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
       childList: true,
@@ -509,12 +544,17 @@ export class ForesightManager {
     this.domObserver?.disconnect()
     this.domObserver = null
 
+    document.removeEventListener("pointermove", this.handlePointerMove)
+    this.handler.disconnect()
+
     if (this.rafId) {
       cancelAnimationFrame(this.rafId)
       this.rafId = null
     }
+
     this.pendingPointerEvent = null
   }
+
   /**
    * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
    *
@@ -522,17 +562,29 @@ export class ForesightManager {
    *
    */
   private handleDomMutations = (mutationsList: MutationRecord[]) => {
-    // Invalidate tabbale elements cache
-    if (mutationsList.length) {
-      this.desktopHandler?.invalidateTabCache()
+    if (!mutationsList.length) {
+      return
     }
-    for (const mutation of mutationsList) {
+
+    this.desktopHandler?.invalidateTabCache()
+
+    let hasRemovedNodes = false
+    for (let i = 0; i < mutationsList.length; i++) {
+      const mutation = mutationsList[i]
+
       if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        for (const element of this.elements.keys()) {
-          if (!element.isConnected) {
-            this.unregister(element, "disconnected")
-          }
-        }
+        hasRemovedNodes = true
+        break
+      }
+    }
+
+    if (!hasRemovedNodes) {
+      return
+    }
+
+    for (const element of this.elements.keys()) {
+      if (!element.isConnected) {
+        this.unregister(element, "disconnected")
       }
     }
   }
@@ -544,6 +596,7 @@ export class ForesightManager {
       }
     }
   }
+
   /**
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
@@ -612,7 +665,6 @@ export class ForesightManager {
     if (props.debug !== undefined) {
       this._globalSettings.debug = props.debug
     }
-    console.log(this._globalSettings)
   }
 
   private updateNumericSettings(
@@ -637,6 +689,7 @@ export class ForesightManager {
     if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
       return false
     }
+
     this._globalSettings[setting] = newValue
     return true
   }
@@ -651,6 +704,7 @@ export class ForesightManager {
       MIN_TRAJECTORY_PREDICTION_TIME,
       MAX_TRAJECTORY_PREDICTION_TIME
     )
+
     if (trajectoryPredictionTimeChanged) {
       changedSettings.push({
         setting: "trajectoryPredictionTime",
@@ -686,9 +740,6 @@ export class ForesightManager {
     )
     if (scrollMarginChanged) {
       const newValue = this._globalSettings.scrollMargin
-      // if (this.scrollPredictor) {
-      //   this.scrollPredictor.scrollMargin = newValue
-      // }
       changedSettings.push({
         setting: "scrollMargin",
         oldValue: oldScrollMargin,
@@ -710,9 +761,6 @@ export class ForesightManager {
         MAX_TAB_OFFSET,
         "tabOffset"
       )
-      // if (this.tabPredictor) {
-      //   this.tabPredictor.tabOffset = this._globalSettings.tabOffset
-      // }
       changedSettings.push({
         setting: "tabOffset",
         oldValue: oldTabOffset,

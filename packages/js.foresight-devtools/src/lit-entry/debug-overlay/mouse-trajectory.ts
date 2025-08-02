@@ -7,6 +7,7 @@ import {
   type ManagerSettingsChangedEvent,
 } from "js.foresight"
 import type { ElementUnregisteredEvent } from "js.foresight"
+import type { CallbackCompletedEvent } from "packages/js.foresight/dist"
 
 export type Point = {
   x: number
@@ -65,15 +66,17 @@ export class MouseTrajectory extends LitElement {
     super.connectedCallback()
     const { signal } = this._abortController
 
+    ForesightManager.instance.addEventListener("callbackCompleted", this.handleTrajectoryReset, {
+      signal,
+    })
+
+    ForesightManager.instance.addEventListener("elementUnregistered", this.handleTrajectoryReset, {
+      signal,
+    })
+
     ForesightManager.instance.addEventListener(
       "mouseTrajectoryUpdate",
       this.handleTrajectoryUpdate,
-      { signal }
-    )
-
-    ForesightManager.instance.addEventListener(
-      "elementUnregistered",
-      this.handleElementUnregistered,
       { signal }
     )
 
@@ -97,9 +100,12 @@ export class MouseTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  // On last element make sure to remove any leftovers
-  private handleElementUnregistered = (e: ElementUnregisteredEvent) => {
-    if (e.wasLastElement) {
+  private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
+    const shouldReset =
+      ("wasLastActiveElement" in e && e.wasLastActiveElement) ||
+      ("wasLastRegisteredElement" in e && e.wasLastRegisteredElement)
+
+    if (shouldReset) {
       this._isVisible = false
       this._trajectoryStyles = {
         transform: `translate3d(0px, 0px, 0) rotate(0deg)`,
@@ -107,6 +113,7 @@ export class MouseTrajectory extends LitElement {
       }
     }
   }
+
   private handleSettingsChange = (e: ManagerSettingsChangedEvent) => {
     const isEnabled = e.managerData.globalSettings.enableMousePrediction
     this._mousePredictionIsEnabled = isEnabled

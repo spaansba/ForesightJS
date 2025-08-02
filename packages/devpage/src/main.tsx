@@ -16,9 +16,9 @@ ForesightManager.initialize({
     right: 10,
     bottom: 10,
   },
-  enableTabPrediction: false,
+  enableTabPrediction: true,
   tabOffset: 2,
-  touchDeviceStrategy: "onTouchStart",
+  touchDeviceStrategy: "viewport",
 })
 
 ForesightDevtools.initialize({})

@@ -20,6 +20,7 @@ export class DesktopHandler extends BaseForesightModule {
   private tabPredictor: TabPredictor
   private scrollPredictor: ScrollPredictor
   private positionObserver: PositionObserver | null = null
+
   public trajectoryPositions: TrajectoryPositions = {
     positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
     currentPoint: { x: 0, y: 0 },
@@ -28,34 +29,32 @@ export class DesktopHandler extends BaseForesightModule {
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
+
     this.tabPredictor = new TabPredictor(dependencies)
+
     this.scrollPredictor = new ScrollPredictor({
       dependencies,
       trajectoryPositions: this.trajectoryPositions,
     })
+
     this.mousePredictor = new MousePredictor({
       dependencies,
       trajectoryPositions: this.trajectoryPositions,
     })
   }
 
-  public invalidateTabCache(): void {
-    this.tabPredictor?.invalidateCache()
-  }
-
-  public processMouseMovement(event: PointerEvent): void {
-    this.mousePredictor.processMouseMovement(event)
-  }
-
   protected onConnect(): void {
     if (this.settings.enableTabPrediction) {
       this.connectTabPredictor()
     }
+
     if (this.settings.enableScrollPrediction) {
       this.connectScrollPredictor()
     }
+
     this.connectMousePredictor() // We always connect the mouse predictor
     this.positionObserver = new PositionObserver(this.handlePositionChange)
+
     for (const element of this.elements.keys()) {
       this.positionObserver.observe(element)
     }
@@ -63,34 +62,41 @@ export class DesktopHandler extends BaseForesightModule {
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
     const enableScrollPosition = this.settings.enableScrollPrediction
+
     for (const entry of entries) {
       const elementData = this.elements.get(entry.target)
+
       if (!elementData) {
         continue
       }
+
       if (enableScrollPosition) {
         this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
       } else {
         // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-        if (
-          isPointInRectangle(
-            this.trajectoryPositions.currentPoint,
-            elementData.elementBounds.expandedRect
-          )
-        ) {
-          this.callCallback(elementData, {
-            kind: "mouse",
-            subType: "hover",
-          })
-        }
+        this.checkForMouseHover(elementData)
       }
+
       // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
       this.handlePositionChangeDataUpdates(elementData, entry)
     }
 
-    // End batch processing for scroll prediction
     if (enableScrollPosition) {
       this.scrollPredictor?.resetScrollProps()
+    }
+  }
+
+  private checkForMouseHover = (elementData: ForesightElementData) => {
+    if (
+      isPointInRectangle(
+        this.trajectoryPositions.currentPoint,
+        elementData.elementBounds.expandedRect
+      )
+    ) {
+      this.callCallback(elementData, {
+        kind: "mouse",
+        subType: "hover",
+      })
     }
   }
 
@@ -101,13 +107,11 @@ export class DesktopHandler extends BaseForesightModule {
     const updatedProps: UpdatedDataPropertyNames[] = []
     const isNowIntersecting = entry.isIntersecting
 
-    // Track visibility changes
     if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
       updatedProps.push("visibility")
       elementData.isIntersectingWithViewport = isNowIntersecting
     }
 
-    // Handle bounds updates for intersecting elements
     if (isNowIntersecting) {
       updatedProps.push("bounds")
       elementData.elementBounds = {
@@ -116,6 +120,7 @@ export class DesktopHandler extends BaseForesightModule {
         expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
       }
     }
+
     if (updatedProps.length) {
       this.emit({
         type: "elementDataUpdated",
@@ -133,35 +138,19 @@ export class DesktopHandler extends BaseForesightModule {
     this.positionObserver = null
   }
 
-  public observeElement(element: ForesightElement): void {
-    this.positionObserver?.observe(element)
-  }
+  public processMouseMovement = (event: PointerEvent) =>
+    this.mousePredictor.processMouseMovement(event)
 
-  public unobserveElement(element: ForesightElement): void {
-    this.positionObserver?.unobserve(element)
-  }
+  public invalidateTabCache = () => this.tabPredictor?.invalidateCache()
 
-  public connectTabPredictor(): void {
-    this.tabPredictor.connect()
-  }
+  public observeElement = (element: ForesightElement) => this.positionObserver?.observe(element)
+  public unobserveElement = (element: ForesightElement) => this.positionObserver?.unobserve(element)
 
-  public connectScrollPredictor(): void {
-    this.scrollPredictor.connect()
-  }
+  public connectTabPredictor = () => this.tabPredictor.connect()
+  public connectScrollPredictor = () => this.scrollPredictor.connect()
+  public connectMousePredictor = () => this.mousePredictor.connect()
 
-  public connectMousePredictor(): void {
-    this.mousePredictor.connect()
-  }
-
-  public disconnectTabPredictor(): void {
-    this.tabPredictor.disconnect()
-  }
-
-  public disconnectScrollPredictor(): void {
-    this.scrollPredictor.disconnect()
-  }
-
-  public disconnectMousePredictor(): void {
-    this.mousePredictor.disconnect()
-  }
+  public disconnectTabPredictor = () => this.tabPredictor.disconnect()
+  public disconnectScrollPredictor = () => this.scrollPredictor.disconnect()
+  public disconnectMousePredictor = () => this.mousePredictor.disconnect()
 }

@@ -5,6 +5,7 @@ import type {
   ScrollTrajectoryUpdateEvent,
   ManagerSettingsChangedEvent,
   ElementUnregisteredEvent,
+  CallbackCompletedEvent,
 } from "js.foresight"
 import { ForesightManager } from "js.foresight"
 import type { Point } from "./mouse-trajectory"
@@ -109,11 +110,13 @@ export class ScrollTrajectory extends LitElement {
       { signal }
     )
 
-    ForesightManager.instance.addEventListener(
-      "elementUnregistered",
-      this.handleElementUnregistered,
-      { signal }
-    )
+    ForesightManager.instance.addEventListener("callbackCompleted", this.handleTrajectoryReset, {
+      signal,
+    })
+
+    ForesightManager.instance.addEventListener("elementUnregistered", this.handleTrajectoryReset, {
+      signal,
+    })
 
     ForesightManager.instance.addEventListener(
       "managerSettingsChanged",
@@ -127,10 +130,16 @@ export class ScrollTrajectory extends LitElement {
     this._abortController.abort()
   }
 
-  // On last element make sure to remove any leftovers
-  private handleElementUnregistered = (e: ElementUnregisteredEvent) => {
-    if (e.wasLastElement) {
+  private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
+    const shouldReset =
+      ("wasLastActiveElement" in e && e.wasLastActiveElement) ||
+      ("wasLastRegisteredElement" in e && e.wasLastRegisteredElement)
+
+    if (shouldReset) {
       this._isVisible = false
+      this._trajectoryStyles = {
+        transform: `translate(0px, 0px) rotate(0deg)`,
+      }
     }
   }
 
