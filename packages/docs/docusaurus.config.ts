@@ -71,6 +71,16 @@ const config: Config = {
 
   themeConfig: {
     // image: "img/docusaurus-social-card.jpg",
+    algolia: {
+      appId: "BOP697VONY",
+      apiKey: "a8fc98d356c7f6be1fbe5a6acb214a3a", // this is safe lol
+      indexName: "ForesightJS Doc",
+      // Optional: see doc section below
+      contextualSearch: false,
+      // Optional: path for search page that enabled by default (`false` to disable it)
+      searchPagePath: "search",
+      insights: true,
+    },
     navbar: {
       title: "ForesightJS",
       logo: {
