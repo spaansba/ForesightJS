@@ -129,7 +129,7 @@ export class ReactivateCountdown extends LitElement {
 
     updateCountdown()
 
-    if (this.remainingTime > 0) {
+    if (this.remainingTime > 0 && typeof window !== "undefined") {
       this.intervalId = window.setInterval(updateCountdown, 100)
     }
   }

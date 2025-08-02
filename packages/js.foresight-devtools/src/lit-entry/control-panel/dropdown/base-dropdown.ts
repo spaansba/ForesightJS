@@ -173,6 +173,10 @@ export abstract class BaseDropdown extends LitElement {
   }
 
   protected _positionDropdown() {
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const triggerButton = this.shadowRoot?.querySelector(".trigger-button") as HTMLElement
     const dropdownMenu = this.shadowRoot?.querySelector(".dropdown-menu") as HTMLElement
 
