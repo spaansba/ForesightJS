@@ -17,7 +17,7 @@ ForesightJS is a lightweight JavaScript library that predicts user intent to pre
 ### [Playground](https://foresightjs.com/)
 
 ![](https://github.com/user-attachments/assets/f5650c63-4489-4878-bd72-d8954c6a739b)
-_In the GIF above, the [ForesightJS DevTools](https://foresightjs.com/docs/getting_started/development_tools) are enabled. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
+_In the GIF above, the [ForesightJS DevTools](https://foresightjs.com/docs/debugging/devtools) are enabled. Normally, users won't see anything that ForesightJS does except the increased perceived speed from early prefetching._
 
 ## Download
 
@@ -31,7 +31,7 @@ yarn add js.foresight
 
 ## Basic Usage Example
 
-This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations).
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations/react/useForesight).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -56,33 +56,29 @@ const { isTouchDevice } = ForesightManager.instance.register({
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built [integrations](https://foresightjs.com/docs/integrations) for every framework, ready-to-use implementations for [Next.js](https://foresightjs.com/docs/integrations/react/nextjs) and [React Router](https://foresightjs.com/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](https://foresightjs.com/docs/integrations/react/nextjs) and [React Router](https://foresightjs.com/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 
-ForesightJS can be used bare-bones but also can be configured. For all configuration possibilities you can reference the [docs](https://foresightjs.com/docs/getting_started/config).
+ForesightJS works out of the box with no setup required, but it can be configured both [globally](https://foresightjs.com/docs/configuration/global-settings) and per [element](https://foresightjs.com/docs/configuration/element-settings) if needed.
 
 ## Development Tools
 
-ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) created with [Foresight Events](https://foresightjs.com/docs/getting_started/events) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution.
+ForesightJS has dedicated [Development Tools](https://github.com/spaansba/ForesightJS-DevTools) created with [Foresight Events](https://foresightjs.com/docs/events) that help you understand and tune how foresight is working in your application. This standalone development package provides real-time visualization of mouse trajectory predictions, element bounds, and callback execution.
 
 ```bash
 pnpm add js.foresight-devtools
 ```
 
-See the [development tools documentation](https://foresightjs.com/docs/getting_started/debug) for more details.
+See the [development tools documentation](https://foresightjs.com/docs/debugging/devtools) for more details.
 
 ## Prediction Strategies
 
 ForesightJS uses different prediction strategies depending on the device type:
 
-**Desktop/Keyboard Users**: Mouse trajectory prediction, keyboard navigation tracking, and scroll-based prefetching
+**Desktop/Keyboard Users**: Mouse trajectory prediction, keyboard navigation tracking, and scroll-based prefetching. [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#keyboardmouse-users)
 
-**Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`](https://foresightjs.com/docs/getting_started/config#touch-device-strategy-v330))
-
-## How Does ForesightJS Work?
-
-For a detailed technical explanation of its prediction algorithms and internal architecture, see the **[Behind the Scenes documentation](https://foresightjs.com/docs/Behind_the_Scenes)**.
+**Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`]). [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#touch-devices-v330)
 
 ## Providing Context to AI Tools
 
@@ -91,6 +87,8 @@ ForesightJS is a newer library, so most AI assistants and LLMs may not have much
 - Use [llms.txt](https://foresightjs.com/llms.txt) for a concise overview of the API and usage patterns.
 - Use [llms-full.txt](https://foresightjs.com/llms-full.txt) for a full markdown version of the docs, ideal for AI tools that support context injection or uploads.
 - All documentation pages are also available in markdown. You can view them by adding .md to the end of any URL, for example: https://foresightjs.com/docs/getting_started.md.
+
+[Read more](https://foresightjs.com/docs/ai-context)
 
 # Contributing
 

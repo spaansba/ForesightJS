@@ -57,7 +57,7 @@ ForesightJS uses different prediction strategies depending on the device type. F
 
 ### Keyboard/Mouse Users
 
-Pick and choose multiple prediction strategies:
+Pick and choose multiple prediction strategies. All are enabled by default, but you can disable any of them when [initializing](/docs/getting-started/initialize-the-manager) the `ForesightManager`.
 
 - **Mouse Trajectory** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Analyzes cursor movement patterns to predict which links users are heading towards and prefetches content before they arrive
 - **Keyboard Navigation** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Tracks tab key usage and focus states to preload content for keyboard users navigating through your site
@@ -65,9 +65,7 @@ Pick and choose multiple prediction strategies:
 
 ### Touch Devices (v3.3.0+)
 
-While desktop systems use multiple concurrent prediction strategies, touch devices operate with a single active strategy that can be configured while initializing the `ForesightManager`
-
-Available strategies:
+While desktop systems use multiple concurrent prediction strategies, touch devices operate with a single active strategy that can be configured while [initializing](/docs/getting-started/initialize-the-manager) the `ForesightManager`.
 
 - **onTouchStart** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Captures the initial touch event to begin prefetching when users start interacting with registered elements
 - **Viewport Enter** - Detects when registered elements enter the viewport and prefetches their content based on scroll behavior and visibility
