@@ -22,21 +22,23 @@ export function QuickStart() {
               theme={themes.vsDark}
               code={`import { ForesightManager } from 'js.foresight'
 
-// Initialize the manager
+// Initialize the manager if you want custom settings
+// Otherwise you can skip this step of initialization
 ForesightManager.initialize({
-  enableMousePrediction: true,
-  trajectoryPredictionTime: 100,
-  tabOffset: 2
+  touchDeviceStrategy: "viewport",
+  tabOffset: 5
 })
 
 // Register an element for prediction
-const button = document.querySelector('#my-button')
+const myLink = document.querySelector('#my-link')
+
+// Register a callback to be called when the user shows intent
 ForesightManager.instance.register({
-  element: button,
+  element: myLink,
   callback: () => {
-    // Prefetch data or prepare content
     console.log('User intent detected!')
   }
+  // Optional: extra settings
 })`}
               language="javascript"
             >
@@ -61,19 +63,27 @@ ForesightManager.instance.register({
                 <strong>Mouse prediction:</strong> Detect cursor trajectory towards elements
               </li>
               <li>
-                <strong>Keyboard support:</strong> Predict tab navigation patterns
+                <strong>Keyboard support:</strong> Detect user tabbing towards elements
               </li>
               <li>
                 <strong>Scroll Prediction:</strong> Detect scrolling towards a fetchable element
+              </li>
+              <li>
+                <strong>Touch device support:</strong> Full touch device support (mobile/pen)
+              </li>
+              <li>
+                <strong>Performance:</strong> No polling, no reflows, event-driven architecture
               </li>
               <li>
                 <strong>TypeScript:</strong> Full type safety out of the box
               </li>
             </ul>
 
-
             <div className={styles.actions}>
-              <Link to="/docs/getting-started/what-is-foresightjs" className="button button--primary">
+              <Link
+                to="/docs/getting-started/what-is-foresightjs"
+                className="button button--primary"
+              >
                 Full Documentation
               </Link>
               <Link to="/docs/configuration/global-settings" className="button button--secondary">

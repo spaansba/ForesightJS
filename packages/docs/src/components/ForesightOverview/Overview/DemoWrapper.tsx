@@ -6,10 +6,6 @@ function DemoWrapper() {
   return (
     <section id="playground" className={styles.playgroundSection}>
       <div className="container">
-        <div className={styles.mobileMessage}>
-          <MobileMessage />
-        </div>
-
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>
@@ -23,6 +19,10 @@ function DemoWrapper() {
             </a>
             . Move your mouse, scroll or use Tab navigation to experience intent detection.
           </p>
+        </div>
+
+        <div className={styles.mobileMessage}>
+          <MobileMessage />
         </div>
 
         <div className={styles.playgroundContainer}>

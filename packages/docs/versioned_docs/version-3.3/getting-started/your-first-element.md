@@ -8,26 +8,26 @@ keywords:
   - getting started
 description: Learn how to register your first element with ForesightJS and start predicting user intent
 last_updated:
-  date: 2025-07-31
+  date: 2025-08-03
   author: Bart Spaans
 ---
 
 # Your First Element
 
-This guide will walk you through registering your first element with ForesightJS and understanding how the prediction system works.
+This guide will walk you through registering your first element with `ForesightJS` and understanding how the prediction system works.
 
 ## Basic Usage Example
 
-This basic example is in vanilla JavaScript. Most people will use ForesightJS with a framework - you can read about framework integrations in the integrations section below.
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations below.
 
 ```javascript
 import { ForesightManager } from "js.foresight"
 
 // Register an element to be tracked
-const myButton = document.getElementById("my-button")
+const myLink = document.getElementById("my-link")
 
 ForesightManager.instance.register({
-  element: myButton,
+  element: myLink,
   callback: () => {
     // This is where your prefetching logic goes
     console.log("User is likely to interact with this element!")
@@ -45,10 +45,10 @@ However if you want to add a bit more power to your element you can give it the 
 ```javascript
 import { ForesightManager } from "js.foresight"
 
-const myButton = document.getElementById("my-button")
+const myLink = document.getElementById("my-link")
 
 ForesightManager.instance.register({
-  element: myButton,
+  element: myLink,
   callback: () => {
     console.log("User is likely to interact with this element!")
   },

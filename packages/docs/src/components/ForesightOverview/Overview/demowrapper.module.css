@@ -124,8 +124,11 @@
     padding: 16px;
   }
 
-  .playgroundContainer,
-  .sectionHeader {
+  .playgroundContainer {
+    display: none;
+  }
+
+  .sectionSubtitle {
     display: none;
   }
 }
