@@ -58,8 +58,9 @@ export abstract class BaseForesightModule {
   }
 
   public devLog(message: string): void {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`🛠️ ${this.moduleName}: ${message}`)
+    if (this.settings.enableManagerLogging) {
+      const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
+      console.log(`%c🛠️ ${this.moduleName}: ${message}`, `color: ${color}; font-weight: bold;`)
     }
   }
 

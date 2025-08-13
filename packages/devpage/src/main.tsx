@@ -17,6 +17,7 @@ ForesightManager.initialize({
     bottom: 10,
   },
   enableTabPrediction: true,
+  enableManagerLogging: true,
   tabOffset: 2,
   touchDeviceStrategy: "viewport",
 })

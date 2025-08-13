@@ -97,6 +97,7 @@ export class ForesightManager {
 
   private _globalSettings: ForesightManagerSettings = {
     debug: false,
+    enableManagerLogging: false,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
     positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
@@ -141,6 +142,7 @@ export class ForesightManager {
     this.handler =
       this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
 
+    this.devLog(`ForesightManager initialized with device strategy: ${this.currentDeviceStrategy}`)
     this.initializeGlobalListeners()
   }
 
@@ -335,6 +337,7 @@ export class ForesightManager {
     const wasLastRegisteredElement = this.elements.size === 0 && this.isSetup
 
     if (wasLastRegisteredElement) {
+      this.devLog("All elements unregistered, removing global listeners")
       this.removeGlobalListeners()
     }
 
@@ -462,6 +465,7 @@ export class ForesightManager {
       const isLastActiveElement = this.activeElementCount === 0
 
       if (isLastActiveElement) {
+        this.devLog("All elements unactivated, removing global listeners")
         this.removeGlobalListeners()
       }
 
@@ -480,6 +484,11 @@ export class ForesightManager {
   }
 
   private setDeviceStrategy(strategy: CurrentDeviceStrategy) {
+    const previousStrategy = this.handler instanceof DesktopHandler ? "mouse" : "touch"
+    if (previousStrategy !== strategy) {
+      this.devLog(`Switching device strategy from ${previousStrategy} to ${strategy}`)
+    }
+
     this.handler.disconnect()
     this.handler = strategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
     this.handler.connect()
@@ -522,6 +531,7 @@ export class ForesightManager {
       return
     }
 
+    this.devLog("Initializing global listeners (pointermove, MutationObserver)")
     this.setDeviceStrategy(this.currentDeviceStrategy)
 
     document.addEventListener("pointermove", this.handlePointerMove)
@@ -654,6 +664,7 @@ export class ForesightManager {
     this.updateBooleanSetting(props.enableMousePrediction, "enableMousePrediction")
     this.updateBooleanSetting(props.enableScrollPrediction, "enableScrollPrediction")
     this.updateBooleanSetting(props.enableTabPrediction, "enableTabPrediction")
+    this.updateBooleanSetting(props.enableManagerLogging, "enableManagerLogging")
 
     if (props.defaultHitSlop !== undefined) {
       this._globalSettings.defaultHitSlop = normalizeHitSlop(props.defaultHitSlop)
@@ -859,6 +870,12 @@ export class ForesightManager {
         managerData: this.getManagerData,
         updatedSettings: changedSettings,
       })
+    }
+  }
+
+  private devLog(message: string): void {
+    if (this._globalSettings.enableManagerLogging) {
+      console.log(`%c🛠️ ForesightManager: ${message}`, "color: #16a34a; font-weight: bold;")
     }
   }
 }

@@ -26,12 +26,15 @@ export class TouchDeviceHandler extends BaseForesightModule {
     switch (this.settings.touchDeviceStrategy) {
       case "viewport":
         this.predictor = this.viewportPredictor
+        this.devLog(`Connected touch strategy: viewport (ViewportPredictor)`)
         break
       case "onTouchStart":
         this.predictor = this.touchStartPredictor
+        this.devLog(`Connected touch strategy: onTouchStart (TouchStartPredictor)`)
         break
       case "none":
         this.predictor = null
+        this.devLog(`Touch strategy set to "none" - no predictor connected`)
         return
       default:
         this.settings.touchDeviceStrategy satisfies never
@@ -44,7 +47,10 @@ export class TouchDeviceHandler extends BaseForesightModule {
     }
   }
 
-  protected onDisconnect = () => this.predictor?.disconnect()
+  protected onDisconnect = () => {
+    this.devLog("Disconnecting touch predictor")
+    this.predictor?.disconnect()
+  }
   protected onConnect = () => this.setTouchPredictor()
 
   public observeElement = (element: ForesightElement) => this.predictor?.observeElement(element)

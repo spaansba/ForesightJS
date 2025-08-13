@@ -27,6 +27,9 @@ export class TabPredictor extends BaseForesightModule {
   }
 
   public invalidateCache() {
+    if (this.tabbableElementsCache.length) {
+      this.devLog("Invalidating tabbable elements cache")
+    }
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
   }
@@ -78,6 +81,7 @@ export class TabPredictor extends BaseForesightModule {
 
     // tabbable uses element.GetBoundingClientRect under the hood, to avoid alot of computations we cache its values
     if (!this.tabbableElementsCache.length || this.lastFocusedIndex === -1) {
+      this.devLog("Caching tabbable elements")
       this.tabbableElementsCache = tabbable(document.documentElement)
     }
 

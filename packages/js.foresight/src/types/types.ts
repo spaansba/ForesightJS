@@ -209,6 +209,16 @@ type BaseForesightManagerSettings = {
   debug: boolean
 
   /**
+   *
+   * Logs basic information about the ForesightManager and its handlers that doesn't have a dedicated event.
+   *
+   * Mostly used by the maintainers of ForesightJS to debug the manager. But might be useful for implementers aswell.
+   *
+   * This is not the same as logging events, this can be done with the actual developer tools.
+   * @link https://foresightjs.com/docs/debugging/devtools
+   */
+  enableManagerLogging: boolean
+  /**
    * How far ahead (in milliseconds) to predict the mouse trajectory.
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
    *

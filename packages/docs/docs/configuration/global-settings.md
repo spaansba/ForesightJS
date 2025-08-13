@@ -8,7 +8,7 @@ keywords:
   - initialization
 description: Configure global ForesightJS settings that apply to the entire ForesightManager instance
 last_updated:
-  date: 2025-07-31
+  date: 2025-08-13
   author: Bart Spaans
 ---
 
@@ -37,6 +37,7 @@ ForesightManager.initialize({
   enableScrollPrediction: true,
   scrollMargin: 150,
   touchDeviceStrategy: "viewport",
+  enableManagerLogging: false,
 })
 ```
 
@@ -186,7 +187,7 @@ ForesightManager.initialize({
 
 ---
 
-### Touch Device Strategy (v3.3.0+)
+### Touch Device Settings (v3.3.0+)
 
 #### `touchDeviceStrategy`
 
@@ -201,11 +202,22 @@ ForesightManager.initialize({
 })
 ```
 
-**Available strategies:**
+---
 
-- **`"onTouchStart"`** - Captures the initial touch event to begin prefetching when users start interacting with registered elements
-- **`"viewport"`** - Detects when registered elements enter the viewport and prefetches their content based on visibility
-- **`"none"`** - Disables ForesightJS on touch devices
+### Other Settings
+
+#### `enableManagerLogging`
+
+- **Type:** `boolean`
+- **Default:** `"false"`
+- **Description:** Logs basic information about the `ForesightManager` and its handlers that is not available through [events](/docs/events). Mostly used by the maintainers of `ForesightJS` to debug the manager, but might be useful for implementers aswell.
+- **Note:** Examples of logs are: Initializing the manager, switching from device strategy (e.g. Mouse to pen), aborting controllers and invalidating cache.
+
+```javascript
+ForesightManager.initialize({
+  enableManagerLogging: true,
+})
+```
 
 ## Runtime Configuration Changes
 
