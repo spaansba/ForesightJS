@@ -38,6 +38,7 @@ ForesightManager.initialize({
   scrollMargin: 150,
   touchDeviceStrategy: "viewport",
   enableManagerLogging: false,
+  limitedConnectionType: "2g",
 })
 ```
 
@@ -199,6 +200,23 @@ ForesightManager.initialize({
 ```javascript
 ForesightManager.initialize({
   touchDeviceStrategy: "viewport",
+})
+```
+
+---
+
+### Limited Connection Settings (v3.3.0+)
+
+#### `limitedConnectionType`
+
+- **Type:** `LimitedConnectionType`
+- **Default:** `"2g"`
+- **Options:** `"slow-2g"`, `"2g"`, `"3g"`, `"4g"`
+- **Description:** The minimum connection speed required to register elements.
+
+```javascript
+ForesightManager.initialize({
+  limitedConnectionType: "2g",
 })
 ```
 

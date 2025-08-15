@@ -112,7 +112,7 @@ export class ForesightManager {
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     touchDeviceStrategy: "onTouchStart",
-    limitedConnectionType: "3g",
+    limitedConnectionType: "2g",
   }
 
   private pendingPointerEvent: PointerEvent | null = null

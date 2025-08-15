@@ -20,6 +20,7 @@ ForesightManager.initialize({
   enableManagerLogging: true,
   tabOffset: 2,
   touchDeviceStrategy: "viewport",
+  limitedConnectionType: "2g",
 })
 
 ForesightDevtools.initialize({})
