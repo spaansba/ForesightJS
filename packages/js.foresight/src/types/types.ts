@@ -186,6 +186,12 @@ export type ForesightManagerData = {
 
 export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
 
+/**
+ * Network effective connection types that can be considered limited
+ * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
+ */
+export type LimitedConnectionType = "slow-2g" | "2g" | "3g" | "4g"
+
 type BaseForesightManagerSettings = {
   /**
    * Number of mouse positions to keep in history for trajectory calculation.
@@ -272,12 +278,21 @@ type BaseForesightManagerSettings = {
 
   /**
    * The prefetch strategy used for touch devices.
-   * - `none`: No prefetching is done on touch devices.
    * - `viewport`: Prefetching is done based on the viewport, meaning elements in the viewport are preloaded.
    * - `onTouchStart`: Prefetching is done when the user touches the element
    * @default onTouchStart
    */
   touchDeviceStrategy: TouchDeviceStrategy
+
+  /**
+   * Network effective connection types that should be considered as limited connections.
+   * When the user's network matches any of these types, ForesightJS will disable prefetching
+   * to avoid consuming data on slow or expensive connections.
+   * 
+   * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
+   * @default 2g
+   */
+  limitedConnectionType: LimitedConnectionType
 }
 
 export type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
