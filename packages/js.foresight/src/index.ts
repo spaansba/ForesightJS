@@ -25,5 +25,5 @@ export type {
   CallbackHitType,
   CallbackHits,
   TouchDeviceStrategy,
-  LimitedConnectionType,
+  MinimumConnectionType,
 } from "./types/types"

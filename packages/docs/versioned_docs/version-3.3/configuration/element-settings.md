@@ -195,7 +195,7 @@ const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.in
 #### `isLimitedConnection`
 
 - **Type:** `boolean`
-- **Description:** Is `true` when the user's connection matches the configured `limitedConnectionType` setting (defaults to "2g"). Elements will not be registered when connection is limited. See [Global Settings](/docs/configuration/global-settings#limitedconnectiontype) for details.
+- **Description:** Is `true` when the user's connection matches the configured `minimumConnectionType` setting (defaults to "3g"). Elements will not be registered when connection is limited. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
 
 ---
 

@@ -1,7 +1,7 @@
 import type {
   ForesightManagerSettings,
   TouchDeviceStrategy,
-  LimitedConnectionType,
+  MinimumConnectionType,
   UpdatedManagerSetting,
 } from "js.foresight"
 import { ForesightManager } from "js.foresight"
@@ -106,7 +106,7 @@ export class SettingsTab extends LitElement {
     },
   ]
 
-  @state() private limitedConnectionTypeOptions: DropdownOption[] = [
+  @state() private minimumConnectionTypeOptions: DropdownOption[] = [
     {
       value: "slow-2g",
       label: "Slow 2G",
@@ -191,7 +191,7 @@ export class SettingsTab extends LitElement {
       "tabOffset",
       "scrollMargin",
       "touchDeviceStrategy",
-      "limitedConnectionType",
+      "minimumConnectionType",
     ]
 
     for (const key of managerKeys) {
@@ -244,9 +244,9 @@ export class SettingsTab extends LitElement {
     })
   }
 
-  private _handleLimitedConnectionTypeChange = (value: string): void => {
+  private _handleMinimumConnectionTypeChange = (value: string): void => {
     ForesightManager.instance.alterGlobalSettings({
-      limitedConnectionType: value as LimitedConnectionType,
+      minimumConnectionType: value as MinimumConnectionType,
     })
   }
 
@@ -275,7 +275,7 @@ export class SettingsTab extends LitElement {
       tabOffset: settings.tabOffset,
       scrollMargin: settings.scrollMargin,
       touchDeviceStrategy: settings.touchDeviceStrategy,
-      limitedConnectionType: settings.limitedConnectionType,
+      minimumConnectionType: settings.minimumConnectionType,
     }
 
     return `ForesightManager.initialize(${JSON.stringify(settingsObject, null, 2)})`
@@ -403,16 +403,16 @@ export class SettingsTab extends LitElement {
             </div>
 
             <div class="settings-group">
-              <h4>Limited Connection</h4>
+              <h4>Minimum Connection</h4>
               <setting-item
-                header="Limited Connection Type"
-                description="How to handle prediction on limited connections"
+                header="Minimum Connection Type"
+                description="Minimum connection speed required to register elements"
               >
                 <single-select-dropdown
                   slot="controls"
-                  .dropdownOptions=${this.limitedConnectionTypeOptions}
-                  .selectedOptionValue=${settings.limitedConnectionType}
-                  .onSelectionChange=${this._handleLimitedConnectionTypeChange}
+                  .dropdownOptions=${this.minimumConnectionTypeOptions}
+                  .selectedOptionValue=${settings.minimumConnectionType}
+                  .onSelectionChange=${this._handleMinimumConnectionTypeChange}
                 ></single-select-dropdown>
               </setting-item>
             </div>

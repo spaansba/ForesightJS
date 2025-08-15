@@ -190,7 +190,7 @@ export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
  * Network effective connection types that can be considered limited
  * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
  */
-export type LimitedConnectionType = "slow-2g" | "2g" | "3g" | "4g"
+export type MinimumConnectionType = "slow-2g" | "2g" | "3g" | "4g"
 
 type BaseForesightManagerSettings = {
   /**
@@ -292,7 +292,7 @@ type BaseForesightManagerSettings = {
    * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
    * @default 2g
    */
-  limitedConnectionType: LimitedConnectionType
+  minimumConnectionType: MinimumConnectionType
 }
 
 export type CurrentDeviceStrategy = "mouse" | "touch" | "pen"

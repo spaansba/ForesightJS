@@ -112,7 +112,7 @@ export class ForesightManager {
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     touchDeviceStrategy: "onTouchStart",
-    limitedConnectionType: "2g",
+    minimumConnectionType: "3g",
   }
 
   private pendingPointerEvent: PointerEvent | null = null
@@ -675,8 +675,8 @@ export class ForesightManager {
       this._globalSettings.touchDeviceStrategy = props.touchDeviceStrategy
     }
 
-    if (props.limitedConnectionType !== undefined) {
-      this._globalSettings.limitedConnectionType = props.limitedConnectionType
+    if (props.minimumConnectionType !== undefined) {
+      this._globalSettings.minimumConnectionType = props.minimumConnectionType
     }
 
     if (props.debug !== undefined) {
@@ -868,13 +868,13 @@ export class ForesightManager {
       }
     }
 
-    if (props?.limitedConnectionType !== undefined) {
-      const oldLimitedConnectionType = this._globalSettings.limitedConnectionType
-      this._globalSettings.limitedConnectionType = props.limitedConnectionType
+    if (props?.minimumConnectionType !== undefined) {
+      const oldMinimumConnectionType = this._globalSettings.minimumConnectionType
+      this._globalSettings.minimumConnectionType = props.minimumConnectionType
       changedSettings.push({
-        setting: "limitedConnectionType",
-        oldValue: oldLimitedConnectionType,
-        newValue: this._globalSettings.limitedConnectionType,
+        setting: "minimumConnectionType",
+        oldValue: oldMinimumConnectionType,
+        newValue: this._globalSettings.minimumConnectionType,
       })
     }
 
