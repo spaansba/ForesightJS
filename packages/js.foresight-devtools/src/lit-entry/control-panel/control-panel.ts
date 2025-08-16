@@ -7,17 +7,16 @@ import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
-import type { ControllerTabs } from "../../types/types"
+import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
   static styles = css`
     .control-wrapper {
+      --panel-offset: 10px;
       padding: 12px;
       position: fixed;
-      bottom: 10px;
-      right: 10px;
       background-color: rgba(0, 0, 0, 0.9);
       color: white;
       font-family: Arial, sans-serif;
@@ -30,7 +29,27 @@ export class ControlPanel extends LitElement {
       height: 450px;
       transition: width 0.3s ease, height 0.3s ease;
       box-sizing: border-box;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
+
+    .control-wrapper.top-left {
+      top: var(--panel-offset);
+      left: var(--panel-offset);
+    }
+    .control-wrapper.top-right {
+      top: var(--panel-offset);
+      right: var(--panel-offset);
+    }
+    .control-wrapper.bottom-left {
+      bottom: var(--panel-offset);
+      left: var(--panel-offset);
+    }
+    .control-wrapper.bottom-right {
+      bottom: var(--panel-offset);
+      right: var(--panel-offset);
+    }
+
     .control-wrapper.minimized {
       width: 230px;
       height: 45px;
@@ -137,13 +156,17 @@ export class ControlPanel extends LitElement {
     ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
   @state() private isTouchDevice: boolean = false
   @state() private isWarningDismissed: boolean = false
+  @state() private corner: "top-left" | "top-right" | "bottom-left" | "bottom-right" =
+    "bottom-right"
 
   private localStorageSelectedTabKey = "foresight-devtools-control-panel-tab"
+  private localStorageCornerKey = "foresight-devtools-control-panel-corner"
   private _abortController: AbortController | null = null
 
   constructor() {
     super()
     this.activeTab = this.getStoredTab()
+    this.corner = this.getStoredCorner()
     this.isTouchDevice = ForesightManager.instance.getManagerData.currentDeviceStrategy === "touch"
   }
 
@@ -160,6 +183,15 @@ export class ControlPanel extends LitElement {
           this.isWarningDismissed = false
         }
       },
+      { signal }
+    )
+
+    // Listen for corner change events
+    this.addEventListener(
+      "corner-change",
+      ((e: CustomEvent) => {
+        this.setCorner(e.detail.corner)
+      }) as EventListener,
       { signal }
     )
   }
@@ -179,6 +211,19 @@ export class ControlPanel extends LitElement {
       return "logs"
     }
   }
+
+  private getStoredCorner(): Corner {
+    try {
+      const stored = localStorage.getItem(this.localStorageCornerKey)
+      if (stored) {
+        return stored as Corner
+      }
+    } catch (error) {
+      console.error("ForesightDevtools: Failed to load corner from localStorage:", error)
+    }
+    return "bottom-right"
+  }
+
   private _handleTabChange(event: CustomEvent) {
     this.activeTab = event.detail.tab
     this.setStoredTab(this.activeTab)
@@ -188,8 +233,15 @@ export class ControlPanel extends LitElement {
     try {
       localStorage.setItem(this.localStorageSelectedTabKey, tab)
     } catch (error) {
-      // Silently fail - localStorage may be disabled (private browsing, etc.)
       console.warn("ForesightDevtools: Failed to save tab preference to localStorage:", error)
+    }
+  }
+
+  private setStoredCorner(corner: Corner): void {
+    try {
+      localStorage.setItem(this.localStorageCornerKey, corner)
+    } catch (error) {
+      console.warn("ForesightDevtools: Failed to save corner to localStorage:", error)
     }
   }
 
@@ -197,12 +249,27 @@ export class ControlPanel extends LitElement {
     this.isWarningDismissed = true
   }
 
+  public setCorner(corner: Corner): void {
+    this.corner = corner
+    this.setStoredCorner(this.corner)
+    this.requestUpdate()
+  }
+
+  private handleMinimizeClick(event: Event): void {
+    event.stopPropagation()
+    this.isMinimized = !this.isMinimized
+  }
+
+  private getMinimizeSymbol(): string {
+    return this.isMinimized ? "+" : "−"
+  }
+
   protected render() {
     return html`
-      <div class="control-wrapper ${this.isMinimized ? "minimized" : ""}">
+      <div class="control-wrapper ${this.corner} ${this.isMinimized ? "minimized" : ""}">
         <div class="title-wrapper">
-          <button @click="${() => (this.isMinimized = !this.isMinimized)}" class="minimize-button">
-            -
+          <button @click="${this.handleMinimizeClick}" class="minimize-button">
+            ${this.getMinimizeSymbol()}
           </button>
           <h1>Foresight DevTools</h1>
           <div></div>
