@@ -1,18 +1,13 @@
 import { Link } from "react-router-dom"
 import { useButtonActions, useIsRemoved, useIsResized, useIsVisible } from "../stores/ButtonStateStore"
-import { ForesightDevtools } from "js.foresight-devtools"
+import { useDebug } from "../contexts/DebugContext"
 
 export const Navigation = () => {
   const actions = useButtonActions()
   const isVisible = useIsVisible()
   const isRemoved = useIsRemoved()
   const isResized = useIsResized()
-
-  const toggleDebug = () => {
-    ForesightDevtools.instance.alterDevtoolsSettings({
-      showDebugger: !ForesightDevtools.instance.devtoolsSettings.showDebugger,
-    })
-  }
+  const { isDebugActive, toggleDebug } = useDebug()
 
   return (
     <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-10">
@@ -52,9 +47,14 @@ export const Navigation = () => {
             </button>
             <button
               onClick={toggleDebug}
-              className="px-3 py-1 rounded-md text-xs font-medium bg-gray-600 hover:bg-gray-700 text-white transition-colors"
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                isDebugActive
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gray-600 hover:bg-gray-700 text-white"
+              }`}
+              title="⚠️ Warning: Debug mode may impact performance with many elements"
             >
-              Debug
+              {isDebugActive ? "Debug ON" : "Debug OFF"}
             </button>
             <button
               onClick={actions.resetAll}
@@ -63,6 +63,12 @@ export const Navigation = () => {
               Reset
             </button>
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
+            <Link 
+              to="/" 
+              className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
+            >
+              🏠 Home
+            </Link>
             <Link 
               to="/images" 
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
