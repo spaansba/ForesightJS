@@ -205,7 +205,7 @@ ForesightManager.initialize({
 
 ---
 
-### Minimum Connection Settings (v3.3.0+)
+### Minimum Connection Settings (v3.4.0+)
 
 #### `minimumConnectionType`
 

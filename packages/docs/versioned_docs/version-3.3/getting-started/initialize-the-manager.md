@@ -44,6 +44,9 @@ ForesightManager.initialize({
   // Touch device settings
   touchDeviceStrategy: "viewport", // "none", "viewport", or "onTouchStart"
 
+  // Connection settings
+  minimumConnectionType: "3g", // "slow-2g", "2g", "3g", "4g"
+
   // Default element settings
   defaultHitSlop: 0, // Default hit slop for all elements (number or {top, right, bottom, left})
 })

@@ -38,8 +38,6 @@ export function userUsesTouchDevice(): boolean {
  * }
  */
 function hasConnectionLimitations(): boolean {
-  console.log('hasConnectionLimitations');
-  console.log('navigator', navigator);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
   if (!connection) return false
@@ -54,5 +52,5 @@ function hasConnectionLimitations(): boolean {
   const minimumConnectionIndex = connectionTypes.indexOf(minimumConnectionType)
 
   // If user's connection is slower than the minimum required, or data saver is enabled, return true
-  return currentConnectionIndex <= minimumConnectionIndex || connection.saveData
+  return currentConnectionIndex < minimumConnectionIndex || connection.saveData
 }
