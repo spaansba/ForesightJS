@@ -1,5 +1,7 @@
 import type { HitSlop, ForesightEvent } from "js.foresight"
 
+export type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right"
+
 export type DeepPartial<T> = T extends object
   ? {
       [P in keyof T]?: DeepPartial<T[P]>

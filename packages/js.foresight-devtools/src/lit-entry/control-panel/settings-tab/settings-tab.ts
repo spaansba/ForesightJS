@@ -8,7 +8,7 @@ import { ForesightManager } from "js.foresight"
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
 
-import type { DevtoolsSettings } from "../../../types/types"
+import type { Corner, DevtoolsSettings } from "../../../types/types"
 import {
   MAX_POSITION_HISTORY_SIZE,
   MAX_SCROLL_MARGIN,
@@ -85,6 +85,7 @@ export class SettingsTab extends LitElement {
   }>
   @state() private devtoolsSettings: DevtoolsSettings
   @state() private changedSettings: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[] = []
+  @state() private currentCorner: Corner = "bottom-right"
   @state() private touchDeviceStrategyOptions: DropdownOption[] = [
     {
       value: "onTouchStart",
@@ -130,6 +131,31 @@ export class SettingsTab extends LitElement {
       label: "4G",
       title: "4G",
       icon: html`<span>4G</span>`,
+
+  @state() private cornerOptions: DropdownOption[] = [
+    {
+      value: "top-left",
+      label: "Top Left",
+      title: "Position control panel in top-left corner",
+      icon: html`<span>↖</span>`,
+    },
+    {
+      value: "top-right",
+      label: "Top Right",
+      title: "Position control panel in top-right corner",
+      icon: html`<span>↗</span>`,
+    },
+    {
+      value: "bottom-left",
+      label: "Bottom Left",
+      title: "Position control panel in bottom-left corner",
+      icon: html`<span>↙</span>`,
+    },
+    {
+      value: "bottom-right",
+      label: "Bottom Right",
+      title: "Position control panel in bottom-right corner",
+      icon: html`<span>↘</span>`,
     },
   ]
 
@@ -143,6 +169,7 @@ export class SettingsTab extends LitElement {
     // Shallow copy is sufficient for settings objects
     this.devtoolsSettings = Object.assign({}, currentDevtoolsSettings)
     this.managerSettings = Object.assign({}, currentManagerSettings)
+    this.currentCorner = this.getCurrentCorner()
 
     this.initialSettings = {
       devtools: Object.assign({}, currentDevtoolsSettings),
@@ -248,6 +275,30 @@ export class SettingsTab extends LitElement {
     ForesightManager.instance.alterGlobalSettings({
       minimumConnectionType: value as MinimumConnectionType,
     })
+
+  private _handleCornerChange = (value: Corner): void => {
+    this.currentCorner = value
+    // Dispatch custom event that bubbles up to control panel
+    this.dispatchEvent(
+      new CustomEvent("corner-change", {
+        detail: { corner: value },
+        bubbles: true,
+        composed: true,
+      })
+    )
+  }
+
+  private getCurrentCorner(): Corner {
+    // Get corner from localStorage directly since it's the source of truth
+    try {
+      const stored = localStorage.getItem("foresight-devtools-control-panel-corner")
+      if (stored && ["top-left", "top-right", "bottom-left", "bottom-right"].includes(stored)) {
+        return stored as Corner
+      }
+    } catch (error) {
+      console.warn("ForesightDevtools: Failed to load corner from localStorage:", error)
+    }
+    return "bottom-right"
   }
 
   private async handleCopySettings(): Promise<void> {
@@ -260,8 +311,8 @@ export class SettingsTab extends LitElement {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(settingsCode)
       }
-    } catch (err) {
-      console.error("Failed to copy settings code:", err)
+    } catch (error) {
+      console.error("Failed to copy settings code:", error)
     }
   }
 
@@ -427,6 +478,17 @@ export class SettingsTab extends LitElement {
                 setting="showNameTags"
                 @setting-changed=${this._handleDevtoolsSettingChange}
               ></setting-item-checkbox>
+              <setting-item
+                header="Panel Position"
+                description="Choose which corner to position the control panel"
+              >
+                <single-select-dropdown
+                  slot="controls"
+                  .dropdownOptions=${this.cornerOptions}
+                  .selectedOptionValue=${this.currentCorner}
+                  .onSelectionChange=${this._handleCornerChange}
+                ></single-select-dropdown>
+              </setting-item>
             </div>
           </div>
         </div>

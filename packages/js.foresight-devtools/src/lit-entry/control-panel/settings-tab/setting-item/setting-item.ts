@@ -36,7 +36,6 @@ export class SettingItem extends LitElement {
         font-weight: 500;
         color: #fff;
         font-size: 13px;
-        cursor: pointer;
         min-width: 180px;
       }
       .setting-header {
