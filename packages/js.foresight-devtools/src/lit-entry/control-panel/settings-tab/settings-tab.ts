@@ -131,6 +131,8 @@ export class SettingsTab extends LitElement {
       label: "4G",
       title: "4G",
       icon: html`<span>4G</span>`,
+    },
+  ]
 
   @state() private cornerOptions: DropdownOption[] = [
     {
@@ -275,6 +277,7 @@ export class SettingsTab extends LitElement {
     ForesightManager.instance.alterGlobalSettings({
       minimumConnectionType: value as MinimumConnectionType,
     })
+  }
 
   private _handleCornerChange = (value: Corner): void => {
     this.currentCorner = value
