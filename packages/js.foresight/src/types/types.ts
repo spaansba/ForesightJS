@@ -59,7 +59,7 @@ export type ForesightRegisterResult = {
    * @deprecated As of version 3.3, ForesightJS handles touch devices internally with dedicated touch strategies
    */
   isTouchDevice: boolean
-  /** Whether the user has connection limitations (slow network (2g) or data saver enabled) that should prevent prefetching */
+  /** Whether the user has connection limitations (network slower than minimum connection type (default: 3g) or data saver enabled) that should prevent prefetching */
   isLimitedConnection: boolean
   /** Whether ForesightJS will actively track this element. False if touch device or limited connection, true otherwise */
   isRegistered: boolean
@@ -185,6 +185,7 @@ export type ForesightManagerData = {
 }
 
 export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
+export type MinimumConnectionType = "slow-2g" | "2g" | "3g" | "4g"
 
 type BaseForesightManagerSettings = {
   /**
@@ -272,12 +273,21 @@ type BaseForesightManagerSettings = {
 
   /**
    * The prefetch strategy used for touch devices.
-   * - `none`: No prefetching is done on touch devices.
    * - `viewport`: Prefetching is done based on the viewport, meaning elements in the viewport are preloaded.
    * - `onTouchStart`: Prefetching is done when the user touches the element
    * @default onTouchStart
    */
   touchDeviceStrategy: TouchDeviceStrategy
+
+  /**
+   * Network effective connection types that should be considered as limited connections.
+   * When the user's network matches any of these types, ForesightJS will disable prefetching
+   * to avoid consuming data on slow or expensive connections.
+   * 
+   * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
+   * @default 3g
+   */
+  minimumConnectionType: MinimumConnectionType
 }
 
 export type CurrentDeviceStrategy = "mouse" | "touch" | "pen"

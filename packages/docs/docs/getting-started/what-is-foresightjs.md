@@ -53,7 +53,7 @@ yarn add js.foresight
 
 ## Prediction Strategies
 
-ForesightJS uses different prediction strategies depending on the device type. For limited connections (2G or [data-saver mode](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData)), we respect the user's preference to minimize data usage and skip registration. Foresight automatically detects mouse, pen, or touch input, and updates its strategy if the input method changes.
+ForesightJS uses different prediction strategies depending on the device type. For limited connections (slower than the minimum connection type - default: 3G - or [data-saver mode](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData)), we respect the user's preference to minimize data usage and skip registration. Foresight automatically detects mouse, pen, or touch input, and updates its strategy if the input method changes.
 
 ### Keyboard/Mouse Users
 

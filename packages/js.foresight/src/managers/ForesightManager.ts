@@ -112,6 +112,7 @@ export class ForesightManager {
     enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
     tabOffset: DEFAULT_TAB_OFFSET,
     touchDeviceStrategy: "onTouchStart",
+    minimumConnectionType: "3g",
   }
 
   private pendingPointerEvent: PointerEvent | null = null
@@ -674,6 +675,10 @@ export class ForesightManager {
       this._globalSettings.touchDeviceStrategy = props.touchDeviceStrategy
     }
 
+    if (props.minimumConnectionType !== undefined) {
+      this._globalSettings.minimumConnectionType = props.minimumConnectionType
+    }
+
     if (props.debug !== undefined) {
       this._globalSettings.debug = props.debug
     }
@@ -861,6 +866,16 @@ export class ForesightManager {
       if (this.handler instanceof TouchDeviceHandler) {
         this.handler.setTouchPredictor()
       }
+    }
+
+    if (props?.minimumConnectionType !== undefined) {
+      const oldMinimumConnectionType = this._globalSettings.minimumConnectionType
+      this._globalSettings.minimumConnectionType = props.minimumConnectionType
+      changedSettings.push({
+        setting: "minimumConnectionType",
+        oldValue: oldMinimumConnectionType,
+        newValue: this._globalSettings.minimumConnectionType,
+      })
     }
 
     if (changedSettings.length > 0) {

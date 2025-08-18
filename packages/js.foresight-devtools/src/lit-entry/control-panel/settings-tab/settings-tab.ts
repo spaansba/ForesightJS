@@ -1,6 +1,7 @@
 import type {
   ForesightManagerSettings,
   TouchDeviceStrategy,
+  MinimumConnectionType,
   UpdatedManagerSetting,
 } from "js.foresight"
 import { ForesightManager } from "js.foresight"
@@ -106,6 +107,31 @@ export class SettingsTab extends LitElement {
     },
   ]
 
+  @state() private minimumConnectionTypeOptions: DropdownOption[] = [
+    {
+      value: "slow-2g",
+      label: "Slow 2G",
+      title: "Slow 2G",
+      icon: html`<span>Slow 2G</span>`,
+    },
+    {
+      value: "2g",
+      label: "2G",
+      title: "2G",
+      icon: html`<span>2G</span>`,
+    },
+    {
+      value: "3g",
+      label: "3G",
+      title: "3G",
+      icon: html`<span>3G</span>`,
+    },
+    {
+      value: "4g",
+      label: "4G",
+      title: "4G",
+      icon: html`<span>4G</span>`,
+
   @state() private cornerOptions: DropdownOption[] = [
     {
       value: "top-left",
@@ -192,6 +218,7 @@ export class SettingsTab extends LitElement {
       "tabOffset",
       "scrollMargin",
       "touchDeviceStrategy",
+      "minimumConnectionType",
     ]
 
     for (const key of managerKeys) {
@@ -244,6 +271,11 @@ export class SettingsTab extends LitElement {
     })
   }
 
+  private _handleMinimumConnectionTypeChange = (value: string): void => {
+    ForesightManager.instance.alterGlobalSettings({
+      minimumConnectionType: value as MinimumConnectionType,
+    })
+
   private _handleCornerChange = (value: Corner): void => {
     this.currentCorner = value
     // Dispatch custom event that bubbles up to control panel
@@ -294,6 +326,7 @@ export class SettingsTab extends LitElement {
       tabOffset: settings.tabOffset,
       scrollMargin: settings.scrollMargin,
       touchDeviceStrategy: settings.touchDeviceStrategy,
+      minimumConnectionType: settings.minimumConnectionType,
     }
 
     return `ForesightManager.initialize(${JSON.stringify(settingsObject, null, 2)})`
@@ -416,6 +449,21 @@ export class SettingsTab extends LitElement {
                   .dropdownOptions=${this.touchDeviceStrategyOptions}
                   .selectedOptionValue=${settings.touchDeviceStrategy}
                   .onSelectionChange=${this._handleTouchDeviceStrategyChange}
+                ></single-select-dropdown>
+              </setting-item>
+            </div>
+
+            <div class="settings-group">
+              <h4>Minimum Connection</h4>
+              <setting-item
+                header="Minimum Connection Type"
+                description="Minimum connection speed required to register elements"
+              >
+                <single-select-dropdown
+                  slot="controls"
+                  .dropdownOptions=${this.minimumConnectionTypeOptions}
+                  .selectedOptionValue=${settings.minimumConnectionType}
+                  .onSelectionChange=${this._handleMinimumConnectionTypeChange}
                 ></single-select-dropdown>
               </setting-item>
             </div>

@@ -38,6 +38,7 @@ ForesightManager.initialize({
   scrollMargin: 150,
   touchDeviceStrategy: "viewport",
   enableManagerLogging: false,
+  minimumConnectionType: "3g",
 })
 ```
 
@@ -199,6 +200,24 @@ ForesightManager.initialize({
 ```javascript
 ForesightManager.initialize({
   touchDeviceStrategy: "viewport",
+})
+```
+
+---
+
+### Minimum Connection Settings (v3.4.0+)
+
+#### `minimumConnectionType`
+
+- **Type:** `MinimumConnectionType`
+- **Default:** `"3g"`
+- **Options:** `"slow-2g"`, `"2g"`, `"3g"`, `"4g"`
+- **Description:** The minimum connection speed required to register elements. Elements will not be registered when the user's connection is slower than this threshold.
+- **Note:** This feature relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS will register elements regardless of connection speed.
+
+```javascript
+ForesightManager.initialize({
+  minimumConnectionType: "3g",
 })
 ```
 

@@ -195,7 +195,8 @@ const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.in
 #### `isLimitedConnection`
 
 - **Type:** `boolean`
-- **Description:** Is `true` when the user is on a 2G connection or has data-saver enabled. Elements will not be registered when connection is limited.
+- **Description:** Is `true` when the user's connection matches the configured `minimumConnectionType` setting (defaults to "3g"). Elements will not be registered when connection is limited. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
+- **Note:** This feature relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS will register elements regardless of connection speed.
 
 ---
 
