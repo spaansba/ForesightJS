@@ -162,13 +162,13 @@ global.PointerEvent = class PointerEvent extends Event {
   clientY: number
   pointerType: string
 
-  constructor(type: string, init: any = {}) {
+  constructor(type: string, init: PointerEventInit = {}) {
     super(type, init)
     this.clientX = init.clientX || 0
     this.clientY = init.clientY || 0
     this.pointerType = init.pointerType || "mouse"
   }
-} as any
+} as unknown as typeof PointerEvent
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -179,7 +179,7 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-} as any
+} as unknown as typeof IntersectionObserver
 
 // Mock matchMedia
 global.matchMedia = vi.fn().mockImplementation(query => ({

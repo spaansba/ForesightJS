@@ -100,10 +100,13 @@ ForesightManager.instance.register({
                 <Link to="/docs/integrations/react/react-router" className={styles.integrationLink}>
                   React Router
                 </Link>
-                {/* <Link to="/docs/integrations/vue/vue" className={styles.integrationLink}>
+                <Link to="/docs/integrations/vue" className={styles.integrationLink}>
                   Vue.js
                 </Link>
-                <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
+                <Link to="/docs/integrations/angular" className={styles.integrationLink}>
+                  Angular
+                </Link>
+                {/* <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
                   TanStack Router
                 </Link> */}
               </div>
