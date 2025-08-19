@@ -31,7 +31,7 @@ yarn add js.foresight
 
 ## Basic Usage Example
 
-This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations/react/useForesight).
+This basic example is in vanilla JS, of course most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations/react/useForesight).
 
 ```javascript
 import { ForesightManager } from "foresightjs"

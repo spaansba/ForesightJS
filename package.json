@@ -9,6 +9,7 @@
     "docs:build": "pnpm --filter docs build",
     "fsinfo": "node ./scripts/list-packages.js",
     "test": "pnpm --filter \"./packages/**\" test",
+    "test:run": "pnpm --filter \"./packages/**\" test:run",
     "test:watch": "pnpm --filter \"./packages/**\" test:watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
