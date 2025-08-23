@@ -19,7 +19,7 @@ ForesightManager.initialize({
   enableTabPrediction: true,
   enableManagerLogging: true,
   tabOffset: 2,
-  touchDeviceStrategy: "viewport",
+  touchDeviceStrategy: "onTouchStart",
   minimumConnectionType: "3g",
 })
 

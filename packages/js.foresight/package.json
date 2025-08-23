@@ -1,6 +1,6 @@
 {
   "name": "js.foresight",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "Predicts where users will click based on mouse movement, keyboard navigation, and scroll behavior. Includes touch device support. Triggers callbacks before interactions happen to enable prefetching and faster UI responses. Works with any framework.",
   "type": "module",
   "scripts": {
