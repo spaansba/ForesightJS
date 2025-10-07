@@ -44,23 +44,18 @@ interface ForesightLinkProps
 
 export function ForesightLink({ children, className, ...props }: ForesightLinkProps) {
   const router = useRouter() // import from "next/navigation" not "next/router"
-  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
+  const { elementRef } = useForesight<HTMLAnchorElement>({
     callback: () => {
       router.prefetch(props.href.toString())
     },
     hitSlop: props.hitSlop,
     name: props.name,
-    meta: props.meta
+    meta: props.meta,
     reactivateAfter: props.reactivateAfter,
   })
 
   return (
-    <Link
-      {...props}
-      prefetch={registerResults?.isTouchDevice ?? false}
-      ref={elementRef}
-      className={className}
-    >
+    <Link {...props} ref={elementRef} className={className}>
       {children}
     </Link>
   )
