@@ -200,7 +200,11 @@ export class ForesightManager {
 
     for (let i = 0; i < listeners.length; i++) {
       try {
-        listeners[i](event)
+        const listener = listeners[i]
+
+        if (listener) {
+          listener(event)
+        }
       } catch (error) {
         console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
       }
@@ -584,7 +588,7 @@ export class ForesightManager {
     for (let i = 0; i < mutationsList.length; i++) {
       const mutation = mutationsList[i]
 
-      if (mutation.type === "childList" && mutation.removedNodes.length > 0) {
+      if (mutation && mutation.type === "childList" && mutation.removedNodes.length > 0) {
         hasRemovedNodes = true
         break
       }

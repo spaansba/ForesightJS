@@ -56,8 +56,15 @@ export class DesktopHandler extends BaseForesightModule {
     this.positionObserver = new PositionObserver(this.handlePositionChange)
 
     const enabledPredictors = ["mouse"]
-    if (this.settings.enableTabPrediction) enabledPredictors.push("tab")
-    if (this.settings.enableScrollPrediction) enabledPredictors.push("scroll")
+
+    if (this.settings.enableTabPrediction) {
+      enabledPredictors.push("tab")
+    }
+
+    if (this.settings.enableScrollPrediction) {
+      enabledPredictors.push("scroll")
+    }
+
     this.devLog(`Connected predictors: [${enabledPredictors.join(", ")}] and PositionObserver`)
 
     for (const element of this.elements.keys()) {

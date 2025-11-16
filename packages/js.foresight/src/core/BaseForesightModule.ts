@@ -28,9 +28,11 @@ export abstract class BaseForesightModule {
   protected emit: EmitFunction
   protected settings: ForesightManagerSettings
   private _isConnected = false
+
   public get isConnected(): boolean {
     return this._isConnected
   }
+
   protected abstract readonly moduleName: string // Name of the implementor class for debugging purposes
 
   constructor(dependencies: ForesightModuleDependencies) {
