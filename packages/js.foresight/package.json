@@ -56,19 +56,19 @@
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.7.0",
-    "@types/node": "^24.3.0",
-    "@vitest/coverage-v8": "3.2.4",
-    "@vitest/ui": "^3.2.4",
-    "happy-dom": "^18.0.1",
-    "jsdom": "^26.1.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@types/node": "^24.10.1",
+    "@vitest/coverage-v8": "4.0.9",
+    "@vitest/ui": "^4.0.9",
+    "happy-dom": "^20.0.10",
+    "jsdom": "^27.2.0",
     "tslib": "^2.8.1",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.9"
   },
   "dependencies": {
     "position-observer": "^1.0.3",
-    "tabbable": "^6.2.0"
+    "tabbable": "^6.3.0"
   }
 }
