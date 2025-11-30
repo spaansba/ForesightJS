@@ -1,8 +1,9 @@
 {
   "name": "foresightjs-monorepo",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel --filter \"./packages/**\" dev",
+    "dev": "node ./scripts/dev-select.js",
     "build": "pnpm --filter js.foresight* build",
     "build:prod": "pnpm --filter js.foresight* build:prod",
     "docs:start": "pnpm --filter docs start",
