@@ -20,21 +20,22 @@
     },
     {
       "type": "category",
-      "label": "Integrations",
+      "label": "React",
       "items": [
-        {
-          "type": "category",
-          "label": "React",
-          "items": [
-            "integrations/react/useForesight",
-            "integrations/react/nextjs",
-            "integrations/react/react-router"
-          ]
-        },
-        "integrations/vue",
-        "integrations/angular"
+        "react/hook",
+        "react/nextjs",
+        "react/react-router"
       ]
     },
+    {
+      "type": "category",
+      "label": "Vue",
+      "items": [
+        "vue/directive",
+        "vue/composable"
+      ]
+    },
+    "angular",
     {
       "type": "category",
       "label": "Debugging",
