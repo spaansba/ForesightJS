@@ -49,4 +49,4 @@ All documentation pages are available as markdown by adding `.md` to any URL:
 
 - `https://foresightjs.com/docs/getting-started/your-first-element.md`
 - `https://foresightjs.com/docs/configuration/global-settings.md`
-- `https://foresightjs.com/docs/integrations/react/nextjs.md`
+- `https://foresightjs.com/docs/react/nextjs.md`

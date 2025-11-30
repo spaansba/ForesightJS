@@ -31,7 +31,7 @@ yarn add js.foresight
 
 ## Basic Usage Example
 
-This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations/react/useForesight).
+This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/react/hook).
 
 ```javascript
 import { ForesightManager } from "foresightjs"
@@ -56,7 +56,12 @@ ForesightManager.instance.register({
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. While I haven't yet built integrations for every framework, ready-to-use implementations for [Next.js](https://foresightjs.com/docs/integrations/react/nextjs) and [React Router](https://foresightjs.com/docs/integrations/react/react-router) are already available. Sharing integrations for other frameworks/packages is highly appreciated!
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. Ready-to-use implementations are available for:
+
+- **React**: [Next.js](https://foresightjs.com/docs/react/nextjs), [React Router](https://foresightjs.com/docs/react/react-router), and [useForesight hook](https://foresightjs.com/docs/react/hook)
+- **Vue**: [Directive](https://foresightjs.com/docs/vue/directive) and [Composable](https://foresightjs.com/docs/vue/composable)
+
+Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 

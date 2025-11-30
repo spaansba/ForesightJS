@@ -78,5 +78,5 @@ function MyComponent() {
 
 For ready-to-use components built on top of useForesight, see our framework-specific integrations:
 
-- [React Router](/docs/integrations/react/react-router#foresightlink-component)
-- [Next.js](/docs/integrations/react/nextjs#foresightlink-component)
+- [React Router](/docs/react/react-router#foresightlink-component)
+- [Next.js](/docs/react/nextjs#foresightlink-component)

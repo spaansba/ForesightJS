@@ -94,18 +94,18 @@ ForesightManager.instance.register({
             <div className={styles.integrations}>
               <h4>Premade Framework Integrations:</h4>
               <div className={styles.integrationLinks}>
-                <Link to="/docs/integrations/react/nextjs" className={styles.integrationLink}>
+                <Link to="/docs/react/nextjs" className={styles.integrationLink}>
                   Next.js
                 </Link>
-                <Link to="/docs/integrations/react/react-router" className={styles.integrationLink}>
+                <Link to="/docs/react/react-router" className={styles.integrationLink}>
                   React Router
                 </Link>
-                {/* <Link to="/docs/integrations/vue/vue" className={styles.integrationLink}>
+                <Link to="/docs/vue/directive" className={styles.integrationLink}>
                   Vue.js
                 </Link>
-                <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
+                {/* <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
                   TanStack Router
-                </Link> */}
+                </Link>  */}
               </div>
             </div>
           </div>
