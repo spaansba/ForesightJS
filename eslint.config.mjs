@@ -52,4 +52,18 @@ export default [
     ...config,
     files: ["packages/devpage-vue/**/*.vue"],
   })),
+  {
+    files: ["packages/devpage-vue/**/*.vue"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      parserOptions: {
+        parser: tseslint.parser,
+        extraFileExtensions: [".vue"],
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+    },
+  },
 ]
