@@ -3,6 +3,7 @@ import globals from "globals"
 import tseslint from "typescript-eslint"
 import wcPlugin from "eslint-plugin-wc"
 import litPlugin from "eslint-plugin-lit"
+import pluginVue from "eslint-plugin-vue"
 
 export default [
   // Global ignores
@@ -45,4 +46,10 @@ export default [
       ...litPlugin.configs.recommended.rules,
     },
   },
+
+  // Specific config for devpage-vue package (Vue.js)
+  ...pluginVue.configs["flat/essential"].map(config => ({
+    ...config,
+    files: ["packages/devpage-vue/**/*.vue"],
+  })),
 ]
