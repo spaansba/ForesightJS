@@ -1,5 +1,4 @@
 ---
-sidebar_position: 1
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -9,15 +8,15 @@ keywords:
   - useForesight
 description: React hook for ForesightJS integration
 last_updated:
-  date: 2025-06-23
+  date: 2025-11-30
   author: Bart Spaans
 ---
 
-# useForesight
+# Hook
 
 The `useForesight` hook serves as the base for all ForesightJS usage with any React framework.
 
-## useForesight
+## Basic useForesight
 
 ```tsx
 import { useRef, useEffect } from "react"

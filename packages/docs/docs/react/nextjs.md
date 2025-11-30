@@ -1,5 +1,4 @@
 ---
-sidebar_position: 3
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -11,7 +10,7 @@ keywords:
   - React
 description: Integration details to add ForesightJS to your Next.js projects
 last_updated:
-  date: 2025-06-23
+  date: 2025-11-30
   author: Bart Spaans
 ---
 

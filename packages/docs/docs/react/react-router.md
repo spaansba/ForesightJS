@@ -1,5 +1,4 @@
 ---
-sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -10,7 +9,7 @@ keywords:
   - PrefetchPageLinks
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
-  date: 2025-07-15
+  date: 2025-11-30
   author: Bart Spaans
 ---
 

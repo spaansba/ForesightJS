@@ -8,7 +8,7 @@ keywords:
   - getting started
 description: Learn how to register your first element with ForesightJS and start predicting user intent
 last_updated:
-  date: 2025-08-03
+  date: 2025-11-30
   author: Bart Spaans
 ---
 
@@ -65,16 +65,21 @@ ForesightManager.instance.register({
 
 Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. Ready-to-use implementations are available for:
 
-- [Next.js](/docs/integrations/react/nextjs)
-- [React Router](/docs/integrations/react/react-router)
-- [Angular](/docs/integrations/angular)
+- [Next.js](/docs/react/nextjs)
+- [React Router](/docs/react/react-router)
+- [Vue](/docs/vue/directive)
+- [Angular](/docs/angular)
 
 ## Development Tools
 
 ForesightJS has dedicated [Development Tools](/docs/debugging/devtools) that help you understand and tune how prediction is working in your application:
 
 ```bash
+pnpm add js.foresight-devtools
+# or
 npm install js.foresight-devtools
+# or
+yarn add js.foresight-devtools
 ```
 
 ```javascript

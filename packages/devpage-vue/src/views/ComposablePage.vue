@@ -42,9 +42,10 @@ onMounted(() => {
       <!-- Simple usage -->
       <div>
         <h2 class="text-xl font-semibold mb-3">Simple Usage</h2>
-        <button ref="buttonRef" class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600">
-          Hover to Predict
-        </button>
+        <button
+          ref="buttonRef"
+          class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+        />
       </div>
     </div>
   </div>

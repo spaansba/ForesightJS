@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { vForesight } from "../directives/vForesight"
+const handlePrefetch = () => {
+  console.log("Button with options hovered")
+}
 </script>
 
 <template>
@@ -22,7 +24,7 @@ import { vForesight } from "../directives/vForesight"
         <h2 class="text-xl font-semibold mb-3">With options</h2>
         <button
           v-foresight="{
-            callback: () => console.log('Button with Hit Slop'),
+            callback: handlePrefetch,
             hitSlop: { top: 20, bottom: 20, left: 20, right: 20 },
             name: 'button-with-options',
             reactivateAfter: 3000,
