@@ -21,13 +21,15 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
     "@tsconfig/node24": "^24.0.3",
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/tsconfig": "^0.8.1",
-    "js.foresight-devtools": "workspace:*",
     "jiti": "^2.6.1",
+    "js.foresight-devtools": "workspace:*",
     "npm-run-all2": "^8.0.4",
+    "tailwindcss": "^4.1.17",
     "typescript": "~5.9.0",
     "vite": "^7.2.4",
     "vite-plugin-vue-devtools": "^8.0.5",
