@@ -159,9 +159,7 @@ export abstract class BaseDropdown extends LitElement {
       this.isDropdownOpen = true
       BaseDropdown.currentlyOpen = this
 
-      requestAnimationFrame(() => {
-        this._positionDropdown()
-      })
+      this._positionDropdown()
     }
   }
 
@@ -173,7 +171,7 @@ export abstract class BaseDropdown extends LitElement {
   }
 
   protected _positionDropdown() {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return
     }
 

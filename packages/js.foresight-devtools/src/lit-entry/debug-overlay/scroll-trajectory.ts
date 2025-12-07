@@ -166,7 +166,7 @@ export class ScrollTrajectory extends LitElement {
 
     if (!this._isUpdateScheduled) {
       this._isUpdateScheduled = true
-      requestAnimationFrame(this.renderScrollTrajectory)
+      this.renderScrollTrajectory()
     }
   }
 
