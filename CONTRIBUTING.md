@@ -55,6 +55,9 @@ This project uses a monorepo structure with multiple packages. Install dependenc
 ```bash
 # Install all workspace dependencies
 pnpm install
+
+# then
+pnpm build
 ```
 
 **3. Start developing with the development page**
