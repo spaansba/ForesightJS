@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "js.foresight": "workspace:*",
-    "vue": "^3.5.25",
+    "vue": "^3.5.26",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
