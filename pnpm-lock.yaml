@@ -24,8 +24,8 @@ importers:
         specifier: ~10.5.1
         version: 10.5.1(@typescript-eslint/parser@8.40.0(eslint@9.33.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.33.0(jiti@2.6.1))(vue-eslint-parser@10.2.0(eslint@9.33.0(jiti@2.6.1)))
       eslint-plugin-wc:
-        specifier: ^3.0.1
-        version: 3.0.1(eslint@9.33.0(jiti@2.6.1))
+        specifier: ^3.0.2
+        version: 3.0.2(eslint@9.33.0(jiti@2.6.1))
       globals:
         specifier: ^16.3.0
         version: 16.3.0
@@ -991,6 +991,10 @@ packages:
 
   '@babel/runtime@7.28.3':
     resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -4051,8 +4055,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-wc@3.0.1:
-    resolution: {integrity: sha512-0p1wkSlA2Ue3FA4qW+5LZ+15sy0p1nUyVl1eyBMLq4rtN1LtE9IdI49BXNWMz8N8bM/y7Ulx8SWGAni5f8XO5g==}
+  eslint-plugin-wc@3.0.2:
+    resolution: {integrity: sha512-siwTrxPTw6GU2JmP3faInw8nhi0ZCnKsiSRM3j7EAkZmBTGYdDAToeseLYsvPrc5Urp/vPz+g7Ewh7XcICLxww==}
     peerDependencies:
       eslint: '>=8.40.0'
 
@@ -6589,8 +6593,8 @@ packages:
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
 
-  seroval-plugins@1.3.2:
-    resolution: {integrity: sha512-0QvCV2lM3aj/U3YozDiVwx9zpH0q8A60CTWIv4Jszj/givcudPb48B+rkU5D51NJ0pTpweGMttHjboPa9/zoIQ==}
+  seroval-plugins@1.3.3:
+    resolution: {integrity: sha512-16OL3NnUBw8JG1jBLUoZJsLnQq0n5Ua6aHalhJK4fMQkz1lqR7Osz1sA30trBtd9VUDc2NgkuRCn8+/pBwqZ+w==}
     engines: {node: '>=10'}
     peerDependencies:
       seroval: ^1.0
@@ -7428,6 +7432,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -8559,6 +8564,8 @@ snapshots:
       core-js-pure: 3.45.0
 
   '@babel/runtime@7.28.3': {}
+
+  '@babel/runtime@7.28.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -10241,7 +10248,7 @@ snapshots:
 
   '@slorber/react-helmet-async@1.3.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.28.3
+      '@babel/runtime': 7.28.4
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 19.1.1
@@ -12406,7 +12413,7 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/parser': 8.40.0(eslint@9.33.0(jiti@2.6.1))(typescript@5.9.2)
 
-  eslint-plugin-wc@3.0.1(eslint@9.33.0(jiti@2.6.1)):
+  eslint-plugin-wc@3.0.2(eslint@9.33.0(jiti@2.6.1)):
     dependencies:
       eslint: 9.33.0(jiti@2.6.1)
       is-valid-element-name: 1.0.0
@@ -13108,7 +13115,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.28.3
+      '@babel/runtime': 7.28.4
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -15526,7 +15533,7 @@ snapshots:
     dependencies:
       randombytes: 2.1.0
 
-  seroval-plugins@1.3.2(seroval@1.3.2):
+  seroval-plugins@1.3.3(seroval@1.3.2):
     dependencies:
       seroval: 1.3.2
 
@@ -15670,7 +15677,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
       seroval: 1.3.2
-      seroval-plugins: 1.3.2(seroval@1.3.2)
+      seroval-plugins: 1.3.3(seroval@1.3.2)
 
   sort-css-media-queries@2.2.0: {}
 
