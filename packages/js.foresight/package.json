@@ -57,7 +57,7 @@
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.3",
     "@vitest/coverage-v8": "4.0.9",
     "@vitest/ui": "^4.0.9",
     "happy-dom": "^20.0.10",
