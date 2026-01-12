@@ -51,7 +51,7 @@
     "js.foresight": "^3.3.2"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.6",
     "js.foresight": "workspace:*",
     "tslib": "^2.8.1",
     "tsup": "^8.5.1",
