@@ -1,12 +1,5 @@
-version: 2
+version: 3
 updates:
-  # Root package.json
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-
   # js.foresight package
   - package-ecosystem: "npm"
     directory: "/packages/js.foresight"
@@ -17,27 +10,6 @@ updates:
   # js.foresight-devtools package
   - package-ecosystem: "npm"
     directory: "/packages/js.foresight-devtools"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-
-  # devpage-react package
-  - package-ecosystem: "npm"
-    directory: "/packages/devpage-react"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-
-  # devpage-vue package
-  - package-ecosystem: "npm"
-    directory: "/packages/devpage-vue"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-
-  # docs package
-  - package-ecosystem: "npm"
-    directory: "/packages/docs"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
