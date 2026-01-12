@@ -1,4 +1,4 @@
-version: 3
+version: 2
 updates:
   # js.foresight package
   - package-ecosystem: "npm"
@@ -13,3 +13,6 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
