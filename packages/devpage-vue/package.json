@@ -18,7 +18,7 @@
   "dependencies": {
     "js.foresight": "workspace:*",
     "vue": "^3.5.26",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.17",
