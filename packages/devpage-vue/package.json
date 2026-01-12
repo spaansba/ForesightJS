@@ -30,7 +30,7 @@
     "js.foresight-devtools": "workspace:*",
     "npm-run-all2": "^8.0.4",
     "tailwindcss": "^4.1.17",
-    "typescript": "~5.9.0",
+    "typescript": "~5.9.3",
     "vite": "^7.2.4",
     "vite-plugin-vue-devtools": "^8.0.5",
     "vue-tsc": "^3.2.1"
