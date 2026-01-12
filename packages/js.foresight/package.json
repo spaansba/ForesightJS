@@ -61,7 +61,7 @@
     "@vitest/coverage-v8": "4.0.9",
     "@vitest/ui": "^4.0.9",
     "happy-dom": "^20.0.10",
-    "jsdom": "^27.2.0",
+    "jsdom": "^27.4.0",
     "tslib": "^2.8.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
