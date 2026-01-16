@@ -1,5 +1,5 @@
 import { MinimumConnectionType } from '../types/types'
-import { ForesightManager } from "js.foresight"
+import { ForesightManager } from "../managers/ForesightManager"
 
 type ShouldRegister = {
   shouldRegister: boolean
