@@ -48,7 +48,7 @@ function ForesightStats() {
               <div className={styles.statLabel}>npm downloads</div>
             </div>
           </div>
-          
+
           <div
             className={styles.statItem}
             onClick={() => window.open("https://github.com/spaansba/ForesightJS", "_blank")}

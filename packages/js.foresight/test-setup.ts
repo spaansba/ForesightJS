@@ -156,30 +156,34 @@ export const simulateScrollEvent = (
   return event
 }
 
-// Mock PointerEvent
-global.PointerEvent = class PointerEvent extends Event {
-  clientX: number
-  clientY: number
-  pointerType: string
+// Mock PointerEvent (jsdom doesn't fully support it)
+vi.stubGlobal(
+  "PointerEvent",
+  class PointerEvent extends MouseEvent {
+    readonly pointerId: number = 0
+    readonly pointerType: string
+    readonly isPrimary: boolean = true
 
-  constructor(type: string, init: any = {}) {
-    super(type, init)
-    this.clientX = init.clientX || 0
-    this.clientY = init.clientY || 0
-    this.pointerType = init.pointerType || "mouse"
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init)
+      this.pointerType = init.pointerType || "mouse"
+    }
   }
-} as any
+)
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  callback: IntersectionObserverCallback
-  constructor(callback: IntersectionObserverCallback) {
-    this.callback = callback
+// Mock IntersectionObserver (jsdom doesn't support it)
+vi.stubGlobal(
+  "IntersectionObserver",
+  class IntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords(): IntersectionObserverEntry[] {
+      return []
+    }
   }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-} as any
+)
 
 // Mock matchMedia
 global.matchMedia = vi.fn().mockImplementation(query => ({

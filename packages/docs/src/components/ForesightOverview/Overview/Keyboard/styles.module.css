@@ -31,7 +31,9 @@
 .smallButton:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 3px 12px rgba(59, 130, 246, 0.2);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3),
+    0 3px 12px rgba(59, 130, 246, 0.2);
 }
 
 .smallButton:focus-visible {
@@ -53,12 +55,16 @@
 
 .smallButton.default:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 16px rgba(59, 130, 246, 0.25);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3),
+    0 4px 16px rgba(59, 130, 246, 0.25);
 }
 
 .smallButton.loading:focus {
   border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), 0 4px 16px rgba(245, 158, 11, 0.25);
+  box-shadow:
+    0 0 0 3px rgba(245, 158, 11, 0.3),
+    0 4px 16px rgba(245, 158, 11, 0.25);
 }
 
 .smallButton.loaded {
@@ -70,7 +76,9 @@
 
 .smallButton.loaded:focus {
   border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3), 0 6px 20px rgba(34, 197, 94, 0.3);
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.3),
+    0 6px 20px rgba(34, 197, 94, 0.3);
 }
 
 .buttonContent {

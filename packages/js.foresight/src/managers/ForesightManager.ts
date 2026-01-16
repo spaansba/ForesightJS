@@ -1,27 +1,12 @@
-import {
-  DEFAULT_ENABLE_MOUSE_PREDICTION,
-  DEFAULT_ENABLE_SCROLL_PREDICTION,
-  DEFAULT_ENABLE_TAB_PREDICTION,
-  DEFAULT_HITSLOP,
-  DEFAULT_POSITION_HISTORY_SIZE,
-  DEFAULT_SCROLL_MARGIN,
-  DEFAULT_STALE_TIME,
-  DEFAULT_TAB_OFFSET,
-  DEFAULT_TRAJECTORY_PREDICTION_TIME,
-  MAX_POSITION_HISTORY_SIZE,
-  MAX_SCROLL_MARGIN,
-  MAX_TAB_OFFSET,
-  MAX_TRAJECTORY_PREDICTION_TIME,
-  MIN_POSITION_HISTORY_SIZE,
-  MIN_SCROLL_MARGIN,
-  MIN_TAB_OFFSET,
-  MIN_TRAJECTORY_PREDICTION_TIME,
-} from "../constants"
-import { clampNumber } from "../helpers/clampNumber"
-import { initialViewportState } from "../helpers/initialViewportState"
-import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
+import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
-import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
+import {
+  createDefaultSettings,
+  createElementData,
+  createInitialCallbackHits,
+} from "../helpers/createInitialState"
+import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
+import { applySettingsChanges, initializeSettings } from "./SettingsManager"
 import type {
   CallbackHits,
   CallbackHitType,
@@ -32,18 +17,15 @@ import type {
   ForesightElementData,
   ForesightEvent,
   ForesightEventListener,
-  ForesightEventMap,
   ForesightManagerData,
   ForesightManagerSettings,
   ForesightRegisterOptions,
   ForesightRegisterResult,
-  ManagerBooleanSettingKeys,
-  NumericSettingKeys,
-  UpdatedManagerSetting,
   UpdateForsightManagerSettings,
 } from "../types/types"
 import { DesktopHandler } from "./DesktopHandler"
 import { TouchDeviceHandler } from "./TouchDeviceHandler"
+
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -61,11 +43,11 @@ import { TouchDeviceHandler } from "./TouchDeviceHandler"
  * It should be initialized once using {@link ForesightManager.initialize} and then
  * accessed via the static getter {@link ForesightManager.instance}.
  */
-
 export class ForesightManager {
   private static manager: ForesightManager
 
   private elements: Map<ForesightElement, ForesightElementData> = new Map()
+  private checkableElements: Set<ForesightElementData> = new Set()
   private idCounter: number = 0
   private activeElementCount: number = 0
 
@@ -74,73 +56,32 @@ export class ForesightManager {
   private handler: DesktopHandler | TouchDeviceHandler
 
   private isSetup: boolean = false
-
-  private _globalCallbackHits: CallbackHits = {
-    mouse: {
-      hover: 0,
-      trajectory: 0,
-    },
-    tab: {
-      forwards: 0,
-      reverse: 0,
-    },
-    scroll: {
-      down: 0,
-      left: 0,
-      right: 0,
-      up: 0,
-    },
-    touch: 0,
-    viewport: 0,
-    total: 0,
-  }
-
-  private _globalSettings: ForesightManagerSettings = {
-    debug: false,
-    enableManagerLogging: false,
-    enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
-    enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
-    positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
-    trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
-    scrollMargin: DEFAULT_SCROLL_MARGIN,
-    defaultHitSlop: {
-      top: DEFAULT_HITSLOP,
-      left: DEFAULT_HITSLOP,
-      right: DEFAULT_HITSLOP,
-      bottom: DEFAULT_HITSLOP,
-    },
-    enableTabPrediction: DEFAULT_ENABLE_TAB_PREDICTION,
-    tabOffset: DEFAULT_TAB_OFFSET,
-    touchDeviceStrategy: "onTouchStart",
-    minimumConnectionType: "3g",
-  }
-
   private pendingPointerEvent: PointerEvent | null = null
   private rafId: number | null = null
-
   private domObserver: MutationObserver | null = null
-
-  private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
-
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
+
+  private eventEmitter = new ForesightEventEmitter()
+  private _globalCallbackHits: CallbackHits = createInitialCallbackHits()
+  private _globalSettings: ForesightManagerSettings = createDefaultSettings()
 
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
     if (initialSettings !== undefined) {
-      this.initializeManagerSettings(initialSettings)
+      initializeSettings(this._globalSettings, initialSettings)
     }
 
     const dependencies = {
       elements: this.elements,
+      checkableElements: this.checkableElements,
       callCallback: this.callCallback.bind(this),
-      emit: this.emit.bind(this),
-      hasListeners: this.hasListeners.bind(this),
+      emit: this.eventEmitter.emit.bind(this.eventEmitter),
+      hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
+      updateCheckableStatus: this.updateCheckableStatus.bind(this),
       settings: this._globalSettings,
     }
 
     this.desktopHandler = new DesktopHandler(dependencies)
-
     this.touchDeviceHandler = new TouchDeviceHandler(dependencies)
-
     this.handler =
       this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
 
@@ -148,88 +89,11 @@ export class ForesightManager {
     this.initializeGlobalListeners()
   }
 
-  private generateId(): string {
-    return `foresight-${++this.idCounter}`
-  }
-
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
       ForesightManager.manager = new ForesightManager(props)
     }
-
     return ForesightManager.manager
-  }
-
-  public addEventListener<K extends ForesightEvent>(
-    eventType: K,
-    listener: ForesightEventListener<K>,
-    options?: { signal?: AbortSignal }
-  ) {
-    if (options?.signal?.aborted) {
-      return () => {}
-    }
-
-    const listeners = this.eventListeners.get(eventType) ?? []
-    listeners.push(listener as ForesightEventListener)
-    this.eventListeners.set(eventType, listeners)
-
-    options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
-  }
-
-  public removeEventListener<K extends ForesightEvent>(
-    eventType: K,
-    listener: ForesightEventListener<K>
-  ): void {
-    const listeners = this.eventListeners.get(eventType)
-
-    if (!listeners) {
-      return
-    }
-
-    const index = listeners.indexOf(listener as ForesightEventListener)
-    if (index > -1) {
-      listeners.splice(index, 1)
-    }
-  }
-
-  private emit<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
-    const listeners = this.eventListeners.get(event.type)
-
-    if (!listeners || listeners.length === 0) {
-      return
-    }
-
-    for (let i = 0; i < listeners.length; i++) {
-      try {
-        const listener = listeners[i]
-
-        if (listener) {
-          listener(event)
-        }
-      } catch (error) {
-        console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
-      }
-    }
-  }
-
-  /**
-   * Check if there are any listeners registered for a specific event type.
-   * Useful for avoiding expensive event object creation when no one is listening.
-   */
-  public hasListeners<K extends ForesightEvent>(eventType: K): boolean {
-    const listeners = this.eventListeners.get(eventType)
-    return listeners !== undefined && listeners.length > 0
-  }
-
-  public get getManagerData(): Readonly<ForesightManagerData> {
-    return {
-      registeredElements: this.elements,
-      globalSettings: this._globalSettings,
-      globalCallbackHits: this._globalCallbackHits,
-      eventListeners: this.eventListeners,
-      currentDeviceStrategy: this.currentDeviceStrategy,
-      activeElementCount: this.activeElementCount,
-    }
   }
 
   public static get isInitiated(): Readonly<boolean> {
@@ -240,18 +104,45 @@ export class ForesightManager {
     return this.initialize()
   }
 
+  private generateId(): string {
+    return `foresight-${++this.idCounter}`
+  }
+
+  public addEventListener<K extends ForesightEvent>(
+    eventType: K,
+    listener: ForesightEventListener<K>,
+    options?: { signal?: AbortSignal }
+  ): void {
+    this.eventEmitter.addEventListener(eventType, listener, options)
+  }
+
+  public removeEventListener<K extends ForesightEvent>(
+    eventType: K,
+    listener: ForesightEventListener<K>
+  ): void {
+    this.eventEmitter.removeEventListener(eventType, listener)
+  }
+
+  public hasListeners<K extends ForesightEvent>(eventType: K): boolean {
+    return this.eventEmitter.hasListeners(eventType)
+  }
+
+  public get getManagerData(): Readonly<ForesightManagerData> {
+    return {
+      registeredElements: this.elements,
+      globalSettings: this._globalSettings,
+      globalCallbackHits: this._globalCallbackHits,
+      eventListeners: this.eventEmitter.getEventListeners(),
+      currentDeviceStrategy: this.currentDeviceStrategy,
+      activeElementCount: this.activeElementCount,
+    }
+  }
+
   public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementData> {
     return this.elements
   }
 
-  public register({
-    element,
-    callback,
-    hitSlop,
-    name,
-    meta,
-    reactivateAfter,
-  }: ForesightRegisterOptions): ForesightRegisterResult {
+  public register(options: ForesightRegisterOptions): ForesightRegisterResult {
     const { isTouchDevice, isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
 
     if (!shouldRegister) {
@@ -263,11 +154,9 @@ export class ForesightManager {
       }
     }
 
-    const previousElementData = this.elements.get(element)
-
+    const previousElementData = this.elements.get(options.element)
     if (previousElementData) {
       previousElementData.registerCount++
-
       return {
         isLimitedConnection,
         isTouchDevice,
@@ -280,44 +169,18 @@ export class ForesightManager {
       this.initializeGlobalListeners()
     }
 
-    const initialRect = element.getBoundingClientRect()
+    const elementData = createElementData(
+      options,
+      this.generateId(),
+      this._globalSettings.defaultHitSlop
+    )
 
-    const normalizedHitSlop = hitSlop
-      ? normalizeHitSlop(hitSlop)
-      : this._globalSettings.defaultHitSlop
-
-    const elementData: ForesightElementData = {
-      id: this.generateId(),
-      element: element,
-      callback,
-      elementBounds: {
-        originalRect: initialRect,
-        expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
-        hitSlop: normalizedHitSlop,
-      },
-      name: name || element.id || "unnamed",
-      isIntersectingWithViewport: initialViewportState(initialRect),
-      registerCount: 1,
-      meta: meta ?? {},
-      callbackInfo: {
-        callbackFiredCount: 0,
-        lastCallbackInvokedAt: undefined,
-        lastCallbackCompletedAt: undefined,
-        lastCallbackRuntime: undefined,
-        lastCallbackStatus: undefined,
-        lastCallbackErrorMessage: undefined,
-        reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
-        isCallbackActive: true,
-        isRunningCallback: false,
-        reactivateTimeoutId: undefined,
-      },
-    }
-
-    this.elements.set(element, elementData)
+    this.elements.set(options.element, elementData)
     this.activeElementCount++
-    this.handler.observeElement(element)
+    this.updateCheckableStatus(elementData)
+    this.handler.observeElement(options.element)
 
-    this.emit({
+    this.eventEmitter.emit({
       type: "elementRegistered",
       timestamp: Date.now(),
       elementData,
@@ -328,46 +191,167 @@ export class ForesightManager {
       isLimitedConnection,
       isRegistered: true,
       unregister: () => {
-        this.unregister(element)
+        this.unregister(options.element)
       },
     }
   }
 
-  public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason) {
+  public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason): void {
     const elementData = this.elements.get(element)
-
     if (!elementData) {
       return
     }
 
     this.clearReactivateTimeout(elementData)
-
     this.handler.unobserveElement(element)
     this.elements.delete(element)
+    this.checkableElements.delete(elementData)
 
     if (elementData.callbackInfo.isCallbackActive) {
       this.activeElementCount--
     }
 
     const wasLastRegisteredElement = this.elements.size === 0 && this.isSetup
-
     if (wasLastRegisteredElement) {
       this.devLog("All elements unregistered, removing global listeners")
       this.removeGlobalListeners()
     }
 
-    if (elementData) {
-      this.emit({
-        type: "elementUnregistered",
-        elementData: elementData,
+    this.eventEmitter.emit({
+      type: "elementUnregistered",
+      elementData,
+      timestamp: Date.now(),
+      unregisterReason: unregisterReason ?? "by user",
+      wasLastRegisteredElement,
+    })
+  }
+
+  public reactivate(element: ForesightElement): void {
+    const elementData = this.elements.get(element)
+    if (!elementData) {
+      return
+    }
+
+    if (!this.isSetup) {
+      this.initializeGlobalListeners()
+    }
+
+    this.clearReactivateTimeout(elementData)
+
+    if (!elementData.callbackInfo.isRunningCallback) {
+      elementData.callbackInfo.isCallbackActive = true
+      this.activeElementCount++
+      this.updateCheckableStatus(elementData)
+      this.handler.observeElement(element)
+      this.eventEmitter.emit({
+        type: "elementReactivated",
+        elementData,
         timestamp: Date.now(),
-        unregisterReason: unregisterReason ?? "by user",
-        wasLastRegisteredElement: wasLastRegisteredElement,
       })
     }
   }
 
-  private updateHitCounters(callbackHitType: CallbackHitType) {
+  private clearReactivateTimeout(elementData: ForesightElementData): void {
+    clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
+    elementData.callbackInfo.reactivateTimeoutId = undefined
+  }
+
+  public updateCheckableStatus(elementData: ForesightElementData): void {
+    const isCheckable =
+      elementData.isIntersectingWithViewport &&
+      elementData.callbackInfo.isCallbackActive &&
+      !elementData.callbackInfo.isRunningCallback
+
+    if (isCheckable) {
+      this.checkableElements.add(elementData)
+    } else {
+      this.checkableElements.delete(elementData)
+    }
+  }
+
+  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType): void {
+    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
+      return
+    }
+
+    this.markElementAsRunning(elementData)
+    this.executeCallbackAsync(elementData, callbackHitType)
+  }
+
+  private markElementAsRunning(elementData: ForesightElementData): void {
+    elementData.callbackInfo.callbackFiredCount++
+    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
+    elementData.callbackInfo.isRunningCallback = true
+    this.clearReactivateTimeout(elementData)
+    this.checkableElements.delete(elementData)
+  }
+
+  private async executeCallbackAsync(
+    elementData: ForesightElementData,
+    callbackHitType: CallbackHitType
+  ): Promise<void> {
+    this.updateHitCounters(callbackHitType)
+    this.eventEmitter.emit({
+      type: "callbackInvoked",
+      timestamp: Date.now(),
+      elementData,
+      hitType: callbackHitType,
+    })
+
+    const start = performance.now()
+    let status: callbackStatus = undefined
+    let errorMessage = null
+
+    try {
+      await elementData.callback()
+      status = "success"
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : String(error)
+      status = "error"
+      console.error(`Error in callback for element ${elementData.name}:`, error)
+    }
+
+    this.finalizeCallback(elementData, callbackHitType, start, status, errorMessage)
+  }
+
+  private finalizeCallback(
+    elementData: ForesightElementData,
+    callbackHitType: CallbackHitType,
+    startTime: number,
+    status: callbackStatus,
+    errorMessage: string | null
+  ): void {
+    elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
+    elementData.callbackInfo.isRunningCallback = false
+    elementData.callbackInfo.isCallbackActive = false
+    this.activeElementCount--
+    this.handler.unobserveElement(elementData.element)
+
+    if (elementData.callbackInfo.reactivateAfter !== Infinity) {
+      elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
+        this.reactivate(elementData.element)
+      }, elementData.callbackInfo.reactivateAfter)
+    }
+
+    const isLastActiveElement = this.activeElementCount === 0
+    if (isLastActiveElement) {
+      this.devLog("All elements unactivated, removing global listeners")
+      this.removeGlobalListeners()
+    }
+
+    this.eventEmitter.emit({
+      type: "callbackCompleted",
+      timestamp: Date.now(),
+      elementData,
+      hitType: callbackHitType,
+      elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - startTime),
+      status: (elementData.callbackInfo.lastCallbackStatus = status),
+      errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
+      wasLastActiveElement: isLastActiveElement,
+    })
+  }
+
+  private updateHitCounters(callbackHitType: CallbackHitType): void {
     switch (callbackHitType.kind) {
       case "mouse":
         this._globalCallbackHits.mouse[callbackHitType.subType]++
@@ -387,118 +371,10 @@ export class ForesightManager {
       default:
         callbackHitType satisfies never
     }
-
     this._globalCallbackHits.total++
   }
 
-  public reactivate(element: ForesightElement) {
-    const elementData = this.elements.get(element)
-
-    if (!elementData) {
-      return
-    }
-
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
-    }
-
-    this.clearReactivateTimeout(elementData)
-
-    // Only reactivate if callback is not currently running
-    if (!elementData.callbackInfo.isRunningCallback) {
-      elementData.callbackInfo.isCallbackActive = true
-      this.activeElementCount++
-      this.handler.observeElement(element)
-      this.emit({
-        type: "elementReactivated",
-        elementData: elementData,
-        timestamp: Date.now(),
-      })
-    }
-  }
-
-  private clearReactivateTimeout(elementData: ForesightElementData) {
-    clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-    elementData.callbackInfo.reactivateTimeoutId = undefined
-  }
-
-  private makeElementUnactive(elementData: ForesightElementData) {
-    elementData.callbackInfo.callbackFiredCount++
-    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
-    elementData.callbackInfo.isRunningCallback = true
-    // dont set isCallbackActive to false here, only do that after the callback is finished running
-
-    this.clearReactivateTimeout(elementData)
-  }
-
-  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType) {
-    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
-      return
-    }
-
-    this.makeElementUnactive(elementData)
-    // We have this async wrapper so we can time exactly how long the callback takes
-    const asyncCallbackWrapper = async () => {
-      this.updateHitCounters(callbackHitType)
-      this.emit({
-        type: "callbackInvoked",
-        timestamp: Date.now(),
-        elementData,
-        hitType: callbackHitType,
-      })
-
-      const start = performance.now()
-
-      let status: callbackStatus = undefined
-      let errorMessage = null
-
-      try {
-        await elementData.callback()
-        status = "success"
-      } catch (error) {
-        errorMessage = error instanceof Error ? error.message : String(error)
-        status = "error"
-        console.error(`Error in callback for element ${elementData.name}:`, error)
-      }
-
-      elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
-
-      elementData.callbackInfo.isRunningCallback = false
-
-      //Only make the callback unactive AFTER the callback is finished running, same for positionObserver as otherwise the animation wont run in debugger
-      elementData.callbackInfo.isCallbackActive = false
-      this.activeElementCount--
-      this.handler.unobserveElement(elementData.element)
-
-      // Schedule element to become active again after approximately reactivateAfter (not perfect since we are using setTimeout)
-      if (elementData.callbackInfo.reactivateAfter !== Infinity) {
-        elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
-          this.reactivate(elementData.element)
-        }, elementData.callbackInfo.reactivateAfter)
-      }
-
-      const isLastActiveElement = this.activeElementCount === 0
-
-      if (isLastActiveElement) {
-        this.devLog("All elements unactivated, removing global listeners")
-        this.removeGlobalListeners()
-      }
-
-      this.emit({
-        type: "callbackCompleted",
-        timestamp: Date.now(),
-        elementData,
-        hitType: callbackHitType,
-        elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - start),
-        status: (elementData.callbackInfo.lastCallbackStatus = status),
-        errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
-        wasLastActiveElement: isLastActiveElement,
-      })
-    }
-    asyncCallbackWrapper()
-  }
-
-  private setDeviceStrategy(strategy: CurrentDeviceStrategy) {
+  private setDeviceStrategy(strategy: CurrentDeviceStrategy): void {
     const previousStrategy = this.handler instanceof DesktopHandler ? "mouse" : "touch"
     if (previousStrategy !== strategy) {
       this.devLog(`Switching device strategy from ${previousStrategy} to ${strategy}`)
@@ -509,17 +385,16 @@ export class ForesightManager {
     this.handler.connect()
   }
 
-  private handlePointerMove = (e: PointerEvent) => {
+  private handlePointerMove = (e: PointerEvent): void => {
     this.pendingPointerEvent = e
 
-    if (e.pointerType != this.currentDeviceStrategy) {
-      this.emit({
+    if (e.pointerType !== this.currentDeviceStrategy) {
+      this.eventEmitter.emit({
         type: "deviceStrategyChanged",
         timestamp: Date.now(),
         newStrategy: e.pointerType as CurrentDeviceStrategy,
         oldStrategy: this.currentDeviceStrategy,
       })
-
       this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
     }
 
@@ -536,12 +411,11 @@ export class ForesightManager {
       if (this.pendingPointerEvent) {
         this.handler.processMouseMovement(this.pendingPointerEvent)
       }
-
       this.rafId = null
     })
   }
 
-  private initializeGlobalListeners() {
+  private initializeGlobalListeners(): void {
     if (this.isSetup || typeof document === "undefined") {
       return
     }
@@ -561,7 +435,7 @@ export class ForesightManager {
     this.isSetup = true
   }
 
-  private removeGlobalListeners() {
+  private removeGlobalListeners(): void {
     if (typeof document === "undefined") {
       return
     }
@@ -581,13 +455,7 @@ export class ForesightManager {
     this.pendingPointerEvent = null
   }
 
-  /**
-   * Detects when registered elements are removed from the DOM and automatically unregisters them to prevent stale references.
-   *
-   * @param mutationsList - Array of MutationRecord objects describing the DOM changes
-   *
-   */
-  private handleDomMutations = (mutationsList: MutationRecord[]) => {
+  private handleDomMutations = (mutationsList: MutationRecord[]): void => {
     if (!mutationsList.length) {
       return
     }
@@ -597,7 +465,6 @@ export class ForesightManager {
     let hasRemovedNodes = false
     for (let i = 0; i < mutationsList.length; i++) {
       const mutation = mutationsList[i]
-
       if (mutation && mutation.type === "childList" && mutation.removedNodes.length > 0) {
         hasRemovedNodes = true
         break
@@ -615,8 +482,51 @@ export class ForesightManager {
     }
   }
 
-  private forceUpdateAllElementBounds() {
-    for (const [, elementData] of this.elements) {
+  public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
+    const result = applySettingsChanges(this._globalSettings, props)
+
+    if (result.positionHistorySizeChanged) {
+      this.desktopHandler.trajectoryPositions.positions.resize(
+        this._globalSettings.positionHistorySize
+      )
+    }
+
+    if (result.scrollPredictionChanged && this.handler instanceof DesktopHandler) {
+      if (this._globalSettings.enableScrollPrediction) {
+        this.handler.connectScrollPredictor()
+      } else {
+        this.handler.disconnectScrollPredictor()
+      }
+    }
+
+    if (result.tabPredictionChanged && this.handler instanceof DesktopHandler) {
+      if (this._globalSettings.enableTabPrediction) {
+        this.handler.connectTabPredictor()
+      } else {
+        this.handler.disconnectTabPredictor()
+      }
+    }
+
+    if (result.hitSlopChanged) {
+      this.forceUpdateAllElementBounds()
+    }
+
+    if (result.touchStrategyChanged && this.handler instanceof TouchDeviceHandler) {
+      this.handler.setTouchPredictor()
+    }
+
+    if (result.changedSettings.length > 0) {
+      this.eventEmitter.emit({
+        type: "managerSettingsChanged",
+        timestamp: Date.now(),
+        managerData: this.getManagerData,
+        updatedSettings: result.changedSettings,
+      })
+    }
+  }
+
+  private forceUpdateAllElementBounds(): void {
+    for (const elementData of this.elements.values()) {
       if (elementData.isIntersectingWithViewport) {
         this.forceUpdateElementBounds(elementData)
       }
@@ -627,7 +537,7 @@ export class ForesightManager {
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
    */
-  private forceUpdateElementBounds(elementData: ForesightElementData) {
+  private forceUpdateElementBounds(elementData: ForesightElementData): void {
     const newOriginalRect = elementData.element.getBoundingClientRect()
     const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
 
@@ -643,261 +553,10 @@ export class ForesightManager {
 
       this.elements.set(elementData.element, updatedElementData)
 
-      this.emit({
+      this.eventEmitter.emit({
         type: "elementDataUpdated",
         elementData: updatedElementData,
         updatedProps: ["bounds" as const],
-      })
-    }
-  }
-
-  private initializeManagerSettings(props: Partial<UpdateForsightManagerSettings>): void {
-    // Apply settings without emitting events or triggering handlers (used during construction)
-    this.updateNumericSettings(
-      props.trajectoryPredictionTime,
-      "trajectoryPredictionTime",
-      MIN_TRAJECTORY_PREDICTION_TIME,
-      MAX_TRAJECTORY_PREDICTION_TIME
-    )
-
-    this.updateNumericSettings(
-      props.positionHistorySize,
-      "positionHistorySize",
-      MIN_POSITION_HISTORY_SIZE,
-      MAX_POSITION_HISTORY_SIZE
-    )
-
-    this.updateNumericSettings(
-      props.scrollMargin,
-      "scrollMargin",
-      MIN_SCROLL_MARGIN,
-      MAX_SCROLL_MARGIN
-    )
-
-    this.updateNumericSettings(props.tabOffset, "tabOffset", MIN_TAB_OFFSET, MAX_TAB_OFFSET)
-
-    this.updateBooleanSetting(props.enableMousePrediction, "enableMousePrediction")
-    this.updateBooleanSetting(props.enableScrollPrediction, "enableScrollPrediction")
-    this.updateBooleanSetting(props.enableTabPrediction, "enableTabPrediction")
-    this.updateBooleanSetting(props.enableManagerLogging, "enableManagerLogging")
-
-    if (props.defaultHitSlop !== undefined) {
-      this._globalSettings.defaultHitSlop = normalizeHitSlop(props.defaultHitSlop)
-    }
-
-    if (props.touchDeviceStrategy !== undefined) {
-      this._globalSettings.touchDeviceStrategy = props.touchDeviceStrategy
-    }
-
-    if (props.minimumConnectionType !== undefined) {
-      this._globalSettings.minimumConnectionType = props.minimumConnectionType
-    }
-
-    if (props.debug !== undefined) {
-      this._globalSettings.debug = props.debug
-    }
-  }
-
-  private updateNumericSettings(
-    newValue: number | undefined,
-    setting: NumericSettingKeys,
-    min: number,
-    max: number
-  ) {
-    if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
-      return false
-    }
-
-    this._globalSettings[setting] = clampNumber(newValue, min, max, setting)
-
-    return true
-  }
-
-  private updateBooleanSetting(
-    newValue: boolean | undefined,
-    setting: ManagerBooleanSettingKeys
-  ): boolean {
-    if (!shouldUpdateSetting(newValue, this._globalSettings[setting])) {
-      return false
-    }
-
-    this._globalSettings[setting] = newValue
-    return true
-  }
-
-  public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
-    const changedSettings: UpdatedManagerSetting[] = []
-
-    const oldTrajectoryPredictionTime = this._globalSettings.trajectoryPredictionTime
-    const trajectoryPredictionTimeChanged = this.updateNumericSettings(
-      props?.trajectoryPredictionTime,
-      "trajectoryPredictionTime",
-      MIN_TRAJECTORY_PREDICTION_TIME,
-      MAX_TRAJECTORY_PREDICTION_TIME
-    )
-
-    if (trajectoryPredictionTimeChanged) {
-      changedSettings.push({
-        setting: "trajectoryPredictionTime",
-        oldValue: oldTrajectoryPredictionTime,
-        newValue: this._globalSettings.trajectoryPredictionTime,
-      })
-    }
-
-    const oldPositionHistorySize = this._globalSettings.positionHistorySize
-    const positionHistorySizeChanged = this.updateNumericSettings(
-      props?.positionHistorySize,
-      "positionHistorySize",
-      MIN_POSITION_HISTORY_SIZE,
-      MAX_POSITION_HISTORY_SIZE
-    )
-    if (positionHistorySizeChanged) {
-      changedSettings.push({
-        setting: "positionHistorySize",
-        oldValue: oldPositionHistorySize,
-        newValue: this._globalSettings.positionHistorySize,
-      })
-      this.desktopHandler.trajectoryPositions.positions.resize(
-        this._globalSettings.positionHistorySize
-      )
-    }
-
-    const oldScrollMargin = this._globalSettings.scrollMargin
-    const scrollMarginChanged = this.updateNumericSettings(
-      props?.scrollMargin,
-      "scrollMargin",
-      MIN_SCROLL_MARGIN,
-      MAX_SCROLL_MARGIN
-    )
-    if (scrollMarginChanged) {
-      const newValue = this._globalSettings.scrollMargin
-      changedSettings.push({
-        setting: "scrollMargin",
-        oldValue: oldScrollMargin,
-        newValue: newValue,
-      })
-    }
-
-    const oldTabOffset = this._globalSettings.tabOffset
-    const tabOffsetChanged = this.updateNumericSettings(
-      props?.tabOffset,
-      "tabOffset",
-      MIN_TAB_OFFSET,
-      MAX_TAB_OFFSET
-    )
-    if (tabOffsetChanged) {
-      this._globalSettings.tabOffset = clampNumber(
-        props!.tabOffset!,
-        MIN_TAB_OFFSET,
-        MAX_TAB_OFFSET,
-        "tabOffset"
-      )
-      changedSettings.push({
-        setting: "tabOffset",
-        oldValue: oldTabOffset,
-        newValue: this._globalSettings.tabOffset,
-      })
-    }
-
-    const oldEnableMousePrediction = this._globalSettings.enableMousePrediction
-    const enableMousePredictionChanged = this.updateBooleanSetting(
-      props?.enableMousePrediction,
-      "enableMousePrediction"
-    )
-    if (enableMousePredictionChanged) {
-      changedSettings.push({
-        setting: "enableMousePrediction",
-        oldValue: oldEnableMousePrediction,
-        newValue: this._globalSettings.enableMousePrediction,
-      })
-    }
-
-    const oldEnableScrollPrediction = this._globalSettings.enableScrollPrediction
-    const enableScrollPredictionChanged = this.updateBooleanSetting(
-      props?.enableScrollPrediction,
-      "enableScrollPrediction"
-    )
-    if (enableScrollPredictionChanged) {
-      if (this.handler instanceof DesktopHandler) {
-        if (this._globalSettings.enableScrollPrediction) {
-          this.handler.connectScrollPredictor()
-        } else {
-          this.handler.disconnectScrollPredictor()
-        }
-      }
-      changedSettings.push({
-        setting: "enableScrollPrediction",
-        oldValue: oldEnableScrollPrediction,
-        newValue: this._globalSettings.enableScrollPrediction,
-      })
-    }
-
-    const oldEnableTabPrediction = this._globalSettings.enableTabPrediction
-    const enableTabPredictionChanged = this.updateBooleanSetting(
-      props?.enableTabPrediction,
-      "enableTabPrediction"
-    )
-
-    if (enableTabPredictionChanged) {
-      if (this.handler instanceof DesktopHandler) {
-        if (this._globalSettings.enableTabPrediction) {
-          this.handler.connectTabPredictor()
-        } else {
-          this.handler.disconnectTabPredictor()
-        }
-      }
-      changedSettings.push({
-        setting: "enableTabPrediction",
-        oldValue: oldEnableTabPrediction,
-        newValue: this._globalSettings.enableTabPrediction,
-      })
-    }
-
-    if (props?.defaultHitSlop !== undefined) {
-      const oldHitSlop = this._globalSettings.defaultHitSlop
-      const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
-
-      if (!areRectsEqual(oldHitSlop, normalizedNewHitSlop)) {
-        this._globalSettings.defaultHitSlop = normalizedNewHitSlop
-        changedSettings.push({
-          setting: "defaultHitSlop",
-          oldValue: oldHitSlop,
-          newValue: normalizedNewHitSlop,
-        })
-        this.forceUpdateAllElementBounds()
-      }
-    }
-
-    if (props?.touchDeviceStrategy !== undefined) {
-      const oldTouchDeviceStrategy = this._globalSettings.touchDeviceStrategy
-      const newTouchDeviceStrategy = props.touchDeviceStrategy
-      this._globalSettings.touchDeviceStrategy = newTouchDeviceStrategy
-      changedSettings.push({
-        setting: "touchDeviceStrategy",
-        oldValue: oldTouchDeviceStrategy,
-        newValue: newTouchDeviceStrategy,
-      })
-      if (this.handler instanceof TouchDeviceHandler) {
-        this.handler.setTouchPredictor()
-      }
-    }
-
-    if (props?.minimumConnectionType !== undefined) {
-      const oldMinimumConnectionType = this._globalSettings.minimumConnectionType
-      this._globalSettings.minimumConnectionType = props.minimumConnectionType
-      changedSettings.push({
-        setting: "minimumConnectionType",
-        oldValue: oldMinimumConnectionType,
-        newValue: this._globalSettings.minimumConnectionType,
-      })
-    }
-
-    if (changedSettings.length > 0) {
-      this.emit({
-        type: "managerSettingsChanged",
-        timestamp: Date.now(),
-        managerData: this.getManagerData,
-        updatedSettings: changedSettings,
       })
     }
   }

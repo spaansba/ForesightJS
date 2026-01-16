@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom"
-import { useButtonActions, useIsRemoved, useIsResized, useIsVisible } from "../stores/ButtonStateStore"
+import {
+  useButtonActions,
+  useIsRemoved,
+  useIsResized,
+  useIsVisible,
+} from "../stores/ButtonStateStore"
 import { useDebug } from "../contexts/DebugContext"
 
 export const Navigation = () => {
@@ -24,7 +29,9 @@ export const Navigation = () => {
             <button
               onClick={actions.toggleVisibility}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isVisible ? "bg-green-500 hover:bg-green-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"
+                isVisible
+                  ? "bg-green-500 hover:bg-green-600 text-white"
+                  : "bg-red-500 hover:bg-red-600 text-white"
               }`}
             >
               Visible: {isVisible ? "ON" : "OFF"}
@@ -32,7 +39,9 @@ export const Navigation = () => {
             <button
               onClick={actions.toggleResized}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isResized ? "bg-green-500 hover:bg-green-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"
+                isResized
+                  ? "bg-green-500 hover:bg-green-600 text-white"
+                  : "bg-red-500 hover:bg-red-600 text-white"
               }`}
             >
               Resize: {isResized ? "ON" : "OFF"}
@@ -40,7 +49,9 @@ export const Navigation = () => {
             <button
               onClick={actions.toggleRemoved}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isRemoved ? "bg-green-500 hover:bg-green-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"
+                isRemoved
+                  ? "bg-green-500 hover:bg-green-600 text-white"
+                  : "bg-red-500 hover:bg-red-600 text-white"
               }`}
             >
               Remove: {isRemoved ? "ON" : "OFF"}
@@ -63,20 +74,20 @@ export const Navigation = () => {
               Reset
             </button>
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               🏠 Home
             </Link>
-            <Link 
-              to="/images" 
+            <Link
+              to="/images"
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               🖼️ Images
             </Link>
-            <Link 
-              to="/mass" 
+            <Link
+              to="/mass"
               className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               📊 Mass Test

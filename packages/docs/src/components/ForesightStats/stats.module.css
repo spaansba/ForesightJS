@@ -56,17 +56,17 @@
   .statsSection {
     padding: 1rem 1rem;
   }
-  
+
   .statsContainer {
     flex-direction: column;
     gap: 1rem;
     max-width: 200px;
   }
-  
+
   .statItem {
     justify-content: center;
   }
-  
+
   .statContent {
     text-align: center;
   }

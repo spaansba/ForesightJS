@@ -48,7 +48,9 @@ export class ElementOverlays extends LitElement {
         will-change: transform, box-shadow;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
-        transition: border-color 0.2s ease, background-color 0.2s ease;
+        transition:
+          border-color 0.2s ease,
+          background-color 0.2s ease;
       }
 
       .expanded-overlay.invoked-by-scroll {
@@ -93,8 +95,9 @@ export class ElementOverlays extends LitElement {
         color: white;
         padding: 4px 8px;
         font-size: 11px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-          sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+          "Apple Color Emoji", "Segoe UI Emoji";
         z-index: 10001;
         white-space: nowrap;
         pointer-events: none;

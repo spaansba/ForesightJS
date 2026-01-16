@@ -26,15 +26,20 @@ function Mass() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100">
-      <SimpleNavigation onReset={resetTest} hitCount={hitCount} buttonCount={buttonCount} setButtonCount={setButtonCount} />
+      <SimpleNavigation
+        onReset={resetTest}
+        hitCount={hitCount}
+        buttonCount={buttonCount}
+        setButtonCount={setButtonCount}
+      />
 
       {/* Title Section */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Mass Performance Test</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Testing ForesightJS performance with {buttonCount.toLocaleString()} registered elements. Hover over buttons to
-            trigger callbacks and watch the counter.
+            Testing ForesightJS performance with {buttonCount.toLocaleString()} registered elements.
+            Hover over buttons to trigger callbacks and watch the counter.
           </p>
         </div>
 
@@ -60,7 +65,10 @@ function Mass() {
               <h3 className="text-lg font-semibold text-amber-900">Debug Mode Active</h3>
             </div>
             <p className="text-amber-700 leading-relaxed">
-              <strong>Debug mode with {buttonCount.toLocaleString()} elements may significantly impact performance.</strong>{" "}
+              <strong>
+                Debug mode with {buttonCount.toLocaleString()} elements may significantly impact
+                performance.
+              </strong>{" "}
               The visual debugging overlay can cause reduced frame rates and browser responsiveness.
               Consider testing with fewer elements when debugging.
             </p>

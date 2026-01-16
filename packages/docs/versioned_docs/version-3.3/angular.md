@@ -14,7 +14,6 @@ slug: angular
 
 # Angular
 
-
 ```bash
 npm install js.foresight ngx-foresight
 npm install -D js.foresight-devtools
@@ -26,9 +25,9 @@ pnpm add -D js.foresight-devtools
 After that import the `ForesightjsDirective` to the components with `href` and `routerLink`, and use the `ForesightjsStrategy` as `preloadingStrategy` in the router's configuration. For example:
 
 ```ts
-import { ForesightManager } from 'js.foresight';
-import { ForesightDevtools } from 'js.foresight-devtools';
-import { ForesightjsDirective } from 'ngx-foresight';
+import { ForesightManager } from "js.foresight"
+import { ForesightDevtools } from "js.foresight-devtools"
+import { ForesightjsDirective } from "ngx-foresight"
 
 ForesightManager.initialize({
   enableMousePrediction: true,
@@ -39,14 +38,14 @@ ForesightManager.initialize({
   tabOffset: 3,
   enableScrollPrediction: true,
   scrollMargin: 150,
-});
+})
 
 ForesightDevtools.initialize({
   showDebugger: true,
   isControlPanelDefaultMinimized: true, // optional setting which allows you to minimize the control panel on default
   showNameTags: true, // optional setting which shows the name of the element
-  sortElementList: 'visibility', // optional setting for how the elements in the control panel are sorted
-});
+  sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
+})
 ```
 
 ```html
@@ -59,7 +58,7 @@ ForesightDevtools.initialize({
 
 ```ts
 // configure preloading strategy as per routes
-  provideRouter(routes, withPreloading(ForesightjsStrategy)),
-// for older versions
-  RouterModule.forRoot(routes, { preloadingStrategy: ForesightjsStrategy })
+;(provideRouter(routes, withPreloading(ForesightjsStrategy)),
+  // for older versions
+  RouterModule.forRoot(routes, { preloadingStrategy: ForesightjsStrategy }))
 ```

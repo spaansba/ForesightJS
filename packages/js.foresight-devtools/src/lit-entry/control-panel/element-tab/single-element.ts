@@ -240,8 +240,8 @@ export class SingleElement extends LitElement {
               class="element-name ${this.isActive
                 ? "callback-active"
                 : !this.elementData.callbackInfo.isCallbackActive
-                ? "callback-inactive"
-                : ""}"
+                  ? "callback-inactive"
+                  : ""}"
             >
               ${this.elementData.name || "unnamed"}
             </span>

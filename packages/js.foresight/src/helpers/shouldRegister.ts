@@ -1,5 +1,5 @@
-import { MinimumConnectionType } from '../types/types'
-import { ForesightManager } from "js.foresight"
+import { MinimumConnectionType } from "../types/types"
+import { ForesightManager } from "../managers/ForesightManager"
 
 type ShouldRegister = {
   shouldRegister: boolean
@@ -21,7 +21,7 @@ export function evaluateRegistrationConditions(): ShouldRegister {
  * @returns `true` if the device is likely touch-enabled, `false` otherwise.
  */
 export function userUsesTouchDevice(): boolean {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
     return false
   }
 
@@ -42,12 +42,15 @@ function hasConnectionLimitations(): boolean {
   const connection = (navigator as any).connection
   if (!connection) return false
 
-  const minimumConnectionType = ForesightManager.instance.getManagerData.globalSettings.minimumConnectionType
+  const minimumConnectionType =
+    ForesightManager.instance.getManagerData.globalSettings.minimumConnectionType
 
   // Define array of connection types from slowest to fastest
   const connectionTypes: MinimumConnectionType[] = ["slow-2g", "2g", "3g", "4g"]
   // Get index of user's current connection speed in the array (e.g. "4g" would be index 3)
-  const currentConnectionIndex = connectionTypes.indexOf(connection.effectiveType as MinimumConnectionType)
+  const currentConnectionIndex = connectionTypes.indexOf(
+    connection.effectiveType as MinimumConnectionType
+  )
   // Get index of the minimum connection speed required in settings (e.g. "3g" would be index 2)
   const minimumConnectionIndex = connectionTypes.indexOf(minimumConnectionType)
 

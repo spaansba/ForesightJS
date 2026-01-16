@@ -32,6 +32,7 @@ Since DOM elements can change position and we need to keep the DOM clean, we req
 - **`PositionObserver`**: Shopify's library that asynchronously monitors element position changes without polling
 
 The `PositionObserver` uses layered observation:
+
 1. `VisibilityObserver` (built on `IntersectionObserver`) determines if elements are viewport-visible
 2. `ResizeObserver` tracks size changes of visible target elements
 3. Target-specific `IntersectionObserver` instances with smart rootMargin calculations transform viewport observation into target-specific observation regions
@@ -45,11 +46,13 @@ Mouse prediction tracks cursor movement patterns to anticipate click targets by 
 **Event Handling**: `mousemove` events record `clientX` and `clientY` coordinates. Position history is limited by `positionHistorySize` setting.
 
 **Prediction Algorithm**: The `predictNextMousePosition` function implements linear extrapolation:
+
 1. **History Tracking**: Stores past mouse positions with timestamps
 2. **Velocity Calculation**: Calculates average velocity using oldest and newest points in history
 3. **Extrapolation**: Projects current position along trajectory using calculated velocity and `trajectoryPredictionTimeInMs` setting
 
 **Intersection Detection**: The `lineSegmentIntersectsRect` function implements the Liang-Barsky line clipping algorithm to check intersections between the predicted mouse path and element rectangles:
+
 1. Line segment defined by current and predicted mouse positions
 2. Target rectangle includes element's `hitSlop`
 3. Algorithm clips line segment against rectangle's four edges
@@ -60,6 +63,7 @@ Mouse prediction tracks cursor movement patterns to anticipate click targets by 
 Tab prediction monitors keyboard navigation by detecting Tab key presses and focus changes.
 
 **Event Handling**:
+
 - `keydown`: Detects Tab key presses
 - `focusin`: Fires when elements gain focus
 
@@ -68,6 +72,7 @@ When `focusin` follows a Tab `keydown`, ForesightJS identifies this as tab navig
 **Tab Navigation Logic**: Uses the `tabbable` library to determine tab order. Results are cached for performance since `tabbable()` calls `getBoundingClientRect()` internally. Cache invalidates on DOM mutations.
 
 Prediction process:
+
 1. Identify current focused element's index in tabbable elements list
 2. Determine tab direction (forward/backward based on Shift key)
 3. Calculate prediction range using current index, direction, and `tabOffset`

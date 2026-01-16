@@ -145,18 +145,18 @@ const ControlSection = ({ title, subtitle }: ControlSectionProps) => {
               button.id === "reset-all"
                 ? "bg-orange-500 hover:bg-red-400 text-white"
                 : button.isActive
-                ? "bg-green-500 hover:bg-green-400 text-white"
-                : "bg-red-500 hover:bg-red-400 text-white"
+                  ? "bg-green-500 hover:bg-green-400 text-white"
+                  : "bg-red-500 hover:bg-red-400 text-white"
             }`}
           >
             <div className="font-medium text-xs truncate">
               {button.id === "visibility-toggle"
                 ? `Visible: ${isVisible ? "ON" : "OFF"}`
                 : button.id === "resize-toggle"
-                ? `Resize: ${isResized ? "ON" : "OFF"}`
-                : button.id === "remove-toggle"
-                ? `Remove: ${isRemoved ? "ON" : "OFF"}`
-                : "RESET"}
+                  ? `Resize: ${isResized ? "ON" : "OFF"}`
+                  : button.id === "remove-toggle"
+                    ? `Remove: ${isRemoved ? "ON" : "OFF"}`
+                    : "RESET"}
             </div>
           </button>
         ))}

@@ -8,7 +8,12 @@ interface SimpleNavigationProps {
   setButtonCount?: (count: number) => void
 }
 
-export const SimpleNavigation = ({ onReset, hitCount, buttonCount, setButtonCount }: SimpleNavigationProps) => {
+export const SimpleNavigation = ({
+  onReset,
+  hitCount,
+  buttonCount,
+  setButtonCount,
+}: SimpleNavigationProps) => {
   const location = useLocation()
   const { isDebugActive, toggleDebug } = useDebug()
 
@@ -24,24 +29,22 @@ export const SimpleNavigation = ({ onReset, hitCount, buttonCount, setButtonCoun
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            {location.pathname === '/mass' && typeof hitCount === 'number' && (
+            {location.pathname === "/mass" && typeof hitCount === "number" && (
               <>
                 <div className="bg-green-500 rounded-lg px-4 py-1 min-w-16">
-                  <div className="text-center text-sm font-bold text-white">
-                    {hitCount} Hits
-                  </div>
+                  <div className="text-center text-sm font-bold text-white">{hitCount} Hits</div>
                 </div>
                 <div className="w-px h-6 bg-gray-300"></div>
               </>
             )}
-            {location.pathname === '/mass' && typeof buttonCount === 'number' && setButtonCount && (
+            {location.pathname === "/mass" && typeof buttonCount === "number" && setButtonCount && (
               <>
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-gray-700 font-medium">Count:</label>
                   <input
                     type="number"
                     value={buttonCount}
-                    onChange={(e) => {
+                    onChange={e => {
                       const value = Math.max(1, Math.min(10000, parseInt(e.target.value) || 1))
                       setButtonCount(value)
                     }}
@@ -64,7 +67,7 @@ export const SimpleNavigation = ({ onReset, hitCount, buttonCount, setButtonCoun
             >
               {isDebugActive ? "Debug ON" : "Debug OFF"}
             </button>
-            {location.pathname === '/mass' && onReset && (
+            {location.pathname === "/mass" && onReset && (
               <button
                 onClick={onReset}
                 className="px-3 py-1 rounded-md text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
@@ -73,20 +76,20 @@ export const SimpleNavigation = ({ onReset, hitCount, buttonCount, setButtonCoun
               </button>
             )}
             <div className="w-px h-6 bg-gray-300 mx-2"></div>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               🏠 Home
             </Link>
-            <Link 
-              to="/images" 
+            <Link
+              to="/images"
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               🖼️ Images
             </Link>
-            <Link 
-              to="/mass" 
+            <Link
+              to="/mass"
               className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               📊 Mass Test
