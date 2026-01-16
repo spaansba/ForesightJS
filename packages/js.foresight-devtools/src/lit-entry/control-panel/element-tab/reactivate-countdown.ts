@@ -58,8 +58,8 @@ export class ReactivateCountdown extends LitElement {
     this.clearCountdown()
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>) {
-    super.updated(changedProperties)
+  willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
+    super.willUpdate(changedProperties)
     if (changedProperties.has("elementData")) {
       this.checkAndStartCountdown()
     }
