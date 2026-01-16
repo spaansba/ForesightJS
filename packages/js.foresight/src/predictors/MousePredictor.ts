@@ -74,11 +74,13 @@ export class MousePredictor extends BaseForesightModule {
       }
     }
 
-    this.emit({
-      type: "mouseTrajectoryUpdate",
-      predictionEnabled: enablePrediction,
-      trajectoryPositions: this.trajectoryPositions,
-    })
+    if (this.hasListeners("mouseTrajectoryUpdate")) {
+      this.emit({
+        type: "mouseTrajectoryUpdate",
+        predictionEnabled: enablePrediction,
+        trajectoryPositions: this.trajectoryPositions,
+      })
+    }
   }
 
   protected onDisconnect(): void {}

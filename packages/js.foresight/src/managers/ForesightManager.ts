@@ -133,6 +133,7 @@ export class ForesightManager {
       elements: this.elements,
       callCallback: this.callCallback.bind(this),
       emit: this.emit.bind(this),
+      hasListeners: this.hasListeners.bind(this),
       settings: this._globalSettings,
     }
 
@@ -192,9 +193,9 @@ export class ForesightManager {
   }
 
   private emit<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
-    const listeners = this.eventListeners.get(event.type)?.slice()
+    const listeners = this.eventListeners.get(event.type)
 
-    if (!listeners) {
+    if (!listeners || listeners.length === 0) {
       return
     }
 
@@ -209,6 +210,15 @@ export class ForesightManager {
         console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
       }
     }
+  }
+
+  /**
+   * Check if there are any listeners registered for a specific event type.
+   * Useful for avoiding expensive event object creation when no one is listening.
+   */
+  public hasListeners<K extends ForesightEvent>(eventType: K): boolean {
+    const listeners = this.eventListeners.get(eventType)
+    return listeners !== undefined && listeners.length > 0
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {

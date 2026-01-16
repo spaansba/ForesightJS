@@ -14,10 +14,13 @@ export type CallCallbackFunction = (
 
 export type EmitFunction = <K extends ForesightEvent>(event: ForesightEventMap[K]) => void
 
+export type HasListenersFunction = <K extends ForesightEvent>(eventType: K) => boolean
+
 export type ForesightModuleDependencies = {
   elements: ReadonlyMap<ForesightElement, ForesightElementData>
   callCallback: CallCallbackFunction
   emit: EmitFunction
+  hasListeners: HasListenersFunction
   settings: ForesightManagerSettings
 }
 
@@ -26,8 +29,10 @@ export abstract class BaseForesightModule {
   protected elements: ReadonlyMap<ForesightElement, ForesightElementData>
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
+  protected hasListeners: HasListenersFunction
   protected settings: ForesightManagerSettings
   private _isConnected = false
+  private _cachedLogStyle: string | null = null
 
   public get isConnected(): boolean {
     return this._isConnected
@@ -39,6 +44,7 @@ export abstract class BaseForesightModule {
     this.elements = dependencies.elements
     this.callCallback = dependencies.callCallback
     this.emit = dependencies.emit
+    this.hasListeners = dependencies.hasListeners
     this.settings = dependencies.settings
   }
 
@@ -60,10 +66,16 @@ export abstract class BaseForesightModule {
   }
 
   public devLog(message: string): void {
-    if (this.settings.enableManagerLogging) {
-      const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
-      console.log(`%c🛠️ ${this.moduleName}: ${message}`, `color: ${color}; font-weight: bold;`)
+    if (!this.settings.enableManagerLogging) {
+      return
     }
+
+    // Cache the log style on first use to avoid repeated string operations
+    if (this._cachedLogStyle === null) {
+      const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
+      this._cachedLogStyle = `color: ${color}; font-weight: bold;`
+    }
+    console.log(`%c${this.moduleName}: ${message}`, this._cachedLogStyle)
   }
 
   protected abstract onConnect(): void

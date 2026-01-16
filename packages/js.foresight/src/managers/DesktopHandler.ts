@@ -133,7 +133,7 @@ export class DesktopHandler extends BaseForesightModule {
       }
     }
 
-    if (updatedProps.length) {
+    if (updatedProps.length && this.hasListeners("elementDataUpdated")) {
       this.emit({
         type: "elementDataUpdated",
         elementData: elementData,
