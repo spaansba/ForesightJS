@@ -12,32 +12,38 @@ import type { CircularBuffer } from "./CircularBuffer"
  *                 This buffer will be modified by this function.
  * @param trajectoryPredictionTimeInMs - How far into the future (in milliseconds)
  *                                       to predict the mouse position.
- * @returns The predicted {@link Point} (x, y coordinates). If history is insufficient
- *          (less than 2 points) or time delta is zero, returns the `currentPoint`.
+ * @param out - Output point to mutate with the predicted position.
  */
 export function predictNextMousePosition(
   currentPoint: Point,
   buffer: CircularBuffer<MousePosition>,
-  trajectoryPredictionTimeInMs: number
-): Point {
+  trajectoryPredictionTimeInMs: number,
+  out: Point
+): void {
   const now = performance.now()
-  const currentPosition: MousePosition = { point: currentPoint, time: now }
+  // Create a copy of currentPoint for buffer storage (buffer needs independent copies)
+  buffer.add({ point: { x: currentPoint.x, y: currentPoint.y }, time: now })
+
   const { x, y } = currentPoint
 
-  buffer.add(currentPosition)
-
   if (buffer.length < 2) {
-    return { x, y }
+    out.x = x
+    out.y = y
+    return
   }
 
   const [first, last] = buffer.getFirstLast()
   if (!first || !last) {
-    return { x, y }
+    out.x = x
+    out.y = y
+    return
   }
-  const dt = (last.time - first.time) * 0.001
 
+  const dt = (last.time - first.time) * 0.001
   if (dt === 0) {
-    return { x, y }
+    out.x = x
+    out.y = y
+    return
   }
 
   const dx = last.point.x - first.point.x
@@ -46,8 +52,6 @@ export function predictNextMousePosition(
   const vy = dy / dt
 
   const trajectoryPredictionTimeInSeconds = trajectoryPredictionTimeInMs * 0.001
-  const predictedX = x + vx * trajectoryPredictionTimeInSeconds
-  const predictedY = y + vy * trajectoryPredictionTimeInSeconds
-
-  return { x: predictedX, y: predictedY }
+  out.x = x + vx * trajectoryPredictionTimeInSeconds
+  out.y = y + vy * trajectoryPredictionTimeInSeconds
 }

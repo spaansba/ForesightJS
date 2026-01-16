@@ -27,16 +27,21 @@ export class MousePredictor extends BaseForesightModule {
   }
 
   private updatePointerState(e: MouseEvent): void {
-    const currentPoint = { x: e.clientX, y: e.clientY }
-    this.trajectoryPositions.currentPoint = currentPoint
+    // Mutate existing point objects instead of creating new ones (perf optimization)
+    const currentPoint = this.trajectoryPositions.currentPoint
+    currentPoint.x = e.clientX
+    currentPoint.y = e.clientY
+
     if (this.settings.enableMousePrediction) {
-      this.trajectoryPositions.predictedPoint = predictNextMousePosition(
+      predictNextMousePosition(
         currentPoint,
         this.trajectoryPositions.positions,
-        this.settings.trajectoryPredictionTime
+        this.settings.trajectoryPredictionTime,
+        this.trajectoryPositions.predictedPoint // reuse existing object
       )
     } else {
-      this.trajectoryPositions.predictedPoint = currentPoint
+      this.trajectoryPositions.predictedPoint.x = currentPoint.x
+      this.trajectoryPositions.predictedPoint.y = currentPoint.y
     }
   }
 
