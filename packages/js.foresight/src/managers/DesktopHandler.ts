@@ -11,7 +11,7 @@ import type {
 } from "../types/types"
 import { CircularBuffer } from "../helpers/CircularBuffer"
 import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
-import { getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
+import { areRectsEqual, getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
 export class DesktopHandler extends BaseForesightModule {
   protected readonly moduleName = "DesktopHandler"
@@ -124,7 +124,10 @@ export class DesktopHandler extends BaseForesightModule {
       elementData.isIntersectingWithViewport = isNowIntersecting
     }
 
-    if (isNowIntersecting) {
+    if (
+      isNowIntersecting &&
+      !areRectsEqual(entry.boundingClientRect, elementData.elementBounds.originalRect)
+    ) {
       updatedProps.push("bounds")
       elementData.elementBounds = {
         hitSlop: elementData.elementBounds.hitSlop,
