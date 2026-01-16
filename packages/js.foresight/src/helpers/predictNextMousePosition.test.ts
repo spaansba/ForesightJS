@@ -5,10 +5,12 @@ import type { MousePosition, Point } from "../types/types"
 
 describe("predictNextMousePosition", () => {
   let buffer: CircularBuffer<MousePosition>
+  let out: Point
   let mockTime = 0
 
   beforeEach(() => {
     buffer = new CircularBuffer<MousePosition>(5)
+    out = { x: 0, y: 0 }
     mockTime = 0
     vi.spyOn(performance, "now").mockImplementation(() => {
       mockTime += 16 // 16ms increments (60fps)
@@ -18,17 +20,17 @@ describe("predictNextMousePosition", () => {
 
   it("should return current point when buffer is empty", () => {
     const currentPoint: Point = { x: 100, y: 200 }
-    const result = predictNextMousePosition(currentPoint, buffer, 100)
+    predictNextMousePosition(currentPoint, buffer, 100, out)
 
-    expect(result).toEqual(currentPoint)
+    expect(out).toEqual(currentPoint)
     expect(buffer.length).toBe(1)
   })
 
   it("should return current point when buffer has only one entry", () => {
     const currentPoint: Point = { x: 100, y: 200 }
-    const result = predictNextMousePosition(currentPoint, buffer, 100)
+    predictNextMousePosition(currentPoint, buffer, 100, out)
 
-    expect(result).toEqual(currentPoint)
+    expect(out).toEqual(currentPoint)
     expect(buffer.length).toBe(1)
   })
 
@@ -42,12 +44,12 @@ describe("predictNextMousePosition", () => {
     vi.spyOn(performance, "now").mockReturnValue(1016)
 
     const currentPoint: Point = { x: 100, y: 0 }
-    const result = predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime, out)
 
     // Movement is 100px in 16ms = 6250px/second
     // Prediction for 100ms = 625px ahead
-    expect(result.x).toBeCloseTo(725, 0) // 100 + 625
-    expect(result.y).toBe(0)
+    expect(out.x).toBeCloseTo(725, 0) // 100 + 625
+    expect(out.y).toBe(0)
   })
 
   it("should predict diagonal movement correctly", () => {
@@ -60,13 +62,13 @@ describe("predictNextMousePosition", () => {
     vi.spyOn(performance, "now").mockReturnValue(2016)
 
     const currentPoint: Point = { x: 50, y: 50 }
-    const result = predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime, out)
 
     // Movement is 50px x and y in 16ms
     // Velocity: 3125px/s in both directions
     // Prediction for 50ms = 156.25px in each direction
-    expect(result.x).toBeCloseTo(206.25, 1)
-    expect(result.y).toBeCloseTo(206.25, 1)
+    expect(out.x).toBeCloseTo(206.25, 1)
+    expect(out.y).toBeCloseTo(206.25, 1)
   })
 
   it("should maintain buffer size limit", () => {
@@ -76,7 +78,7 @@ describe("predictNextMousePosition", () => {
     // Add more points than the limit
     for (let i = 0; i < 5; i++) {
       const currentPoint: Point = { x: i * 10, y: 0 }
-      predictNextMousePosition(currentPoint, buffer3, trajectoryPredictionTime)
+      predictNextMousePosition(currentPoint, buffer3, trajectoryPredictionTime, out)
     }
 
     expect(buffer3.length).toBe(3)
@@ -93,10 +95,10 @@ describe("predictNextMousePosition", () => {
     const currentPoint1: Point = { x: 0, y: 0 }
     const currentPoint2: Point = { x: 100, y: 100 }
 
-    predictNextMousePosition(currentPoint1, buffer, trajectoryPredictionTime)
-    const result = predictNextMousePosition(currentPoint2, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint1, buffer, trajectoryPredictionTime, out)
+    predictNextMousePosition(currentPoint2, buffer, trajectoryPredictionTime, out)
 
-    expect(result).toEqual(currentPoint2)
+    expect(out).toEqual(currentPoint2)
   })
 
   it("should handle negative movement correctly", () => {
@@ -109,13 +111,13 @@ describe("predictNextMousePosition", () => {
     vi.spyOn(performance, "now").mockReturnValue(3016)
 
     const currentPoint: Point = { x: 50, y: 75 }
-    const result = predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime, out)
 
     // Movement is -50px x, -25px y in 16ms
     // Velocity: -3125px/s x, -1562.5px/s y
     // Prediction for 100ms = -312.5px x, -156.25px y
-    expect(result.x).toBeCloseTo(-262.5, 1) // 50 - 312.5
-    expect(result.y).toBeCloseTo(-81.25, 1) // 75 - 156.25
+    expect(out.x).toBeCloseTo(-262.5, 1) // 50 - 312.5
+    expect(out.y).toBeCloseTo(-81.25, 1) // 75 - 156.25
   })
 
   it("should use first and last points for velocity calculation", () => {
@@ -134,17 +136,17 @@ describe("predictNextMousePosition", () => {
     vi.spyOn(performance, "now").mockImplementation(() => times[buffer.length] || 64)
 
     points.forEach(point => {
-      predictNextMousePosition(point, buffer, trajectoryPredictionTime)
+      predictNextMousePosition(point, buffer, trajectoryPredictionTime, out)
     })
 
     const currentPoint: Point = { x: 40, y: 20 }
-    const result = predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime, out)
 
     // Velocity calculated from first (0,0) to last (40,20) over 64ms
     // Velocity: 625px/s x, 312.5px/s y
     // Prediction for 100ms = 62.5px x, 31.25px y ahead
-    expect(result.x).toBeCloseTo(102.5, 1) // 40 + 62.5
-    expect(result.y).toBeCloseTo(51.25, 1) // 20 + 31.25
+    expect(out.x).toBeCloseTo(102.5, 1) // 40 + 62.5
+    expect(out.y).toBeCloseTo(51.25, 1) // 20 + 31.25
   })
 
   it("should handle stationary mouse", () => {
@@ -158,8 +160,8 @@ describe("predictNextMousePosition", () => {
     buffer.add({ point: { x: 50, y: 50 }, time: endTime })
 
     const currentPoint: Point = { x: 50, y: 50 }
-    const result = predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime)
+    predictNextMousePosition(currentPoint, buffer, trajectoryPredictionTime, out)
 
-    expect(result).toEqual(currentPoint)
+    expect(out).toEqual(currentPoint)
   })
 })

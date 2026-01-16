@@ -78,6 +78,12 @@ export class ElementTab extends LitElement {
   @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
   private _abortController: AbortController | null = null
+  private _pendingElementUpdates: Map<ForesightElement, ForesightElementData> = new Map()
+  private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
+  // Cached sorted element lists to avoid repeated filtering in render
+  private _cachedActiveElements: ForesightElementData[] = []
+  private _cachedInactiveElements: ForesightElementData[] = []
+  private _elementsCacheDirty = true
 
   constructor() {
     super()
@@ -106,6 +112,7 @@ export class ElementTab extends LitElement {
 
   private handleSortChange = (value: string): void => {
     this.sortOrder = value as SortElementList
+    this._elementsCacheDirty = true
   }
 
   private handleElementToggle = (elementId: string): void => {
@@ -191,6 +198,7 @@ export class ElementTab extends LitElement {
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.elementData.element, e.elementData)
+        this._elementsCacheDirty = true
       },
       { signal }
     )
@@ -200,8 +208,9 @@ export class ElementTab extends LitElement {
       (e: ElementDataUpdatedEvent) => {
         const existingElementData = this.elementListItems.get(e.elementData.element)
         if (existingElementData) {
-          this.elementListItems.set(e.elementData.element, e.elementData)
-          this.requestUpdate()
+          // Batch updates and debounce to avoid excessive re-renders during scroll
+          this._pendingElementUpdates.set(e.elementData.element, e.elementData)
+          this._scheduleDebouncedUpdate()
         }
       },
       { signal }
@@ -213,6 +222,7 @@ export class ElementTab extends LitElement {
         const existingElementData = this.elementListItems.get(e.elementData.element)
         if (existingElementData) {
           this.elementListItems.set(e.elementData.element, e.elementData)
+          this._elementsCacheDirty = true
           this.requestUpdate()
         }
       },
@@ -227,6 +237,7 @@ export class ElementTab extends LitElement {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
         this.runningCallbacks.delete(e.elementData.element)
+        this._elementsCacheDirty = true
         this.requestUpdate()
       },
       { signal }
@@ -240,6 +251,7 @@ export class ElementTab extends LitElement {
           this.elementListItems.set(e.elementData.element, e.elementData)
         }
         this.runningCallbacks.add(e.elementData.element)
+        this._elementsCacheDirty = true
         this.requestUpdate()
       },
       { signal }
@@ -254,6 +266,7 @@ export class ElementTab extends LitElement {
         }
         this.handleCallbackCompleted(e.hitType)
         this.runningCallbacks.delete(e.elementData.element)
+        this._elementsCacheDirty = true
         this.requestUpdate()
       },
       { signal }
@@ -264,10 +277,43 @@ export class ElementTab extends LitElement {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
+    if (this._updateDebounceId !== null) {
+      clearTimeout(this._updateDebounceId)
+      this._updateDebounceId = null
+    }
+    this._pendingElementUpdates.clear()
+  }
+
+  private _scheduleDebouncedUpdate(): void {
+    // Already scheduled, let the pending timeout handle it
+    if (this._updateDebounceId !== null) {
+      return
+    }
+
+    // Debounce updates to ~60fps (16ms) to batch rapid updates
+    this._updateDebounceId = setTimeout(() => {
+      this._updateDebounceId = null
+      this._flushPendingUpdates()
+    }, 16)
+  }
+
+  private _flushPendingUpdates(): void {
+    if (this._pendingElementUpdates.size === 0) {
+      return
+    }
+
+    // Apply all pending updates in one batch
+    for (const [element, elementData] of this._pendingElementUpdates) {
+      this.elementListItems.set(element, elementData)
+    }
+    this._pendingElementUpdates.clear()
+    this._elementsCacheDirty = true
+    this.requestUpdate()
   }
 
   private updateElementListFromManager() {
     this.elementListItems = new Map(ForesightManager.instance.registeredElements)
+    this._elementsCacheDirty = true
   }
 
   private handleCallbackCompleted(hitType: CallbackHitType) {
@@ -316,12 +362,27 @@ export class ElementTab extends LitElement {
     }
   }
 
-  private getActiveElements(): ForesightElementData[] {
-    return this.getSortedElements().filter(data => data.callbackInfo.isCallbackActive)
+  private _recomputeElementsCache(): void {
+    if (!this._elementsCacheDirty) {
+      return
+    }
+
+    const sorted = this.getSortedElements()
+    this._cachedActiveElements = sorted.filter(data => data.callbackInfo.isCallbackActive)
+    this._cachedInactiveElements = sorted.filter(data => !data.callbackInfo.isCallbackActive)
+    this._elementsCacheDirty = false
   }
 
-  private getInactiveElements(): ForesightElementData[] {
-    return this.getSortedElements().filter(data => !data.callbackInfo.isCallbackActive)
+  private get activeElements(): ForesightElementData[] {
+    this._recomputeElementsCache()
+
+    return this._cachedActiveElements
+  }
+
+  private get inactiveElements(): ForesightElementData[] {
+    this._recomputeElementsCache()
+
+    return this._cachedInactiveElements
   }
 
   private sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
@@ -351,13 +412,13 @@ export class ElementTab extends LitElement {
         .noContentMessage=${this.noContentMessage}
         .hasContent=${!!this.elementListItems.size}
       >
-        ${this.getActiveElements().length > 0
+        ${this.activeElements.length > 0
           ? html`
               <div class="element-section">
                 <h3 class="section-header active">
-                  Active Elements (${this.getActiveElements().length})
+                  Active Elements (${this.activeElements.length})
                 </h3>
-                ${map(this.getActiveElements(), elementData => {
+                ${map(this.activeElements, elementData => {
                   return html`
                     <single-element
                       .elementData=${elementData}
@@ -371,13 +432,13 @@ export class ElementTab extends LitElement {
               </div>
             `
           : ""}
-        ${this.getInactiveElements().length > 0
+        ${this.inactiveElements.length > 0
           ? html`
               <div class="element-section">
                 <h3 class="section-header inactive">
-                  Inactive Elements (${this.getInactiveElements().length})
+                  Inactive Elements (${this.inactiveElements.length})
                 </h3>
-                ${map(this.getInactiveElements(), elementData => {
+                ${map(this.inactiveElements, elementData => {
                   return html`
                     <single-element
                       .elementData=${elementData}

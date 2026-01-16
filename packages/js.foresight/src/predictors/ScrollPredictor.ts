@@ -71,12 +71,14 @@ export class ScrollPredictor extends BaseForesightModule {
       })
     }
 
-    this.emit({
-      type: "scrollTrajectoryUpdate",
-      currentPoint: this.trajectoryPositions.currentPoint,
-      predictedPoint: this.predictedScrollPoint,
-      scrollDirection: this.scrollDirection,
-    })
+    if (this.hasListeners("scrollTrajectoryUpdate")) {
+      this.emit({
+        type: "scrollTrajectoryUpdate",
+        currentPoint: this.trajectoryPositions.currentPoint,
+        predictedPoint: this.predictedScrollPoint,
+        scrollDirection: this.scrollDirection,
+      })
+    }
   }
 
   protected onConnect() {}

@@ -1,4 +1,5 @@
 export { ForesightManager } from "./managers/ForesightManager"
+export type { HasListenersFunction } from "./core/BaseForesightModule"
 export type {
   Rect as ForesightRect,
   ForesightElement,
