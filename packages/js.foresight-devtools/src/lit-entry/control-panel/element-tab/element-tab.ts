@@ -78,6 +78,8 @@ export class ElementTab extends LitElement {
   @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
   private _abortController: AbortController | null = null
+  private _pendingElementUpdates: Map<ForesightElement, ForesightElementData> = new Map()
+  private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     super()
@@ -200,8 +202,9 @@ export class ElementTab extends LitElement {
       (e: ElementDataUpdatedEvent) => {
         const existingElementData = this.elementListItems.get(e.elementData.element)
         if (existingElementData) {
-          this.elementListItems.set(e.elementData.element, e.elementData)
-          this.requestUpdate()
+          // Batch updates and debounce to avoid excessive re-renders during scroll
+          this._pendingElementUpdates.set(e.elementData.element, e.elementData)
+          this._scheduleDebouncedUpdate()
         }
       },
       { signal }
@@ -264,6 +267,37 @@ export class ElementTab extends LitElement {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
+    if (this._updateDebounceId !== null) {
+      clearTimeout(this._updateDebounceId)
+      this._updateDebounceId = null
+    }
+    this._pendingElementUpdates.clear()
+  }
+
+  private _scheduleDebouncedUpdate(): void {
+    // Already scheduled, let the pending timeout handle it
+    if (this._updateDebounceId !== null) {
+      return
+    }
+
+    // Debounce updates to ~60fps (16ms) to batch rapid updates
+    this._updateDebounceId = setTimeout(() => {
+      this._updateDebounceId = null
+      this._flushPendingUpdates()
+    }, 16)
+  }
+
+  private _flushPendingUpdates(): void {
+    if (this._pendingElementUpdates.size === 0) {
+      return
+    }
+
+    // Apply all pending updates in one batch
+    for (const [element, elementData] of this._pendingElementUpdates) {
+      this.elementListItems.set(element, elementData)
+    }
+    this._pendingElementUpdates.clear()
+    this.requestUpdate()
   }
 
   private updateElementListFromManager() {
