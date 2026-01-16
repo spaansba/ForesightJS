@@ -7,10 +7,6 @@ import type { ForesightEvent, ForesightEventListener, ForesightEventMap } from "
 export class ForesightEventEmitter {
   private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
 
-  /**
-   * Add an event listener for a specific event type.
-   * Supports AbortSignal for automatic cleanup.
-   */
   public addEventListener<K extends ForesightEvent>(
     eventType: K,
     listener: ForesightEventListener<K>,
@@ -27,9 +23,6 @@ export class ForesightEventEmitter {
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
   }
 
-  /**
-   * Remove a previously registered event listener.
-   */
   public removeEventListener<K extends ForesightEvent>(
     eventType: K,
     listener: ForesightEventListener<K>
@@ -78,10 +71,6 @@ export class ForesightEventEmitter {
     return listeners !== undefined && listeners.length > 0
   }
 
-  /**
-   * Get all registered event listeners (readonly).
-   * Used for debugging/inspection.
-   */
   public getEventListeners(): ReadonlyMap<ForesightEvent, ForesightEventListener[]> {
     return this.eventListeners
   }

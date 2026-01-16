@@ -19,9 +19,6 @@ import type {
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
 import { initialViewportState } from "./initialViewportState"
 
-/**
- * Creates the initial callback hits tracking object with all counters at zero.
- */
 export function createInitialCallbackHits(): CallbackHits {
   return {
     mouse: {
@@ -44,9 +41,6 @@ export function createInitialCallbackHits(): CallbackHits {
   }
 }
 
-/**
- * Creates the default manager settings object.
- */
 export function createDefaultSettings(): ForesightManagerSettings {
   return {
     debug: false,
