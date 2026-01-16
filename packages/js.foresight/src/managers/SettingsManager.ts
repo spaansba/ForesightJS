@@ -20,10 +20,7 @@ import type {
 } from "../types/types"
 
 /** Configuration for numeric settings with their min/max constraints */
-const NUMERIC_SETTING_CONFIGS: Record<
-  NumericSettingKeys,
-  { min: number; max: number }
-> = {
+const NUMERIC_SETTING_CONFIGS: Record<NumericSettingKeys, { min: number; max: number }> = {
   trajectoryPredictionTime: {
     min: MIN_TRAJECTORY_PREDICTION_TIME,
     max: MAX_TRAJECTORY_PREDICTION_TIME,

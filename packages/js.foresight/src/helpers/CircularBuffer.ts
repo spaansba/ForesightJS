@@ -6,7 +6,7 @@ export class CircularBuffer<T> {
 
   constructor(capacity: number) {
     if (capacity <= 0) {
-      throw new Error('CircularBuffer capacity must be greater than 0')
+      throw new Error("CircularBuffer capacity must be greater than 0")
     }
     this.capacity = capacity
     this.buffer = new Array(capacity)
@@ -15,7 +15,7 @@ export class CircularBuffer<T> {
   add(item: T): void {
     this.buffer[this.head] = item
     this.head = (this.head + 1) % this.capacity
-    
+
     if (this.count < this.capacity) {
       this.count++
     }
@@ -63,7 +63,7 @@ export class CircularBuffer<T> {
 
   resize(newCapacity: number): void {
     if (newCapacity <= 0) {
-      throw new Error('CircularBuffer capacity must be greater than 0')
+      throw new Error("CircularBuffer capacity must be greater than 0")
     }
 
     if (newCapacity === this.capacity) {
@@ -94,7 +94,7 @@ export class CircularBuffer<T> {
     }
 
     const result: T[] = new Array(this.count)
-    
+
     if (this.count < this.capacity) {
       for (let i = 0; i < this.count; i++) {
         result[i] = this.buffer[i]
@@ -106,7 +106,7 @@ export class CircularBuffer<T> {
         result[i] = this.buffer[bufferIndex]
       }
     }
-    
+
     return result
   }
 

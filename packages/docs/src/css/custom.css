@@ -1,61 +1,61 @@
-[data-theme='dark'] .navbar {
+[data-theme="dark"] .navbar {
   background-color: black !important;
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-background-color: #000000;
   --ifm-background-surface-color: #111111;
   --ifm-color-primary: #58a6ff;
   --ifm-navbar-background-color: black;
 }
 
-[data-theme='light'] .navbar {
+[data-theme="light"] .navbar {
   background-color: #1a1a1a;
 }
 
-[data-theme='light'] {
+[data-theme="light"] {
   --ifm-navbar-background-color: #1a1a1a;
 }
 
 /* Match ALL sections to hero section colors */
-[data-theme='dark'] .main-wrapper {
+[data-theme="dark"] .main-wrapper {
   background: linear-gradient(to bottom, #000000, #111111);
 }
 
-[data-theme='dark'] article,
-[data-theme='dark'] .container,
-[data-theme='dark'] .row,
-[data-theme='dark'] section {
+[data-theme="dark"] article,
+[data-theme="dark"] .container,
+[data-theme="dark"] .row,
+[data-theme="dark"] section {
   background: transparent !important;
 }
 
-[data-theme='dark'] .footer {
+[data-theme="dark"] .footer {
   background: #111111;
 }
 
 /* Override all component backgrounds */
-[data-theme='dark'] * {
+[data-theme="dark"] * {
   --ifm-background-color: transparent;
   --ifm-background-surface-color: transparent;
 }
 
 /* Ensure all sections use consistent gradient */
-[data-theme='dark'] .features-section,
-[data-theme='dark'] .playground-section,
-[data-theme='dark'] .quickstart-section,
-[data-theme='dark'] .stats-section {
+[data-theme="dark"] .features-section,
+[data-theme="dark"] .playground-section,
+[data-theme="dark"] .quickstart-section,
+[data-theme="dark"] .stats-section {
   background: linear-gradient(to bottom, #111111, #222222) !important;
 }
 
 /* Fix h2 color in docs */
-[data-theme='dark'] h2 {
+[data-theme="dark"] h2 {
   color: white !important;
 }
 
 /* Remove active color on navbar links */
-[data-theme='dark'] .navbar__link--active,
-[data-theme='light'] .navbar__link--active,
-[data-theme='dark'] .menu__link--active,
-[data-theme='light'] .menu__link--active {
+[data-theme="dark"] .navbar__link--active,
+[data-theme="light"] .navbar__link--active,
+[data-theme="dark"] .menu__link--active,
+[data-theme="light"] .menu__link--active {
   color: inherit !important;
 }

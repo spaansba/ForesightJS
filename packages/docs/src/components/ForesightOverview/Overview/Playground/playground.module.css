@@ -88,7 +88,7 @@
 }
 
 .demoCard::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -178,15 +178,33 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes bounce {
-  0%, 20%, 53%, 80%, 100% { transform: translate3d(0, 0, 0); }
-  40%, 43% { transform: translate3d(0, -8px, 0); }
-  70% { transform: translate3d(0, -4px, 0); }
-  90% { transform: translate3d(0, -2px, 0); }
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
 }
 
 .demoInfo {
@@ -284,7 +302,7 @@
 .codeBlock {
   background: transparent;
   color: rgba(255, 255, 255, 0.9);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 0.85rem;
   line-height: 1.6;
   margin: 0;
@@ -297,7 +315,7 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   .demoGrid {
     grid-template-columns: 1fr;
   }
@@ -308,30 +326,30 @@
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .demoTab {
     width: 100%;
     justify-content: flex-start;
     padding: 16px;
   }
-  
+
   .demoGrid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .demoCard {
     padding: 20px;
   }
-  
+
   .playgroundTitle {
     font-size: 1.75rem;
   }
-  
+
   .codeExample {
     padding: 20px;
   }
-  
+
   .codeBlock {
     font-size: 0.8rem;
   }

@@ -35,8 +35,7 @@ import useForesight from "../hooks/useForesight"
 import { useRouter } from "next/navigation"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">,
-    Omit<ForesightRegisterOptions, "element" | "callback"> {
+  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
 }

@@ -283,7 +283,7 @@ type BaseForesightManagerSettings = {
    * Network effective connection types that should be considered as limited connections.
    * When the user's network matches any of these types, ForesightJS will disable prefetching
    * to avoid consuming data on slow or expensive connections.
-   * 
+   *
    * @link https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType
    * @default 3g
    */

@@ -84,8 +84,6 @@
   font-weight: 400;
 }
 
-
-
 @media screen and (max-width: 996px) {
   .featuresContent {
     grid-template-columns: 1fr;

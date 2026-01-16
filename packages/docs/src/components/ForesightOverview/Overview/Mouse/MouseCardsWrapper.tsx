@@ -9,7 +9,8 @@ function MouseCardsWrapper() {
       <div className={styles.comparisonHeader}>
         <h2>Playground</h2>
         <p className={styles.comparisonDescription}>
-          Experience the difference between traditional prefetching methods and ForesightJS's intelligent mouse tracking.
+          Experience the difference between traditional prefetching methods and ForesightJS's
+          intelligent mouse tracking.
         </p>
       </div>
       <div className={styles.demoCardGrid}>

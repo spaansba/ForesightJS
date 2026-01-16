@@ -65,7 +65,8 @@ function Playground() {
           for visual feedback and real-time tuning
         </div>
         <div className={styles.keyboardTip}>
-          <strong>INFO:</strong> Element overlays might lag behind since we use RAF and async techniques. This actually means the core package is optimized for performance.
+          <strong>INFO:</strong> Element overlays might lag behind since we use RAF and async
+          techniques. This actually means the core package is optimized for performance.
         </div>
       </div>
     </>

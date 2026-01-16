@@ -14,7 +14,7 @@ export function PackageManagerTabs() {
   return (
     <div className={styles.packageManagerTabs}>
       <div className={styles.tabsHeader}>
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             className={clsx(styles.tabButton, activeTab === tab.id && styles.activeTab)}
@@ -25,7 +25,7 @@ export function PackageManagerTabs() {
         ))}
       </div>
       <div className={styles.tabContent}>
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <div
             key={tab.id}
             className={clsx(styles.tabPanel, activeTab === tab.id && styles.activeTabPanel)}

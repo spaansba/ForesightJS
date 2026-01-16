@@ -15,18 +15,18 @@ type ButtonStateStore = {
   actions: ButtonStateActions
 }
 
-const useButtonStateStore = create<ButtonStateStore>((set) => ({
+const useButtonStateStore = create<ButtonStateStore>(set => ({
   name: "button-state-store",
   isVisible: true,
   isRemoved: false,
   isResized: true,
   resetKey: 0,
   actions: {
-    toggleVisibility: () => set((state) => ({ isVisible: !state.isVisible })),
-    toggleResized: () => set((state) => ({ isResized: !state.isResized })),
-    toggleRemoved: () => set((state) => ({ isRemoved: !state.isRemoved })),
+    toggleVisibility: () => set(state => ({ isVisible: !state.isVisible })),
+    toggleResized: () => set(state => ({ isResized: !state.isResized })),
+    toggleRemoved: () => set(state => ({ isRemoved: !state.isRemoved })),
     resetAll: () =>
-      set((state) => ({
+      set(state => ({
         isVisible: true,
         isRemoved: false,
         isResized: true,
@@ -35,8 +35,8 @@ const useButtonStateStore = create<ButtonStateStore>((set) => ({
   },
 }))
 
-export const useIsVisible = () => useButtonStateStore((state) => state.isVisible)
-export const useIsResized = () => useButtonStateStore((state) => state.isResized)
-export const useIsRemoved = () => useButtonStateStore((state) => state.isRemoved)
-export const useResetKey = () => useButtonStateStore((state) => state.resetKey)
-export const useButtonActions = () => useButtonStateStore((state) => state.actions)
+export const useIsVisible = () => useButtonStateStore(state => state.isVisible)
+export const useIsResized = () => useButtonStateStore(state => state.isResized)
+export const useIsRemoved = () => useButtonStateStore(state => state.isRemoved)
+export const useResetKey = () => useButtonStateStore(state => state.resetKey)
+export const useButtonActions = () => useButtonStateStore(state => state.actions)

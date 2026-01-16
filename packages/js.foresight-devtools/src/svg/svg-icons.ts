@@ -268,8 +268,8 @@ export const TOUCH_SVG = html`
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <path d="M18 8a6 6 0 0 0-12 0c0 2 3 4 6 6 3-2 6-4 6-6z"/>
-    <circle cx="12" cy="8" r="3"/>
+    <path d="M18 8a6 6 0 0 0-12 0c0 2 3 4 6 6 3-2 6-4 6-6z" />
+    <circle cx="12" cy="8" r="3" />
   </svg>
 `
 
@@ -285,10 +285,10 @@ export const VIEWPORT_SVG = html`
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-    <line x1="8" y1="21" x2="16" y2="21"/>
-    <line x1="12" y1="17" x2="12" y2="21"/>
-    <circle cx="12" cy="10" r="2"/>
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+    <line x1="8" y1="21" x2="16" y2="21" />
+    <line x1="12" y1="17" x2="12" y2="21" />
+    <circle cx="12" cy="10" r="2" />
   </svg>
 `
 
@@ -304,7 +304,7 @@ export const DISABLED_SVG = html`
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
   </svg>
 `

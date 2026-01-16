@@ -632,7 +632,6 @@ h2 {
   transition: opacity 0.3s ease;
 }
 
-
 .cardContent:hover .actionHint {
   color: #3b82f6;
 }

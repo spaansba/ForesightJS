@@ -2,7 +2,7 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - core-js
   - core-js-pure
   - esbuild

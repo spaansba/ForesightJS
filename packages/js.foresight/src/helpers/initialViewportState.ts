@@ -1,5 +1,5 @@
 export function initialViewportState(rect: DOMRect) {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
+  if (typeof window === "undefined" || typeof document === "undefined") {
     return false
   }
 

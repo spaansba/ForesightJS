@@ -27,7 +27,9 @@ export class ControlPanel extends LitElement {
       flex-direction: column;
       width: 450px;
       height: 450px;
-      transition: width 0.3s ease, height 0.3s ease;
+      transition:
+        width 0.3s ease,
+        height 0.3s ease;
       box-sizing: border-box;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
