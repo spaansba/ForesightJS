@@ -1,4 +1,4 @@
-name: Test
+name: Typecheck
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
   pull_request:
 
 concurrency:
-  group: test-${{ github.ref }}
+  group: typecheck-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,4 +26,4 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm test
+      - run: pnpm build
