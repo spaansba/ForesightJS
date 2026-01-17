@@ -742,4 +742,126 @@ describe("ForesightManager", () => {
       expect(manager.getManagerData.activeElementCount).toBe(1)
     })
   })
+
+  describe("Lazy Loading", () => {
+    it("should not have handlers loaded before first registration", () => {
+      const manager = ForesightManager.initialize()
+
+      const data = manager.getManagerData
+      expect(data.loadedModules.desktopHandler).toBe(false)
+      expect(data.loadedModules.touchHandler).toBe(false)
+      expect(data.loadedModules.predictors.mouse).toBe(false)
+      expect(data.loadedModules.predictors.tab).toBe(false)
+      expect(data.loadedModules.predictors.scroll).toBe(false)
+      expect(data.loadedModules.predictors.viewport).toBe(false)
+      expect(data.loadedModules.predictors.touchStart).toBe(false)
+    })
+
+    it("should lazy load desktop handler on first element registration", async () => {
+      vi.useRealTimers() // Need real timers for dynamic imports
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      // Before registration, no handlers loaded
+      expect(manager.getManagerData.loadedModules.desktopHandler).toBe(false)
+
+      manager.register({ element, callback: vi.fn() })
+
+      // Wait for async handler loading to complete
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+      })
+      vi.useFakeTimers()
+    })
+
+    it("should expose loadedModules in getManagerData", () => {
+      const manager = ForesightManager.initialize()
+
+      const data = manager.getManagerData
+
+      expect(data.loadedModules).toBeDefined()
+      expect(data.loadedModules).toHaveProperty("desktopHandler")
+      expect(data.loadedModules).toHaveProperty("touchHandler")
+      expect(data.loadedModules).toHaveProperty("predictors")
+      expect(data.loadedModules.predictors).toHaveProperty("mouse")
+      expect(data.loadedModules.predictors).toHaveProperty("tab")
+      expect(data.loadedModules.predictors).toHaveProperty("scroll")
+      expect(data.loadedModules.predictors).toHaveProperty("viewport")
+      expect(data.loadedModules.predictors).toHaveProperty("touchStart")
+    })
+
+    it("should load mouse predictor with desktop handler", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+
+      // Mouse predictor is always loaded with DesktopHandler
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.predictors.mouse).toBe(true)
+      })
+      vi.useFakeTimers()
+    })
+
+    it("should lazy load tab predictor when enabled", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize({ enableTabPrediction: true })
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.predictors.tab).toBe(true)
+      })
+      vi.useFakeTimers()
+    })
+
+    it("should not load tab predictor when disabled", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize({ enableTabPrediction: false })
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+
+      // Wait for handler to load first
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+      })
+
+      // Tab predictor should still be false
+      expect(manager.getManagerData.loadedModules.predictors.tab).toBe(false)
+      vi.useFakeTimers()
+    })
+
+    it("should lazy load scroll predictor when enabled", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize({ enableScrollPrediction: true })
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.predictors.scroll).toBe(true)
+      })
+      vi.useFakeTimers()
+    })
+
+    it("should not load scroll predictor when disabled", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize({ enableScrollPrediction: false })
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+
+      // Wait for handler to load first
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+      })
+
+      // Scroll predictor should still be false
+      expect(manager.getManagerData.loadedModules.predictors.scroll).toBe(false)
+      vi.useFakeTimers()
+    })
+  })
 })

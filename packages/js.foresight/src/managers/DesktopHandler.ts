@@ -1,7 +1,7 @@
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { MousePredictor } from "../predictors/MousePredictor"
-import { ScrollPredictor } from "../predictors/ScrollPredictor"
-import { TabPredictor } from "../predictors/TabPredictor"
+import type { ScrollPredictor } from "../predictors/ScrollPredictor"
+import type { TabPredictor } from "../predictors/TabPredictor"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 import type {
   ForesightElement,
@@ -17,9 +17,10 @@ export class DesktopHandler extends BaseForesightModule {
   protected readonly moduleName = "DesktopHandler"
 
   private mousePredictor: MousePredictor
-  private tabPredictor: TabPredictor
-  private scrollPredictor: ScrollPredictor
+  private tabPredictor: TabPredictor | null = null
+  private scrollPredictor: ScrollPredictor | null = null
   private positionObserver: PositionObserver | null = null
+  private storedDependencies: ForesightModuleDependencies
 
   public trajectoryPositions: TrajectoryPositions = {
     positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
@@ -29,14 +30,9 @@ export class DesktopHandler extends BaseForesightModule {
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
+    this.storedDependencies = dependencies
 
-    this.tabPredictor = new TabPredictor(dependencies)
-
-    this.scrollPredictor = new ScrollPredictor({
-      dependencies,
-      trajectoryPositions: this.trajectoryPositions,
-    })
-
+    // Only MousePredictor is instantiated immediately - Tab and Scroll are lazy-loaded
     this.mousePredictor = new MousePredictor({
       dependencies,
       trajectoryPositions: this.trajectoryPositions,
@@ -58,11 +54,11 @@ export class DesktopHandler extends BaseForesightModule {
     const enabledPredictors = ["mouse"]
 
     if (this.settings.enableTabPrediction) {
-      enabledPredictors.push("tab")
+      enabledPredictors.push("tab (loading...)")
     }
 
     if (this.settings.enableScrollPrediction) {
-      enabledPredictors.push("scroll")
+      enabledPredictors.push("scroll (loading...)")
     }
 
     this.devLog(`Connected predictors: [${enabledPredictors.join(", ")}] and PositionObserver`)
@@ -161,11 +157,42 @@ export class DesktopHandler extends BaseForesightModule {
   public observeElement = (element: ForesightElement) => this.positionObserver?.observe(element)
   public unobserveElement = (element: ForesightElement) => this.positionObserver?.unobserve(element)
 
-  public connectTabPredictor = () => this.tabPredictor.connect()
-  public connectScrollPredictor = () => this.scrollPredictor.connect()
+  public connectTabPredictor = async () => {
+    if (!this.tabPredictor) {
+      const { TabPredictor } = await import("../predictors/TabPredictor")
+      this.tabPredictor = new TabPredictor(this.storedDependencies)
+      this.devLog("TabPredictor lazy loaded")
+    }
+
+    this.tabPredictor.connect()
+  }
+
+  public connectScrollPredictor = async () => {
+    if (!this.scrollPredictor) {
+      const { ScrollPredictor } = await import("../predictors/ScrollPredictor")
+      this.scrollPredictor = new ScrollPredictor({
+        dependencies: this.storedDependencies,
+        trajectoryPositions: this.trajectoryPositions,
+      })
+
+      this.devLog("ScrollPredictor lazy loaded")
+    }
+
+    this.scrollPredictor.connect()
+  }
+
   public connectMousePredictor = () => this.mousePredictor.connect()
 
-  public disconnectTabPredictor = () => this.tabPredictor.disconnect()
-  public disconnectScrollPredictor = () => this.scrollPredictor.disconnect()
+  public disconnectTabPredictor = () => this.tabPredictor?.disconnect()
+  public disconnectScrollPredictor = () => this.scrollPredictor?.disconnect()
   public disconnectMousePredictor = () => this.mousePredictor.disconnect()
+
+  /** For debugging: returns which predictors have been lazy loaded */
+  public get loadedPredictors() {
+    return {
+      mouse: this.mousePredictor !== null,
+      tab: this.tabPredictor !== null,
+      scroll: this.scrollPredictor !== null,
+    }
+  }
 }

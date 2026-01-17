@@ -60,6 +60,7 @@ Checks whether the ForesightManager has been initialized.
 Manually reactivates an element, allowing its callback to be triggered again. This is useful when you want to re-enable prefetching for an element before its `reactivateAfter` timeout expires.
 
 **Parameters:**
+
 - `element` - The DOM element to reactivate
 
 **Example:**
@@ -80,6 +81,7 @@ ForesightJS automatically tracks and unregisters elements when they are removed 
 :::
 
 **Parameters:**
+
 - `element` - The DOM element to unregister
 - `reason` (optional) - A string describing why the element was unregistered (useful for debugging via events)
 
@@ -104,6 +106,7 @@ Snapshot of the current `ForesightManager` state, including all [global settings
 - `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
 - `currentDeviceStrategy` - Which strategy is being used. Can be either `touch` or `mouse`, this changes dynamically
 - `activeElementCount` - Amount of elements currently active (not the same as registered)
+- `loadedModules` - Shows which handlers and predictors have been [lazy loaded](/docs/Behind_the_Scenes#bundle-optimization)
 
 **Returns:** `Readonly<ForesightManagerData>`
 
@@ -176,6 +179,17 @@ The return will look something like this:
     "touch": 0,
     "viewport": 0,
     "total": 8
+  },
+  "loadedModules": {
+    "desktopHandler": true,
+    "touchHandler": false,
+    "predictors": {
+      "mouse": true,
+      "tab": true,
+      "scroll": true,
+      "viewport": false,
+      "touchStart": false
+    }
   }
 }
 ```

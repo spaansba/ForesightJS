@@ -1,36 +1,56 @@
 import type { ForesightElement } from "../types/types"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
-import { ViewportPredictor } from "../predictors/ViewportPredictor"
-import { TouchStartPredictor } from "../predictors/TouchStartPredictor"
+import type { ViewportPredictor } from "../predictors/ViewportPredictor"
+import type { TouchStartPredictor } from "../predictors/TouchStartPredictor"
 
 export class TouchDeviceHandler extends BaseForesightModule {
   protected readonly moduleName = "TouchDeviceHandler"
 
-  private viewportPredictor: ViewportPredictor
-  private touchStartPredictor: TouchStartPredictor
+  private viewportPredictor: ViewportPredictor | null = null
+  private touchStartPredictor: TouchStartPredictor | null = null
   private predictor: ViewportPredictor | TouchStartPredictor | null = null
+  private storedDependencies: ForesightModuleDependencies
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
-
-    this.viewportPredictor = new ViewportPredictor(dependencies)
-
-    this.touchStartPredictor = new TouchStartPredictor(dependencies)
-
-    this.predictor = this.viewportPredictor
+    this.storedDependencies = dependencies
   }
 
-  public setTouchPredictor() {
+  private async getOrCreateViewportPredictor(): Promise<ViewportPredictor> {
+    if (!this.viewportPredictor) {
+      const { ViewportPredictor } = await import("../predictors/ViewportPredictor")
+      this.viewportPredictor = new ViewportPredictor(this.storedDependencies)
+      this.devLog("ViewportPredictor lazy loaded")
+    }
+
+    return this.viewportPredictor
+  }
+
+  private async getOrCreateTouchStartPredictor(): Promise<TouchStartPredictor> {
+    if (!this.touchStartPredictor) {
+      const { TouchStartPredictor } = await import("../predictors/TouchStartPredictor")
+      this.touchStartPredictor = new TouchStartPredictor(this.storedDependencies)
+      this.devLog("TouchStartPredictor lazy loaded")
+    }
+
+    return this.touchStartPredictor
+  }
+
+  public async setTouchPredictor() {
     this.predictor?.disconnect()
 
     switch (this.settings.touchDeviceStrategy) {
       case "viewport":
-        this.predictor = this.viewportPredictor
-        this.devLog(`Connected touch strategy: viewport (ViewportPredictor)`)
+        this.predictor = await this.getOrCreateViewportPredictor()
+        this.devLog(
+          `Connected touch strategy: ${this.settings.touchDeviceStrategy} (ViewportPredictor)`
+        )
         break
       case "onTouchStart":
-        this.predictor = this.touchStartPredictor
-        this.devLog(`Connected touch strategy: onTouchStart (TouchStartPredictor)`)
+        this.predictor = await this.getOrCreateTouchStartPredictor()
+        this.devLog(
+          `Connected touch strategy: ${this.settings.touchDeviceStrategy} (TouchStartPredictor)`
+        )
         break
       case "none":
         this.predictor = null
@@ -55,4 +75,12 @@ export class TouchDeviceHandler extends BaseForesightModule {
 
   public observeElement = (element: ForesightElement) => this.predictor?.observeElement(element)
   public unobserveElement = (element: ForesightElement) => this.predictor?.unobserveElement(element)
+
+  /** For debugging: returns which predictors have been lazy loaded */
+  public get loadedPredictors() {
+    return {
+      viewport: this.viewportPredictor !== null,
+      touchStart: this.touchStartPredictor !== null,
+    }
+  }
 }
