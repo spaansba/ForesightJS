@@ -14,6 +14,10 @@ slug: angular
 
 # Angular
 
+:::info Community Contribution Welcome
+The maintainer of ForesightJS doesn't use Angular, so this documentation is minimal. If you're using ForesightJS with Angular and would like to help improve these docs with more detailed examples and best practices, PRs are greatly appreciated!
+:::
+
 ```bash
 npm install js.foresight ngx-foresight
 npm install -D js.foresight-devtools
