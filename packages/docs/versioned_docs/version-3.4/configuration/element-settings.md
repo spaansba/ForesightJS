@@ -190,12 +190,16 @@ const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.in
 - **Type:** `boolean`
 - **Description:** Indicates whether the current device is a touch device.
 
+:::caution Deprecated
+As of v3.3, ForesightJS handles touch devices internally with dedicated touch strategies. You no longer need to check this value for fallback prefetching logic.
+:::
+
 ---
 
 #### `isLimitedConnection`
 
 - **Type:** `boolean`
-- **Description:** Is `true` when the user's connection matches the configured `minimumConnectionType` setting (defaults to "3g"). Elements will not be registered when connection is limited. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
+- **Description:** Is `true` when the user's connection is slower than the configured `minimumConnectionType` setting (defaults to "3g"). Elements will not be registered when connection is limited. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
 - **Note:** This feature relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS will register elements regardless of connection speed.
 
 ---

@@ -12,7 +12,7 @@ last_updated:
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possbile.
+ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possible.
 
 ## Most Used Internal types
 
@@ -57,6 +57,16 @@ type CallbackHitType =
   | { kind: "mouse"; subType: "hover" | "trajectory" }
   | { kind: "tab"; subType: "forwards" | "reverse" }
   | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
+  | { kind: "touch"; subType?: string }
+  | { kind: "viewport"; subType?: string }
+```
+
+### CurrentDeviceStrategy
+
+Represents the current input method being used. ForesightJS automatically detects and switches between strategies.
+
+```typescript
+type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
 ```
 
 ### ForesightManagerData
@@ -80,7 +90,7 @@ type ForesightManagerData = {
 
 Usefull for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
 
-This type is used in the [`useForesight`](/docs/react/hook) hook for React and in the [`useForesight`](/docs/vue/composable) composable for Vue.
+This type is used in the [`useForesight`](/docs/react/hook) hook for React.
 
 ```typescript
 type ForesightButtonProps = {
