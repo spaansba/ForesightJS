@@ -66,7 +66,7 @@ type CallbackInvokedEvent = {
   type: "callbackInvoked"
   timestamp: number
   elementData: ForesightElementData
-  hitType: HitType
+  hitType: CallbackHitType
 }
 ```
 
@@ -101,7 +101,7 @@ Events fired during element registration, updates, and cleanup.
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementRegistered</code>
 
-Fired when an element is successfully registered with `ForesightManager` using `foresightmanager.instance.register(element)`.
+Fired when an element is successfully registered with `ForesightManager` using `ForesightManager.instance.register(element)`.
 
 ```typescript
 type ElementRegisteredEvent = {
@@ -117,7 +117,7 @@ type ElementRegisteredEvent = {
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementReactivated</code>
 
-Fired when an element is reactivated after its callback was triggered. This happends after `reactivateAfter` ms (default infinity) or with `foresightmanager.instance.reactivate(element)`.
+Fired when an element is reactivated after its callback was triggered. This happens after `reactivateAfter` ms (default infinity) or with `ForesightManager.instance.reactivate(element)`.
 
 ```typescript
 type ElementReactivatedEvent = {
@@ -133,7 +133,7 @@ type ElementReactivatedEvent = {
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementUnregistered</code>
 
-Fired when an element is removed from `ForesightManager`'s tracking. This only happends when the element is removed from the `DOM` or via developer actions like `foresightmanar.instance.unregister(element)`
+Fired when an element is removed from `ForesightManager`'s tracking. This only happens when the element is removed from the `DOM` or via developer actions like `ForesightManager.instance.unregister(element)`
 
 ```typescript
 type ElementUnregisteredEvent = {
@@ -209,7 +209,7 @@ Events fired when ForesightManager configuration changes.
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f59e0b', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>managerSettingsChanged</code>
 
-Fired when [global](/docs/configuration/global-settings) `ForesightManager` settings are updated via the [devtools](/docs/debugging/devtools) or via `foresightmanager.instance.alterGlobalSettings()`.
+Fired when [global](/docs/configuration/global-settings) `ForesightManager` settings are updated via the [devtools](/docs/debugging/devtools) or via `ForesightManager.instance.alterGlobalSettings()`.
 
 ```typescript
 type ManagerSettingsChangedEvent = {

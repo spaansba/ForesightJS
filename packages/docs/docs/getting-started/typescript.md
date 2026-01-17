@@ -12,7 +12,7 @@ last_updated:
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possbile.
+ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possible.
 
 ## Most Used Internal types
 

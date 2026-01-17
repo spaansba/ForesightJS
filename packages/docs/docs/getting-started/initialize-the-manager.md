@@ -56,4 +56,4 @@ ForesightManager.initialize({
 
 The `ForesightManager` is a singleton, meaning it can only be initialized once. If you call `ForesightManager.initialize()` multiple times, only the first call will take effect. Any subsequent calls will simply return the already initialized instance.
 
-The manager also provides several static methods you can use to get information about which elements are registered, how many callbacks have been ran and all the listeneing [event](/docs/events) listeners. You can find a list of these methods [here](/docs/debugging/static-properties).
+The manager also provides several static methods you can use to get information about which elements are registered, how many callbacks have been ran and all the listening [event](/docs/events) listeners. You can find a list of these methods [here](/docs/debugging/static-properties).

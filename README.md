@@ -34,7 +34,7 @@ yarn add js.foresight
 This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/react/hook).
 
 ```javascript
-import { ForesightManager } from "foresightjs"
+import { ForesightManager } from "js.foresight"
 
 // Initialize the manager if you want custom global settings (do this once at app startup)
 ForesightManager.initialize({

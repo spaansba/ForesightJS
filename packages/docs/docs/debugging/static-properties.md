@@ -100,7 +100,10 @@ The return will look something like this:
       "managerSettingsChanged": []
     },
     "6": {
-      "callbackFired": []
+      "callbackInvoked": []
+    },
+    "7": {
+      "callbackCompleted": []
     }
   },
   "globalSettings": {
@@ -114,7 +117,6 @@ The return will look something like this:
     "enableScrollPrediction": true,
     "enableTabPrediction": true,
     "positionHistorySize": 10,
-    "resizeScrollThrottleDelay": 0,
     "scrollMargin": 150,
     "tabOffset": 2,
     "trajectoryPredictionTime": 100
