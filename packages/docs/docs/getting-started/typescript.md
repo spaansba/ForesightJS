@@ -12,7 +12,7 @@ last_updated:
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possbile.
+ForesightJS is fully written in `TypeScript` to make sure your development experience is as good as possible.
 
 ## Most Used Internal types
 
@@ -57,6 +57,16 @@ type CallbackHitType =
   | { kind: "mouse"; subType: "hover" | "trajectory" }
   | { kind: "tab"; subType: "forwards" | "reverse" }
   | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
+  | { kind: "touch"; subType?: string }
+  | { kind: "viewport"; subType?: string }
+```
+
+### CurrentDeviceStrategy
+
+Represents the current input method being used. ForesightJS automatically detects and switches between strategies.
+
+```typescript
+type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
 ```
 
 ### ForesightManagerData
