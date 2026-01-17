@@ -190,6 +190,10 @@ const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.in
 - **Type:** `boolean`
 - **Description:** Indicates whether the current device is a touch device.
 
+:::caution Deprecated
+As of v3.3, ForesightJS handles touch devices internally with dedicated touch strategies. You no longer need to check this value for fallback prefetching logic.
+:::
+
 ---
 
 #### `isLimitedConnection`

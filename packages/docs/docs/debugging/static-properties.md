@@ -55,6 +55,43 @@ Checks whether the ForesightManager has been initialized.
 
 **Returns:** `Readonly<boolean>`
 
+## ForesightManager.instance.reactivate(element)
+
+Manually reactivates an element, allowing its callback to be triggered again. This is useful when you want to re-enable prefetching for an element before its `reactivateAfter` timeout expires.
+
+**Parameters:**
+- `element` - The DOM element to reactivate
+
+**Example:**
+
+```javascript
+const myButton = document.getElementById("my-button")
+
+// Manually reactivate the element
+ForesightManager.instance.reactivate(myButton)
+```
+
+## ForesightManager.instance.unregister(element, reason?)
+
+Removes an element from ForesightManager's tracking.
+
+:::tip You probably don't need this
+ForesightJS automatically tracks and unregisters elements when they are removed from the DOM. Manual unregistering is rarely needed and should only be used for edge cases where you want to stop tracking an element that remains in the DOM.
+:::
+
+**Parameters:**
+- `element` - The DOM element to unregister
+- `reason` (optional) - A string describing why the element was unregistered (useful for debugging via events)
+
+**Example:**
+
+```javascript
+const myButton = document.getElementById("my-button")
+
+// Unregister with a custom reason
+ForesightManager.instance.unregister(myButton, "user-navigation")
+```
+
 ## ForesightManager.instance.getManagerData {#foresightmanagerinstancegetmanagerdata}
 
 Snapshot of the current `ForesightManager` state, including all [global settings](/docs/configuration/global-settings), registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.

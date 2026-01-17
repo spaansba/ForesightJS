@@ -228,14 +228,14 @@ type ManagerSettingsChangedEvent = {
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f59e0b', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>deviceStrategyChanged</code>
 
-Fired when user switches from mouse+keyboard setup to pen/touch or vice versa.
+Fired when user switches between input methods (mouse, touch, or pen).
 
 ```typescript
-type ManagerSettingsChangedEvent = {
+type DeviceStrategyChangedEvent = {
   type: "deviceStrategyChanged"
   timestamp: number
-  newStrategy: CurrentDeviceStrategy
-  oldStrategy: CurrentDeviceStrategy
+  newStrategy: CurrentDeviceStrategy // "mouse" | "touch" | "pen"
+  oldStrategy: CurrentDeviceStrategy // "mouse" | "touch" | "pen"
 }
 ```
 
