@@ -122,6 +122,7 @@ interface ManagerDataPayload extends PayloadBase {
   eventListenerCount: Record<string, number>
   managerSettings: ForesightManagerSettings
   registeredElements: Array<Omit<ForesightElementData, "element"> & { elementInfo: string }>
+  loadedModules: ForesightManagerData["loadedModules"]
 }
 
 export type SerializedEventData =
@@ -168,6 +169,7 @@ export function safeSerializeManagerData(
     eventListenerCount: eventListeners,
     managerSettings: data.globalSettings,
     registeredElements: registeredElements,
+    loadedModules: data.loadedModules,
     summary: `${registeredElements.length} elements, ${
       Object.values(eventListeners).flat().length
     } listeners,

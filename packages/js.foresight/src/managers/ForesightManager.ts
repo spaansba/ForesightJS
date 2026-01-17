@@ -6,6 +6,7 @@ import {
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
+import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { applySettingsChanges, initializeSettings } from "./SettingsManager"
 import type {
   CallbackHits,
@@ -23,8 +24,8 @@ import type {
   ForesightRegisterResult,
   UpdateForsightManagerSettings,
 } from "../types/types"
-import { DesktopHandler } from "./DesktopHandler"
-import { TouchDeviceHandler } from "./TouchDeviceHandler"
+import type { DesktopHandler } from "./DesktopHandler"
+import type { TouchDeviceHandler } from "./TouchDeviceHandler"
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -51,9 +52,10 @@ export class ForesightManager {
   private idCounter: number = 0
   private activeElementCount: number = 0
 
-  private desktopHandler: DesktopHandler
-  private touchDeviceHandler: TouchDeviceHandler
-  private handler: DesktopHandler | TouchDeviceHandler
+  private desktopHandler: DesktopHandler | null = null
+  private touchDeviceHandler: TouchDeviceHandler | null = null
+  private currentlyActiveHandler: DesktopHandler | TouchDeviceHandler | null = null
+  private handlerDependencies: ForesightModuleDependencies
 
   private isSetup: boolean = false
   private pendingPointerEvent: PointerEvent | null = null
@@ -70,29 +72,44 @@ export class ForesightManager {
       initializeSettings(this._globalSettings, initialSettings)
     }
 
-    const dependencies = {
+    this.handlerDependencies = {
       elements: this.elements,
-      checkableElements: this.checkableElements,
       callCallback: this.callCallback.bind(this),
       emit: this.eventEmitter.emit.bind(this.eventEmitter),
       hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
-      updateCheckableStatus: this.updateCheckableStatus.bind(this),
       settings: this._globalSettings,
     }
 
-    this.desktopHandler = new DesktopHandler(dependencies)
-    this.touchDeviceHandler = new TouchDeviceHandler(dependencies)
-    this.handler =
-      this.currentDeviceStrategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
-
+    // Handlers are created lazily when first needed as of 3.4.0
     this.devLog(`ForesightManager initialized with device strategy: ${this.currentDeviceStrategy}`)
     this.initializeGlobalListeners()
+  }
+
+  private async getOrCreateDesktopHandler(): Promise<DesktopHandler> {
+    if (!this.desktopHandler) {
+      const { DesktopHandler } = await import("./DesktopHandler")
+      this.desktopHandler = new DesktopHandler(this.handlerDependencies)
+      this.devLog("DesktopHandler lazy loaded")
+    }
+
+    return this.desktopHandler
+  }
+
+  private async getOrCreateTouchHandler(): Promise<TouchDeviceHandler> {
+    if (!this.touchDeviceHandler) {
+      const { TouchDeviceHandler } = await import("./TouchDeviceHandler")
+      this.touchDeviceHandler = new TouchDeviceHandler(this.handlerDependencies)
+      this.devLog("TouchDeviceHandler lazy loaded")
+    }
+
+    return this.touchDeviceHandler
   }
 
   public static initialize(props?: Partial<UpdateForsightManagerSettings>): ForesightManager {
     if (!this.isInitiated) {
       ForesightManager.manager = new ForesightManager(props)
     }
+
     return ForesightManager.manager
   }
 
@@ -106,6 +123,10 @@ export class ForesightManager {
 
   private generateId(): string {
     return `foresight-${++this.idCounter}`
+  }
+
+  private get isUsingDesktopHandler(): boolean {
+    return this.currentDeviceStrategy === "mouse" || this.currentDeviceStrategy === "pen"
   }
 
   public addEventListener<K extends ForesightEvent>(
@@ -128,6 +149,9 @@ export class ForesightManager {
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
+    const desktopPredictors = this.desktopHandler?.loadedPredictors
+    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
+
     return {
       registeredElements: this.elements,
       globalSettings: this._globalSettings,
@@ -135,6 +159,17 @@ export class ForesightManager {
       eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
       activeElementCount: this.activeElementCount,
+      loadedModules: {
+        desktopHandler: this.desktopHandler !== null,
+        touchHandler: this.touchDeviceHandler !== null,
+        predictors: {
+          mouse: desktopPredictors?.mouse ?? false,
+          tab: desktopPredictors?.tab ?? false,
+          scroll: desktopPredictors?.scroll ?? false,
+          viewport: touchPredictors?.viewport ?? false,
+          touchStart: touchPredictors?.touchStart ?? false,
+        },
+      },
     }
   }
 
@@ -178,7 +213,7 @@ export class ForesightManager {
     this.elements.set(options.element, elementData)
     this.activeElementCount++
     this.updateCheckableStatus(elementData)
-    this.handler.observeElement(options.element)
+    this.currentlyActiveHandler?.observeElement(options.element)
 
     this.eventEmitter.emit({
       type: "elementRegistered",
@@ -203,7 +238,7 @@ export class ForesightManager {
     }
 
     this.clearReactivateTimeout(elementData)
-    this.handler.unobserveElement(element)
+    this.currentlyActiveHandler?.unobserveElement(element)
     this.elements.delete(element)
     this.checkableElements.delete(elementData)
 
@@ -240,9 +275,12 @@ export class ForesightManager {
 
     if (!elementData.callbackInfo.isRunningCallback) {
       elementData.callbackInfo.isCallbackActive = true
+
       this.activeElementCount++
+
       this.updateCheckableStatus(elementData)
-      this.handler.observeElement(element)
+
+      this.currentlyActiveHandler?.observeElement(element)
       this.eventEmitter.emit({
         type: "elementReactivated",
         elementData,
@@ -324,8 +362,10 @@ export class ForesightManager {
     elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
     elementData.callbackInfo.isRunningCallback = false
     elementData.callbackInfo.isCallbackActive = false
+
     this.activeElementCount--
-    this.handler.unobserveElement(elementData.element)
+
+    this.currentlyActiveHandler?.unobserveElement(elementData.element)
 
     if (elementData.callbackInfo.reactivateAfter !== Infinity) {
       elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
@@ -374,15 +414,22 @@ export class ForesightManager {
     this._globalCallbackHits.total++
   }
 
-  private setDeviceStrategy(strategy: CurrentDeviceStrategy): void {
-    const previousStrategy = this.handler instanceof DesktopHandler ? "mouse" : "touch"
+  private async setDeviceStrategy(strategy: CurrentDeviceStrategy): Promise<void> {
+    const previousStrategy = this.currentDeviceStrategy
+
     if (previousStrategy !== strategy) {
       this.devLog(`Switching device strategy from ${previousStrategy} to ${strategy}`)
     }
 
-    this.handler.disconnect()
-    this.handler = strategy === "mouse" ? this.desktopHandler : this.touchDeviceHandler
-    this.handler.connect()
+    this.currentlyActiveHandler?.disconnect()
+
+    // Lazy load the handler
+    this.currentlyActiveHandler =
+      strategy === "mouse" || strategy === "pen"
+        ? await this.getOrCreateDesktopHandler()
+        : await this.getOrCreateTouchHandler()
+
+    this.currentlyActiveHandler.connect()
   }
 
   private handlePointerMove = (e: PointerEvent): void => {
@@ -395,7 +442,9 @@ export class ForesightManager {
         newStrategy: e.pointerType as CurrentDeviceStrategy,
         oldStrategy: this.currentDeviceStrategy,
       })
-      this.setDeviceStrategy((this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy))
+
+      this.currentDeviceStrategy = e.pointerType as CurrentDeviceStrategy
+      this.setDeviceStrategy(this.currentDeviceStrategy)
     }
 
     if (this.rafId) {
@@ -403,13 +452,14 @@ export class ForesightManager {
     }
 
     this.rafId = requestAnimationFrame(() => {
-      if (this.handler instanceof TouchDeviceHandler) {
+      // Only process mouse movements for desktop handler (mouse/pen)
+      if (!this.isUsingDesktopHandler) {
         this.rafId = null
         return
       }
 
       if (this.pendingPointerEvent) {
-        this.handler.processMouseMovement(this.pendingPointerEvent)
+        this.desktopHandler?.processMouseMovement(this.pendingPointerEvent)
       }
       this.rafId = null
     })
@@ -445,7 +495,7 @@ export class ForesightManager {
     this.domObserver = null
 
     document.removeEventListener("pointermove", this.handlePointerMove)
-    this.handler.disconnect()
+    this.currentlyActiveHandler?.disconnect()
 
     if (this.rafId) {
       cancelAnimationFrame(this.rafId)
@@ -485,25 +535,25 @@ export class ForesightManager {
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
     const result = applySettingsChanges(this._globalSettings, props)
 
-    if (result.positionHistorySizeChanged) {
+    if (result.positionHistorySizeChanged && this.desktopHandler) {
       this.desktopHandler.trajectoryPositions.positions.resize(
         this._globalSettings.positionHistorySize
       )
     }
 
-    if (result.scrollPredictionChanged && this.handler instanceof DesktopHandler) {
+    if (result.scrollPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
       if (this._globalSettings.enableScrollPrediction) {
-        this.handler.connectScrollPredictor()
+        this.desktopHandler.connectScrollPredictor()
       } else {
-        this.handler.disconnectScrollPredictor()
+        this.desktopHandler.disconnectScrollPredictor()
       }
     }
 
-    if (result.tabPredictionChanged && this.handler instanceof DesktopHandler) {
+    if (result.tabPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
       if (this._globalSettings.enableTabPrediction) {
-        this.handler.connectTabPredictor()
+        this.desktopHandler.connectTabPredictor()
       } else {
-        this.handler.disconnectTabPredictor()
+        this.desktopHandler.disconnectTabPredictor()
       }
     }
 
@@ -511,8 +561,8 @@ export class ForesightManager {
       this.forceUpdateAllElementBounds()
     }
 
-    if (result.touchStrategyChanged && this.handler instanceof TouchDeviceHandler) {
-      this.handler.setTouchPredictor()
+    if (result.touchStrategyChanged && !this.isUsingDesktopHandler && this.touchDeviceHandler) {
+      this.touchDeviceHandler.setTouchPredictor()
     }
 
     if (result.changedSettings.length > 0) {

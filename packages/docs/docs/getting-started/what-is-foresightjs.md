@@ -88,3 +88,7 @@ Many modern frameworks (like Next.js) automatically prefetch resources for all l
 #### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
 
 Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
+
+## Lightweight & Optimized
+
+ForesightJS is built to be tiny. The entire library with all features is only **~32 KB** minified. On top of that, we use code splitting so you only load what you use: touch devices load just **~19 KB**, and desktop users load **~32 KB** with predictors lazy-loaded when enabled. See [Behind the Scenes](/docs/Behind_the_Scenes#bundle-optimization) for details.

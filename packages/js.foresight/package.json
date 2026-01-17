@@ -3,6 +3,7 @@
   "version": "3.3.5",
   "description": "Predicts where users will click based on mouse movement, keyboard navigation, and scroll behavior. Includes touch device support. Triggers callbacks before interactions happen to enable prefetching and faster UI responses. Works with any framework.",
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "build": "tsup --sourcemap",
     "build:prod": "tsup",
