@@ -228,7 +228,7 @@ ForesightManager.initialize({
 #### `enableManagerLogging`
 
 - **Type:** `boolean`
-- **Default:** `"false"`
+- **Default:** `false`
 - **Description:** Logs basic information about the `ForesightManager` and its handlers that is not available through [events](/docs/events). Mostly used by the maintainers of `ForesightJS` to debug the manager, but might be useful for implementers aswell.
 - **Note:** Examples of logs are: Initializing the manager, switching from device strategy (e.g. Mouse to pen), aborting controllers and invalidating cache.
 

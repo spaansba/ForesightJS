@@ -53,7 +53,7 @@ export function ForesightLink({ children, className, ...props }: ForesightLinkPr
   })
 
   return (
-    <Link {...props} ref={elementRef} className={className}>
+    <Link {...props} ref={elementRef} className={className} prefetch={false}>
       {children}
     </Link>
   )

@@ -101,3 +101,22 @@ Touch devices require different prediction strategies due to the lack of continu
 5. **Reactivation**: `isCallbackActive` reset to `true` after duration elapses
 
 **Cleanup**: Elements removed via `ForesightManager.instance.unregister(element)` or automatically when DOM removal is detected by `MutationObserver`.
+
+## Bundle Optimization
+
+ForesightJS is designed to be lightweight. The entire library with all features is only **~32 KB** minified. But we go further with **code splitting** to minimize your initial bundle even more. Both handlers and predictors are lazy-loaded based on device type and enabled features:
+
+| Chunk                           | Size    | Loaded When                      |
+| ------------------------------- | ------- | -------------------------------- |
+| Core                            | ~14 KB  | Always (initial load)            |
+| DesktopHandler + MousePredictor | ~15 KB  | Desktop/mouse users              |
+| TouchDeviceHandler              | ~2 KB   | Touch device users               |
+| TabPredictor + tabbable         | ~7 KB   | `enableTabPrediction: true`      |
+| ScrollPredictor                 | ~1.5 KB | `enableScrollPrediction: true`   |
+| Touch predictors                | ~1.5 KB | Touch device (based on strategy) |
+
+**Result**:
+
+- Touch devices load only **~19 KB** (core + touch handler + touch predictor)
+- Desktop with mouse-only loads **~32 KB** (core + desktop handler + mouse predictor)
+- Additional predictors (Tab, Scroll) load on-demand when enabled
