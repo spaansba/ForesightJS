@@ -22,7 +22,7 @@ This is the main type used in ForesightJS as it gathers all information about a 
 
 ```TS
 type ForesightElementData = {
-  callback: ForesightCallback // () => void
+  callback: ForesightCallback // (elementData: ForesightElementData) => void
   name: string
   id: string // only for internals
   elementBounds: {
@@ -86,9 +86,27 @@ type ForesightManagerData = {
 
 ## Helper Types
 
+### ForesightCallback
+
+The callback function type used when registering elements. Receives the `ForesightElementData` of the element that triggered the callback.
+
+```typescript
+type ForesightCallback = (elementData: ForesightElementData) => void
+```
+
+This is useful when registering multiple elements with a shared callback, as you can identify which element triggered it:
+
+```typescript
+import type { ForesightCallback } from "js.foresight"
+
+const myCallback: ForesightCallback = elementData => {
+  console.log(`Triggered by: ${elementData.name}`)
+}
+```
+
 ### ForesightRegisterOptionsWithoutElement
 
-Usefull for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
+Useful for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
 
 This type is used in the [`useForesight`](/docs/react/hook) hook for React.
 

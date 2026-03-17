@@ -30,16 +30,17 @@ Gets the singleton instance of ForesightManager, initializing it if necessary. T
 ```javascript
 const manager = ForesightManager.instance
 
-// Register an element
+// Register a single element
 manager.register({
   element: myButton,
   callback: () => console.log("Predicted interaction!"),
 })
 
-// or
-ForesightManager.instance.register({
-  element: myButton,
-  callback: () => console.log("Predicted interaction!"),
+// Register multiple elements via NodeList
+const navLinks = document.querySelectorAll("nav a")
+manager.register({
+  element: navLinks,
+  callback: elementData => console.log(`Predicted: ${elementData.name}`),
 })
 ```
 
@@ -57,24 +58,27 @@ Checks whether the ForesightManager has been initialized.
 
 ## ForesightManager.instance.reactivate(element)
 
-Manually reactivates an element, allowing its callback to be triggered again. This is useful when you want to re-enable prefetching for an element before its `reactivateAfter` timeout expires.
+Manually reactivates an element (or all elements in a `NodeList`), allowing its callback to be triggered again. This is useful when you want to re-enable prefetching for an element before its `reactivateAfter` timeout expires.
 
 **Parameters:**
 
-- `element` - The DOM element to reactivate
+- `element` - The DOM element or `NodeList` to reactivate
 
 **Example:**
 
 ```javascript
+// Single element
 const myButton = document.getElementById("my-button")
-
-// Manually reactivate the element
 ForesightManager.instance.reactivate(myButton)
+
+// Multiple elements
+const navLinks = document.querySelectorAll("nav a")
+ForesightManager.instance.reactivate(navLinks)
 ```
 
 ## ForesightManager.instance.unregister(element, reason?)
 
-Removes an element from ForesightManager's tracking.
+Removes an element (or all elements in a `NodeList`) from ForesightManager's tracking.
 
 :::tip You probably don't need this
 ForesightJS automatically tracks and unregisters elements when they are removed from the DOM. Manual unregistering is rarely needed and should only be used for edge cases where you want to stop tracking an element that remains in the DOM.
@@ -82,16 +86,19 @@ ForesightJS automatically tracks and unregisters elements when they are removed 
 
 **Parameters:**
 
-- `element` - The DOM element to unregister
+- `element` - The DOM element or `NodeList` to unregister
 - `reason` (optional) - A string describing why the element was unregistered (useful for debugging via events)
 
 **Example:**
 
 ```javascript
+// Single element
 const myButton = document.getElementById("my-button")
-
-// Unregister with a custom reason
 ForesightManager.instance.unregister(myButton, "user-navigation")
+
+// Multiple elements
+const navLinks = document.querySelectorAll("nav a")
+ForesightManager.instance.unregister(navLinks)
 ```
 
 ## ForesightManager.instance.getManagerData {#foresightmanagerinstancegetmanagerdata}

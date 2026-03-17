@@ -41,7 +41,7 @@ ForesightManager.initialize({
   // Optional props (see configuration)
 })
 
-// Register an element to be tracked
+// Register a single element (or NodeList)
 const myButton = document.getElementById("my-button")
 
 ForesightManager.instance.register({

@@ -45,17 +45,28 @@ const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.in
 
 #### `element`
 
-- **Type:** `element`
+- **Type:** `element | NodeListOf<element>`
 - **Required:** Yes
-- **Description:** The DOM element to monitor for user interactions.
+- **Description:** The DOM element (or a `NodeList` of elements) to monitor for user interactions. When a `NodeList` is passed, all elements are registered with the same callback and settings.
 
 ```javascript
+// Single element
 const button = document.querySelector("#my-button")
 
 ForesightManager.instance.register({
-  element: button, // Any DOM element
+  element: button,
   callback: () => {
     /* prefetch logic */
+  },
+})
+
+// Multiple elements via NodeList
+const navLinks = document.querySelectorAll("nav a")
+
+ForesightManager.instance.register({
+  element: navLinks,
+  callback: elementData => {
+    /* elementData identifies which element triggered */
   },
 })
 ```
@@ -64,15 +75,16 @@ ForesightManager.instance.register({
 
 #### `callback`
 
-- **Type:** `function`
+- **Type:** `(elementData: ForesightElementData) => void`
 - **Required:** Yes
-- **Description:** Function that executes when interaction is predicted or occurs. This is where your prefetching logic goes.
+- **Description:** Function that executes when interaction is predicted or occurs. This is where your prefetching logic goes. The callback receives the [`ForesightElementData`](/docs/getting-started/typescript#foresightelementdata) of the element that triggered it, which is especially useful when registering multiple elements with a shared callback.
 - **Note:** If you await your prefetch logic the `callbackCompleted` [event](/docs/events#callbackcompleted) will show you how long your prefetch took to run.
 
 ```javascript
 ForesightManager.instance.register({
   element: myElement,
-  callback: () => {
+  callback: elementData => {
+    console.log(`Triggered ${elementData.element}`)
     // prefetch logic
   },
 })
@@ -170,13 +182,20 @@ ForesightManager.instance.register({
 
 ## Registration Return Value
 
-The `register()` method returns useful information about the registration:
+The `register()` method returns useful information about the registration. When a single element is passed, it returns a `ForesightRegisterResult`. When a `NodeList` is passed, it returns `ForesightRegisterResult[]`.
 
-**TypeScript Type:** `ForesightRegisterResult`
+**TypeScript Type:** `ForesightRegisterResult` or `ForesightRegisterResult[]`
 
 ```javascript
+// Single element returns ForesightRegisterResult
 const { isTouchDevice, isLimitedConnection, isRegistered } = ForesightManager.instance.register({
   element: myElement,
+  callback: () => {},
+})
+
+// NodeList returns ForesightRegisterResult[]
+const results = ForesightManager.instance.register({
+  element: document.querySelectorAll(".my-elements"),
   callback: () => {},
 })
 ```
