@@ -381,7 +381,7 @@ export class ForesightManager {
     let errorMessage = null
 
     try {
-      await elementData.callback()
+      await elementData.callback(elementData)
       status = "success"
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : String(error)
