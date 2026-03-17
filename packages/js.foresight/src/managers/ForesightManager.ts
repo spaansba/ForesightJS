@@ -20,6 +20,7 @@ import type {
   ForesightEventListener,
   ForesightManagerData,
   ForesightManagerSettings,
+  ForesightRegisterNodeListOptions,
   ForesightRegisterOptions,
   ForesightRegisterResult,
   UpdateForsightManagerSettings,
@@ -177,7 +178,21 @@ export class ForesightManager {
     return this.elements
   }
 
-  public register(options: ForesightRegisterOptions): ForesightRegisterResult {
+  public register(options: ForesightRegisterNodeListOptions): ForesightRegisterResult[]
+  public register(options: ForesightRegisterOptions): ForesightRegisterResult
+  public register(
+    options: ForesightRegisterOptions | ForesightRegisterNodeListOptions
+  ): ForesightRegisterResult | ForesightRegisterResult[] {
+    const { element: elements, ...rest } = options
+
+    if (elements instanceof NodeList) {
+      return Array.from(elements, element => this.registerElement({ ...rest, element }))
+    }
+
+    return this.registerElement({ ...rest, element: elements })
+  }
+
+  private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
     const { isTouchDevice, isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
 
     if (!shouldRegister) {
@@ -186,6 +201,7 @@ export class ForesightManager {
         isTouchDevice,
         isRegistered: false,
         unregister: () => {},
+        elementData: null,
       }
     }
 
@@ -197,6 +213,7 @@ export class ForesightManager {
         isTouchDevice,
         isRegistered: false,
         unregister: () => {},
+        elementData: null,
       }
     }
 
@@ -228,10 +245,25 @@ export class ForesightManager {
       unregister: () => {
         this.unregister(options.element)
       },
+      elementData,
     }
   }
 
-  public unregister(element: ForesightElement, unregisterReason?: ElementUnregisteredReason): void {
+  public unregister(
+    element: ForesightElement | NodeListOf<ForesightElement>,
+    unregisterReason?: ElementUnregisteredReason
+  ): void {
+    if (element instanceof NodeList) {
+      element.forEach(el => this.unregisterElement(el, unregisterReason))
+    } else {
+      this.unregisterElement(element, unregisterReason)
+    }
+  }
+
+  private unregisterElement(
+    element: ForesightElement,
+    unregisterReason?: ElementUnregisteredReason
+  ): void {
     const elementData = this.elements.get(element)
     if (!elementData) {
       return
@@ -261,7 +293,15 @@ export class ForesightManager {
     })
   }
 
-  public reactivate(element: ForesightElement): void {
+  public reactivate(element: ForesightElement | NodeListOf<ForesightElement>): void {
+    if (element instanceof NodeList) {
+      element.forEach(el => this.reactivateElement(el))
+    } else {
+      this.reactivate(element)
+    }
+  }
+
+  private reactivateElement(element: ForesightElement): void {
     const elementData = this.elements.get(element)
     if (!elementData) {
       return

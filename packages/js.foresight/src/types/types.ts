@@ -67,6 +67,8 @@ export type ForesightRegisterResult = {
    * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
    */
   unregister: () => void
+  /** The data associated with the registered element. This will be null if the element was not registered */
+  elementData: ForesightElementData | null
 }
 
 /**
@@ -322,8 +324,22 @@ export type UpdateForsightManagerSettings = BaseForesightManagerSettings & {
 /**
  * Type used to register elements to the foresight manager
  */
-export type ForesightRegisterOptions = {
+export type ForesightRegisterOptions = ForesightRegisterOptionsWithoutElement & {
   element: ForesightElement
+}
+
+export type ForesightRegisterNodeListOptions = ForesightRegisterOptionsWithoutElement & {
+  element: NodeListOf<ForesightElement>
+}
+
+/**
+ * Use full for if you want to create a custom button component in a modern framework (for example React).
+ * And you want to have the ForesightRegisterOptions used in ForesightManager.instance.register({})
+ * without the element as the element will be the ref of the component.
+ *
+ * @link https://foresightjs.com/docs/getting_started/typescript#foresightregisteroptionswithoutelement
+ */
+export type ForesightRegisterOptionsWithoutElement = {
   callback: ForesightCallback
   hitSlop?: HitSlop
   /**
@@ -342,15 +358,6 @@ export type ForesightRegisterOptions = {
    */
   reactivateAfter?: number
 }
-
-/**
- * Usefull for if you want to create a custom button component in a modern framework (for example React).
- * And you want to have the ForesightRegisterOptions used in ForesightManager.instance.register({})
- * without the element as the element will be the ref of the component.
- *
- * @link https://foresightjs.com/docs/getting_started/typescript#foresightregisteroptionswithoutelement
- */
-export type ForesightRegisterOptionsWithoutElement = Omit<ForesightRegisterOptions, "element">
 
 /**
  * Fully invisible "slop" around the element.
