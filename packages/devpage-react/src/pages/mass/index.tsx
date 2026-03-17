@@ -7,9 +7,8 @@ function Mass() {
   const [resetKey, setResetKey] = useState(0)
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)
-  const handleHit = useCallback(() => setHitCount(prev => prev + 1), [])
   const { isDebugActive, setDebugMode } = useDebug()
-
+  const containerRef = useRef<HTMLDivElement>(null)
   // Automatically disable debug mode when entering mass page
   useEffect(() => {
     setDebugMode(false)
@@ -20,9 +19,32 @@ function Mass() {
     setHitCount(0)
   }, [])
 
-  const buttons = Array.from({ length: buttonCount }, (_, i) => (
-    <SmallButton key={`${resetKey}-${i}`} name={i} onHit={handleHit} />
-  ))
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const buttons = containerRef.current.querySelectorAll("[data-foresight-btn]")
+
+    const HIT_CLASSES = [
+      "bg-gradient-to-br",
+      "from-green-400",
+      "to-emerald-500",
+      "text-white",
+      "shadow-lg",
+      "ring-2",
+      "ring-green-300/50",
+    ]
+    const UNHIT_CLASSES = ["bg-white", "text-gray-700", "shadow-sm", "border", "border-gray-200/60"]
+
+    ForesightManager.instance.register({
+      element: buttons,
+      callback: ({ element }) => {
+        element.classList.remove(...UNHIT_CLASSES)
+        element.classList.add(...HIT_CLASSES)
+        setHitCount(prev => prev + 1)
+      },
+      hitSlop: 0,
+    })
+  }, [resetKey, buttonCount])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100">
@@ -79,48 +101,20 @@ function Mass() {
       {/* Button Grid */}
       <div className="max-w-7xl mx-auto px-6 pb-12">
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50">
-          <div className="flex flex-wrap gap-2 justify-center">{buttons}</div>
+          <div ref={containerRef} className="flex flex-wrap gap-2 justify-center">
+            {Array.from({ length: buttonCount }, (_, i) => (
+              <button
+                key={`${resetKey}-${i}`}
+                data-foresight-btn
+                className="flex justify-center items-center size-10 rounded-lg text-sm font-medium bg-white text-gray-700 shadow-sm border border-gray-200/60"
+              >
+                <span className="text-center leading-tight">{i}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
-  )
-}
-
-function SmallButton({ name, onHit }: { name: number; onHit: () => void }) {
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const [isHit, setIsHit] = useState(false)
-
-  useEffect(() => {
-    if (!buttonRef.current) {
-      return
-    }
-    ForesightManager.instance.register({
-      element: buttonRef.current,
-      callback: () => {
-        onHit()
-        setIsHit(true)
-      },
-      name: name.toString(),
-      hitSlop: 0,
-    })
-
-    return () => {}
-  }, [name])
-
-  return (
-    <button
-      ref={buttonRef}
-      className={`
-        flex justify-center items-center size-10 rounded-lg text-sm font-medium
-        ${
-          isHit
-            ? "bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-lg ring-2 ring-green-300/50"
-            : "bg-white text-gray-700 shadow-sm border border-gray-200/60"
-        }
-      `}
-    >
-      <span className="text-center leading-tight">{name}</span>
-    </button>
   )
 }
 
