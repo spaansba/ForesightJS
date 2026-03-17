@@ -6,6 +6,7 @@ export type {
   ForesightRegisterResult,
   UpdateForsightManagerSettings,
   ForesightManagerSettings,
+  ForesightCallback,
   ForesightRegisterOptions,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptionsWithoutElement,
