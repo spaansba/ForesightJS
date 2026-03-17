@@ -297,7 +297,7 @@ export class ForesightManager {
     if (element instanceof NodeList) {
       element.forEach(el => this.reactivateElement(el))
     } else {
-      this.reactivate(element)
+      this.reactivateElement(element)
     }
   }
 
