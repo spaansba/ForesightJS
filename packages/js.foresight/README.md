@@ -34,14 +34,14 @@ yarn add js.foresight
 This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations in the [docs](https://foresightjs.com/docs/integrations/react/useForesight).
 
 ```javascript
-import { ForesightManager } from "js.foresightjs"
+import { ForesightManager } from "js.foresight"
 
 // Initialize the manager if you want custom global settings (do this once at app startup)
 ForesightManager.initialize({
   // Optional props (see configuration)
 })
 
-// Register an element to be tracked
+// Register a single element (or NodeList)
 const myButton = document.getElementById("my-button")
 
 ForesightManager.instance.register({

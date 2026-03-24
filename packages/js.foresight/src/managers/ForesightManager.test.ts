@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
-import type { ForesightElement } from "../types/types"
+import type { ForesightElement, ForesightElementData } from "../types/types"
 
 // Mock position-observer before importing ForesightManager
 vi.mock("position-observer", () => {
@@ -41,6 +41,31 @@ function createMockElement(id = "test-element"): ForesightElement {
   }))
 
   return element
+}
+
+function createMockNodeList(count: number): NodeListOf<ForesightElement> {
+  const container = document.createElement("div")
+  document.body.appendChild(container)
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div")
+    el.classList.add("foresight-item")
+    el.id = `item-${i}`
+    el.getBoundingClientRect = vi.fn(() => ({
+      top: 100,
+      left: 100,
+      right: 200,
+      bottom: 200,
+      width: 100,
+      height: 100,
+      x: 100,
+      y: 100,
+      toJSON: () => ({}),
+    }))
+    container.appendChild(el)
+  }
+
+  return container.querySelectorAll(".foresight-item")
 }
 
 describe("ForesightManager", () => {
@@ -862,6 +887,229 @@ describe("ForesightManager", () => {
       // Scroll predictor should still be false
       expect(manager.getManagerData.loadedModules.predictors.scroll).toBe(false)
       vi.useFakeTimers()
+    })
+  })
+
+  describe("NodeList Support", () => {
+    describe("register with NodeList", () => {
+      it("should register all elements in a NodeList", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(3)
+
+        const results = manager.register({ element: nodeList, callback: vi.fn() })
+
+        expect(results).toHaveLength(3)
+        expect(manager.registeredElements.size).toBe(3)
+      })
+
+      it("should return an array of ForesightRegisterResult", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+
+        const results = manager.register({ element: nodeList, callback: vi.fn() })
+
+        expect(Array.isArray(results)).toBe(true)
+        results.forEach(result => {
+          expect(result.isRegistered).toBe(true)
+          expect(result.elementData).not.toBeNull()
+        })
+      })
+
+      it("should return a single ForesightRegisterResult for a single element", () => {
+        const manager = ForesightManager.initialize()
+        const element = createMockElement()
+
+        const result = manager.register({ element, callback: vi.fn() })
+
+        expect(Array.isArray(result)).toBe(false)
+        expect(result.isRegistered).toBe(true)
+      })
+
+      it("should assign unique IDs to each element in NodeList", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(3)
+
+        const results = manager.register({ element: nodeList, callback: vi.fn() })
+
+        const ids = results.map(r => r.elementData?.id)
+        const uniqueIds = new Set(ids)
+        expect(uniqueIds.size).toBe(3)
+      })
+
+      it("should share the same callback across all NodeList elements", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+        const callback = vi.fn()
+
+        manager.register({ element: nodeList, callback })
+
+        nodeList.forEach(el => {
+          const data = manager.registeredElements.get(el)
+          expect(data?.callback).toBe(callback)
+        })
+      })
+
+      it("should apply shared hitSlop to all NodeList elements", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+
+        manager.register({ element: nodeList, callback: vi.fn(), hitSlop: 20 })
+
+        nodeList.forEach(el => {
+          const data = manager.registeredElements.get(el)
+          expect(data?.elementBounds.hitSlop).toEqual({
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: 20,
+          })
+        })
+      })
+
+      it("should emit elementRegistered event for each element in NodeList", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(3)
+        const listener = vi.fn()
+
+        manager.addEventListener("elementRegistered", listener)
+        manager.register({ element: nodeList, callback: vi.fn() })
+
+        expect(listener).toHaveBeenCalledTimes(3)
+      })
+
+      it("should handle empty NodeList", () => {
+        const manager = ForesightManager.initialize()
+        const container = document.createElement("div")
+        document.body.appendChild(container)
+        const emptyNodeList = container.querySelectorAll(".nonexistent")
+
+        const results = manager.register({ element: emptyNodeList, callback: vi.fn() })
+
+        expect(results).toHaveLength(0)
+        expect(manager.registeredElements.size).toBe(0)
+      })
+    })
+
+    describe("unregister with NodeList", () => {
+      it("should unregister all elements in a NodeList", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(3)
+
+        manager.register({ element: nodeList, callback: vi.fn() })
+        expect(manager.registeredElements.size).toBe(3)
+
+        manager.unregister(nodeList)
+        expect(manager.registeredElements.size).toBe(0)
+      })
+
+      it("should emit elementUnregistered event for each element", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(3)
+        const listener = vi.fn()
+
+        manager.register({ element: nodeList, callback: vi.fn() })
+        manager.addEventListener("elementUnregistered", listener)
+        manager.unregister(nodeList)
+
+        expect(listener).toHaveBeenCalledTimes(3)
+      })
+
+      it("should handle unregistering NodeList with non-registered elements", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+
+        expect(() => manager.unregister(nodeList)).not.toThrow()
+      })
+    })
+
+    describe("reactivate with NodeList", () => {
+      it("should reactivate all elements in a NodeList", async () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+
+        manager.register({ element: nodeList, callback: vi.fn(), reactivateAfter: Infinity })
+
+        // Deactivate all elements
+        for (const el of Array.from(nodeList)) {
+          const elementData = manager.registeredElements.get(el)!
+          // @ts-expect-error - accessing private method for testing
+          manager.callCallback(elementData, { kind: "mouse", subType: "hover" })
+        }
+        await vi.runAllTimersAsync()
+
+        // Verify all deactivated
+        nodeList.forEach(el => {
+          expect(manager.registeredElements.get(el)?.callbackInfo.isCallbackActive).toBe(false)
+        })
+
+        manager.reactivate(nodeList)
+
+        // Verify all reactivated
+        nodeList.forEach(el => {
+          expect(manager.registeredElements.get(el)?.callbackInfo.isCallbackActive).toBe(true)
+        })
+      })
+
+      it("should handle reactivating NodeList with non-registered elements", () => {
+        const manager = ForesightManager.initialize()
+        const nodeList = createMockNodeList(2)
+
+        expect(() => manager.reactivate(nodeList)).not.toThrow()
+      })
+    })
+  })
+
+  describe("Callback receives elementData", () => {
+    it("should pass elementData to callback on invocation", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn()
+
+      manager.register({ element, callback, name: "test-element" })
+
+      const elementData = manager.registeredElements.get(element)!
+      // @ts-expect-error - accessing private method for testing
+      manager.callCallback(elementData, { kind: "mouse", subType: "hover" })
+      await vi.runAllTimersAsync()
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      const receivedData: ForesightElementData = callback.mock.calls[0][0]
+      expect(receivedData.name).toBe("test-element")
+      expect(receivedData.element).toBe(element)
+    })
+
+    it("should pass correct elementData for each NodeList element callback", async () => {
+      const manager = ForesightManager.initialize()
+      const nodeList = createMockNodeList(2)
+      const callback = vi.fn()
+
+      manager.register({ element: nodeList, callback })
+
+      // Trigger callback on first element
+      const firstElementData = manager.registeredElements.get(nodeList[0])!
+      // @ts-expect-error - accessing private method for testing
+      manager.callCallback(firstElementData, { kind: "mouse", subType: "hover" })
+      await vi.runAllTimersAsync()
+
+      expect(callback).toHaveBeenCalledTimes(1)
+      const receivedData: ForesightElementData = callback.mock.calls[0][0]
+      expect(receivedData.element).toBe(nodeList[0])
+      expect(receivedData.id).toBe(firstElementData.id)
+    })
+
+    it("should still work with callbacks that ignore the parameter", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn(() => {})
+
+      manager.register({ element, callback })
+
+      const elementData = manager.registeredElements.get(element)!
+      // @ts-expect-error - accessing private method for testing
+      manager.callCallback(elementData, { kind: "mouse", subType: "trajectory" })
+      await vi.runAllTimersAsync()
+
+      expect(callback).toHaveBeenCalledTimes(1)
     })
   })
 })
