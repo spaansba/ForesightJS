@@ -30,8 +30,7 @@ import { Link, PrefetchPageLinks, type LinkProps } from "react-router"
 import useForesight from "./useForesight"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">,
-    Omit<ForesightRegisterOptions, "element" | "callback"> {
+  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
 }

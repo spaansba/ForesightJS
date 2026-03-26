@@ -13,36 +13,23 @@
     {
       "type": "category",
       "label": "Configuration",
-      "items": [
-        "configuration/global-settings",
-        "configuration/element-settings"
-      ]
+      "items": ["configuration/global-settings", "configuration/element-settings"]
     },
     {
       "type": "category",
       "label": "React",
-      "items": [
-        "react/hook",
-        "react/nextjs",
-        "react/react-router"
-      ]
+      "items": ["react/hook", "react/nextjs", "react/react-router"]
     },
     {
       "type": "category",
       "label": "Vue",
-      "items": [
-        "vue/directive",
-        "vue/composable"
-      ]
+      "items": ["vue/directive", "vue/composable"]
     },
     "angular",
     {
       "type": "category",
       "label": "Debugging",
-      "items": [
-        "debugging/devtools",
-        "debugging/static-properties"
-      ]
+      "items": ["debugging/devtools", "debugging/static-properties"]
     },
     "events",
     "behind-the-scenes",
