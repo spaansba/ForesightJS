@@ -70,6 +70,6 @@
   },
   "dependencies": {
     "position-observer": "^1.0.3",
-    "tabbable": "^6.3.0"
+    "tabbable": "^6.4.0"
   }
 }
