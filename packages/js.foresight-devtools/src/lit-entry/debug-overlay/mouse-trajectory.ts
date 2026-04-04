@@ -7,7 +7,7 @@ import {
   type ManagerSettingsChangedEvent,
 } from "js.foresight"
 import type { ElementUnregisteredEvent } from "js.foresight"
-import type { CallbackCompletedEvent } from "packages/js.foresight/dist"
+import type { CallbackCompletedEvent } from "js.foresight"
 
 export type Point = {
   x: number

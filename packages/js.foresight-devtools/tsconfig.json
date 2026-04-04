@@ -2,13 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "target": "es2020",
-    "declaration": true,
-    "declarationMap": true,
     "useDefineForClassFields": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "sourceMap": true,
     "composite": true,
     "jsx": "react-jsx"
   },

@@ -2,9 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "composite": true
   },
   "include": ["src", "test-setup.ts"],

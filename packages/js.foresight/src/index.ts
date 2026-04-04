@@ -12,6 +12,7 @@ export type {
   ForesightRegisterOptionsWithoutElement,
   ForesightElementData,
   ForesightEvent,
+  ForesightEventMap,
   ElementRegisteredEvent,
   DeviceStrategyChangedEvent,
   ElementCallbackInfo,
@@ -29,4 +30,8 @@ export type {
   CallbackHits,
   TouchDeviceStrategy,
   MinimumConnectionType,
+  Point as ForesightPoint,
+  ScrollDirection,
+  ForesightManagerData,
+  UpdatedDataPropertyNames,
 } from "./types/types"
