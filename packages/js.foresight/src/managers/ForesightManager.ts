@@ -377,19 +377,17 @@ export class ForesightManager {
     })
 
     const start = performance.now()
-    let status: callbackStatus = undefined
-    let errorMessage = null
+    let errorMessage: string | null = null
 
     try {
       await elementData.callback(elementData)
-      status = "success"
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : String(error)
-      status = "error"
       console.error(`Error in callback for element ${elementData.name}:`, error)
     }
 
-    this.finalizeCallback(elementData, callbackHitType, start, status, errorMessage)
+    const callbackResult: callbackStatus = errorMessage !== null ? "error" : "success"
+    this.finalizeCallback(elementData, callbackHitType, start, callbackResult, errorMessage)
   }
 
   private finalizeCallback(
