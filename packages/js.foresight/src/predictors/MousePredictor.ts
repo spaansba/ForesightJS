@@ -2,7 +2,7 @@ import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
 import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { isPointInRectangle } from "../helpers/rectAndHitSlop"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
-import type { TrajectoryPositions } from "../types/types"
+import type { MouseTrajectoryUpdateEvent, TrajectoryPositions } from "../types/types"
 
 export interface MousePredictorSettings {
   enableMousePrediction: boolean
@@ -20,10 +20,18 @@ export class MousePredictor extends BaseForesightModule {
 
   private trajectoryPositions: TrajectoryPositions
 
+  // Pre-allocated event object to avoid creating a new object every frame (~60/sec)
+  private readonly mouseTrajectoryEvent: MouseTrajectoryUpdateEvent
+
   constructor(config: MousePredictorConfig) {
     super(config.dependencies)
 
     this.trajectoryPositions = config.trajectoryPositions
+    this.mouseTrajectoryEvent = {
+      type: "mouseTrajectoryUpdate",
+      predictionEnabled: false,
+      trajectoryPositions: this.trajectoryPositions,
+    }
   }
 
   private updatePointerState(e: MouseEvent): void {
@@ -80,11 +88,8 @@ export class MousePredictor extends BaseForesightModule {
     }
 
     if (this.hasListeners("mouseTrajectoryUpdate")) {
-      this.emit({
-        type: "mouseTrajectoryUpdate",
-        predictionEnabled: enablePrediction,
-        trajectoryPositions: this.trajectoryPositions,
-      })
+      this.mouseTrajectoryEvent.predictionEnabled = enablePrediction
+      this.emit(this.mouseTrajectoryEvent)
     }
   }
 

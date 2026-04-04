@@ -5,6 +5,7 @@ import type {
   ForesightElementData,
   Point,
   ScrollDirection,
+  ScrollTrajectoryUpdateEvent,
   TrajectoryPositions,
 } from "../types/types"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
@@ -21,9 +22,18 @@ export class ScrollPredictor extends BaseForesightModule {
   private scrollDirection: ScrollDirection | null = null
   private trajectoryPositions: Readonly<TrajectoryPositions>
 
+  // Pre-allocated event object to avoid creating a new object every scroll frame
+  private readonly scrollTrajectoryEvent: ScrollTrajectoryUpdateEvent
+
   constructor(config: ScrollPredictorConfig) {
     super(config.dependencies)
     this.trajectoryPositions = config.trajectoryPositions
+    this.scrollTrajectoryEvent = {
+      type: "scrollTrajectoryUpdate",
+      currentPoint: this.trajectoryPositions.currentPoint,
+      predictedPoint: { x: 0, y: 0 },
+      scrollDirection: "none",
+    }
   }
 
   public resetScrollProps(): void {
@@ -72,12 +82,9 @@ export class ScrollPredictor extends BaseForesightModule {
     }
 
     if (this.hasListeners("scrollTrajectoryUpdate")) {
-      this.emit({
-        type: "scrollTrajectoryUpdate",
-        currentPoint: this.trajectoryPositions.currentPoint,
-        predictedPoint: this.predictedScrollPoint,
-        scrollDirection: this.scrollDirection,
-      })
+      this.scrollTrajectoryEvent.predictedPoint = this.predictedScrollPoint
+      this.scrollTrajectoryEvent.scrollDirection = this.scrollDirection
+      this.emit(this.scrollTrajectoryEvent)
     }
   }
 
