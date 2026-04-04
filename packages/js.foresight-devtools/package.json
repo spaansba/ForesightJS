@@ -59,7 +59,6 @@
     "vitest": "^4.1.2"
   },
   "dependencies": {
-    "@thednp/position-observer": "^1.1.0",
     "lit": "^3.3.2"
   }
 }
