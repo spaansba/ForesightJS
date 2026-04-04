@@ -8,11 +8,11 @@ import type {
   ForesightManagerData,
   ForesightManagerSettings,
   HitSlop,
-  Point,
+  ForesightPoint,
   ScrollDirection,
   UpdatedDataPropertyNames,
   UpdatedManagerSetting,
-} from "js.foresight/types/types"
+} from "js.foresight"
 
 type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
@@ -84,16 +84,16 @@ interface CallbackCompletedPayload extends PayloadBase {
 
 interface MouseTrajectoryUpdatePayload extends PayloadBase {
   type: "mouseTrajectoryUpdate"
-  currentPoint: Point
-  predictedPoint: Point
+  currentPoint: ForesightPoint
+  predictedPoint: ForesightPoint
   positionCount: number
   mousePredictionEnabled: boolean
 }
 
 interface ScrollTrajectoryUpdatePayload extends PayloadBase {
   type: "scrollTrajectoryUpdate"
-  currentPoint: Point
-  predictedPoint: Point
+  currentPoint: ForesightPoint
+  predictedPoint: ForesightPoint
   scrollDirection: ScrollDirection
 }
 

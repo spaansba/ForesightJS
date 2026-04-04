@@ -1,5 +1,5 @@
 import { ForesightManager } from "js.foresight"
-import type { ForesightEvent, ForesightEventMap } from "js.foresight/types/types"
+import type { ForesightEvent, ForesightEventMap } from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import { map } from "lit/directives/map.js"

@@ -4,7 +4,7 @@ import "./element-overlays"
 import "./mouse-trajectory"
 import "./scroll-trajectory"
 import { ForesightManager } from "js.foresight"
-import type { DeviceStrategyChangedEvent } from "packages/js.foresight/dist"
+import type { DeviceStrategyChangedEvent } from "js.foresight"
 
 @customElement("debug-overlay")
 export class DebugOverlay extends LitElement {
