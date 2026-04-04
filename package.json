@@ -13,6 +13,7 @@
     "test:watch": "pnpm --filter \"./packages/**\" test:watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "clean": "rm -r -force node_modules && rm pnpm-lock.yaml"
   },
   "devDependencies": {
