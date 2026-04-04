@@ -13,19 +13,20 @@
     "test:watch": "pnpm --filter \"./packages/**\" test:watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "clean": "rm -r -force node_modules && rm pnpm-lock.yaml"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@vue/eslint-config-typescript": "^14.6.0",
-    "eslint": "^9.39.2",
-    "eslint-plugin-lit": "^2.1.1",
-    "eslint-plugin-vue": "~10.5.1",
-    "eslint-plugin-wc": "^3.0.2",
-    "globals": "^16.5.0",
-    "prettier": "^3.8.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.0",
-    "vite": "^5.4.21"
+    "@eslint/js": "^10.0.1",
+    "@vue/eslint-config-typescript": "^14.7.0",
+    "eslint": "^10.2.0",
+    "eslint-plugin-lit": "^2.2.1",
+    "eslint-plugin-vue": "~10.8.0",
+    "eslint-plugin-wc": "^3.1.0",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vite": "^8.0.3"
   }
 }
