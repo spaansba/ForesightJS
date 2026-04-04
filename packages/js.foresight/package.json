@@ -58,15 +58,15 @@
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
-    "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "4.0.16",
-    "@vitest/ui": "^4.0.9",
-    "happy-dom": "^20.0.10",
-    "jsdom": "^27.4.0",
+    "@types/node": "^25.5.2",
+    "@vitest/coverage-v8": "4.1.2",
+    "@vitest/ui": "^4.1.2",
+    "happy-dom": "^20.8.9",
+    "jsdom": "^29.0.1",
     "tslib": "^2.8.1",
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.9"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
     "position-observer": "^1.0.3",
