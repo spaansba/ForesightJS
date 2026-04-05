@@ -50,6 +50,26 @@ export class ElementTab extends LitElement {
       margin: 4px 0 4px 0;
       font-size: 12px;
       font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .section-header:hover {
+      opacity: 0.8;
+    }
+
+    .section-header::before {
+      content: "▼";
+      display: inline-block;
+      transition: transform 0.15s ease;
+      font-size: 10px;
+    }
+
+    .section-header.collapsed::before {
+      transform: rotate(-90deg);
     }
 
     .section-header.active {
@@ -77,6 +97,8 @@ export class ElementTab extends LitElement {
   @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
   @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
+  @state() private activeSectionCollapsed = false
+  @state() private inactiveSectionCollapsed = false
   private _abortController: AbortController | null = null
   private _pendingElementUpdates: Map<ForesightElement, ForesightElementData> = new Map()
   private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
@@ -415,40 +437,56 @@ export class ElementTab extends LitElement {
         ${this.activeElements.length > 0
           ? html`
               <div class="element-section">
-                <h3 class="section-header active">
+                <h3
+                  class="section-header active ${this.activeSectionCollapsed ? "collapsed" : ""}"
+                  @click=${() => {
+                    this.activeSectionCollapsed = !this.activeSectionCollapsed
+                  }}
+                >
                   Active Elements (${this.activeElements.length})
                 </h3>
-                ${map(this.activeElements, elementData => {
-                  return html`
-                    <single-element
-                      .elementData=${elementData}
-                      .isActive=${this.runningCallbacks.has(elementData.element)}
-                      .isExpanded=${this.expandedElementIds.has(elementData.id)}
-                      .onToggle=${this.handleElementToggle}
-                    >
-                    </single-element>
-                  `
-                })}
+                ${!this.activeSectionCollapsed
+                  ? map(this.activeElements, elementData => {
+                      return html`
+                        <single-element
+                          .elementData=${elementData}
+                          .isActive=${this.runningCallbacks.has(elementData.element)}
+                          .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                          .onToggle=${this.handleElementToggle}
+                        >
+                        </single-element>
+                      `
+                    })
+                  : ""}
               </div>
             `
           : ""}
         ${this.inactiveElements.length > 0
           ? html`
               <div class="element-section">
-                <h3 class="section-header inactive">
+                <h3
+                  class="section-header inactive ${this.inactiveSectionCollapsed
+                    ? "collapsed"
+                    : ""}"
+                  @click=${() => {
+                    this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
+                  }}
+                >
                   Inactive Elements (${this.inactiveElements.length})
                 </h3>
-                ${map(this.inactiveElements, elementData => {
-                  return html`
-                    <single-element
-                      .elementData=${elementData}
-                      .isActive=${this.runningCallbacks.has(elementData.element)}
-                      .isExpanded=${this.expandedElementIds.has(elementData.id)}
-                      .onToggle=${this.handleElementToggle}
-                    >
-                    </single-element>
-                  `
-                })}
+                ${!this.inactiveSectionCollapsed
+                  ? map(this.inactiveElements, elementData => {
+                      return html`
+                        <single-element
+                          .elementData=${elementData}
+                          .isActive=${this.runningCallbacks.has(elementData.element)}
+                          .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                          .onToggle=${this.handleElementToggle}
+                        >
+                        </single-element>
+                      `
+                    })
+                  : ""}
               </div>
             `
           : ""}
