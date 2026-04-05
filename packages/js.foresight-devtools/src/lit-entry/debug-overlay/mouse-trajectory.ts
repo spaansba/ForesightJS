@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit"
-import { customElement, state } from "lit/decorators.js"
-import { styleMap } from "lit/directives/style-map.js"
+import { customElement } from "lit/decorators.js"
 import {
   ForesightManager,
   type MouseTrajectoryUpdateEvent,
@@ -22,6 +21,7 @@ export class MouseTrajectory extends LitElement {
       }
 
       .trajectory-line {
+        display: none;
         position: absolute;
         top: 0;
         left: 0;
@@ -51,16 +51,10 @@ export class MouseTrajectory extends LitElement {
   ]
 
   private _abortController = new AbortController()
-
-  @state()
+  private _lineEl: HTMLElement | null = null
   private _mousePredictionIsEnabled =
     ForesightManager.instance.getManagerData.globalSettings.enableMousePrediction
-
-  @state()
   private _isVisible = false
-
-  @state()
-  private _trajectoryStyles: { [key: string]: string } = {}
 
   connectedCallback(): void {
     super.connectedCallback()
@@ -83,7 +77,7 @@ export class MouseTrajectory extends LitElement {
     ForesightManager.instance.addEventListener(
       "scrollTrajectoryUpdate",
       () => {
-        this._isVisible = false
+        this._setVisible(false)
       },
       { signal }
     )
@@ -95,9 +89,21 @@ export class MouseTrajectory extends LitElement {
     )
   }
 
+  protected firstUpdated(): void {
+    this._lineEl = this.shadowRoot!.querySelector<HTMLElement>(".trajectory-line")
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this._abortController.abort()
+  }
+
+  private _setVisible(visible: boolean): void {
+    if (this._isVisible === visible) return
+    this._isVisible = visible
+    if (this._lineEl) {
+      this._lineEl.style.display = visible ? "block" : "none"
+    }
   }
 
   private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
@@ -106,10 +112,10 @@ export class MouseTrajectory extends LitElement {
       ("wasLastRegisteredElement" in e && e.wasLastRegisteredElement)
 
     if (shouldReset) {
-      this._isVisible = false
-      this._trajectoryStyles = {
-        transform: `translate3d(0px, 0px, 0) rotate(0deg)`,
-        width: `0px`,
+      this._setVisible(false)
+      if (this._lineEl) {
+        this._lineEl.style.transform = "translate3d(0px, 0px, 0) rotate(0deg)"
+        this._lineEl.style.width = "0px"
       }
     }
   }
@@ -118,33 +124,28 @@ export class MouseTrajectory extends LitElement {
     const isEnabled = e.managerData.globalSettings.enableMousePrediction
     this._mousePredictionIsEnabled = isEnabled
     if (!isEnabled) {
-      this._isVisible = false
+      this._setVisible(false)
     }
-    this.requestUpdate()
   }
 
   private handleTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
     if (!this._mousePredictionIsEnabled) return
 
-    this._isVisible = true
+    this._setVisible(true)
 
     const { currentPoint, predictedPoint } = e.trajectoryPositions
     const dx = predictedPoint.x - currentPoint.x
     const dy = predictedPoint.y - currentPoint.y
     const length = Math.sqrt(dx * dx + dy * dy)
-
     const angle = Math.atan2(dy, dx) * 57.29577951308232 // Pre-calculate rad to deg
-    this._trajectoryStyles = {
-      transform: `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`,
-      width: `${length}px`,
+
+    if (this._lineEl) {
+      this._lineEl.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
+      this._lineEl.style.width = `${length}px`
     }
   }
 
   render() {
-    const combinedStyles = {
-      display: this._isVisible ? "block" : "none",
-      ...this._trajectoryStyles,
-    }
-    return html` <div class="trajectory-line" style=${styleMap(combinedStyles)}></div> `
+    return html`<div class="trajectory-line"></div>`
   }
 }

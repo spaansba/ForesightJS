@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit"
-import { customElement, state } from "lit/decorators.js"
-import { styleMap } from "lit/directives/style-map.js"
+import { customElement } from "lit/decorators.js"
 import type {
   ScrollTrajectoryUpdateEvent,
   ManagerSettingsChangedEvent,
@@ -19,6 +18,7 @@ export class ScrollTrajectory extends LitElement {
       }
 
       .scroll-trajectory-line {
+        display: none;
         position: absolute;
         top: 0;
         left: 0;
@@ -77,22 +77,14 @@ export class ScrollTrajectory extends LitElement {
   ]
 
   private _abortController = new AbortController()
-
-  @state()
+  private _lineEl: HTMLElement | null = null
   private _scrollPredictionIsEnabled =
     ForesightManager.instance.getManagerData.globalSettings.enableScrollPrediction
-
-  @state()
   private _scrollMargin = ForesightManager.instance.getManagerData.globalSettings.scrollMargin
-
-  @state()
   private _isVisible = false
-
-  @state()
-  private _trajectoryStyles: { [key: string]: string } = {}
-
+  private _latestCurrentPoint: Point | null = null
+  private _latestPredictedPoint: Point | null = null
   private _isUpdateScheduled = false
-  private _latestScrollTrajectory: { currentPoint: Point; predictedPoint: Point } | null = null
 
   connectedCallback(): void {
     super.connectedCallback()
@@ -105,7 +97,7 @@ export class ScrollTrajectory extends LitElement {
     ForesightManager.instance.addEventListener(
       "mouseTrajectoryUpdate",
       () => {
-        this._isVisible = false
+        this._setVisible(false)
       },
       { signal }
     )
@@ -125,9 +117,21 @@ export class ScrollTrajectory extends LitElement {
     )
   }
 
+  protected firstUpdated(): void {
+    this._lineEl = this.shadowRoot!.querySelector<HTMLElement>(".scroll-trajectory-line")
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this._abortController.abort()
+  }
+
+  private _setVisible(visible: boolean): void {
+    if (this._isVisible === visible) return
+    this._isVisible = visible
+    if (this._lineEl) {
+      this._lineEl.style.display = visible ? "block" : "none"
+    }
   }
 
   private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
@@ -136,9 +140,9 @@ export class ScrollTrajectory extends LitElement {
       ("wasLastRegisteredElement" in e && e.wasLastRegisteredElement)
 
     if (shouldReset) {
-      this._isVisible = false
-      this._trajectoryStyles = {
-        transform: `translate(0px, 0px) rotate(0deg)`,
+      this._setVisible(false)
+      if (this._lineEl) {
+        this._lineEl.style.transform = "translate(0px, 0px) rotate(0deg)"
       }
     }
   }
@@ -147,54 +151,48 @@ export class ScrollTrajectory extends LitElement {
     const isEnabled = e.managerData.globalSettings.enableScrollPrediction
     this._scrollPredictionIsEnabled = isEnabled
     if (!isEnabled) {
-      this._isVisible = false
+      this._setVisible(false)
     }
     const scrollMarginUpdate = e.updatedSettings.find(update => update.setting === "scrollMargin")
     if (scrollMarginUpdate) {
       this._scrollMargin = scrollMarginUpdate.newValue
+      if (this._lineEl) {
+        this._lineEl.style.width = `${this._scrollMargin}px`
+      }
     }
   }
 
   private handleScrollUpdate = (e: ScrollTrajectoryUpdateEvent) => {
     if (!this._scrollPredictionIsEnabled) return
 
-    this._isVisible = true
-    this._latestScrollTrajectory = {
-      currentPoint: e.currentPoint,
-      predictedPoint: e.predictedPoint,
-    }
+    this._setVisible(true)
+    this._latestCurrentPoint = e.currentPoint
+    this._latestPredictedPoint = e.predictedPoint
 
     if (!this._isUpdateScheduled) {
       this._isUpdateScheduled = true
-      this.renderScrollTrajectory()
+      this.applyScrollTransform()
     }
   }
 
-  private renderScrollTrajectory = () => {
-    if (!this._latestScrollTrajectory) {
+  private applyScrollTransform = () => {
+    if (!this._latestCurrentPoint || !this._latestPredictedPoint) {
       this._isUpdateScheduled = false
       return
     }
 
-    const { currentPoint, predictedPoint } = this._latestScrollTrajectory
-    const dx = predictedPoint.x - currentPoint.x
-    const dy = predictedPoint.y - currentPoint.y
+    const dx = this._latestPredictedPoint.x - this._latestCurrentPoint.x
+    const dy = this._latestPredictedPoint.y - this._latestCurrentPoint.y
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
-    this._trajectoryStyles = {
-      transform: `translate(${currentPoint.x}px, ${currentPoint.y}px) rotate(${angle}deg)`,
+    if (this._lineEl) {
+      this._lineEl.style.transform = `translate(${this._latestCurrentPoint.x}px, ${this._latestCurrentPoint.y}px) rotate(${angle}deg)`
     }
 
     this._isUpdateScheduled = false
-    this.requestUpdate()
   }
 
   render() {
-    const combinedStyles = {
-      display: this._isVisible ? "block" : "none",
-      width: `${this._scrollMargin}px`,
-      ...this._trajectoryStyles,
-    }
-    return html` <div class="scroll-trajectory-line" style=${styleMap(combinedStyles)}></div> `
+    return html`<div class="scroll-trajectory-line" style="width: ${this._scrollMargin}px"></div>`
   }
 }
