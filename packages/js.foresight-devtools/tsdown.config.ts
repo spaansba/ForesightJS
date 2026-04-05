@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup"
+import { defineConfig } from "tsdown"
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
@@ -10,6 +10,9 @@ export default defineConfig({
   },
   clean: true,
   minify: true,
-  external: ["js.foresight"],
   outDir: "dist",
+  deps: {
+    neverBundle: ["js.foresight"],
+  },
+  target: false,
 })

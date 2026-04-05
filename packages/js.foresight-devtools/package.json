@@ -4,9 +4,9 @@
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "type": "module",
   "scripts": {
-    "build": "tsup --sourcemap",
-    "build:prod": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown --sourcemap",
+    "build:prod": "tsdown",
+    "dev": "tsdown --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
@@ -14,13 +14,13 @@
     "lint": "eslint . --fix",
     "prepublishOnly": "pnpm lint && pnpm test:run && pnpm build:prod"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "homepage": "https://foresightjs.com/docs/getting_started/development_tools",
@@ -54,7 +54,7 @@
     "@types/node": "^25.5.2",
     "js.foresight": "workspace:*",
     "tslib": "^2.8.1",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   },
