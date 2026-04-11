@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { lineSegmentIntersectsRect } from "./lineSigmentIntersectsRect"
+import { lineSegmentIntersectsRect } from "./lineSegmentIntersectsRect"
 import type { Point, Rect } from "../types/types"
 
 describe("lineSegmentIntersectsRect", () => {

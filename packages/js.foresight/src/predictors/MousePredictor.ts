@@ -1,4 +1,4 @@
-import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { lineSegmentIntersectsRect } from "../helpers/lineSegmentIntersectsRect"
 import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { isPointInRectangle } from "../helpers/rectAndHitSlop"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
