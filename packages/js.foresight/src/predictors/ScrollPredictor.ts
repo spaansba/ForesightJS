@@ -1,5 +1,5 @@
 import { getScrollDirection } from "../helpers/getScrollDirection"
-import { lineSegmentIntersectsRect } from "../helpers/lineSigmentIntersectsRect"
+import { lineSegmentIntersectsRect } from "../helpers/lineSegmentIntersectsRect"
 import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import type {
   ForesightElementData,
