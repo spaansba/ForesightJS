@@ -91,7 +91,7 @@ ForesightJS is a newer library, so most AI assistants and LLMs may not have much
 
 - Use [llms.txt](https://foresightjs.com/llms.txt) for a concise overview of the API and usage patterns.
 - Use [llms-full.txt](https://foresightjs.com/llms-full.txt) for a full markdown version of the docs, ideal for AI tools that support context injection or uploads.
-- All documentation pages are also available in markdown. You can view them by adding .md to the end of any URL, for example: https://foresightjs.com/docs/getting_started.md.
+- All documentation pages are also available in markdown. You can view them by adding .md to the end of any URL, for example: [https://foresightjs.com/docs/getting_started.md](https://foresightjs.com/docs/getting-started/what-is-foresightjs.md).
 
 [Read more](https://foresightjs.com/docs/ai-context)
 
