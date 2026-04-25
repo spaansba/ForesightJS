@@ -6,8 +6,10 @@ type ForesightButtonRegularProps = {
 
 function ForesightButtonRegular({ name }: ForesightButtonRegularProps) {
   return (
-    <div className="size-40 bg-green-200">
+    <article className="flex flex-col items-center gap-3 w-40">
+      <h4 className="text-sm font-medium text-gray-900 self-start">{name}</h4>
       <BaseForesightButton
+        className="size-40 bg-green-200"
         registerOptions={{
           callback: async () => {
             const randomTimeout = Math.floor(Math.random() * 1000)
@@ -18,7 +20,7 @@ function ForesightButtonRegular({ name }: ForesightButtonRegularProps) {
           unregisterOnCallback: false,
         }}
       />
-    </div>
+    </article>
   )
 }
 

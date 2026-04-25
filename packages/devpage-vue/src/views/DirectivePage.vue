@@ -5,23 +5,24 @@ const handlePrefetch = () => {
 </script>
 
 <template>
-  <div class="p-8">
-    <h1 class="text-3xl font-bold mb-6">Directive Test Page</h1>
-    <p class="mb-8 text-gray-600">Testing v-foresight directive</p>
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <h1 class="text-xl font-semibold mb-1">Directive test page</h1>
+    <p class="mb-8 text-sm text-gray-600">Testing v-foresight directive.</p>
 
-    <div class="space-y-6">
-      <div>
-        <h2 class="text-xl font-semibold mb-3">Simple Callback</h2>
+    <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">
+      <article class="flex flex-col items-start gap-3 w-56">
+        <h4 class="text-sm font-medium">Simple callback</h4>
         <button
           v-foresight="() => console.log('Simple Button')"
-          class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+          class="flex items-center justify-center size-40 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium"
         >
-          Hover to Predict
+          Hover to predict
         </button>
-      </div>
+        <p class="text-xs text-gray-600">Pass a function as the directive value.</p>
+      </article>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-3">With options</h2>
+      <article class="flex flex-col items-start gap-3 w-56">
+        <h4 class="text-sm font-medium">With options</h4>
         <button
           v-foresight="{
             callback: handlePrefetch,
@@ -29,11 +30,14 @@ const handlePrefetch = () => {
             name: 'button-with-options',
             reactivateAfter: 3000,
           }"
-          class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
+          class="flex items-center justify-center size-40 bg-green-500 hover:bg-green-600 text-white text-sm font-medium"
         >
-          Large Hit Area
+          Large hit area
         </button>
-      </div>
-    </div>
+        <p class="text-xs text-gray-600">
+          hitSlop, name and reactivateAfter set via options object.
+        </p>
+      </article>
+    </section>
   </div>
 </template>

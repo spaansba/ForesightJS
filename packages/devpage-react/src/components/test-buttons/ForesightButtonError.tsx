@@ -1,6 +1,4 @@
-import React from "react"
 import BaseForesightButton from "./BaseForesightButton"
-import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
 type ForesightButtonErrorProps = {
   name: string
@@ -8,23 +6,22 @@ type ForesightButtonErrorProps = {
 
 function ForesightButtonError({ name }: ForesightButtonErrorProps) {
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <h3 className="text-lg font-semibold ">Error test button</h3>
-      <div className="size-40 rounded-lg shadow-md bg-red-500">
-        <BaseForesightButton
-          registerOptions={{
-            callback: async () => {
-              const randomTimeout = Math.floor(Math.random() * 1000)
-              await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              throw new Error("Test error - callback always fails")
-            },
-            hitSlop: 20,
-            name: name,
-          }}
-        />
-        <ForesightButtonParagraph paragraph="Tests error in callback" />
-      </div>
-    </div>
+    <article className="flex flex-col items-center gap-3 w-40">
+      <h4 className="text-sm font-medium text-gray-900 self-start">Error in callback</h4>
+      <BaseForesightButton
+        className="size-40 bg-red-500 text-white"
+        registerOptions={{
+          callback: async () => {
+            const randomTimeout = Math.floor(Math.random() * 1000)
+            await new Promise(resolve => setTimeout(resolve, randomTimeout))
+            throw new Error("Test error - callback always fails")
+          },
+          hitSlop: 20,
+          name: name,
+        }}
+      />
+      <p className="text-xs text-gray-600">Callback throws after a random delay.</p>
+    </article>
   )
 }
 

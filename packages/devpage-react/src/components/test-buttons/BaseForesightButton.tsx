@@ -1,30 +1,39 @@
 import type { ForesightRegisterOptionsWithoutElement } from "js.foresight"
 import useForesight from "../../hooks/useForesight"
+import ButtonStats from "../ui/ButtonStats"
+import { useReactivateAfter } from "../../stores/ButtonStateStore"
 
 type ForesightButtonProps = {
   registerOptions: ForesightRegisterOptionsWithoutElement
+  className?: string
+  children?: React.ReactNode
 }
 
-function ForesightButton({ registerOptions }: ForesightButtonProps) {
-  const { elementRef, state } = useForesight<HTMLButtonElement>(registerOptions)
+function ForesightButton({ registerOptions, className = "", children }: ForesightButtonProps) {
+  const reactivateAfter = useReactivateAfter()
+  const merged: ForesightRegisterOptionsWithoutElement = {
+    reactivateAfter,
+    ...registerOptions,
+  }
+  const { elementRef, state } = useForesight<HTMLButtonElement>(merged)
   const isPredicted = state?.isPredicted ?? false
-  const hitCount = state?.hitCount ?? 0
-  const hasError = state?.lastStatus === "error"
+
   return (
-    <button
-      ref={elementRef}
-      id={registerOptions.name}
-      data-predicted={isPredicted}
-      className={`flex flex-col justify-center items-center h-full w-full rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 ${
-        isPredicted ? "ring-2 ring-amber-400 bg-amber-100" : ""
-      }`}
-    >
-      <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
-      <span className="text-[10px] font-mono text-slate-500 mt-1">
-        hits:{hitCount} {isPredicted ? "· predicting" : ""}
-        {hasError ? " · err" : ""}
-      </span>
-    </button>
+    <>
+      <button
+        ref={elementRef}
+        id={registerOptions.name}
+        data-predicted={isPredicted}
+        className={`flex items-center justify-center text-slate-900 font-medium text-sm focus:outline-none ${
+          isPredicted ? "outline outline-2 outline-amber-500" : ""
+        } ${className}`}
+      >
+        {children ?? (
+          <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
+        )}
+      </button>
+      <ButtonStats state={state} />
+    </>
   )
 }
 

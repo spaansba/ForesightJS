@@ -285,7 +285,9 @@ export class ForesightManager {
     const current = internal.state
     let changed = false
     for (const key in patch) {
-      if (patch[key as keyof ForesightElementState] !== current[key as keyof ForesightElementState]) {
+      if (
+        patch[key as keyof ForesightElementState] !== current[key as keyof ForesightElementState]
+      ) {
         changed = true
         break
       }
@@ -408,10 +410,7 @@ export class ForesightManager {
     }
   }
 
-  private callCallback(
-    internal: ForesightElementInternal,
-    callbackHitType: CallbackHitType
-  ): void {
+  private callCallback(internal: ForesightElementInternal, callbackHitType: CallbackHitType): void {
     if (internal.state.isPredicted || !internal.state.isActive) {
       return
     }

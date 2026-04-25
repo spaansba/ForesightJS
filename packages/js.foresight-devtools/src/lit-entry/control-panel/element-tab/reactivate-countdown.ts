@@ -1,8 +1,4 @@
-import {
-  ForesightManager,
-  type ForesightElement,
-  type ForesightElementState,
-} from "js.foresight"
+import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 
@@ -84,8 +80,7 @@ export class ReactivateCountdown extends LitElement {
     // 2. Callback has completed at least once (has lastCompletedAt OR lastInvokedAt)
     // 3. reactivateAfter is not 0 (otherwise instant reactivation)
     const hasCallbackHistory = state.lastCompletedAt || state.lastInvokedAt
-    const shouldShowCountdown =
-      !state.isActive && hasCallbackHistory && state.reactivateAfter > 0
+    const shouldShowCountdown = !state.isActive && hasCallbackHistory && state.reactivateAfter > 0
 
     if (shouldShowCountdown) {
       this.startCountdown()

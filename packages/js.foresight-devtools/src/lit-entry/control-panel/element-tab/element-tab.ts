@@ -362,10 +362,10 @@ export class ElementTab extends LitElement {
   }
 
   private getSortedElements(): ElementListEntry[] {
-    const entries: ElementListEntry[] = Array.from(
-      this.elementListItems,
-      ([element, state]) => ({ element, state })
-    )
+    const entries: ElementListEntry[] = Array.from(this.elementListItems, ([element, state]) => ({
+      element,
+      state,
+    }))
 
     switch (this.sortOrder) {
       case "insertionOrder":

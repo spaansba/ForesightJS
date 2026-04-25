@@ -21,48 +21,73 @@ const { state: stateB } = useForesight({
 })
 
 onMounted(() => {
-  // Elementref has type safety meaning we can call exposed methods on TestComponent
   templateRef.value?.x()
 })
 </script>
 
 <template>
-  <div class="p-8">
-    <h1 class="text-3xl font-bold mb-6">Composable Test Page</h1>
-    <p class="mb-8 text-gray-600">Testing useForesight composable</p>
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <h1 class="text-xl font-semibold mb-1">Composable test page</h1>
+    <p class="mb-8 text-sm text-gray-600">Testing useForesight composable.</p>
 
-    <div class="space-y-6">
-      <!-- Simple usage -->
-      <div>
-        <h2 class="text-xl font-semibold mb-3">Simple Usage</h2>
+    <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">
+      <article class="flex flex-col items-start gap-3 w-56">
+        <h4 class="text-sm font-medium">Custom component ref</h4>
         <TestComponent
           ref="customComponent"
           :class="[
-            'px-6 py-3 text-white rounded transition-colors',
+            'flex items-center justify-center size-40 text-white text-sm font-medium',
             stateA?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
           ]"
         >
-          Hover to Predict
+          Hover to predict
         </TestComponent>
-        <pre class="mt-2 text-xs font-mono text-gray-700">{{ stateA }}</pre>
-      </div>
-    </div>
+        <dl
+          class="w-40 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
+        >
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">hits</dt>
+            <dd>{{ stateA?.hitCount ?? 0 }}</dd>
+          </div>
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">predicted</dt>
+            <dd>{{ stateA?.isPredicted ? "yes" : "no" }}</dd>
+          </div>
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">status</dt>
+            <dd>{{ stateA?.lastStatus ?? "—" }}</dd>
+          </div>
+        </dl>
+      </article>
 
-    <div class="space-y-6">
-      <!-- Simple usage -->
-      <div>
-        <h2 class="text-xl font-semibold mb-3">Simple Usage</h2>
+      <article class="flex flex-col items-start gap-3 w-56">
+        <h4 class="text-sm font-medium">HTML element ref</h4>
         <button
           ref="buttonRef"
           :class="[
-            'px-6 py-3 text-white rounded transition-colors',
+            'flex items-center justify-center size-40 text-white text-sm font-medium',
             stateB?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
           ]"
         >
-          hits: {{ stateB?.hitCount ?? 0 }}{{ stateB?.isPredicted ? " · predicting" : "" }}
+          Hover to predict
         </button>
-        <pre class="mt-2 text-xs font-mono text-gray-700">{{ stateB }}</pre>
-      </div>
-    </div>
+        <dl
+          class="w-40 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
+        >
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">hits</dt>
+            <dd>{{ stateB?.hitCount ?? 0 }}</dd>
+          </div>
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">predicted</dt>
+            <dd>{{ stateB?.isPredicted ? "yes" : "no" }}</dd>
+          </div>
+          <div class="flex justify-between px-2 py-1">
+            <dt class="text-gray-500">status</dt>
+            <dd>{{ stateB?.lastStatus ?? "—" }}</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
   </div>
 </template>

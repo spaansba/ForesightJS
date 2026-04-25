@@ -1,100 +1,56 @@
 import { Link } from "react-router-dom"
-import {
-  useButtonActions,
-  useIsRemoved,
-  useIsResized,
-  useIsVisible,
-} from "../stores/ButtonStateStore"
+import { useButtonActions, useReactivateAfter } from "../stores/ButtonStateStore"
 import { useDebug } from "../contexts/DebugContext"
 
 export const Navigation = () => {
   const actions = useButtonActions()
-  const isVisible = useIsVisible()
-  const isRemoved = useIsRemoved()
-  const isResized = useIsResized()
+  const reactivateAfter = useReactivateAfter()
   const { isDebugActive, toggleDebug } = useDebug()
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="text-left">
-            <h1 className="text-xl font-bold text-gray-900">
-              <Link to="/" className="hover:text-blue-600 transition-colors">
-                ForesightJS Dev
-              </Link>
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={actions.toggleVisibility}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isVisible
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              }`}
-            >
-              Visible: {isVisible ? "ON" : "OFF"}
-            </button>
-            <button
-              onClick={actions.toggleResized}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isResized
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              }`}
-            >
-              Resize: {isResized ? "ON" : "OFF"}
-            </button>
-            <button
-              onClick={actions.toggleRemoved}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isRemoved
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              }`}
-            >
-              Remove: {isRemoved ? "ON" : "OFF"}
-            </button>
-            <button
-              onClick={toggleDebug}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                isDebugActive
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-gray-600 hover:bg-gray-700 text-white"
-              }`}
-              title="⚠️ Warning: Debug mode may impact performance with many elements"
-            >
-              {isDebugActive ? "Debug ON" : "Debug OFF"}
-            </button>
-            <button
-              onClick={actions.resetAll}
-              className="px-3 py-1 rounded-md text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white transition-colors"
-            >
-              Reset
-            </button>
-            <div className="w-px h-6 bg-gray-300 mx-2"></div>
-            <Link
-              to="/"
-              className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
-            >
-              🏠 Home
-            </Link>
-            <Link
-              to="/images"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
-            >
-              🖼️ Images
-            </Link>
-            <Link
-              to="/mass"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
-            >
-              📊 Mass Test
-            </Link>
-          </div>
-        </div>
+    <header className="bg-white border-b border-gray-300 sticky top-0 z-10">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <Link to="/" className="text-base font-semibold text-gray-900">
+          ForesightJS Dev
+        </Link>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link to="/" className="text-gray-700 hover:text-gray-900">
+            Home
+          </Link>
+          <Link to="/images" className="text-gray-700 hover:text-gray-900">
+            Images
+          </Link>
+          <Link to="/mass" className="text-gray-700 hover:text-gray-900">
+            Mass test
+          </Link>
+          <span className="w-px h-5 bg-gray-300" />
+          <label className="flex items-center gap-1 text-xs text-gray-700">
+            Reactivate
+            <input
+              type="number"
+              min={0}
+              step={500}
+              value={reactivateAfter}
+              onChange={e => actions.setReactivateAfter(Number(e.target.value))}
+              className="w-20 px-1 py-0.5 text-xs border border-gray-400"
+            />
+            ms
+          </label>
+          <button
+            onClick={toggleDebug}
+            className="px-2 py-1 text-xs border border-gray-400 text-gray-800 hover:bg-gray-100"
+            title="Toggle ForesightDevtools control panel"
+          >
+            Debug: {isDebugActive ? "on" : "off"}
+          </button>
+          <button
+            onClick={actions.resetAll}
+            className="px-2 py-1 text-xs border border-gray-400 text-gray-800 hover:bg-gray-100"
+          >
+            Reset
+          </button>
+        </nav>
       </div>
-    </div>
+    </header>
   )
 }

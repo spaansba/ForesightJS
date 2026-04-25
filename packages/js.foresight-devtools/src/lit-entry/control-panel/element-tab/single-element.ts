@@ -193,9 +193,7 @@ export class SingleElement extends LitElement {
       return "callback inactive"
     }
 
-    const baseStatus = this.state.isIntersectingWithViewport
-      ? "in viewport"
-      : "not in viewport"
+    const baseStatus = this.state.isIntersectingWithViewport ? "in viewport" : "not in viewport"
     const deviceStatus = this.currentDeviceStrategy === "touch" ? " (touch device)" : ""
 
     return baseStatus + deviceStatus
