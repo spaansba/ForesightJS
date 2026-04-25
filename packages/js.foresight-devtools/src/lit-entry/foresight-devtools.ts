@@ -1,6 +1,13 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import type { DeepPartial, DevtoolsSettings, LogEvents } from "../types/types"
+import {
+  SHOW_KEYS,
+  type DeepPartial,
+  type DevtoolsSettings,
+  type LogEvents,
+  type ShowKey,
+  type ShowSettings,
+} from "../types/types"
 
 import "./control-panel/control-panel"
 import "./debug-overlay/debug-overlay"
@@ -20,9 +27,14 @@ export class ForesightDevtools extends LitElement {
   private static _instance: ForesightDevtools | null = null
 
   public devtoolsSettings: Required<DevtoolsSettings> = {
-    showDebugger: true,
+    show: {
+      controlPanel: true,
+      nameTags: true,
+      elementOverlays: true,
+      mouseTrajectory: true,
+      scrollTrajectory: true,
+    },
     isControlPanelDefaultMinimized: false,
-    showNameTags: true,
     sortElementList: "visibility",
     logging: {
       logLocation: "controlPanel",
@@ -92,22 +104,35 @@ export class ForesightDevtools extends LitElement {
     }
   }
 
+  private updateShowSetting<K extends ShowKey>(
+    key: K,
+    newValue: ShowSettings[K] | undefined
+  ): boolean {
+    if (this.shouldUpdateSetting(newValue, this.devtoolsSettings.show[key])) {
+      this.devtoolsSettings.show[key] = newValue!
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Set every flag inside `show` to the same value. Useful for "turn the
+   * entire devtools UI off" without listing each key.
+   */
+  public setAllShow(value: boolean) {
+    const show = Object.fromEntries(SHOW_KEYS.map(k => [k, value])) as ShowSettings
+    this.alterDevtoolsSettings({ show })
+  }
+
   public alterDevtoolsSettings(props?: DeepPartial<DevtoolsSettings>) {
     if (props === undefined) return
 
-    if (this.shouldUpdateSetting(props.showNameTags, this.devtoolsSettings.showNameTags)) {
-      this.devtoolsSettings.showNameTags = props.showNameTags!
-      this.dispatchEvent(
-        new CustomEvent("showNameTagsChanged", {
-          detail: { showNameTags: props.showNameTags! },
-          bubbles: true,
-        })
-      )
-    }
-
-    if (this.shouldUpdateSetting(props.showDebugger, this.devtoolsSettings.showDebugger)) {
-      this.devtoolsSettings.showDebugger = props.showDebugger!
-      this.requestUpdate()
+    if (props.show) {
+      let needsUpdate = false
+      for (const key of SHOW_KEYS) {
+        if (this.updateShowSetting(key, props.show[key])) needsUpdate = true
+      }
+      if (needsUpdate) this.requestUpdate()
     }
 
     if (
@@ -151,10 +176,19 @@ export class ForesightDevtools extends LitElement {
   }
 
   render() {
-    if (!this.isInitialized || !this.devtoolsSettings.showDebugger) {
+    if (!this.isInitialized) {
       return html``
     }
-    return html`<control-panel></control-panel> <debug-overlay></debug-overlay>`
+    const { show } = this.devtoolsSettings
+    return html`
+      ${show.controlPanel ? html`<control-panel></control-panel>` : ""}
+      <debug-overlay
+        .showElementOverlays=${show.elementOverlays}
+        .showMouseTrajectory=${show.mouseTrajectory}
+        .showScrollTrajectory=${show.scrollTrajectory}
+        .showNameTags=${show.nameTags}
+      ></debug-overlay>
+    `
   }
 }
 

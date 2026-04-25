@@ -31,9 +31,14 @@ ForesightManager.initialize({})
 
 // Initialize the development tools (all options are optional)
 ForesightDevtools.initialize({
-  showDebugger: true,
+  show: {
+    controlPanel: true, // show the floating control panel
+    nameTags: true, // show the element name above each registered element
+    elementOverlays: true, // show the hit-slop boundary around each registered element
+    mouseTrajectory: true, // show the predicted mouse trajectory line
+    scrollTrajectory: true, // show the predicted scroll trajectory line
+  },
   isControlPanelDefaultMinimized: false, // optional setting which allows you to minimize the control panel on default
-  showNameTags: true, // optional setting which shows the name of the element
   sortElementList: "visibility", // optional setting for how the elements in the control panel are sorted
   logging: {
     logLocation: "controlPanel", // Where to log the Foresight Events

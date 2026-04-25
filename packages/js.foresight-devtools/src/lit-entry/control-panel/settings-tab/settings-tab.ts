@@ -8,7 +8,13 @@ import { ForesightManager } from "js.foresight"
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
 
-import type { Corner, DevtoolsSettings } from "../../../types/types"
+import {
+  SHOW_KEYS,
+  type Corner,
+  type DevtoolsSettings,
+  type ShowKey,
+  type ShowSettings,
+} from "../../../types/types"
 import {
   MAX_POSITION_HISTORY_SIZE,
   MAX_SCROLL_MARGIN,
@@ -36,12 +42,12 @@ import { ForesightDevtools } from "../../foresight-devtools"
 
 // A helper type to represent a change in a Devtools setting
 type UpdatedDevtoolsSetting = {
-  [K in keyof DevtoolsSettings]: {
-    setting: K
-    newValue: DevtoolsSettings[K]
-    oldValue: DevtoolsSettings[K]
+  [K in ShowKey]: {
+    setting: `show.${K}`
+    newValue: ShowSettings[K]
+    oldValue: ShowSettings[K]
   }
-}[keyof DevtoolsSettings]
+}[ShowKey]
 
 @customElement("settings-tab")
 export class SettingsTab extends LitElement {
@@ -168,13 +174,20 @@ export class SettingsTab extends LitElement {
     const currentDevtoolsSettings = ForesightDevtools.instance.devtoolsSettings
     const currentManagerSettings = ForesightManager.instance.getManagerData.globalSettings
 
-    // Shallow copy is sufficient for settings objects
-    this.devtoolsSettings = Object.assign({}, currentDevtoolsSettings)
+    // Shallow copy is sufficient except for `show`, which we deep-copy so
+    // the live and initial snapshots can diverge as the user toggles flags.
+    this.devtoolsSettings = {
+      ...currentDevtoolsSettings,
+      show: { ...currentDevtoolsSettings.show },
+    }
     this.managerSettings = Object.assign({}, currentManagerSettings)
     this.currentCorner = this.getCurrentCorner()
 
     this.initialSettings = {
-      devtools: Object.assign({}, currentDevtoolsSettings),
+      devtools: {
+        ...currentDevtoolsSettings,
+        show: { ...currentDevtoolsSettings.show },
+      },
       manager: Object.assign({}, currentManagerSettings),
     }
   }
@@ -239,14 +252,12 @@ export class SettingsTab extends LitElement {
   private _checkDevtoolsSettingsChanges(
     changes: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[]
   ): void {
-    const devtoolsKeys: (keyof DevtoolsSettings)[] = ["showNameTags"]
-
-    for (const key of devtoolsKeys) {
-      const oldValue = this.initialSettings.devtools[key]
-      const newValue = this.devtoolsSettings[key]
+    for (const key of SHOW_KEYS) {
+      const oldValue = this.initialSettings.devtools.show[key]
+      const newValue = this.devtoolsSettings.show[key]
       if (oldValue !== newValue) {
         changes.push({
-          setting: key,
+          setting: `show.${key}`,
           oldValue,
           newValue,
         } as UpdatedDevtoolsSetting)
@@ -257,14 +268,16 @@ export class SettingsTab extends LitElement {
   private _handleDevtoolsSettingChange(e: CustomEvent<{ setting: string; value: boolean }>): void {
     const { setting, value } = e.detail
 
-    if (setting === "showNameTags") {
-      this.devtoolsSettings = {
-        ...this.devtoolsSettings,
-        showNameTags: value,
-      }
-      ForesightDevtools.instance.alterDevtoolsSettings({ showNameTags: value })
-      this._updateChangedSettings()
+    if (!setting.startsWith("show.")) return
+    const key = setting.slice("show.".length) as ShowKey
+    if (!SHOW_KEYS.includes(key)) return
+
+    this.devtoolsSettings = {
+      ...this.devtoolsSettings,
+      show: { ...this.devtoolsSettings.show, [key]: value },
     }
+    ForesightDevtools.instance.alterDevtoolsSettings({ show: { [key]: value } })
+    this._updateChangedSettings()
   }
 
   private _handleTouchDeviceStrategyChange = (value: string): void => {
@@ -475,10 +488,31 @@ export class SettingsTab extends LitElement {
             <div class="settings-group">
               <h4>Developer Tools</h4>
               <setting-item-checkbox
-                .isChecked=${this.devtoolsSettings.showNameTags}
+                .isChecked=${this.devtoolsSettings.show.nameTags}
                 header="Show Name Tags"
                 description="Display name tags over each registered element in the debugger"
-                setting="showNameTags"
+                setting="show.nameTags"
+                @setting-changed=${this._handleDevtoolsSettingChange}
+              ></setting-item-checkbox>
+              <setting-item-checkbox
+                .isChecked=${this.devtoolsSettings.show.elementOverlays}
+                header="Show Element Overlays"
+                description="Render hit-slop boundary overlays around registered elements. Note: turning this off also hides name tags."
+                setting="show.elementOverlays"
+                @setting-changed=${this._handleDevtoolsSettingChange}
+              ></setting-item-checkbox>
+              <setting-item-checkbox
+                .isChecked=${this.devtoolsSettings.show.mouseTrajectory}
+                header="Show Mouse Trajectory"
+                description="Render the predicted mouse trajectory line"
+                setting="show.mouseTrajectory"
+                @setting-changed=${this._handleDevtoolsSettingChange}
+              ></setting-item-checkbox>
+              <setting-item-checkbox
+                .isChecked=${this.devtoolsSettings.show.scrollTrajectory}
+                header="Show Scroll Trajectory"
+                description="Render the predicted scroll trajectory line"
+                setting="show.scrollTrajectory"
                 @setting-changed=${this._handleDevtoolsSettingChange}
               ></setting-item-checkbox>
               <setting-item

@@ -8,13 +8,55 @@ export type DeepPartial<T> = T extends object
     }
   : T
 
-export type DevtoolsSettings = {
+export type ShowSettings = {
   /**
-   * Whether to show visual debugging information on the screen.
-   * This includes overlays for elements, hit slop areas, the predicted mouse path and a debug control panel.
+   * Show the debugger control panel.
    * @default true
    */
-  showDebugger: boolean
+  controlPanel: boolean
+  /**
+   * Show name tags above each registered element.
+   * @default true
+   */
+  nameTags: boolean
+  /**
+   * Show element hit-slop overlays (the expanded boundary around each registered element).
+   *
+   * Note: turning this off also hides name tags, since the labels live inside
+   * the same overlay host.
+   *
+   * @default true
+   */
+  elementOverlays: boolean
+  /**
+   * Show the predicted mouse trajectory line.
+   * @default true
+   */
+  mouseTrajectory: boolean
+  /**
+   * Show the predicted scroll trajectory line.
+   * @default true
+   */
+  scrollTrajectory: boolean
+}
+
+export type ShowKey = keyof ShowSettings
+
+export const SHOW_KEYS = [
+  "controlPanel",
+  "nameTags",
+  "elementOverlays",
+  "mouseTrajectory",
+  "scrollTrajectory",
+] as const satisfies readonly ShowKey[]
+
+export type DevtoolsSettings = {
+  /**
+   * Granular visibility flags for the devtools UI.
+   *
+   * @link https://foresightjs.com/docs/getting_started/debug
+   */
+  show: ShowSettings
 
   /**
    * Determines if the debugger control panel should be initialized in a minimized state.
@@ -24,15 +66,6 @@ export type DevtoolsSettings = {
    * @default false
    */
   isControlPanelDefaultMinimized: boolean
-  /**
-   * Determines if name tags should be displayed visually above each registered element.
-   * This is a helpful visual aid for identifying which elements are being tracked.
-   *
-   * @link https://foresightjs.com/docs/getting_started/debug
-   *
-   * @default false
-   */
-  showNameTags: boolean
   /**
    * Specifies the default sorting order for the list of registered elements in the debugger panel.
    * - `'visibility'`: Sorts elements by their viewport visibility (visible elements first),
@@ -68,9 +101,7 @@ export type ForesightDevtoolsData = {
   settings: Readonly<DevtoolsSettings>
 }
 
-export type DebuggerBooleanSettingKeys = {
-  [K in keyof DevtoolsSettings]: Required<DevtoolsSettings>[K] extends boolean ? K : never
-}[keyof DevtoolsSettings]
+export type DebuggerBooleanSettingKeys = ShowKey
 
 export type ElementOverlays = {
   expandedOverlay: HTMLElement
