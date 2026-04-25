@@ -187,7 +187,7 @@ describe("ForesightManager", () => {
       const result = manager.register({ element, callback: vi.fn() })
 
       expect(result.isRegistered).toBe(false)
-      expect(getInternal(manager, element).registerCount).toBe(2)
+      expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
 
     it("should use element id as name when name not provided", () => {

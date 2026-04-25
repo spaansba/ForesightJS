@@ -105,6 +105,8 @@ export type ForesightElementState = {
   isPredicted: boolean
   /** Number of times the callback has fired for this element. */
   hitCount: number
+  /** Number of times this element has been (re)registered. */
+  registerCount: number
   /** Timestamp the callback was last invoked. */
   lastInvokedAt: number | undefined
   /** Timestamp the callback last completed. */
@@ -130,8 +132,6 @@ export type ForesightElementInternal = {
   element: ForesightElement
   /** User-supplied callback. */
   callback: ForesightCallback
-  /** Number of times this element has been registered (for debugging). */
-  registerCount: number
   /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
   /** Listeners notified whenever `state` is replaced. */

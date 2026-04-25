@@ -92,6 +92,7 @@ export function createElementInternal(
     isActive: true,
     isPredicted: false,
     hitCount: 0,
+    registerCount: 1,
     lastInvokedAt: undefined,
     lastCompletedAt: undefined,
     lastDurationMs: undefined,
@@ -104,7 +105,6 @@ export function createElementInternal(
     state,
     element,
     callback,
-    registerCount: 1,
     reactivateTimeoutId: undefined,
     subscribers: new Set(),
   }

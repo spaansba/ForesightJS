@@ -52,6 +52,7 @@ export class ForesightManager {
   private static manager: ForesightManager
 
   private elements: Map<ForesightElement, ForesightElementInternal> = new Map()
+  private stateView: Map<ForesightElement, ForesightElementState> = new Map()
   private checkableElements: Set<ForesightElementInternal> = new Set()
   private idCounter: number = 0
   private activeElementCount: number = 0
@@ -179,11 +180,7 @@ export class ForesightManager {
   }
 
   public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementState> {
-    const view = new Map<ForesightElement, ForesightElementState>()
-    for (const [element, internal] of this.elements) {
-      view.set(element, internal.state)
-    }
-    return view
+    return this.stateView
   }
 
   public register(options: ForesightRegisterNodeListOptions): ForesightRegisterResult[]
@@ -217,13 +214,15 @@ export class ForesightManager {
 
     const previousInternal = this.elements.get(options.element)
     if (previousInternal) {
-      previousInternal.registerCount++
+      const next = this.updateElementState(previousInternal, {
+        registerCount: previousInternal.state.registerCount + 1,
+      })
       return {
         isLimitedConnection,
         isTouchDevice,
         isRegistered: false,
         unregister: () => {},
-        state: previousInternal.state,
+        state: next,
         subscribe: this.makeSubscribe(previousInternal),
         getSnapshot: () => previousInternal.state,
       }
@@ -240,6 +239,7 @@ export class ForesightManager {
     )
 
     this.elements.set(options.element, internal)
+    this.stateView.set(options.element, internal.state)
     this.activeElementCount++
     this.updateCheckableStatus(internal)
     this.currentlyActiveHandler?.observeElement(options.element)
@@ -298,6 +298,9 @@ export class ForesightManager {
 
     const next = { ...current, ...patch }
     internal.state = next
+    if (this.elements.has(internal.element)) {
+      this.stateView.set(internal.element, next)
+    }
     for (const listener of internal.subscribers) {
       listener()
     }
@@ -338,6 +341,7 @@ export class ForesightManager {
     })
 
     this.elements.delete(element)
+    this.stateView.delete(element)
     this.checkableElements.delete(internal)
     internal.subscribers.clear()
 

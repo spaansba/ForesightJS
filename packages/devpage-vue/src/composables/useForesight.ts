@@ -25,6 +25,7 @@ export function useForesight<T extends HTMLElement | ComponentPublicInstance>(
   const registerResults = ref<ForesightRegisterResult | null>(null)
   const state = shallowRef<ForesightElementState | null>(null)
   let unsubscribe: (() => void) | null = null
+  let registeredElement: HTMLElement | null = null
 
   onMounted(() => {
     if (!templateRef.value) {
@@ -33,6 +34,7 @@ export function useForesight<T extends HTMLElement | ComponentPublicInstance>(
 
     const element: HTMLElement =
       templateRef.value instanceof HTMLElement ? templateRef.value : templateRef.value.$el
+    registeredElement = element
 
     const result = ForesightManager.instance.register({
       element,
@@ -47,6 +49,10 @@ export function useForesight<T extends HTMLElement | ComponentPublicInstance>(
 
   onScopeDispose(() => {
     unsubscribe?.()
+    if (registeredElement) {
+      ForesightManager.instance.unregister(registeredElement, "apiCall")
+      registeredElement = null
+    }
   })
 
   return {

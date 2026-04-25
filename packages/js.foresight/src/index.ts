@@ -3,7 +3,6 @@ export type { HasListenersFunction } from "./core/BaseForesightModule"
 export type {
   Rect as ForesightRect,
   ForesightElement,
-  ForesightElementInternal,
   ForesightElementState,
   ForesightRegisterResult,
   UpdateForsightManagerSettings,

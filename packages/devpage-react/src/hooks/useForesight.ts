@@ -13,18 +13,26 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
   options: ForesightRegisterOptionsWithoutElement
 ) {
   const elementRef = useRef<T>(null)
+  const optionsRef = useRef(options)
+  optionsRef.current = options
   const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
 
   useEffect(() => {
     if (!elementRef.current) return
+    const element = elementRef.current
 
     setRegisterResults(
       ForesightManager.instance.register({
-        element: elementRef.current,
-        ...options,
+        ...optionsRef.current,
+        element,
+        callback: state => optionsRef.current.callback(state),
       })
     )
-  }, [options])
+
+    return () => {
+      ForesightManager.instance.unregister(element, "apiCall")
+    }
+  }, [])
 
   const state = useSyncExternalStore<ForesightElementState | null>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,
