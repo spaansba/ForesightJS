@@ -11,7 +11,8 @@ import {
 } from "../constants"
 import type {
   CallbackHits,
-  ForesightElementData,
+  ForesightElementInternal,
+  ForesightElementState,
   ForesightManagerSettings,
   ForesightRegisterOptions,
   HitSlop,
@@ -64,43 +65,47 @@ export function createDefaultSettings(): ForesightManagerSettings {
 }
 
 /**
- * Creates element data from registration options.
- * This encapsulates all the logic for setting up a new registered element.
+ * Creates the internal record for a newly registered element, including the
+ * initial immutable state snapshot.
  */
-export function createElementData(
+export function createElementInternal(
   options: ForesightRegisterOptions,
   id: string,
   defaultHitSlop: Exclude<HitSlop, number>
-): ForesightElementData {
+): ForesightElementInternal {
   const { element, callback, hitSlop, name, meta, reactivateAfter } = options
 
   const initialRect = element.getBoundingClientRect()
   const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
 
-  return {
+  const state: ForesightElementState = {
     id,
-    element,
-    callback,
+    name: name || element.id || "unnamed",
+    meta: meta ?? {},
     elementBounds: {
       originalRect: initialRect,
       expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
       hitSlop: normalizedHitSlop,
     },
-    name: name || element.id || "unnamed",
     isIntersectingWithViewport: initialViewportState(initialRect),
+    isRegistered: true,
+    isActive: true,
+    isPredicted: false,
+    hitCount: 0,
+    lastInvokedAt: undefined,
+    lastCompletedAt: undefined,
+    lastDurationMs: undefined,
+    lastStatus: undefined,
+    lastError: null,
+    reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
+  }
+
+  return {
+    state,
+    element,
+    callback,
     registerCount: 1,
-    meta: meta ?? {},
-    callbackInfo: {
-      callbackFiredCount: 0,
-      lastCallbackInvokedAt: undefined,
-      lastCallbackCompletedAt: undefined,
-      lastCallbackRuntime: undefined,
-      lastCallbackStatus: undefined,
-      lastCallbackErrorMessage: undefined,
-      reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
-      isCallbackActive: true,
-      isRunningCallback: false,
-      reactivateTimeoutId: undefined,
-    },
+    reactivateTimeoutId: undefined,
+    subscribers: new Set(),
   }
 }

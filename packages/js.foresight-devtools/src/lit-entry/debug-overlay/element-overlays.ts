@@ -1,8 +1,8 @@
 import { LitElement, html, css, type PropertyValues } from "lit"
 import { customElement, state, query, property } from "lit/decorators.js"
 import {
-  type ForesightElementData,
   type ForesightElement,
+  type ForesightElementState,
   type CallbackHitType,
   ForesightManager,
 } from "js.foresight"
@@ -119,8 +119,8 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
-        if (e.elementData.isIntersectingWithViewport) {
-          this.createOrUpdateElementOverlay(e.elementData)
+        if (e.state.isIntersectingWithViewport) {
+          this.createOrUpdateElementOverlay(e.element, e.state)
         }
       },
       { signal }
@@ -128,15 +128,15 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
-        this.removeElementOverlay(e.elementData)
+        this.removeElementOverlay(e.element)
       },
       { signal }
     )
     ForesightManager.instance.addEventListener(
       "elementReactivated",
       (e: ElementReactivatedEvent) => {
-        if (e.elementData.isIntersectingWithViewport) {
-          this.createOrUpdateElementOverlay(e.elementData)
+        if (e.state.isIntersectingWithViewport) {
+          this.createOrUpdateElementOverlay(e.element, e.state)
         }
       },
       { signal }
@@ -144,12 +144,12 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementDataUpdated",
       (e: ElementDataUpdatedEvent) => {
-        if (e.updatedProps.includes("bounds") && e.elementData.callbackInfo.isCallbackActive) {
-          this.createOrUpdateElementOverlay(e.elementData)
+        if (e.updatedProps.includes("bounds") && e.state.isActive) {
+          this.createOrUpdateElementOverlay(e.element, e.state)
         }
         if (e.updatedProps.includes("visibility")) {
-          if (!e.elementData.isIntersectingWithViewport) {
-            this.removeElementOverlay(e.elementData)
+          if (!e.state.isIntersectingWithViewport) {
+            this.removeElementOverlay(e.element)
           }
         }
       },
@@ -158,15 +158,15 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
-        this.highlightElementCallback(e.elementData, e.hitType)
+        this.highlightElementCallback(e.element, e.hitType)
       },
       { signal }
     )
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
-        this.unhighlightElementCallback(e.elementData)
-        this.removeElementOverlay(e.elementData)
+        this.unhighlightElementCallback(e.element)
+        this.removeElementOverlay(e.element)
       },
       { signal }
     )
@@ -178,7 +178,7 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private createElementOverlays(elementData: ForesightElementData): ElementOverlay {
+  private createElementOverlays(element: ForesightElement): ElementOverlay {
     const expandedOverlay = document.createElement("div")
     expandedOverlay.className = "expanded-overlay"
     const nameLabel = document.createElement("div")
@@ -186,13 +186,13 @@ export class ElementOverlays extends LitElement {
     this.containerElement.appendChild(expandedOverlay)
     this.containerElement.appendChild(nameLabel)
     const overlays = { expandedOverlay, nameLabel }
-    this.overlayMap.set(elementData.element, overlays)
+    this.overlayMap.set(element, overlays)
     return overlays
   }
 
-  private updateElementOverlays(overlays: ElementOverlay, elementData: ForesightElementData) {
+  private updateElementOverlays(overlays: ElementOverlay, state: ForesightElementState) {
     const { expandedOverlay, nameLabel } = overlays
-    const { expandedRect } = elementData.elementBounds
+    const { expandedRect } = state.elementBounds
 
     const expandedWidth = expandedRect.right - expandedRect.left
     const expandedHeight = expandedRect.bottom - expandedRect.top
@@ -203,7 +203,7 @@ export class ElementOverlays extends LitElement {
     if (!this.showNameTags) {
       nameLabel.style.display = "none"
     } else {
-      nameLabel.textContent = elementData.name
+      nameLabel.textContent = state.name
       nameLabel.style.display = "block"
       nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${
         expandedRect.top - 25
@@ -211,23 +211,23 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private createOrUpdateElementOverlay(elementData: ForesightElementData) {
-    let overlays = this.overlayMap.get(elementData.element)
+  private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
+    let overlays = this.overlayMap.get(element)
     if (!overlays) {
-      overlays = this.createElementOverlays(elementData)
+      overlays = this.createElementOverlays(element)
     }
-    this.updateElementOverlays(overlays, elementData)
+    this.updateElementOverlays(overlays, state)
   }
 
-  private removeElementOverlay(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
+  private removeElementOverlay(element: ForesightElement) {
+    const overlays = this.overlayMap.get(element)
     if (overlays) {
       overlays.expandedOverlay.remove()
       overlays.nameLabel.remove()
-      this.overlayMap.delete(elementData.element)
+      this.overlayMap.delete(element)
     }
 
-    this.clearCallbackAnimationTimeout(elementData.element)
+    this.clearCallbackAnimationTimeout(element)
   }
 
   private clearCallbackAnimationTimeout(element: ForesightElement) {
@@ -238,12 +238,12 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private highlightElementCallback(elementData: ForesightElementData, hitType: CallbackHitType) {
-    const overlays = this.overlayMap.get(elementData.element)
+  private highlightElementCallback(element: ForesightElement, hitType: CallbackHitType) {
+    const overlays = this.overlayMap.get(element)
     if (!overlays) {
       return
     }
-    this.clearCallbackAnimationTimeout(elementData.element)
+    this.clearCallbackAnimationTimeout(element)
 
     switch (hitType.kind) {
       case "mouse":
@@ -264,18 +264,18 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private unhighlightElementCallback(elementData: ForesightElementData) {
-    const overlays = this.overlayMap.get(elementData.element)
+  private unhighlightElementCallback(element: ForesightElement) {
+    const overlays = this.overlayMap.get(element)
     if (!overlays) {
       return
     }
     const animationDelay = setTimeout(() => {
       overlays.expandedOverlay.classList.remove("callback-invoked")
-      this.callbackAnimations.delete(elementData.element)
+      this.callbackAnimations.delete(element)
     }, 400)
 
-    this.callbackAnimations.set(elementData.element, {
-      element: elementData.element,
+    this.callbackAnimations.set(element, {
+      element,
       timeoutId: animationDelay,
     })
   }

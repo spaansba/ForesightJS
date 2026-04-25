@@ -1,4 +1,8 @@
-import type { ForesightElementData, DeviceStrategyChangedEvent } from "js.foresight"
+import type {
+  DeviceStrategyChangedEvent,
+  ForesightElement,
+  ForesightElementState,
+} from "js.foresight"
 import { LitElement, html, css } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import "../base-tab/expandable-item"
@@ -116,8 +120,9 @@ export class SingleElement extends LitElement {
     `,
   ]
 
-  @property({ hasChanged: () => true }) elementData!: ForesightElementData
-  @property() isActive: boolean = false
+  @property({ attribute: false }) element!: ForesightElement
+  @property({ attribute: false, hasChanged: () => true }) state!: ForesightElementState
+  @property() isPredicting: boolean = false
   @property() isExpanded: boolean = false
   @property() onToggle: ((elementId: string) => void) | undefined
 
@@ -148,10 +153,10 @@ export class SingleElement extends LitElement {
   }
 
   private getBorderColor(): string {
-    if (this.isActive) {
+    if (this.isPredicting) {
       return "#ffeb3b"
     }
-    if (!this.elementData.callbackInfo.isCallbackActive) {
+    if (!this.state.isActive) {
       return "#999"
     }
 
@@ -161,14 +166,14 @@ export class SingleElement extends LitElement {
     }
 
     // Use green for desktop devices when active
-    return this.elementData.isIntersectingWithViewport ? "#4caf50" : "#666"
+    return this.state.isIntersectingWithViewport ? "#4caf50" : "#666"
   }
 
   private getStatusIndicatorClass(): string {
-    if (this.isActive) {
+    if (this.isPredicting) {
       return "prefetching"
     }
-    if (!this.elementData.callbackInfo.isCallbackActive) {
+    if (!this.state.isActive) {
       return "inactive"
     }
 
@@ -177,18 +182,18 @@ export class SingleElement extends LitElement {
       return "touch-device"
     }
 
-    return this.elementData.isIntersectingWithViewport ? "visible" : "hidden"
+    return this.state.isIntersectingWithViewport ? "visible" : "hidden"
   }
 
   private getStatusText(): string {
-    if (this.isActive) {
+    if (this.isPredicting) {
       return "callback active"
     }
-    if (!this.elementData.callbackInfo.isCallbackActive) {
+    if (!this.state.isActive) {
       return "callback inactive"
     }
 
-    const baseStatus = this.elementData.isIntersectingWithViewport
+    const baseStatus = this.state.isIntersectingWithViewport
       ? "in viewport"
       : "not in viewport"
     const deviceStatus = this.currentDeviceStrategy === "touch" ? " (touch device)" : ""
@@ -197,55 +202,47 @@ export class SingleElement extends LitElement {
   }
 
   private formatElementDetails(): string {
-    const elementData = this.elementData
-    const details = {
-      status: this.getStatusText(),
-      isIntersecting: elementData.isIntersectingWithViewport,
-      registerCount: elementData.registerCount,
-      hitSlop: {
-        top: elementData.elementBounds.hitSlop.top,
-        right: elementData.elementBounds.hitSlop.right,
-        bottom: elementData.elementBounds.hitSlop.bottom,
-        left: elementData.elementBounds.hitSlop.left,
-      },
-      callbackInfo: elementData.callbackInfo,
-      meta: this.elementData.meta,
-    }
-
-    return JSON.stringify(details, null, 2)
+    if (!this.isExpanded) return ""
+    const { elementBounds, ...rest } = this.state
+    return JSON.stringify(
+      { status: this.getStatusText(), ...rest, hitSlop: elementBounds.hitSlop },
+      null,
+      2
+    )
   }
 
   private handleUnregister = (e: MouseEvent) => {
     e.stopPropagation()
-    ForesightManager.instance.unregister(this.elementData.element, "devtools")
+    ForesightManager.instance.unregister(this.element, "devtools")
   }
 
   render() {
     // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
     const isNotVisible =
-      !this.elementData.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
+      !this.state.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
 
     return html`
       <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
         <expandable-item
           .borderColor=${this.getBorderColor()}
           .showCopyButton=${true}
-          .itemId=${this.elementData.id}
+          .itemId=${this.state.id}
           .isExpanded=${this.isExpanded}
           .onToggle=${this.onToggle}
         >
           <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
             <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
             <span
-              class="element-name ${this.isActive
+              class="element-name ${this.isPredicting
                 ? "callback-active"
-                : !this.elementData.callbackInfo.isCallbackActive
+                : !this.state.isActive
                   ? "callback-inactive"
                   : ""}"
             >
-              ${this.elementData.name || "unnamed"}
+              ${this.state.name || "unnamed"}
             </span>
-            <reactivate-countdown .elementData=${this.elementData}> </reactivate-countdown>
+            <reactivate-countdown .element=${this.element} .state=${this.state}>
+            </reactivate-countdown>
             <button
               class="unregister-button"
               @click="${this.handleUnregister}"

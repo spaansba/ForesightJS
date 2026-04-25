@@ -3,15 +3,21 @@ import { useForesight } from "../composables/useForesight"
 import { onMounted } from "vue"
 import TestComponent from "../components/TestComponent.vue"
 
-const { templateRef } = useForesight<InstanceType<typeof TestComponent>>({
+const fakePrefetch = async (label: string) => {
+  console.log(`${label} prefetch start`)
+  await new Promise(r => setTimeout(r, 1000))
+  console.log(`${label} prefetch done`)
+}
+
+const { templateRef, state: stateA } = useForesight<InstanceType<typeof TestComponent>>({
   templateRefKey: "customComponent",
-  callback: () => console.log("Simple Composable Button"),
+  callback: () => fakePrefetch("Simple Composable Button"),
   reactivateAfter: 2000,
 })
 
-useForesight({
+const { state: stateB } = useForesight({
   templateRefKey: "buttonRef",
-  callback: () => console.log("HTML Element Button"),
+  callback: () => fakePrefetch("HTML Element Button"),
 })
 
 onMounted(() => {
@@ -31,10 +37,14 @@ onMounted(() => {
         <h2 class="text-xl font-semibold mb-3">Simple Usage</h2>
         <TestComponent
           ref="customComponent"
-          class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+          :class="[
+            'px-6 py-3 text-white rounded transition-colors',
+            stateA?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
+          ]"
         >
           Hover to Predict
         </TestComponent>
+        <pre class="mt-2 text-xs font-mono text-gray-700">{{ stateA }}</pre>
       </div>
     </div>
 
@@ -44,8 +54,14 @@ onMounted(() => {
         <h2 class="text-xl font-semibold mb-3">Simple Usage</h2>
         <button
           ref="buttonRef"
-          class="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
-        />
+          :class="[
+            'px-6 py-3 text-white rounded transition-colors',
+            stateB?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
+          ]"
+        >
+          hits: {{ stateB?.hitCount ?? 0 }}{{ stateB?.isPredicted ? " · predicting" : "" }}
+        </button>
+        <pre class="mt-2 text-xs font-mono text-gray-700">{{ stateB }}</pre>
       </div>
     </div>
   </div>

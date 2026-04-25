@@ -1,8 +1,7 @@
 import type {
   CallbackHits,
   CallbackHitType,
-  ElementCallbackInfo,
-  ForesightElementData,
+  ForesightElementState,
   ForesightEvent,
   ForesightEventMap,
   ForesightManagerData,
@@ -31,7 +30,7 @@ interface ElementRegisteredPayload extends PayloadBase {
   type: "elementRegistered"
   name: string
   id: string
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   hitslop: HitSlop
   meta: Record<string, unknown>
 }
@@ -40,7 +39,7 @@ interface ElementUnregisteredEvent extends PayloadBase {
   type: "elementUnregistered"
   name: string
   id: string
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   meta: Record<string, unknown>
   wasLastRegisteredElement: boolean
 }
@@ -49,7 +48,7 @@ interface ElementReactivatedPayload extends PayloadBase {
   type: "elementReactivated"
   name: string
   id: string
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   meta: Record<string, unknown>
 }
 
@@ -57,7 +56,7 @@ interface ElementDataUpdatedPayload extends PayloadBase {
   type: "elementDataUpdated"
   name: string
   updatedProps: UpdatedDataPropertyNames[]
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   isIntersecting: boolean
   meta: Record<string, unknown>
 }
@@ -66,7 +65,7 @@ interface CallbackInvokedPayload extends PayloadBase {
   type: "callbackInvoked"
   name: string
   hitType: CallbackHitType
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   meta: Record<string, unknown>
 }
 
@@ -77,7 +76,7 @@ interface CallbackCompletedPayload extends PayloadBase {
   hitType: CallbackHitType
   status: "success" | "error" | undefined
   errorMessage: string | undefined | null
-  callbackInfo: ElementCallbackInfo
+  state: ForesightElementState
   wasLastActiveElement: boolean
   meta: Record<string, unknown>
 }
@@ -121,7 +120,7 @@ interface ManagerDataPayload extends PayloadBase {
   globalCallbackHits: CallbackHits
   eventListenerCount: Record<string, number>
   managerSettings: ForesightManagerSettings
-  registeredElements: Array<Omit<ForesightElementData, "element"> & { elementInfo: string }>
+  registeredElements: Array<ForesightElementState & { elementInfo: string }>
   loadedModules: ForesightManagerData["loadedModules"]
 }
 
@@ -147,13 +146,10 @@ export function safeSerializeManagerData(
   data.eventListeners.forEach((listeners, eventType) => {
     eventListeners[eventType] = listeners.length
   })
-  const registeredElements: Array<Omit<ForesightElementData, "element"> & { elementInfo: string }> =
-    []
-  data.registeredElements.forEach((elementData, element) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { element: _, ...elementDataWithoutElement } = elementData
+  const registeredElements: Array<ForesightElementState & { elementInfo: string }> = []
+  data.registeredElements.forEach((state, element) => {
     registeredElements.push({
-      ...elementDataWithoutElement,
+      ...state,
       elementInfo: `${element.id ? `#${element.id}` : ""}${
         element.className ? `.${element.className.replace(/\s+/g, ".")}` : ""
       }`,
@@ -194,88 +190,76 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
       case "elementRegistered":
         return {
           type: "elementRegistered",
-          name: event.elementData.name,
-          id: event.elementData.element.id || "",
-          callbackInfo: event.elementData.callbackInfo,
-          hitslop: event.elementData.elementBounds.hitSlop,
+          name: event.state.name,
+          id: event.element.id || "",
+          state: event.state,
+          hitslop: event.state.elementBounds.hitSlop,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          meta: event.elementData.meta,
-          // if its the 2nd+ time of the element registering, give the user a heads up in the summary
+          meta: event.state.meta,
           logId: logId,
-          summary:
-            event.elementData.registerCount === 1
-              ? event.elementData.name
-              : `${event.elementData.name} - ${getOrdinalSuffix(
-                  event.elementData.registerCount
-                )} time`,
+          summary: event.state.name,
         }
       case "elementReactivated":
         return {
           type: "elementReactivated",
-          name: event.elementData.name,
-          id: event.elementData.element.id || "",
-          callbackInfo: event.elementData.callbackInfo,
+          name: event.state.name,
+          id: event.element.id || "",
+          state: event.state,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          meta: event.elementData.meta,
-          // if its the 2nd+ time of the element registering, give the user a heads up in the summary
+          meta: event.state.meta,
           logId: logId,
-          summary:
-            event.elementData.registerCount === 1
-              ? event.elementData.name
-              : `${event.elementData.name} - ${getOrdinalSuffix(
-                  event.elementData.registerCount
-                )} time`,
+          summary: event.state.name,
         }
       case "elementUnregistered":
         return {
           type: "elementUnregistered",
-          name: event.elementData.name,
-          id: event.elementData.element.id || "",
-          meta: event.elementData.meta,
-          callbackInfo: event.elementData.callbackInfo,
+          name: event.state.name,
+          id: event.element.id || "",
+          meta: event.state.meta,
+          state: event.state,
           wasLastRegisteredElement: event.wasLastRegisteredElement,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
-          summary: `${event.elementData.name} - ${event.unregisterReason}`,
+          summary: `${event.state.name} - ${event.unregisterReason}`,
         }
       case "elementDataUpdated":
         return {
           type: "elementDataUpdated",
-          name: event.elementData.name,
+          name: event.state.name,
           updatedProps: event.updatedProps || [],
-          callbackInfo: event.elementData.callbackInfo,
-          isIntersecting: event.elementData.isIntersectingWithViewport,
-          meta: event.elementData.meta,
+          state: event.state,
+          isIntersecting: event.state.isIntersectingWithViewport,
+          meta: event.state.meta,
           localizedTimestamp: new Date().toLocaleTimeString(),
           logId: logId,
-          summary: `${event.elementData.name} - ${event.updatedProps.toString()}`,
+          summary: `${event.state.name} - ${event.updatedProps.toString()}`,
         }
       case "callbackInvoked":
         return {
           type: "callbackInvoked",
-          name: event.elementData.name,
+          name: event.state.name,
           hitType: event.hitType,
-          callbackInfo: event.elementData.callbackInfo,
-          meta: event.elementData.meta,
+          state: event.state,
+          meta: event.state.meta,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
-          summary: `${event.elementData.name} - ${event.hitType.kind}`,
+          summary: `${event.state.name} - ${event.hitType.kind}`,
         }
       case "callbackCompleted": {
-        const elapsed = formatElapsed(event.elementData.callbackInfo.lastCallbackRuntime || 0)
+        const elapsed = formatElapsed(event.state.lastDurationMs || 0)
         return {
           type: "callbackCompleted",
-          name: event.elementData.name,
+          name: event.state.name,
           hitType: event.hitType,
-          callbackInfo: event.elementData.callbackInfo,
-          meta: event.elementData.meta,
+          state: event.state,
+          meta: event.state.meta,
           wasLastActiveElement: event.wasLastActiveElement,
           elapsed: elapsed,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
-          status: event.elementData.callbackInfo.lastCallbackStatus,
-          errorMessage: event.elementData.callbackInfo.lastCallbackErrorMessage,
-          summary: `${event.elementData.name} - ${elapsed}`,
+          status: event.state.lastStatus,
+          errorMessage: event.state.lastError,
+          summary: `${event.state.name} - ${elapsed}`,
         }
       }
       case "mouseTrajectoryUpdate":
@@ -350,16 +334,4 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
  */
 function formatElapsed(ms: number): string {
   return `${(ms / 1000).toFixed(4)} s`
-}
-
-/**
- * Returns the ordinal suffix for a given number (e.g., "1st", "2nd", "3rd", "4th").
- *
- * @param {number} n The number to get the ordinal suffix for.
- * @returns {string} The ordinal suffix.
- */
-function getOrdinalSuffix(n: number): string {
-  const suffixes = ["th", "st", "nd", "rd"]
-  const v = n % 100
-  return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0])
 }

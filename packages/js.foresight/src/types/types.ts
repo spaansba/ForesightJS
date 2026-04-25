@@ -11,7 +11,7 @@ export type Rect = {
  * A callback function that is executed when a foresight interaction
  * (e.g., hover, trajectory hit) occurs on a registered element.
  */
-export type ForesightCallback = (element: ForesightElementData) => void
+export type ForesightCallback = (state: ForesightElementState) => void
 
 /**
  * Represents the HTML element that is being tracked by the ForesightManager.
@@ -67,80 +67,75 @@ export type ForesightRegisterResult = {
    * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
    */
   unregister: () => void
-  /** The data associated with the registered element. This will be null if the element was not registered */
-  elementData: ForesightElementData | null
+  /** The state snapshot for the registered element. Null if the element was not registered. */
+  state: ForesightElementState | null
+  /**
+   * Subscribe to state changes for this element. Returns an unsubscribe function.
+   * Designed to be consumed by React's `useSyncExternalStore` and Vue's `shallowRef` watchers.
+   */
+  subscribe: (listener: () => void) => () => void
+  /**
+   * Returns the current immutable state snapshot for this element.
+   * The reference is stable until something changes, so it is safe to use with `useSyncExternalStore`.
+   */
+  getSnapshot: () => ForesightElementState | null
 }
 
 /**
- * Represents the data associated with a registered foresight element.
+ * Immutable, flat state snapshot for a registered element.
+ * The reference is replaced (never mutated) on every change so it can be used
+ * with `useSyncExternalStore` and Vue's `shallowRef`.
  */
-export type ForesightElementData = Required<
-  Pick<ForesightRegisterOptions, "callback" | "name" | "meta">
-> & {
-  /** Unique identifier assigned during registration */
+export type ForesightElementState = {
+  /** Unique identifier assigned during registration. */
   id: string
+  /** Human-readable name for debugging. */
+  name: string
+  /** Arbitrary user-supplied metadata. */
+  meta: Record<string, unknown>
   /** The boundary information for the element. */
   elementBounds: ElementBounds
-  /**
-   * Is the element intersecting with the viewport, usefull to track which element we should observe or not
-   * Can be @undefined in the split second the element is registering
-   */
+  /** Whether the element is currently intersecting the viewport. */
   isIntersectingWithViewport: boolean
-  /**
-   * The element you registered
-   */
-  element: ForesightElement
-  /**
-   * For debugging, check if you are registering the same element multiple times.
-   */
-  registerCount: number
-  /**
-   * Callbackinfo for debugging purposes
-   */
-  callbackInfo: ElementCallbackInfo
+  /** Whether the element is currently being tracked by the manager. */
+  isRegistered: boolean
+  /** Whether the element is currently eligible to fire its callback. */
+  isActive: boolean
+  /** True between callbackInvoked and callbackCompleted. */
+  isPredicted: boolean
+  /** Number of times the callback has fired for this element. */
+  hitCount: number
+  /** Timestamp the callback was last invoked. */
+  lastInvokedAt: number | undefined
+  /** Timestamp the callback last completed. */
+  lastCompletedAt: number | undefined
+  /** Duration in ms of the last callback run. */
+  lastDurationMs: number | undefined
+  /** Status of the most recently completed callback. */
+  lastStatus: callbackStatus
+  /** Error message from the most recently completed callback. */
+  lastError: string | null
+  /** Time in ms after which the callback can be fired again (Infinity = never). */
+  reactivateAfter: number
 }
 
-export type ElementCallbackInfo = {
-  /**
-   * Number of times the callback has been fired for this element
-   */
-  callbackFiredCount: number
-  /**
-   * Timestamp when the callback was last fired
-   */
-  lastCallbackInvokedAt: number | undefined
-  /**
-   * Timestamp when the last callback was finished
-   */
-  lastCallbackCompletedAt: number | undefined
-  /**
-   * Time in milliseconds it took for the last callback to go from invoked to complete.
-   */
-  lastCallbackRuntime: number | undefined
-  /**
-   * Status of the last ran callback
-   */
-  lastCallbackStatus: callbackStatus
-  /**
-   * Last callback error message
-   */
-  lastCallbackErrorMessage: string | undefined | null
-  /**
-   * Time in milliseconds after which the callback can be fired again
-   */
-  reactivateAfter: number
-  /**
-   * Whether the callback is currently active (within stale time period)
-   */
-  isCallbackActive: boolean
-  /**
-   * If the element is currently running its callback
-   */
-  isRunningCallback: boolean
-  /**
-   * Timeout ID for the scheduled reactivation, if any
-   */
+/**
+ * Manager-internal record. Holds the public state ref plus internal-only fields.
+ * Not exposed to consumers.
+ */
+export type ForesightElementInternal = {
+  /** Current immutable public state ref. Replaced on every change. */
+  state: ForesightElementState
+  /** The DOM element this record tracks. */
+  element: ForesightElement
+  /** User-supplied callback. */
+  callback: ForesightCallback
+  /** Number of times this element has been registered (for debugging). */
+  registerCount: number
+  /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
+  /** Listeners notified whenever `state` is replaced. */
+  subscribers: Set<() => void>
 }
 
 export type callbackStatus = "error" | "success" | undefined
@@ -178,7 +173,7 @@ export type CallbackHitType =
  * Snapshot of the current ForesightManager state
  */
 export type ForesightManagerData = {
-  registeredElements: ReadonlyMap<ForesightElement, ForesightElementData>
+  registeredElements: ReadonlyMap<ForesightElement, ForesightElementState>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
@@ -423,17 +418,20 @@ export interface DeviceStrategyChangedEvent extends ForesightBaseEvent {
 
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
 }
 
 export interface ElementReactivatedEvent extends ForesightBaseEvent {
   type: "elementReactivated"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
 }
 
 export interface ElementUnregisteredEvent extends ForesightBaseEvent {
   type: "elementUnregistered"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
   unregisterReason: ElementUnregisteredReason
   wasLastRegisteredElement: boolean
 }
@@ -450,7 +448,8 @@ export type ElementUnregisteredReason = "disconnected" | "apiCall" | "devtools" 
 
 export interface ElementDataUpdatedEvent extends Omit<ForesightBaseEvent, "timestamp"> {
   type: "elementDataUpdated"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
   updatedProps: UpdatedDataPropertyNames[]
 }
 
@@ -458,13 +457,15 @@ export type UpdatedDataPropertyNames = "bounds" | "visibility"
 
 export interface CallbackInvokedEvent extends ForesightBaseEvent {
   type: "callbackInvoked"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
   hitType: CallbackHitType
 }
 
 interface CallbackCompletedEventBase extends ForesightBaseEvent {
   type: "callbackCompleted"
-  elementData: ForesightElementData
+  element: ForesightElement
+  state: ForesightElementState
   hitType: CallbackHitType
   elapsed: number
   wasLastActiveElement: boolean
@@ -472,7 +473,7 @@ interface CallbackCompletedEventBase extends ForesightBaseEvent {
 
 export type CallbackCompletedEvent = CallbackCompletedEventBase & {
   status: callbackStatus
-  errorMessage: string | undefined | null
+  errorMessage: string | null
 }
 
 export interface MouseTrajectoryUpdateEvent extends Omit<ForesightBaseEvent, "timestamp"> {

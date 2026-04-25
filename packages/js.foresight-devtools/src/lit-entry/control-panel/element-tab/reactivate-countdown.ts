@@ -1,4 +1,8 @@
-import { ForesightManager, type ForesightElementData } from "js.foresight"
+import {
+  ForesightManager,
+  type ForesightElement,
+  type ForesightElementState,
+} from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 
@@ -38,7 +42,8 @@ export class ReactivateCountdown extends LitElement {
     `,
   ]
 
-  @property({ hasChanged: () => true }) elementData!: ForesightElementData
+  @property({ attribute: false }) element!: ForesightElement
+  @property({ attribute: false, hasChanged: () => true }) state!: ForesightElementState
   @state()
   private remainingTime: number = 0
 
@@ -47,6 +52,7 @@ export class ReactivateCountdown extends LitElement {
 
   private intervalId: number | null = null
   private startTime: number = 0
+  private lastDisplayedTime: string = ""
 
   connectedCallback() {
     super.connectedCallback()
@@ -60,27 +66,26 @@ export class ReactivateCountdown extends LitElement {
 
   willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
     super.willUpdate(changedProperties)
-    if (changedProperties.has("elementData")) {
+    if (changedProperties.has("state")) {
       this.checkAndStartCountdown()
     }
   }
 
   private checkAndStartCountdown() {
-    const callbackInfo = this.elementData?.callbackInfo
+    const state = this.state
 
-    if (!callbackInfo) {
+    if (!state) {
       this.clearCountdown()
       return
     }
 
     // Show countdown when:
     // 1. Callback is inactive (not currently active)
-    // 2. Callback has completed at least once (has lastCallbackCompletedAt OR lastCallbackInvokedAt)
+    // 2. Callback has completed at least once (has lastCompletedAt OR lastInvokedAt)
     // 3. reactivateAfter is not 0 (otherwise instant reactivation)
-    const hasCallbackHistory =
-      callbackInfo.lastCallbackCompletedAt || callbackInfo.lastCallbackInvokedAt
+    const hasCallbackHistory = state.lastCompletedAt || state.lastInvokedAt
     const shouldShowCountdown =
-      !callbackInfo.isCallbackActive && hasCallbackHistory && callbackInfo.reactivateAfter > 0
+      !state.isActive && hasCallbackHistory && state.reactivateAfter > 0
 
     if (shouldShowCountdown) {
       this.startCountdown()
@@ -92,20 +97,20 @@ export class ReactivateCountdown extends LitElement {
   private startCountdown() {
     this.clearCountdown()
 
-    const callbackInfo = this.elementData?.callbackInfo
-    if (!callbackInfo) {
+    const state = this.state
+    if (!state) {
       return
     }
 
     this.isCountdownActive = true
 
-    if (callbackInfo.reactivateAfter === Infinity) {
+    if (state.reactivateAfter === Infinity) {
       this.remainingTime = Infinity
       return
     }
 
-    const reactivateAfter = callbackInfo.reactivateAfter
-    const startTime = callbackInfo.lastCallbackCompletedAt || callbackInfo.lastCallbackInvokedAt
+    const reactivateAfter = state.reactivateAfter
+    const startTime = state.lastCompletedAt || state.lastInvokedAt
 
     if (!startTime) {
       // No callback has been invoked yet, don't show countdown
@@ -118,11 +123,15 @@ export class ReactivateCountdown extends LitElement {
     const updateCountdown = () => {
       const elapsed = Date.now() - this.startTime
       const remaining = Math.max(0, reactivateAfter - elapsed)
+      const formatted = this.formatTime(remaining)
 
-      this.remainingTime = remaining
-      this.requestUpdate()
+      if (formatted !== this.lastDisplayedTime) {
+        this.lastDisplayedTime = formatted
+        this.remainingTime = remaining
+        this.requestUpdate()
+      }
 
-      if (remaining <= 0 || this.elementData.callbackInfo.isCallbackActive) {
+      if (remaining <= 0 || this.state.isActive) {
         this.clearCountdown()
       }
     }
@@ -141,11 +150,12 @@ export class ReactivateCountdown extends LitElement {
     }
     this.isCountdownActive = false
     this.remainingTime = 0
+    this.lastDisplayedTime = ""
   }
 
   private handleTimerClick = (e: MouseEvent) => {
     e.stopPropagation()
-    ForesightManager.instance.reactivate(this.elementData.element)
+    ForesightManager.instance.reactivate(this.element)
   }
 
   private formatTime(ms: number): string {
