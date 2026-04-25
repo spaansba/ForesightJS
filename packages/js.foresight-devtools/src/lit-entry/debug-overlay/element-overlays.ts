@@ -170,7 +170,6 @@ export class ElementOverlays extends LitElement {
       },
       { signal }
     )
-
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
