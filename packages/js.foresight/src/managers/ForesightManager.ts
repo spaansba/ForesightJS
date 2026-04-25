@@ -1,6 +1,7 @@
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
+  createBlockedSnapshot,
   createDefaultSettings,
   createElementInternal,
   createInitialCallbackHits,
@@ -198,17 +199,15 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isTouchDevice, isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
+    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
 
     if (!shouldRegister) {
+      const blocked = createBlockedSnapshot(isLimitedConnection)
       return {
-        isLimitedConnection,
-        isTouchDevice,
-        isRegistered: false,
+        ...blocked,
         unregister: () => {},
-        state: null,
         subscribe: () => NOOP_UNSUBSCRIBE,
-        getSnapshot: () => null,
+        getSnapshot: () => blocked,
       }
     }
 
@@ -218,11 +217,8 @@ export class ForesightManager {
         registerCount: previousInternal.state.registerCount + 1,
       })
       return {
-        isLimitedConnection,
-        isTouchDevice,
-        isRegistered: false,
+        ...next,
         unregister: () => {},
-        state: next,
         subscribe: this.makeSubscribe(previousInternal),
         getSnapshot: () => previousInternal.state,
       }
@@ -252,13 +248,10 @@ export class ForesightManager {
     })
 
     return {
-      isTouchDevice,
-      isLimitedConnection,
-      isRegistered: true,
+      ...internal.state,
       unregister: () => {
         this.unregister(options.element)
       },
-      state: internal.state,
       subscribe: this.makeSubscribe(internal),
       getSnapshot: () => internal.state,
     }

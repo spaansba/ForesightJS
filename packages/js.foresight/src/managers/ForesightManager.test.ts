@@ -186,7 +186,7 @@ describe("ForesightManager", () => {
       manager.register({ element, callback: vi.fn() })
       const result = manager.register({ element, callback: vi.fn() })
 
-      expect(result.isRegistered).toBe(false)
+      expect(result.registerCount).toBe(2)
       expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
 
@@ -919,7 +919,7 @@ describe("ForesightManager", () => {
         expect(Array.isArray(results)).toBe(true)
         results.forEach(result => {
           expect(result.isRegistered).toBe(true)
-          expect(result.state).not.toBeNull()
+          expect(result.id).not.toBe("")
         })
       })
 
@@ -939,7 +939,7 @@ describe("ForesightManager", () => {
 
         const results = manager.register({ element: nodeList, callback: vi.fn() })
 
-        const ids = results.map(r => r.state?.id)
+        const ids = results.map(result => result.id)
         const uniqueIds = new Set(ids)
         expect(uniqueIds.size).toBe(3)
       })

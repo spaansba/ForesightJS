@@ -54,33 +54,6 @@ export type ElementBounds = {
   hitSlop: Exclude<HitSlop, number>
 }
 
-export type ForesightRegisterResult = {
-  /** Whether the current device is a touch device. This is important as ForesightJS only works based on cursor movement. If the user is using a touch device you should handle prefetching differently
-   * @deprecated As of version 3.3, ForesightJS handles touch devices internally with dedicated touch strategies
-   */
-  isTouchDevice: boolean
-  /** Whether the user has connection limitations (network slower than minimum connection type (default: 3g) or data saver enabled) that should prevent prefetching */
-  isLimitedConnection: boolean
-  /** Whether ForesightJS will actively track this element. False if touch device or limited connection, true otherwise */
-  isRegistered: boolean
-  /** Function to unregister the element
-   * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
-   */
-  unregister: () => void
-  /** The state snapshot for the registered element. Null if the element was not registered. */
-  state: ForesightElementState | null
-  /**
-   * Subscribe to state changes for this element. Returns an unsubscribe function.
-   * Designed to be consumed by React's `useSyncExternalStore` and Vue's `shallowRef` watchers.
-   */
-  subscribe: (listener: () => void) => () => void
-  /**
-   * Returns the current immutable state snapshot for this element.
-   * The reference is stable until something changes, so it is safe to use with `useSyncExternalStore`.
-   */
-  getSnapshot: () => ForesightElementState | null
-}
-
 /**
  * Immutable, flat state snapshot for a registered element.
  * The reference is replaced (never mutated) on every change so it can be used
@@ -95,9 +68,11 @@ export type ForesightElementState = {
   meta: Record<string, unknown>
   /** The boundary information for the element. */
   elementBounds: ElementBounds
+  /** Whether the user has connection limitations (network slower than minimum connection type (default: 3g) or data saver enabled) that prevent prefetching. */
+  isLimitedConnection: boolean
   /** Whether the element is currently intersecting the viewport. */
   isIntersectingWithViewport: boolean
-  /** Whether the element is currently being tracked by the manager. */
+  /** Whether the element is currently being tracked by the manager. False on touch devices, limited connections, or after unregister. */
   isRegistered: boolean
   /** Whether the element is currently eligible to fire its callback. */
   isActive: boolean
@@ -119,6 +94,23 @@ export type ForesightElementState = {
   lastError: string | null
   /** Time in ms after which the callback can be fired again (Infinity = never). */
   reactivateAfter: number
+}
+
+export type ForesightRegisterResult = ForesightElementState & {
+  /** Function to unregister the element
+   * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
+   */
+  unregister: () => void
+  /**
+   * Subscribe to state changes for this element. Returns an unsubscribe function.
+   * Designed to be consumed by React's `useSyncExternalStore` and Vue's `shallowRef` watchers.
+   */
+  subscribe: (listener: () => void) => () => void
+  /**
+   * Returns the current immutable state snapshot for this element.
+   * The reference is stable until something changes, so it is safe to use with `useSyncExternalStore`.
+   */
+  getSnapshot: () => ForesightElementState
 }
 
 /**

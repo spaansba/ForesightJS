@@ -87,6 +87,7 @@ export function createElementInternal(
       expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
       hitSlop: normalizedHitSlop,
     },
+    isLimitedConnection: false,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
     isActive: true,
@@ -107,5 +108,36 @@ export function createElementInternal(
     callback,
     reactivateTimeoutId: undefined,
     subscribers: new Set(),
+  }
+}
+
+/**
+ * Sentinel snapshot returned when an element cannot be registered (touch device,
+ * limited connection, etc.). Reuses the flat state shape so consumers don't need
+ * to special-case `null`.
+ */
+export function createBlockedSnapshot(isLimitedConnection: boolean): ForesightElementState {
+  return {
+    id: "",
+    name: "",
+    meta: {},
+    elementBounds: {
+      originalRect: new DOMRectReadOnly(0, 0, 0, 0),
+      expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
+      hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
+    },
+    isLimitedConnection,
+    isIntersectingWithViewport: false,
+    isRegistered: false,
+    isActive: false,
+    isPredicted: false,
+    hitCount: 0,
+    registerCount: 0,
+    lastInvokedAt: undefined,
+    lastCompletedAt: undefined,
+    lastDurationMs: undefined,
+    lastStatus: undefined,
+    lastError: null,
+    reactivateAfter: DEFAULT_STALE_TIME,
   }
 }

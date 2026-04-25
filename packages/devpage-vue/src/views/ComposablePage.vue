@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForesight } from "../composables/useForesight"
-import { onMounted } from "vue"
+import { onMounted, watch } from "vue"
 import TestComponent from "../components/TestComponent.vue"
 
 const fakePrefetch = async (label: string) => {
@@ -14,6 +14,7 @@ const { templateRef, state: stateA } = useForesight<InstanceType<typeof TestComp
   callback: () => fakePrefetch("Simple Composable Button"),
   reactivateAfter: 2000,
 })
+
 
 const { state: stateB } = useForesight({
   templateRefKey: "buttonRef",
