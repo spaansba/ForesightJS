@@ -56,7 +56,7 @@ onMounted(() => {
           </div>
           <div class="flex justify-between px-2 py-1">
             <dt class="text-gray-500">status</dt>
-            <dd>{{ stateA?.lastStatus ?? "—" }}</dd>
+            <dd>{{ stateA?.status ?? "—" }}</dd>
           </div>
         </dl>
       </article>
@@ -85,7 +85,7 @@ onMounted(() => {
           </div>
           <div class="flex justify-between px-2 py-1">
             <dt class="text-gray-500">status</dt>
-            <dd>{{ stateB?.lastStatus ?? "—" }}</dd>
+            <dd>{{ stateB?.status ?? "—" }}</dd>
           </div>
         </dl>
       </article>

@@ -2,7 +2,7 @@ import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
   createBlockedSnapshot,
-  createDefaultSettings,
+  createDefaultManagerSettings,
   createElementInternal,
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
@@ -71,7 +71,7 @@ export class ForesightManager {
 
   private eventEmitter = new ForesightEventEmitter()
   private _globalCallbackHits: CallbackHits = createInitialCallbackHits()
-  private _globalSettings: ForesightManagerSettings = createDefaultSettings()
+  private _globalSettings: ForesightManagerSettings = createDefaultManagerSettings()
 
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
     if (initialSettings !== undefined) {
@@ -419,10 +419,12 @@ export class ForesightManager {
   private markElementAsRunning(internal: ForesightElementInternal): void {
     this.clearReactivateTimeout(internal)
     this.checkableElements.delete(internal)
+
+    internal.invokedAt = Date.now()
+
     this.updateElementState(internal, {
       isPredicted: true,
       hitCount: internal.state.hitCount + 1,
-      lastInvokedAt: Date.now(),
     })
   }
 
@@ -469,13 +471,13 @@ export class ForesightManager {
 
     this.currentlyActiveHandler?.unobserveElement(internal.element)
 
+    internal.completedAt = Date.now()
     const next = this.updateElementState(internal, {
       isPredicted: false,
       isActive: false,
-      lastCompletedAt: Date.now(),
-      lastDurationMs: elapsed,
-      lastStatus: status,
-      lastError: errorMessage,
+      durationMs: elapsed,
+      status,
+      error: errorMessage,
     })
 
     if (next.reactivateAfter !== Infinity) {

@@ -252,7 +252,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           summary: `${event.state.name} - ${event.hitType.kind}`,
         }
       case "callbackCompleted": {
-        const elapsed = formatElapsed(event.state.lastDurationMs || 0)
+        const elapsed = formatElapsed(event.state.durationMs || 0)
+
         return {
           type: "callbackCompleted",
           name: event.state.name,
@@ -263,8 +264,8 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
           elapsed: elapsed,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
-          status: event.state.lastStatus,
-          errorMessage: event.state.lastError,
+          status: event.state.status,
+          errorMessage: event.state.error,
           summary: `${event.state.name} - ${elapsed}`,
         }
       }

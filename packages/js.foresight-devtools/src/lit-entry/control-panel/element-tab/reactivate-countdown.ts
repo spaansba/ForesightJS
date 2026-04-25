@@ -77,9 +77,9 @@ export class ReactivateCountdown extends LitElement {
 
     // Show countdown when:
     // 1. Callback is inactive (not currently active)
-    // 2. Callback has completed at least once (has lastCompletedAt OR lastInvokedAt)
+    // 2. Callback has completed at least once (has a status)
     // 3. reactivateAfter is not 0 (otherwise instant reactivation)
-    const hasCallbackHistory = state.lastCompletedAt || state.lastInvokedAt
+    const hasCallbackHistory = state.status !== undefined
     const shouldShowCountdown = !state.isActive && hasCallbackHistory && state.reactivateAfter > 0
 
     if (shouldShowCountdown) {
@@ -105,15 +105,11 @@ export class ReactivateCountdown extends LitElement {
     }
 
     const reactivateAfter = state.reactivateAfter
-    const startTime = state.lastCompletedAt || state.lastInvokedAt
 
-    if (!startTime) {
-      // No callback has been invoked yet, don't show countdown
-      this.clearCountdown()
-      return
-    }
-
-    this.startTime = startTime
+    // Use the current time as the anchor; the countdown is (re)started each
+    // time the state transitions to inactive, which happens right after the
+    // callback completes.
+    this.startTime = Date.now()
 
     const updateCountdown = () => {
       const elapsed = Date.now() - this.startTime

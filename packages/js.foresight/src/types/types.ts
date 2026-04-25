@@ -82,16 +82,12 @@ export type ForesightElementState = {
   hitCount: number
   /** Number of times this element has been (re)registered. */
   registerCount: number
-  /** Timestamp the callback was last invoked. */
-  lastInvokedAt: number | undefined
-  /** Timestamp the callback last completed. */
-  lastCompletedAt: number | undefined
-  /** Duration in ms of the last callback run. */
-  lastDurationMs: number | undefined
+  /** Duration in ms of the most recent callback run. */
+  durationMs: number | undefined
   /** Status of the most recently completed callback. */
-  lastStatus: callbackStatus
+  status: callbackStatus
   /** Error message from the most recently completed callback. */
-  lastError: string | null
+  error: string | null
   /** Time in ms after which the callback can be fired again (Infinity = never). */
   reactivateAfter: number
 }
@@ -120,6 +116,10 @@ export type ForesightRegisterResult = ForesightElementState & {
 export type ForesightElementInternal = {
   /** Current immutable public state ref. Replaced on every change. */
   state: ForesightElementState
+  /** Timestamp the callback was last invoked. */
+  invokedAt: number | undefined
+  /** Timestamp the callback last completed. */
+  completedAt: number | undefined
   /** The DOM element this record tracks. */
   element: ForesightElement
   /** User-supplied callback. */

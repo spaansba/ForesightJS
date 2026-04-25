@@ -20,7 +20,7 @@ import type {
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
 import { initialViewportState } from "./initialViewportState"
 
-export function createInitialCallbackHits(): CallbackHits {
+export const createInitialCallbackHits = (): CallbackHits => {
   return {
     mouse: {
       hover: 0,
@@ -42,7 +42,7 @@ export function createInitialCallbackHits(): CallbackHits {
   }
 }
 
-export function createDefaultSettings(): ForesightManagerSettings {
+export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   return {
     debug: false,
     enableManagerLogging: false,
@@ -68,11 +68,11 @@ export function createDefaultSettings(): ForesightManagerSettings {
  * Creates the internal record for a newly registered element, including the
  * initial immutable state snapshot.
  */
-export function createElementInternal(
+export const createElementInternal = (
   options: ForesightRegisterOptions,
   id: string,
   defaultHitSlop: Exclude<HitSlop, number>
-): ForesightElementInternal {
+): ForesightElementInternal => {
   const { element, callback, hitSlop, name, meta, reactivateAfter } = options
 
   const initialRect = element.getBoundingClientRect()
@@ -94,16 +94,16 @@ export function createElementInternal(
     isPredicted: false,
     hitCount: 0,
     registerCount: 1,
-    lastInvokedAt: undefined,
-    lastCompletedAt: undefined,
-    lastDurationMs: undefined,
-    lastStatus: undefined,
-    lastError: null,
+    durationMs: undefined,
+    status: undefined,
+    error: null,
     reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
   }
 
   return {
     state,
+    invokedAt: undefined,
+    completedAt: undefined,
     element,
     callback,
     reactivateTimeoutId: undefined,
@@ -116,7 +116,7 @@ export function createElementInternal(
  * limited connection, etc.). Reuses the flat state shape so consumers don't need
  * to special-case `null`.
  */
-export function createBlockedSnapshot(isLimitedConnection: boolean): ForesightElementState {
+export const createBlockedSnapshot = (isLimitedConnection: boolean): ForesightElementState => {
   return {
     id: "",
     name: "",
@@ -133,11 +133,9 @@ export function createBlockedSnapshot(isLimitedConnection: boolean): ForesightEl
     isPredicted: false,
     hitCount: 0,
     registerCount: 0,
-    lastInvokedAt: undefined,
-    lastCompletedAt: undefined,
-    lastDurationMs: undefined,
-    lastStatus: undefined,
-    lastError: null,
+    durationMs: undefined,
+    status: undefined,
+    error: null,
     reactivateAfter: DEFAULT_STALE_TIME,
   }
 }
