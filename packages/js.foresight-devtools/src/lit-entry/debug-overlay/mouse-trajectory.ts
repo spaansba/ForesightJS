@@ -20,6 +20,10 @@ export class MouseTrajectory extends LitElement {
         display: block;
       }
 
+      :host([hidden]) {
+        display: none;
+      }
+
       .trajectory-line {
         display: none;
         position: absolute;

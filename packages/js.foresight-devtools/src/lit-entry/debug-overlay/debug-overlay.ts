@@ -1,5 +1,5 @@
 import { LitElement, css, html } from "lit"
-import { customElement, state } from "lit/decorators.js"
+import { customElement, property, state } from "lit/decorators.js"
 import "./element-overlays"
 import "./mouse-trajectory"
 import "./scroll-trajectory"
@@ -28,6 +28,11 @@ export class DebugOverlay extends LitElement {
   private _strategy: "mouse" | "touch" | "pen" =
     ForesightManager.instance.getManagerData.currentDeviceStrategy
 
+  @property({ type: Boolean }) showElementOverlays = true
+  @property({ type: Boolean }) showMouseTrajectory = true
+  @property({ type: Boolean }) showScrollTrajectory = true
+  @property({ type: Boolean }) showNameTags = true
+
   connectedCallback(): void {
     super.connectedCallback()
     this._abortController = new AbortController()
@@ -53,9 +58,12 @@ export class DebugOverlay extends LitElement {
       <div id="overlay-container">
         ${this._strategy === "mouse"
           ? html`
-              <mouse-trajectory></mouse-trajectory>
-              <scroll-trajectory></scroll-trajectory>
-              <element-overlays></element-overlays>
+              <mouse-trajectory ?hidden=${!this.showMouseTrajectory}></mouse-trajectory>
+              <scroll-trajectory ?hidden=${!this.showScrollTrajectory}></scroll-trajectory>
+              <element-overlays
+                ?hidden=${!this.showElementOverlays}
+                .showNameTags=${this.showNameTags}
+              ></element-overlays>
             `
           : ""}
       </div>

@@ -3,7 +3,9 @@ import { customElement, property } from "lit/decorators.js"
 
 import "./setting-item"
 import { ForesightManager, type ForesightManagerSettings } from "js.foresight"
-import type { DevtoolsSettings } from "../../../../types/types"
+import type { DevtoolsSettings, ShowKey } from "../../../../types/types"
+
+type ShowSettingKey = `show.${ShowKey}`
 @customElement("setting-item-checkbox")
 export class SettingItemCheckbox extends LitElement {
   static styles = [
@@ -56,15 +58,17 @@ export class SettingItemCheckbox extends LitElement {
   @property({ type: Boolean }) isChecked: boolean = false
   @property({ type: String }) header: string = ""
   @property({ type: String }) description: string = ""
-  @property({ type: String }) setting: keyof ForesightManagerSettings | keyof DevtoolsSettings =
-    "enableMousePrediction"
+  @property({ type: String }) setting:
+    | keyof ForesightManagerSettings
+    | keyof DevtoolsSettings
+    | ShowSettingKey = "enableMousePrediction"
 
   private handleCheckboxChange(event: Event): void {
     const target = event.target
     if (target instanceof HTMLInputElement) {
       const targetIsChecked = target.checked
 
-      if (this.setting === "showNameTags") {
+      if (String(this.setting).startsWith("show.")) {
         this.dispatchEvent(
           new CustomEvent("setting-changed", {
             detail: { setting: this.setting, value: targetIsChecked },

@@ -1,5 +1,5 @@
-import { LitElement, html, css } from "lit"
-import { customElement, state, query } from "lit/decorators.js"
+import { LitElement, html, css, type PropertyValues } from "lit"
+import { customElement, state, query, property } from "lit/decorators.js"
 import {
   type ForesightElementData,
   type ForesightElement,
@@ -14,7 +14,6 @@ import type {
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
 } from "js.foresight"
-import { ForesightDevtools } from "../foresight-devtools"
 interface ElementOverlay {
   expandedOverlay: HTMLElement
   nameLabel: HTMLElement
@@ -31,6 +30,8 @@ export class ElementOverlays extends LitElement {
   @state() private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
   @query("#overlays-container") private containerElement!: HTMLElement
 
+  @property({ type: Boolean }) showNameTags = true
+
   static styles = [
     css`
       :host {
@@ -41,6 +42,10 @@ export class ElementOverlays extends LitElement {
         height: 100%;
         pointer-events: none;
         z-index: 9999;
+      }
+
+      :host([hidden]) {
+        display: none;
       }
 
       .expanded-overlay {
@@ -166,14 +171,12 @@ export class ElementOverlays extends LitElement {
       { signal }
     )
 
-    document.addEventListener(
-      "showNameTagsChanged",
-      (e: Event) => {
-        const customEvent = e as CustomEvent<{ showNameTags: boolean }>
-        this.updateNameTagVisibility(customEvent.detail.showNameTags)
-      },
-      { signal }
-    )
+  }
+
+  protected willUpdate(changed: PropertyValues<this>): void {
+    if (changed.has("showNameTags")) {
+      this.updateNameTagVisibility(this.showNameTags)
+    }
   }
 
   private createElementOverlays(elementData: ForesightElementData): ElementOverlay {
@@ -198,7 +201,7 @@ export class ElementOverlays extends LitElement {
     expandedOverlay.style.height = `${expandedHeight}px`
     expandedOverlay.style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
 
-    if (!ForesightDevtools.instance.devtoolsSettings.showNameTags) {
+    if (!this.showNameTags) {
       nameLabel.style.display = "none"
     } else {
       nameLabel.textContent = elementData.name

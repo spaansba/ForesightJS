@@ -43,17 +43,19 @@ export function Hero() {
   })
 
   ForesightDevtools.initialize({
-    showDebugger:
-      typeof window !== "undefined" &&
-      !(window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
-    showNameTags: false,
+    show: {
+      controlPanel:
+        typeof window !== "undefined" &&
+        !(window.matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
+      nameTags: false,
+    },
     isControlPanelDefaultMinimized: true,
     logging: { callbackCompleted: true, callbackInvoked: true, managerSettingsChanged: true },
   })
 
   const turnOffDebugMode = () => {
     ForesightDevtools.instance.alterDevtoolsSettings({
-      showDebugger: false,
+      show: { controlPanel: false },
     })
   }
 

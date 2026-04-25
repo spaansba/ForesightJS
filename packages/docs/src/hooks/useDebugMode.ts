@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 function useDebugMode() {
   const [debugMode, setDebugMode] = useState(true)
   useEffect(() => {
-    ForesightDevtools.instance.alterDevtoolsSettings({ showDebugger: debugMode })
+    ForesightDevtools.instance.alterDevtoolsSettings({ show: { controlPanel: debugMode } })
   }, [debugMode])
 
   const toggleDebugMode = () => {

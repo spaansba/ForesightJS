@@ -11,21 +11,21 @@ const DebugContext = createContext<DebugContextType | undefined>(undefined)
 
 export function DebugProvider({ children }: { children: ReactNode }) {
   const [isDebugActive, setIsDebugActive] = useState(
-    () => ForesightDevtools.instance.devtoolsSettings.showDebugger
+    () => ForesightDevtools.instance.devtoolsSettings.show.controlPanel
   )
 
   const toggleDebug = useCallback(() => {
     const newState = !isDebugActive
     setIsDebugActive(newState)
     ForesightDevtools.instance.alterDevtoolsSettings({
-      showDebugger: newState,
+      show: { controlPanel: newState },
     })
   }, [isDebugActive])
 
   const setDebugMode = useCallback((enabled: boolean) => {
     setIsDebugActive(enabled)
     ForesightDevtools.instance.alterDevtoolsSettings({
-      showDebugger: enabled,
+      show: { controlPanel: enabled },
     })
   }, [])
 

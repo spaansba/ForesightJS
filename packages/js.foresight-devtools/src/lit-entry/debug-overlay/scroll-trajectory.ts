@@ -17,6 +17,10 @@ export class ScrollTrajectory extends LitElement {
         display: block;
       }
 
+      :host([hidden]) {
+        display: none;
+      }
+
       .scroll-trajectory-line {
         display: none;
         position: absolute;
