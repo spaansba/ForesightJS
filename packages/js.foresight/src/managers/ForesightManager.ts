@@ -41,9 +41,9 @@ const NOOP_UNSUBSCRIBE = () => {}
  * - Tracking mouse movements and predicting future cursor positions.
  * - Detecting when a predicted trajectory intersects with a registered element's bounds.
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
- * - Optionally unregistering elements after their callback is triggered.
+ * - Deactivating elements after their callback completes, with optional reactivation via `reactivateAfter`.
  * - Handling global settings for prediction behavior (e.g., history size, prediction time).
- * - Automatically updating element bounds on resize using {@link ResizeObserver}.
+ * - Delegating element bounds observation to device handlers ({@link DesktopHandler}, {@link TouchDeviceHandler}).
  * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
  * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
  *
