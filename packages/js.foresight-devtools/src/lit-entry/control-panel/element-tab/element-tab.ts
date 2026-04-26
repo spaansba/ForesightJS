@@ -12,7 +12,9 @@ import type {
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
 } from "js.foresight"
-import { ForesightManager, type ForesightElement, type ForesightElementData } from "js.foresight"
+import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
+
+type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
 import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 import { ForesightDevtools } from "../../foresight-devtools"
@@ -93,18 +95,17 @@ export class ElementTab extends LitElement {
 
   @state() private sortDropdown: DropdownOption[]
   @state() private sortOrder: SortElementList
-  @state() private elementListItems: Map<ForesightElement, ForesightElementData> = new Map()
+  @state() private elementListItems: Map<ForesightElement, ForesightElementState> = new Map()
   @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
-  @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
   private _abortController: AbortController | null = null
-  private _pendingElementUpdates: Map<ForesightElement, ForesightElementData> = new Map()
+  private _pendingElementUpdates: Map<ForesightElement, ForesightElementState> = new Map()
   private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
   // Cached sorted element lists to avoid repeated filtering in render
-  private _cachedActiveElements: ForesightElementData[] = []
-  private _cachedInactiveElements: ForesightElementData[] = []
+  private _cachedActiveElements: ElementListEntry[] = []
+  private _cachedInactiveElements: ElementListEntry[] = []
   private _elementsCacheDirty = true
 
   constructor() {
@@ -219,7 +220,7 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
-        this.elementListItems.set(e.elementData.element, e.elementData)
+        this.elementListItems.set(e.element, e.state)
         this._elementsCacheDirty = true
       },
       { signal }
@@ -228,10 +229,9 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementDataUpdated",
       (e: ElementDataUpdatedEvent) => {
-        const existingElementData = this.elementListItems.get(e.elementData.element)
-        if (existingElementData) {
+        if (this.elementListItems.has(e.element)) {
           // Batch updates and debounce to avoid excessive re-renders during scroll
-          this._pendingElementUpdates.set(e.elementData.element, e.elementData)
+          this._pendingElementUpdates.set(e.element, e.state)
           this._scheduleDebouncedUpdate()
         }
       },
@@ -241,12 +241,8 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementReactivated",
       (e: ElementReactivatedEvent) => {
-        const existingElementData = this.elementListItems.get(e.elementData.element)
-        if (existingElementData) {
-          this.elementListItems.set(e.elementData.element, e.elementData)
-          this._elementsCacheDirty = true
-          this.requestUpdate()
-        }
+        if (!this.applyStateUpdate(e.element, e.state)) return
+        this.requestUpdate()
       },
       { signal }
     )
@@ -254,11 +250,10 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
-        this.elementListItems.delete(e.elementData.element)
+        this.elementListItems.delete(e.element)
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
-        this.runningCallbacks.delete(e.elementData.element)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -268,11 +263,7 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
-        const existingElementData = this.elementListItems.get(e.elementData.element)
-        if (existingElementData) {
-          this.elementListItems.set(e.elementData.element, e.elementData)
-        }
-        this.runningCallbacks.add(e.elementData.element)
+        this.applyStateUpdate(e.element, e.state)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -282,17 +273,20 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
-        const existingElementData = this.elementListItems.get(e.elementData.element)
-        if (existingElementData) {
-          this.elementListItems.set(e.elementData.element, e.elementData)
-        }
+        this.applyStateUpdate(e.element, e.state)
         this.handleCallbackCompleted(e.hitType)
-        this.runningCallbacks.delete(e.elementData.element)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
       { signal }
     )
+  }
+
+  private applyStateUpdate(element: ForesightElement, state: ForesightElementState): boolean {
+    if (!this.elementListItems.has(element)) return false
+    this.elementListItems.set(element, state)
+    this._elementsCacheDirty = true
+    return true
   }
 
   disconnectedCallback() {
@@ -325,8 +319,8 @@ export class ElementTab extends LitElement {
     }
 
     // Apply all pending updates in one batch
-    for (const [element, elementData] of this._pendingElementUpdates) {
-      this.elementListItems.set(element, elementData)
+    for (const [element, state] of this._pendingElementUpdates) {
+      this.elementListItems.set(element, state)
     }
     this._pendingElementUpdates.clear()
     this._elementsCacheDirty = true
@@ -363,24 +357,27 @@ export class ElementTab extends LitElement {
     this.requestUpdate()
   }
 
-  private getSortedElements(): ForesightElementData[] {
-    const elementsData = Array.from(this.elementListItems.values())
+  private getSortedElements(): ElementListEntry[] {
+    const entries: ElementListEntry[] = Array.from(this.elementListItems, ([element, state]) => ({
+      element,
+      state,
+    }))
 
     switch (this.sortOrder) {
       case "insertionOrder":
-        return elementsData
+        return entries
       case "documentOrder":
-        return elementsData.sort(this.sortByDocumentPosition)
+        return entries.sort(this.sortByDocumentPosition)
       case "visibility":
-        return elementsData.sort((a: ForesightElementData, b: ForesightElementData) => {
-          if (a.isIntersectingWithViewport !== b.isIntersectingWithViewport) {
-            return a.isIntersectingWithViewport ? -1 : 1
+        return entries.sort((a, b) => {
+          if (a.state.isIntersectingWithViewport !== b.state.isIntersectingWithViewport) {
+            return a.state.isIntersectingWithViewport ? -1 : 1
           }
           return this.sortByDocumentPosition(a, b)
         })
       default:
         this.sortOrder satisfies never
-        return elementsData
+        return entries
     }
   }
 
@@ -390,24 +387,24 @@ export class ElementTab extends LitElement {
     }
 
     const sorted = this.getSortedElements()
-    this._cachedActiveElements = sorted.filter(data => data.callbackInfo.isCallbackActive)
-    this._cachedInactiveElements = sorted.filter(data => !data.callbackInfo.isCallbackActive)
+    this._cachedActiveElements = sorted.filter(entry => entry.state.isActive)
+    this._cachedInactiveElements = sorted.filter(entry => !entry.state.isActive)
     this._elementsCacheDirty = false
   }
 
-  private get activeElements(): ForesightElementData[] {
+  private get activeElements(): ElementListEntry[] {
     this._recomputeElementsCache()
 
     return this._cachedActiveElements
   }
 
-  private get inactiveElements(): ForesightElementData[] {
+  private get inactiveElements(): ElementListEntry[] {
     this._recomputeElementsCache()
 
     return this._cachedInactiveElements
   }
 
-  private sortByDocumentPosition = (a: ForesightElementData, b: ForesightElementData) => {
+  private sortByDocumentPosition = (a: ElementListEntry, b: ElementListEntry) => {
     const position = a.element.compareDocumentPosition(b.element)
     if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
     if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
@@ -446,12 +443,12 @@ export class ElementTab extends LitElement {
                   Active Elements (${this.activeElements.length})
                 </h3>
                 ${!this.activeSectionCollapsed
-                  ? map(this.activeElements, elementData => {
+                  ? map(this.activeElements, entry => {
                       return html`
                         <single-element
-                          .elementData=${elementData}
-                          .isActive=${this.runningCallbacks.has(elementData.element)}
-                          .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                          .element=${entry.element}
+                          .state=${entry.state}
+                          .isExpanded=${this.expandedElementIds.has(entry.state.id)}
                           .onToggle=${this.handleElementToggle}
                         >
                         </single-element>
@@ -475,12 +472,12 @@ export class ElementTab extends LitElement {
                   Inactive Elements (${this.inactiveElements.length})
                 </h3>
                 ${!this.inactiveSectionCollapsed
-                  ? map(this.inactiveElements, elementData => {
+                  ? map(this.inactiveElements, entry => {
                       return html`
                         <single-element
-                          .elementData=${elementData}
-                          .isActive=${this.runningCallbacks.has(elementData.element)}
-                          .isExpanded=${this.expandedElementIds.has(elementData.id)}
+                          .element=${entry.element}
+                          .state=${entry.state}
+                          .isExpanded=${this.expandedElementIds.has(entry.state.id)}
                           .onToggle=${this.handleElementToggle}
                         >
                         </single-element>

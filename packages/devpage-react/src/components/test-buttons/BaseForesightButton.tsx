@@ -1,20 +1,39 @@
 import type { ForesightRegisterOptionsWithoutElement } from "js.foresight"
 import useForesight from "../../hooks/useForesight"
+import ButtonStats from "../ui/ButtonStats"
+import { useReactivateAfter } from "../../stores/ButtonStateStore"
 
 type ForesightButtonProps = {
   registerOptions: ForesightRegisterOptionsWithoutElement
+  className?: string
+  children?: React.ReactNode
 }
 
-function ForesightButton({ registerOptions }: ForesightButtonProps) {
-  const { elementRef } = useForesight<HTMLButtonElement>(registerOptions)
+function ForesightButton({ registerOptions, className = "", children }: ForesightButtonProps) {
+  const reactivateAfter = useReactivateAfter()
+  const merged: ForesightRegisterOptionsWithoutElement = {
+    reactivateAfter,
+    ...registerOptions,
+  }
+  const { elementRef, state } = useForesight<HTMLButtonElement>(merged)
+  const isPredicted = state?.isPredicted ?? false
+
   return (
-    <button
-      ref={elementRef}
-      id={registerOptions.name}
-      className="flex justify-center items-center h-full w-full rounded-lg text-slate-800 font-semibold text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
-    >
-      <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
-    </button>
+    <>
+      <button
+        ref={elementRef}
+        id={registerOptions.name}
+        data-predicted={isPredicted}
+        className={`flex items-center justify-center text-slate-900 font-medium text-sm focus:outline-none ${
+          isPredicted ? "outline outline-2 outline-amber-500" : ""
+        } ${className}`}
+      >
+        {children ?? (
+          <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
+        )}
+      </button>
+      <ButtonStats state={state} />
+    </>
   )
 }
 

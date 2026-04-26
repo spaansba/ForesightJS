@@ -58,20 +58,17 @@ export class MousePredictor extends BaseForesightModule {
     const enablePrediction = this.settings.enableMousePrediction
     const currentPoint = this.trajectoryPositions.currentPoint
 
-    for (const currentData of this.elements.values()) {
-      if (
-        !currentData.isIntersectingWithViewport ||
-        !currentData.callbackInfo.isCallbackActive ||
-        currentData.callbackInfo.isRunningCallback
-      ) {
+    for (const internal of this.elements.values()) {
+      const state = internal.state
+      if (!state.isIntersectingWithViewport || !state.isActive || state.isPredicted) {
         continue
       }
 
-      const expandedRect = currentData.elementBounds.expandedRect
+      const expandedRect = state.elementBounds.expandedRect
 
       if (!enablePrediction) {
         if (isPointInRectangle(currentPoint, expandedRect)) {
-          this.callCallback(currentData, { kind: "mouse", subType: "hover" })
+          this.callCallback(internal, { kind: "mouse", subType: "hover" })
           return
         }
 
@@ -83,7 +80,7 @@ export class MousePredictor extends BaseForesightModule {
           expandedRect
         )
       ) {
-        this.callCallback(currentData, { kind: "mouse", subType: "trajectory" })
+        this.callCallback(internal, { kind: "mouse", subType: "trajectory" })
       }
     }
 

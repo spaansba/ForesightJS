@@ -2,7 +2,7 @@ import { getScrollDirection } from "../helpers/getScrollDirection"
 import { lineSegmentIntersectsRect } from "../helpers/lineSegmentIntersectsRect"
 import { predictNextScrollPosition } from "../helpers/predictNextScrollPosition"
 import type {
-  ForesightElementData,
+  ForesightElementInternal,
   Point,
   ScrollDirection,
   ScrollTrajectoryUpdateEvent,
@@ -41,18 +41,15 @@ export class ScrollPredictor extends BaseForesightModule {
     this.predictedScrollPoint = null
   }
 
-  public handleScrollPrefetch(elementData: ForesightElementData, newRect: DOMRect): void {
-    if (
-      !elementData.isIntersectingWithViewport ||
-      elementData.callbackInfo.isRunningCallback ||
-      !elementData.callbackInfo.isCallbackActive
-    ) {
+  public handleScrollPrefetch(entry: ForesightElementInternal, newRect: DOMRect): void {
+    const state = entry.state
+    if (!state.isIntersectingWithViewport || state.isPredicted || !state.isActive) {
       return
     }
 
     // ONCE per handlePositionChange batch we decide what the scroll direction is
     this.scrollDirection =
-      this.scrollDirection ?? getScrollDirection(elementData.elementBounds.originalRect, newRect)
+      this.scrollDirection ?? getScrollDirection(state.elementBounds.originalRect, newRect)
 
     if (this.scrollDirection === "none") {
       return
@@ -72,10 +69,10 @@ export class ScrollPredictor extends BaseForesightModule {
       lineSegmentIntersectsRect(
         this.trajectoryPositions.currentPoint,
         this.predictedScrollPoint,
-        elementData.elementBounds.expandedRect
+        state.elementBounds.expandedRect
       )
     ) {
-      this.callCallback(elementData, {
+      this.callCallback(entry, {
         kind: "scroll",
         subType: this.scrollDirection,
       })

@@ -11,7 +11,8 @@ import {
 } from "../constants"
 import type {
   CallbackHits,
-  ForesightElementData,
+  ForesightElementInternal,
+  ForesightElementState,
   ForesightManagerSettings,
   ForesightRegisterOptions,
   HitSlop,
@@ -19,7 +20,7 @@ import type {
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
 import { initialViewportState } from "./initialViewportState"
 
-export function createInitialCallbackHits(): CallbackHits {
+export const createInitialCallbackHits = (): CallbackHits => {
   return {
     mouse: {
       hover: 0,
@@ -41,7 +42,7 @@ export function createInitialCallbackHits(): CallbackHits {
   }
 }
 
-export function createDefaultSettings(): ForesightManagerSettings {
+export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   return {
     debug: false,
     enableManagerLogging: false,
@@ -64,43 +65,79 @@ export function createDefaultSettings(): ForesightManagerSettings {
 }
 
 /**
- * Creates element data from registration options.
- * This encapsulates all the logic for setting up a new registered element.
+ * Creates the internal record for a newly registered element, including the
+ * initial immutable state snapshot.
  */
-export function createElementData(
+export const createElementInternal = (
   options: ForesightRegisterOptions,
   id: string,
   defaultHitSlop: Exclude<HitSlop, number>
-): ForesightElementData {
+): ForesightElementInternal => {
   const { element, callback, hitSlop, name, meta, reactivateAfter } = options
 
   const initialRect = element.getBoundingClientRect()
   const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
 
-  return {
+  const state: ForesightElementState = {
     id,
-    element,
-    callback,
+    name: name || element.id || "unnamed",
+    meta: meta ?? {},
     elementBounds: {
       originalRect: initialRect,
       expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
       hitSlop: normalizedHitSlop,
     },
-    name: name || element.id || "unnamed",
+    isLimitedConnection: false,
     isIntersectingWithViewport: initialViewportState(initialRect),
+    isRegistered: true,
+    isActive: true,
+    isPredicted: false,
+    isCallbackRunning: false,
+    hitCount: 0,
     registerCount: 1,
-    meta: meta ?? {},
-    callbackInfo: {
-      callbackFiredCount: 0,
-      lastCallbackInvokedAt: undefined,
-      lastCallbackCompletedAt: undefined,
-      lastCallbackRuntime: undefined,
-      lastCallbackStatus: undefined,
-      lastCallbackErrorMessage: undefined,
-      reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
-      isCallbackActive: true,
-      isRunningCallback: false,
-      reactivateTimeoutId: undefined,
+    durationMs: undefined,
+    status: undefined,
+    error: null,
+    reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
+  }
+
+  return {
+    state,
+    invokedAt: undefined,
+    completedAt: undefined,
+    element,
+    callback,
+    reactivateTimeoutId: undefined,
+    subscribers: new Set(),
+  }
+}
+
+/**
+ * Sentinel snapshot returned when an element cannot be registered (touch device,
+ * limited connection, etc.). Reuses the flat state shape so consumers don't need
+ * to special-case `null`.
+ */
+export const createBlockedSnapshot = (isLimitedConnection: boolean): ForesightElementState => {
+  return {
+    id: "",
+    name: "",
+    meta: {},
+    elementBounds: {
+      originalRect: new DOMRectReadOnly(0, 0, 0, 0),
+      expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
+      hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     },
+    isLimitedConnection,
+    isIntersectingWithViewport: false,
+    isRegistered: false,
+    isActive: false,
+    isPredicted: false,
+    isCallbackRunning: false,
+    hitCount: 0,
+    registerCount: 0,
+    durationMs: undefined,
+    status: undefined,
+    error: null,
+    reactivateAfter: DEFAULT_STALE_TIME,
   }
 }

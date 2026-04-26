@@ -31,7 +31,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
   const queryClient = useQueryClient()
   const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image, false, 0))
 
-  const { elementRef } = useForesight<HTMLButtonElement>({
+  const { elementRef, state } = useForesight<HTMLButtonElement>({
     callback: async () => {
       await queryClient.prefetchQuery(
         imageQueryOptions(image, true, queryClient.getQueryState(["image", image])?.dataUpdateCount)
@@ -52,50 +52,56 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
     })
   }
 
+  const isPredicted = state?.isPredicted ?? false
+
   return (
-    <>
-      <button
-        ref={elementRef}
-        onClick={handleOnClick}
-        className="p-4 rounded-lg border-2 transition-all duration-200 h-60 text-left hover:shadow-md cursor-pointer"
-      >
-        <div className="space-y-2">
-          <h3 className="font-semibold text-gray-900">{image.name}</h3>
-          <div className="text-xs text-gray-400">ID: {image.id}</div>
-          <div className="text-xs space-y-1">
-            <div className="flex justify-between">
-              <span>Fetching:</span>
-              <span className={isFetching ? "text-blue-500" : "text-gray-400"}>
-                {isFetching.toString()}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Refetching:</span>
-              <span className={isRefetching ? "text-purple-500" : "text-gray-400"}>
-                {isRefetching.toString()}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Stale:</span>
-              <span className={isStale ? "text-orange-500" : "text-gray-400"}>
-                {isStale.toString()}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Has Data:</span>
-              <span className={data ? "text-green-500" : "text-gray-400"}>
-                {(!!data).toString()}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>From URL:</span>
-              <span className={data ? "text-indigo-500" : "text-gray-400"}>
-                {data?.fromUrl || "none"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </button>
-    </>
+    <button
+      ref={elementRef}
+      onClick={handleOnClick}
+      className={`p-4 border bg-white text-left h-60 cursor-pointer ${
+        isPredicted ? "border-amber-500 outline outline-2 outline-amber-500" : "border-gray-300"
+      }`}
+    >
+      <div className="space-y-2">
+        <h3 className="font-semibold text-gray-900">{image.name}</h3>
+        <div className="text-xs text-gray-500">id: {image.id}</div>
+        <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
+          <Row label="fetching" value={isFetching.toString()} on={isFetching} />
+          <Row label="refetching" value={isRefetching.toString()} on={isRefetching} />
+          <Row label="stale" value={isStale.toString()} on={isStale} />
+          <Row label="hasData" value={(!!data).toString()} on={!!data} />
+          <Row label="fromUrl" value={data?.fromUrl ?? "none"} on={!!data} />
+        </dl>
+        <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
+          <Row label="hits" value={state?.hitCount ?? 0} />
+          <Row
+            label="predicted"
+            value={state?.isPredicted ? "yes" : "no"}
+            on={state?.isPredicted}
+          />
+          <Row
+            label="cb running"
+            value={state?.isCallbackRunning ? "yes" : "no"}
+            on={state?.isCallbackRunning}
+          />
+          <Row label="status" value={state?.status ?? "—"} />
+        </dl>
+        <details className="text-xs font-mono">
+          <summary className="cursor-pointer text-gray-500 select-none">full state</summary>
+          <pre className="mt-1 overflow-auto max-h-40 text-[10px] text-gray-700">
+            {state ? JSON.stringify(state, null, 2) : "null"}
+          </pre>
+        </details>
+      </div>
+    </button>
+  )
+}
+
+function Row({ label, value, on }: { label: string; value: React.ReactNode; on?: boolean }) {
+  return (
+    <div className="flex justify-between py-1">
+      <dt className="text-gray-500">{label}</dt>
+      <dd className={on ? "text-gray-900" : "text-gray-400"}>{value}</dd>
+    </div>
   )
 }

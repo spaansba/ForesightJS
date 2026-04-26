@@ -1,211 +1,89 @@
 import { useIsResized } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
-import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
 type ForesightButtonResizeableProps = {
   name: string
 }
 
+type CardProps = {
+  title: string
+  description: string
+  children: React.ReactNode
+}
+
+function Card({ title, description, children }: CardProps) {
+  return (
+    <article className="flex flex-col items-center gap-3 w-40">
+      <h4 className="text-sm font-medium text-gray-900 self-start">{title}</h4>
+      {children}
+      <p className="text-xs text-gray-600">{description}</p>
+    </article>
+  )
+}
+
 function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
   const isResized = useIsResized()
+  const callback = async () => {
+    const randomTimeout = Math.floor(Math.random() * 1000)
+    await new Promise(resolve => setTimeout(resolve, randomTimeout))
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
-      {/* Original Size Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Size Change</h3>
-        <div
-          className={`${
-            isResized ? "size-40" : "size-20"
-          } rounded-lg shadow-md transition-all duration-500 bg-green-600`}
-        >
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-size-change`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests direct size changes using width/height classes" />
-      </div>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+      <Card title="Size change" description="Width/height classes change.">
+        <BaseForesightButton
+          className={`${isResized ? "size-40" : "size-20"} bg-green-600 text-white transition-all duration-500`}
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-size-change` }}
+        />
+      </Card>
 
-      {/* Padding Change */}
-      {/* <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Padding Change</h3>
-        <div
-          className={`${
-            isResized ? "p-16" : "p-4"
-          } size-20 rounded-lg shadow-md transition-all duration-500 bg-blue-600`}
-        >
-          <BaseForesightButton
-            registerOptions={{
-              callback: () => console.log(`${name}-padding-change`),
-              hitSlop: 30,
-              name: `${name}-padding-change`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests padding changes that affect element boundaries" />
-      </div> */}
+      <Card title="Border change" description="Border width affects boundaries.">
+        <BaseForesightButton
+          className={`${isResized ? "border-8" : "border-2"} box-content size-20 bg-purple-600 border-purple-800 text-white transition-all duration-500`}
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-border-change` }}
+        />
+      </Card>
 
-      {/* Border Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Border Change</h3>
-        <div
-          className={`${
-            isResized ? "border-8" : "border-2"
-          } size-20 rounded-lg shadow-md transition-all duration-500 bg-purple-600 border-purple-800`}
+      <Card title="Content change" description="Inner text grows the box.">
+        <BaseForesightButton
+          className="min-w-20 min-h-20 max-w-40 bg-red-600 text-white transition-all duration-500 px-3 py-2"
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-content-change` }}
         >
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-border-change`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests border width changes affecting element boundaries" />
-      </div>
-
-      {/* Content Text Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Content Change</h3>
-        <div className="min-w-20 min-h-20 rounded-lg shadow-md transition-all duration-500 bg-red-600 flex items-center justify-center p-4">
-          <span className="text-white font-bold text-center">
+          <span className="text-center font-medium text-sm">
             {isResized ? "Much longer button text that causes expansion" : "Click"}
           </span>
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-content-change`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests content changes that affect element size" />
-      </div>
+        </BaseForesightButton>
+      </Card>
 
-      {/* Font Size Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Font Size Change</h3>
-        <div className="min-w-20 min-h-20 rounded-lg shadow-md transition-all duration-500 bg-yellow-600 flex items-center justify-center p-4">
-          <span className={`text-white font-bold ${isResized ? "text-2xl" : "text-sm"}`}>
-            Button
-          </span>
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-font-change`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests font size changes affecting element boundaries" />
-      </div>
-
-      {/* Transform Scale (Visual Only) */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Transform Scale</h3>
-        <div
-          className={`${
-            isResized ? "scale-150" : "scale-100"
-          } size-20 rounded-lg shadow-md transition-all duration-500 bg-indigo-600`}
+      <Card title="Font size change" description="Font size affects element size.">
+        <BaseForesightButton
+          className="min-w-20 min-h-20 bg-yellow-600 text-white transition-all duration-500"
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-font-change` }}
         >
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-transform-scale`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests transform scale (visual only - ResizeObserver should NOT fire)" />
-      </div>
+          <span className={`font-bold ${isResized ? "text-4xl" : "text-sm"}`}>Button</span>
+        </BaseForesightButton>
+      </Card>
 
-      {/* Width/Height Asymmetric */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Asymmetric Resize</h3>
-        <div
-          className={`${
-            isResized ? "w-32 h-12" : "w-12 h-32"
-          } rounded-lg shadow-md transition-all duration-500 bg-teal-600`}
-        >
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-asymmetric`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests asymmetric width/height changes" />
-      </div>
+      <Card title="Transform scale" description="">
+        <BaseForesightButton
+          className={`${isResized ? "scale-150" : "scale-100"} size-20 bg-indigo-600 text-white transition-all duration-500`}
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-transform-scale` }}
+        />
+      </Card>
 
-      {/* Flex Grow Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Flex Grow</h3>
-        <div className="w-40 h-20 flex rounded-lg shadow-md transition-all duration-500 bg-gray-600">
-          <div
-            className={`${
-              isResized ? "flex-grow" : "flex-shrink-0 w-12"
-            } transition-all duration-500 bg-pink-600 rounded-lg`}
-          >
-            <BaseForesightButton
-              registerOptions={{
-                callback: async () => {
-                  const randomTimeout = Math.floor(Math.random() * 1000)
-                  await new Promise(resolve => setTimeout(resolve, randomTimeout))
-                },
-                hitSlop: 30,
-                name: `${name}-flex-grow`,
-              }}
-            />
-          </div>
-          <div className="flex-1 bg-gray-400 rounded-lg ml-1"></div>
-        </div>
-        <ForesightButtonParagraph paragraph="Tests flex-grow changes within container" />
-      </div>
+      <Card title="Asymmetric resize" description="Width/height swap.">
+        <BaseForesightButton
+          className={`${isResized ? "w-32 h-12" : "w-12 h-32"} bg-teal-600 text-white transition-all duration-500`}
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-asymmetric` }}
+        />
+      </Card>
 
-      {/* Max Width Change */}
-      <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-lg font-semibold">Max Width</h3>
-        <div
-          className={`${
-            isResized ? "max-w-none w-48" : "max-w-20 w-48"
-          } h-20 rounded-lg shadow-md transition-all duration-500 bg-orange-600`}
-        >
-          <BaseForesightButton
-            registerOptions={{
-              callback: async () => {
-                const randomTimeout = Math.floor(Math.random() * 1000)
-                await new Promise(resolve => setTimeout(resolve, randomTimeout))
-              },
-              hitSlop: 30,
-              name: `${name}-max-width`,
-            }}
-          />
-        </div>
-        <ForesightButtonParagraph paragraph="Tests max-width constraint changes" />
-      </div>
+      <Card title="Max width" description="max-width constraint changes.">
+        <BaseForesightButton
+          className={`${isResized ? "max-w-none w-48" : "max-w-20 w-48"} h-20 bg-orange-600 text-white transition-all duration-500`}
+          registerOptions={{ callback, hitSlop: 30, name: `${name}-max-width` }}
+        />
+      </Card>
     </div>
   )
 }

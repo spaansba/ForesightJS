@@ -113,14 +113,10 @@ export class TabPredictor extends BaseForesightModule {
     }
 
     for (const element of elementsToPredict) {
-      const elementData = currentElements.get(element)
+      const internal = currentElements.get(element)
 
-      if (
-        elementData &&
-        !elementData.callbackInfo.isRunningCallback &&
-        elementData.callbackInfo.isCallbackActive
-      ) {
-        this.callCallback(elementData, {
+      if (internal && !internal.state.isPredicted && internal.state.isActive) {
+        this.callCallback(internal, {
           kind: "tab",
           subType: isReversed ? "reverse" : "forwards",
         })

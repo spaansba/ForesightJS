@@ -1,8 +1,10 @@
+import { DerivedMapView } from "../helpers/DerivedMapView"
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
-  createDefaultSettings,
-  createElementData,
+  createBlockedSnapshot,
+  createDefaultManagerSettings,
+  createElementInternal,
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
@@ -15,7 +17,8 @@ import type {
   CurrentDeviceStrategy,
   ElementUnregisteredReason,
   ForesightElement,
-  ForesightElementData,
+  ForesightElementInternal,
+  ForesightElementState,
   ForesightEvent,
   ForesightEventListener,
   ForesightManagerData,
@@ -28,6 +31,8 @@ import type {
 import type { DesktopHandler } from "./DesktopHandler"
 import type { TouchDeviceHandler } from "./TouchDeviceHandler"
 
+const NOOP_UNSUBSCRIBE = () => {}
+
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -36,9 +41,9 @@ import type { TouchDeviceHandler } from "./TouchDeviceHandler"
  * - Tracking mouse movements and predicting future cursor positions.
  * - Detecting when a predicted trajectory intersects with a registered element's bounds.
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
- * - Optionally unregistering elements after their callback is triggered.
+ * - Deactivating elements after their callback completes, with optional reactivation via `reactivateAfter`.
  * - Handling global settings for prediction behavior (e.g., history size, prediction time).
- * - Automatically updating element bounds on resize using {@link ResizeObserver}.
+ * - Delegating element bounds observation to device handlers ({@link DesktopHandler}, {@link TouchDeviceHandler}).
  * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
  * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
  *
@@ -48,8 +53,14 @@ import type { TouchDeviceHandler } from "./TouchDeviceHandler"
 export class ForesightManager {
   private static manager: ForesightManager
 
-  private elements: Map<ForesightElement, ForesightElementData> = new Map()
-  private checkableElements: Set<ForesightElementData> = new Set()
+  /** Internal entries containing full element data, callbacks, and subscribers. */
+  private elementEntries: Map<ForesightElement, ForesightElementInternal> = new Map()
+  /** Public read-only view exposing only external state, derived from {@link elementEntries}. */
+  public readonly registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> =
+    new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
+
+  private checkableElements: Set<ForesightElementInternal> = new Set()
+
   private idCounter: number = 0
   private activeElementCount: number = 0
 
@@ -66,7 +77,7 @@ export class ForesightManager {
 
   private eventEmitter = new ForesightEventEmitter()
   private _globalCallbackHits: CallbackHits = createInitialCallbackHits()
-  private _globalSettings: ForesightManagerSettings = createDefaultSettings()
+  private _globalSettings: ForesightManagerSettings = createDefaultManagerSettings()
 
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
     if (initialSettings !== undefined) {
@@ -74,10 +85,11 @@ export class ForesightManager {
     }
 
     this.handlerDependencies = {
-      elements: this.elements,
+      elements: this.elementEntries,
       callCallback: this.callCallback.bind(this),
       emit: this.eventEmitter.emit.bind(this.eventEmitter),
       hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
+      updateElementState: this.updateElementState.bind(this),
       settings: this._globalSettings,
     }
 
@@ -154,7 +166,7 @@ export class ForesightManager {
     const touchPredictors = this.touchDeviceHandler?.loadedPredictors
 
     return {
-      registeredElements: this.elements,
+      registeredElements: this.registeredElements,
       globalSettings: this._globalSettings,
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventEmitter.getEventListeners(),
@@ -174,10 +186,6 @@ export class ForesightManager {
     }
   }
 
-  public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementData> {
-    return this.elements
-  }
-
   public register(options: ForesightRegisterNodeListOptions): ForesightRegisterResult[]
   public register(options: ForesightRegisterOptions): ForesightRegisterResult
   public register(
@@ -193,60 +201,137 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isTouchDevice, isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
+    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
 
     if (!shouldRegister) {
+      const blocked = createBlockedSnapshot(isLimitedConnection)
       return {
-        isLimitedConnection,
-        isTouchDevice,
-        isRegistered: false,
+        ...blocked,
         unregister: () => {},
-        elementData: null,
+        subscribe: () => NOOP_UNSUBSCRIBE,
+        getSnapshot: () => blocked,
       }
     }
 
-    const previousElementData = this.elements.get(options.element)
-    if (previousElementData) {
-      previousElementData.registerCount++
-      return {
-        isLimitedConnection,
-        isTouchDevice,
-        isRegistered: false,
-        unregister: () => {},
-        elementData: null,
-      }
+    const previousEntry = this.elementEntries.get(options.element)
+
+    if (previousEntry) {
+      return this.reRegisterElement(previousEntry, options)
     }
 
     if (!this.isSetup) {
       this.initializeGlobalListeners()
     }
 
-    const elementData = createElementData(
+    const entry = createElementInternal(
       options,
       this.generateId(),
       this._globalSettings.defaultHitSlop
     )
 
-    this.elements.set(options.element, elementData)
+    this.elementEntries.set(options.element, entry)
     this.activeElementCount++
-    this.updateCheckableStatus(elementData)
+    this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(options.element)
 
     this.eventEmitter.emit({
       type: "elementRegistered",
       timestamp: Date.now(),
-      elementData,
+      element: options.element,
+      state: entry.state,
     })
 
     return {
-      isTouchDevice,
-      isLimitedConnection,
-      isRegistered: true,
+      ...entry.state,
       unregister: () => {
         this.unregister(options.element)
       },
-      elementData,
+      subscribe: this.makeSubscribe(entry),
+      getSnapshot: () => entry.state,
     }
+  }
+
+  /**
+   * Handles re-registration of an already registered element.
+   * Updates the entry's callback, name, meta, and reactivateAfter from the new options,
+   * falling back to the existing values when an option is omitted.
+   * If a reactivation timeout is pending and reactivateAfter changed, the timeout is rescheduled.
+   */
+  private reRegisterElement(
+    entry: ForesightElementInternal,
+    options: ForesightRegisterOptions
+  ): ForesightRegisterResult {
+    entry.callback = options.callback
+
+    const reactivateAfter = options.reactivateAfter ?? entry.state.reactivateAfter
+    const next = this.updateElementState(entry, {
+      registerCount: entry.state.registerCount + 1,
+      name: options.name || entry.state.name,
+      meta: options.meta ?? entry.state.meta,
+      reactivateAfter,
+    })
+
+    // Reschedule the reactivation timeout if reactivateAfter changed while waiting
+    if (entry.reactivateTimeoutId !== undefined) {
+      this.clearReactivateTimeout(entry)
+      if (reactivateAfter !== Infinity) {
+        entry.reactivateTimeoutId = setTimeout(() => {
+          this.reactivate(options.element)
+        }, reactivateAfter)
+      }
+    }
+
+    return {
+      ...next,
+      unregister: () => {},
+      subscribe: this.makeSubscribe(entry),
+      getSnapshot: () => entry.state,
+    }
+  }
+
+  /**
+   * Create a subscribe function for an element.
+   * Returns an unsubscribe callback when called.
+   */
+  private makeSubscribe(entry: ForesightElementInternal) {
+    return (listener: () => void): (() => void) => {
+      entry.subscribers.add(listener)
+
+      return () => {
+        entry.subscribers.delete(listener)
+      }
+    }
+  }
+
+  /**
+   * Replace the immutable state ref for an element and notify subscribers.
+   * No-op when every patch value already matches current state — preserves the
+   * stable-reference contract relied on by useSyncExternalStore and shallowRef.
+   */
+  private updateElementState(
+    entry: ForesightElementInternal,
+    patch: Partial<ForesightElementState>
+  ): ForesightElementState {
+    const current = entry.state
+    let changed = false
+    for (const key in patch) {
+      if (
+        patch[key as keyof ForesightElementState] !== current[key as keyof ForesightElementState]
+      ) {
+        changed = true
+        break
+      }
+    }
+    if (!changed) {
+      return current
+    }
+
+    const next = { ...current, ...patch }
+    entry.state = next
+    for (const listener of entry.subscribers) {
+      listener()
+    }
+    return next
   }
 
   public unregister(
@@ -264,21 +349,30 @@ export class ForesightManager {
     element: ForesightElement,
     unregisterReason?: ElementUnregisteredReason
   ): void {
-    const elementData = this.elements.get(element)
-    if (!elementData) {
+    const entry = this.elementEntries.get(element)
+    if (!entry) {
       return
     }
 
-    this.clearReactivateTimeout(elementData)
+    this.clearReactivateTimeout(entry)
     this.currentlyActiveHandler?.unobserveElement(element)
-    this.elements.delete(element)
-    this.checkableElements.delete(elementData)
 
-    if (elementData.callbackInfo.isCallbackActive) {
+    if (entry.state.isActive) {
       this.activeElementCount--
     }
 
-    const wasLastRegisteredElement = this.elements.size === 0 && this.isSetup
+    const finalState = this.updateElementState(entry, {
+      isRegistered: false,
+      isActive: false,
+      isPredicted: false,
+      isCallbackRunning: false,
+    })
+
+    this.elementEntries.delete(element)
+    this.checkableElements.delete(entry)
+    entry.subscribers.clear()
+
+    const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
     if (wasLastRegisteredElement) {
       this.devLog("All elements unregistered, removing global listeners")
       this.removeGlobalListeners()
@@ -286,7 +380,8 @@ export class ForesightManager {
 
     this.eventEmitter.emit({
       type: "elementUnregistered",
-      elementData,
+      element: element,
+      state: finalState,
       timestamp: Date.now(),
       unregisterReason: unregisterReason ?? "by user",
       wasLastRegisteredElement,
@@ -302,8 +397,8 @@ export class ForesightManager {
   }
 
   private reactivateElement(element: ForesightElement): void {
-    const elementData = this.elements.get(element)
-    if (!elementData) {
+    const entry = this.elementEntries.get(element)
+    if (!entry) {
       return
     }
 
@@ -311,68 +406,74 @@ export class ForesightManager {
       this.initializeGlobalListeners()
     }
 
-    this.clearReactivateTimeout(elementData)
+    this.clearReactivateTimeout(entry)
 
-    if (!elementData.callbackInfo.isRunningCallback) {
-      elementData.callbackInfo.isCallbackActive = true
-
-      this.activeElementCount++
-
-      this.updateCheckableStatus(elementData)
-
-      this.currentlyActiveHandler?.observeElement(element)
-      this.eventEmitter.emit({
-        type: "elementReactivated",
-        elementData,
-        timestamp: Date.now(),
-      })
-    }
-  }
-
-  private clearReactivateTimeout(elementData: ForesightElementData): void {
-    clearTimeout(elementData.callbackInfo.reactivateTimeoutId)
-    elementData.callbackInfo.reactivateTimeoutId = undefined
-  }
-
-  public updateCheckableStatus(elementData: ForesightElementData): void {
-    const isCheckable =
-      elementData.isIntersectingWithViewport &&
-      elementData.callbackInfo.isCallbackActive &&
-      !elementData.callbackInfo.isRunningCallback
-
-    if (isCheckable) {
-      this.checkableElements.add(elementData)
-    } else {
-      this.checkableElements.delete(elementData)
-    }
-  }
-
-  private callCallback(elementData: ForesightElementData, callbackHitType: CallbackHitType): void {
-    if (elementData.callbackInfo.isRunningCallback || !elementData.callbackInfo.isCallbackActive) {
+    if (entry.state.isCallbackRunning || entry.state.isActive) {
       return
     }
 
-    this.markElementAsRunning(elementData)
-    this.executeCallbackAsync(elementData, callbackHitType)
+    const next = this.updateElementState(entry, { isActive: true, isPredicted: false })
+    this.activeElementCount++
+    this.updateCheckableStatus(entry)
+    this.currentlyActiveHandler?.observeElement(element)
+
+    this.eventEmitter.emit({
+      type: "elementReactivated",
+      element: element,
+      state: next,
+      timestamp: Date.now(),
+    })
   }
 
-  private markElementAsRunning(elementData: ForesightElementData): void {
-    elementData.callbackInfo.callbackFiredCount++
-    elementData.callbackInfo.lastCallbackInvokedAt = Date.now()
-    elementData.callbackInfo.isRunningCallback = true
-    this.clearReactivateTimeout(elementData)
-    this.checkableElements.delete(elementData)
+  private clearReactivateTimeout(entry: ForesightElementInternal): void {
+    clearTimeout(entry.reactivateTimeoutId)
+    entry.reactivateTimeoutId = undefined
+  }
+
+  public updateCheckableStatus(entry: ForesightElementInternal): void {
+    const state = entry.state
+    const isCheckable = state.isIntersectingWithViewport && state.isActive && !state.isPredicted
+
+    if (isCheckable) {
+      this.checkableElements.add(entry)
+    } else {
+      this.checkableElements.delete(entry)
+    }
+  }
+
+  private callCallback(entry: ForesightElementInternal, callbackHitType: CallbackHitType): void {
+    if (entry.state.isPredicted || !entry.state.isActive) {
+      return
+    }
+
+    this.markElementAsRunning(entry)
+    this.executeCallbackAsync(entry, callbackHitType)
+  }
+
+  private markElementAsRunning(entry: ForesightElementInternal): void {
+    this.clearReactivateTimeout(entry)
+    this.checkableElements.delete(entry)
+
+    entry.invokedAt = Date.now()
+
+    this.updateElementState(entry, {
+      isPredicted: true,
+      isCallbackRunning: true,
+      hitCount: entry.state.hitCount + 1,
+    })
   }
 
   private async executeCallbackAsync(
-    elementData: ForesightElementData,
+    entry: ForesightElementInternal,
     callbackHitType: CallbackHitType
   ): Promise<void> {
     this.updateHitCounters(callbackHitType)
+
     this.eventEmitter.emit({
       type: "callbackInvoked",
       timestamp: Date.now(),
-      elementData,
+      element: entry.element,
+      state: entry.state,
       hitType: callbackHitType,
     })
 
@@ -380,35 +481,44 @@ export class ForesightManager {
     let errorMessage: string | null = null
 
     try {
-      await elementData.callback(elementData)
+      await entry.callback(entry.state)
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`Error in callback for element ${elementData.name}:`, error)
+      console.error(`Error in callback for element ${entry.state.name}:`, error)
     }
 
-    const callbackResult: callbackStatus = errorMessage !== null ? "error" : "success"
-    this.finalizeCallback(elementData, callbackHitType, start, callbackResult, errorMessage)
+    const status: callbackStatus = errorMessage !== null ? "error" : "success"
+    this.finalizeCallback(entry, callbackHitType, start, status, errorMessage)
   }
 
   private finalizeCallback(
-    elementData: ForesightElementData,
+    entry: ForesightElementInternal,
     callbackHitType: CallbackHitType,
     startTime: number,
     status: callbackStatus,
     errorMessage: string | null
   ): void {
-    elementData.callbackInfo.lastCallbackCompletedAt = Date.now()
-    elementData.callbackInfo.isRunningCallback = false
-    elementData.callbackInfo.isCallbackActive = false
+    const elapsed = performance.now() - startTime
 
-    this.activeElementCount--
+    if (entry.state.isActive) {
+      this.activeElementCount--
+    }
 
-    this.currentlyActiveHandler?.unobserveElement(elementData.element)
+    this.currentlyActiveHandler?.unobserveElement(entry.element)
 
-    if (elementData.callbackInfo.reactivateAfter !== Infinity) {
-      elementData.callbackInfo.reactivateTimeoutId = setTimeout(() => {
-        this.reactivate(elementData.element)
-      }, elementData.callbackInfo.reactivateAfter)
+    entry.completedAt = Date.now()
+    const next = this.updateElementState(entry, {
+      isCallbackRunning: false,
+      isActive: false,
+      durationMs: elapsed,
+      status,
+      error: errorMessage,
+    })
+
+    if (next.reactivateAfter !== Infinity) {
+      entry.reactivateTimeoutId = setTimeout(() => {
+        this.reactivate(entry.element)
+      }, next.reactivateAfter)
     }
 
     const isLastActiveElement = this.activeElementCount === 0
@@ -420,11 +530,12 @@ export class ForesightManager {
     this.eventEmitter.emit({
       type: "callbackCompleted",
       timestamp: Date.now(),
-      elementData,
+      element: entry.element,
+      state: next,
       hitType: callbackHitType,
-      elapsed: (elementData.callbackInfo.lastCallbackRuntime = performance.now() - startTime),
-      status: (elementData.callbackInfo.lastCallbackStatus = status),
-      errorMessage: (elementData.callbackInfo.lastCallbackErrorMessage = errorMessage),
+      elapsed,
+      status,
+      errorMessage,
       wasLastActiveElement: isLastActiveElement,
     })
   }
@@ -563,7 +674,7 @@ export class ForesightManager {
       return
     }
 
-    for (const element of this.elements.keys()) {
+    for (const element of this.elementEntries.keys()) {
       if (!element.isConnected) {
         this.unregister(element, "disconnected")
       }
@@ -614,9 +725,9 @@ export class ForesightManager {
   }
 
   private forceUpdateAllElementBounds(): void {
-    for (const elementData of this.elements.values()) {
-      if (elementData.isIntersectingWithViewport) {
-        this.forceUpdateElementBounds(elementData)
+    for (const entry of this.elementEntries.values()) {
+      if (entry.state.isIntersectingWithViewport) {
+        this.forceUpdateElementBounds(entry)
       }
     }
   }
@@ -625,28 +736,28 @@ export class ForesightManager {
    * ONLY use this function when you want to change the rect bounds via code, if the rects are changing because of updates in the DOM do not use this function.
    * We need an observer for that
    */
-  private forceUpdateElementBounds(elementData: ForesightElementData): void {
-    const newOriginalRect = elementData.element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(newOriginalRect, elementData.elementBounds.hitSlop)
+  private forceUpdateElementBounds(entry: ForesightElementInternal): void {
+    const newOriginalRect = entry.element.getBoundingClientRect()
+    const expandedRect = getExpandedRect(newOriginalRect, entry.state.elementBounds.hitSlop)
 
-    if (!areRectsEqual(expandedRect, elementData.elementBounds.expandedRect)) {
-      const updatedElementData = {
-        ...elementData,
-        elementBounds: {
-          ...elementData.elementBounds,
-          originalRect: newOriginalRect,
-          expandedRect,
-        },
-      }
-
-      this.elements.set(elementData.element, updatedElementData)
-
-      this.eventEmitter.emit({
-        type: "elementDataUpdated",
-        elementData: updatedElementData,
-        updatedProps: ["bounds" as const],
-      })
+    if (areRectsEqual(expandedRect, entry.state.elementBounds.expandedRect)) {
+      return
     }
+
+    const next = this.updateElementState(entry, {
+      elementBounds: {
+        hitSlop: entry.state.elementBounds.hitSlop,
+        originalRect: newOriginalRect,
+        expandedRect,
+      },
+    })
+
+    this.eventEmitter.emit({
+      type: "elementDataUpdated",
+      element: entry.element,
+      state: next,
+      updatedProps: ["bounds" as const],
+    })
   }
 
   private devLog(message: string): void {

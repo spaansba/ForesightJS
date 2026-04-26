@@ -45,9 +45,9 @@ export default function ImageGallery() {
   const [selectedImage, setSelectedImage] = useState<ForesightImage | null>(null)
   ForesightDevtools.initialize()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 font-sans">
+    <div className="min-h-screen bg-stone-50 text-gray-900">
       <SimpleNavigation />
-      <div className="max-w-4xl mx-auto p-8">
+      <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {IMAGES.map(image => (
             <ForesightImageButton
@@ -58,24 +58,22 @@ export default function ImageGallery() {
           ))}
         </div>
         {selectedImage && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">{selectedImage.name}</h2>
-              {selectedImage.blob ? (
-                <img
-                  src={URL.createObjectURL(selectedImage.blob)}
-                  alt={selectedImage.name}
-                  className="w-full h-96 object-cover rounded-lg shadow-md"
-                />
-              ) : (
-                <div className="w-full h-96 bg-red-100 rounded-lg shadow-md flex items-center justify-center">
-                  <p className="text-red-600">Failed to load image</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <section className="border border-gray-300 bg-white p-6 space-y-4">
+            <h2 className="text-base font-semibold">{selectedImage.name}</h2>
+            {selectedImage.blob ? (
+              <img
+                src={URL.createObjectURL(selectedImage.blob)}
+                alt={selectedImage.name}
+                className="w-full h-96 object-cover"
+              />
+            ) : (
+              <div className="w-full h-96 bg-red-50 border border-red-300 flex items-center justify-center">
+                <p className="text-red-700 text-sm">Failed to load image</p>
+              </div>
+            )}
+          </section>
         )}
-      </div>
+      </main>
     </div>
   )
 }

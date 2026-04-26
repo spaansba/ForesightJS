@@ -1,6 +1,5 @@
 import { useIsVisible } from "../../stores/ButtonStateStore"
 import BaseForesightButton from "./BaseForesightButton"
-import ForesightButtonParagraph from "./ForesightButtonParagraph"
 
 type ForesightButtonVisibilityProps = {
   name: string
@@ -9,26 +8,24 @@ type ForesightButtonVisibilityProps = {
 function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
   const isVisible = useIsVisible()
   return (
-    <div className={`flex flex-col items-center space-y-4 ${isVisible ? "" : "hidden"}`}>
-      <h3 className="text-lg font-semibold">Visibility Test</h3>
-      <div className="size-40 rounded-lg shadow-md bg-blue-300 ">
-        <BaseForesightButton
-          registerOptions={{
-            callback: async () => {
-              const randomTimeout = Math.floor(Math.random() * 1000)
-              await new Promise(resolve => setTimeout(resolve, randomTimeout))
-            },
-            hitSlop: 0,
-            name: name,
-            unregisterOnCallback: true,
-          }}
-        />
-      </div>
-      <ForesightButtonParagraph
-        paragraph="Tests DOM removal causing layout shifts. The MutationObserver should NOT remove this element
-      since we are just toggling visibility"
+    <article className={`flex flex-col items-center gap-3 w-40 ${isVisible ? "" : "invisible"}`}>
+      <h4 className="text-sm font-medium text-gray-900 self-start">Visibility</h4>
+      <BaseForesightButton
+        className="size-40 bg-blue-400 text-white"
+        registerOptions={{
+          callback: async () => {
+            const randomTimeout = Math.floor(Math.random() * 1000)
+            await new Promise(resolve => setTimeout(resolve, randomTimeout))
+          },
+          hitSlop: 0,
+          name: name,
+          unregisterOnCallback: true,
+        }}
       />
-    </div>
+      <p className="text-xs text-gray-600">
+        Toggles via CSS only — MutationObserver should not unregister.
+      </p>
+    </article>
   )
 }
 

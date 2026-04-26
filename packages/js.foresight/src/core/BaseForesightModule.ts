@@ -1,14 +1,15 @@
 import type {
   CallbackHitType,
   ForesightElement,
-  ForesightElementData,
+  ForesightElementInternal,
+  ForesightElementState,
   ForesightEvent,
   ForesightEventMap,
   ForesightManagerSettings,
 } from "../types/types"
 
 export type CallCallbackFunction = (
-  elementData: ForesightElementData,
+  entry: ForesightElementInternal,
   callbackHitType: CallbackHitType
 ) => void
 
@@ -16,20 +17,27 @@ export type EmitFunction = <K extends ForesightEvent>(event: ForesightEventMap[K
 
 export type HasListenersFunction = <K extends ForesightEvent>(eventType: K) => boolean
 
+export type UpdateElementStateFunction = (
+  entry: ForesightElementInternal,
+  patch: Partial<ForesightElementState>
+) => ForesightElementState
+
 export type ForesightModuleDependencies = {
-  elements: ReadonlyMap<ForesightElement, ForesightElementData>
+  elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
   callCallback: CallCallbackFunction
   emit: EmitFunction
   hasListeners: HasListenersFunction
+  updateElementState: UpdateElementStateFunction
   settings: ForesightManagerSettings
 }
 
 export abstract class BaseForesightModule {
   protected abortController?: AbortController
-  protected elements: ReadonlyMap<ForesightElement, ForesightElementData>
+  protected elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
   protected hasListeners: HasListenersFunction
+  protected updateElementState: UpdateElementStateFunction
   protected settings: ForesightManagerSettings
   private _isConnected = false
   private _cachedLogStyle: string | null = null
@@ -45,6 +53,7 @@ export abstract class BaseForesightModule {
     this.callCallback = dependencies.callCallback
     this.emit = dependencies.emit
     this.hasListeners = dependencies.hasListeners
+    this.updateElementState = dependencies.updateElementState
     this.settings = dependencies.settings
   }
 

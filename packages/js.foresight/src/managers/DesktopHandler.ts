@@ -5,7 +5,8 @@ import type { TabPredictor } from "../predictors/TabPredictor"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 import type {
   ForesightElement,
-  ForesightElementData,
+  ForesightElementInternal,
+  ForesightElementState,
   TrajectoryPositions,
   UpdatedDataPropertyNames,
 } from "../types/types"
@@ -71,22 +72,23 @@ export class DesktopHandler extends BaseForesightModule {
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
     const enableScrollPosition = this.settings.enableScrollPrediction
 
-    for (const entry of entries) {
-      const elementData = this.elements.get(entry.target)
+    for (const positionEntry of entries) {
+      const entry = this.elements.get(positionEntry.target)
 
-      if (!elementData) {
+      if (!entry) {
         continue
       }
 
       if (enableScrollPosition) {
-        this.scrollPredictor?.handleScrollPrefetch(elementData, entry.boundingClientRect)
+        this.scrollPredictor?.handleScrollPrefetch(entry, positionEntry.boundingClientRect)
       } else {
         // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-        this.checkForMouseHover(elementData)
+        this.checkForMouseHover(entry)
       }
 
-      // Always call handlePositionChangeDataUpdates AFTER handleScrollPrefetch since handlePositionChangeDataUpdates alters the elementData
-      this.handlePositionChangeDataUpdates(elementData, entry)
+      // Must run AFTER handleScrollPrefetch — scroll direction is derived from
+      // the difference between the old and new originalRect.
+      this.handlePositionChangeDataUpdates(entry, positionEntry)
     }
 
     if (enableScrollPosition) {
@@ -94,14 +96,14 @@ export class DesktopHandler extends BaseForesightModule {
     }
   }
 
-  private checkForMouseHover = (elementData: ForesightElementData) => {
+  private checkForMouseHover = (entry: ForesightElementInternal) => {
     if (
       isPointInRectangle(
         this.trajectoryPositions.currentPoint,
-        elementData.elementBounds.expandedRect
+        entry.state.elementBounds.expandedRect
       )
     ) {
-      this.callCallback(elementData, {
+      this.callCallback(entry, {
         kind: "mouse",
         subType: "hover",
       })
@@ -109,33 +111,45 @@ export class DesktopHandler extends BaseForesightModule {
   }
 
   private handlePositionChangeDataUpdates = (
-    elementData: ForesightElementData,
-    entry: PositionObserverEntry
+    entry: ForesightElementInternal,
+    positionEntry: PositionObserverEntry
   ) => {
     const updatedProps: UpdatedDataPropertyNames[] = []
-    const isNowIntersecting = entry.isIntersecting
+    const isNowIntersecting = positionEntry.isIntersecting
+    const state = entry.state
+    const patch: Partial<ForesightElementState> = {}
 
-    if (elementData.isIntersectingWithViewport !== isNowIntersecting) {
+    if (state.isIntersectingWithViewport !== isNowIntersecting) {
       updatedProps.push("visibility")
-      elementData.isIntersectingWithViewport = isNowIntersecting
+      patch.isIntersectingWithViewport = isNowIntersecting
     }
 
     if (
       isNowIntersecting &&
-      !areRectsEqual(entry.boundingClientRect, elementData.elementBounds.originalRect)
+      !areRectsEqual(positionEntry.boundingClientRect, state.elementBounds.originalRect)
     ) {
       updatedProps.push("bounds")
-      elementData.elementBounds = {
-        hitSlop: elementData.elementBounds.hitSlop,
-        originalRect: entry.boundingClientRect,
-        expandedRect: getExpandedRect(entry.boundingClientRect, elementData.elementBounds.hitSlop),
+      patch.elementBounds = {
+        hitSlop: state.elementBounds.hitSlop,
+        originalRect: positionEntry.boundingClientRect,
+        expandedRect: getExpandedRect(
+          positionEntry.boundingClientRect,
+          state.elementBounds.hitSlop
+        ),
       }
     }
 
-    if (updatedProps.length && this.hasListeners("elementDataUpdated")) {
+    if (updatedProps.length === 0) {
+      return
+    }
+
+    const next = this.updateElementState(entry, patch)
+
+    if (this.hasListeners("elementDataUpdated")) {
       this.emit({
         type: "elementDataUpdated",
-        elementData: elementData,
+        element: entry.element,
+        state: next,
         updatedProps,
       })
     }
