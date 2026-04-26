@@ -97,7 +97,6 @@ export class ElementTab extends LitElement {
   @state() private sortOrder: SortElementList
   @state() private elementListItems: Map<ForesightElement, ForesightElementState> = new Map()
   @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
-  @state() private runningCallbacks: Set<ForesightElement> = new Set()
   @state() private expandedElementIds: Set<string> = new Set()
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
@@ -255,7 +254,6 @@ export class ElementTab extends LitElement {
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
-        this.runningCallbacks.delete(e.element)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -266,7 +264,6 @@ export class ElementTab extends LitElement {
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
         this.applyStateUpdate(e.element, e.state)
-        this.runningCallbacks.add(e.element)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -278,7 +275,6 @@ export class ElementTab extends LitElement {
       (e: CallbackCompletedEvent) => {
         this.applyStateUpdate(e.element, e.state)
         this.handleCallbackCompleted(e.hitType)
-        this.runningCallbacks.delete(e.element)
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -452,7 +448,6 @@ export class ElementTab extends LitElement {
                         <single-element
                           .element=${entry.element}
                           .state=${entry.state}
-                          .isPredicting=${this.runningCallbacks.has(entry.element)}
                           .isExpanded=${this.expandedElementIds.has(entry.state.id)}
                           .onToggle=${this.handleElementToggle}
                         >
@@ -482,7 +477,6 @@ export class ElementTab extends LitElement {
                         <single-element
                           .element=${entry.element}
                           .state=${entry.state}
-                          .isPredicting=${this.runningCallbacks.has(entry.element)}
                           .isExpanded=${this.expandedElementIds.has(entry.state.id)}
                           .onToggle=${this.handleElementToggle}
                         >

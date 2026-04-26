@@ -66,11 +66,7 @@ export const Main = () => {
           toggleOn={isRemoved}
           onToggle={actions.toggleRemoved}
         >
-          <div className="flex flex-wrap gap-x-6 gap-y-8">
             <ForesightButtonRemoveable name="removeable" />
-            <ForesightButtonRemoveable name="removeable2" />
-            <ForesightButtonRemoveable name="removeable3" />
-          </div>
         </Section>
 
         <Section

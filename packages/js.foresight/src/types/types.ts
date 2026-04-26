@@ -76,8 +76,10 @@ export type ForesightElementState = {
   isRegistered: boolean
   /** Whether the element is currently eligible to fire its callback. */
   isActive: boolean
-  /** True between callbackInvoked and callbackCompleted. */
+  /** True once the element's callback has been triggered by a prediction hit. Stays true until the element is reactivated or unregistered. */
   isPredicted: boolean
+  /** True while the callback is executing (between invocation and completion). The callback is awaited, so this stays true for async callbacks until they resolve or reject. */
+  isCallbackRunning: boolean
   /** Number of times the callback has fired for this element. */
   hitCount: number
   /** Number of times this element has been (re)registered. */

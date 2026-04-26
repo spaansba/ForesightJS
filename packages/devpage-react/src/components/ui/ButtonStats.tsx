@@ -15,12 +15,14 @@ function row(label: string, value: React.ReactNode) {
 
 function ButtonStats({ state }: ButtonStatsProps) {
   const isPredicted = state?.isPredicted ?? false
+  const isCallbackRunning = state?.isCallbackRunning ?? false
   const hitCount = state?.hitCount ?? 0
   const status = state?.status ?? "—"
   return (
     <dl className="w-40 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
       {row("hits", hitCount)}
       {row("predicted", isPredicted ? "yes" : "no")}
+      {row("cb running", isCallbackRunning ? "yes" : "no")}
       {row("status", status)}
     </dl>
   )

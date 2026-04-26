@@ -53,6 +53,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
   }
 
   const isPredicted = state?.isPredicted ?? false
+  const isCallbackRunning = state?.isCallbackRunning ?? false
   const hitCount = state?.hitCount ?? 0
 
   return (
@@ -69,6 +70,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
         <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
           <Row label="hits" value={hitCount} />
           <Row label="predicted" value={isPredicted ? "yes" : "no"} on={isPredicted} />
+          <Row label="cb running" value={isCallbackRunning ? "yes" : "no"} on={isCallbackRunning} />
           <Row label="fetching" value={isFetching.toString()} on={isFetching} />
           <Row label="refetching" value={isRefetching.toString()} on={isRefetching} />
           <Row label="stale" value={isStale.toString()} on={isStale} />

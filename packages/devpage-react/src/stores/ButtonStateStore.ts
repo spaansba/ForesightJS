@@ -28,7 +28,7 @@ const useButtonStateStore = create<ButtonStateStore>(set => ({
     toggleVisibility: () => set(state => ({ isVisible: !state.isVisible })),
     toggleResized: () => set(state => ({ isResized: !state.isResized })),
     toggleRemoved: () => set(state => ({ isRemoved: !state.isRemoved })),
-    setReactivateAfter: ms => set(state => ({ reactivateAfter: ms, resetKey: state.resetKey + 1 })),
+    setReactivateAfter: ms => set({ reactivateAfter: ms }),
     resetAll: () =>
       set(state => ({
         isVisible: true,

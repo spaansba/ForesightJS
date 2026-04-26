@@ -122,7 +122,6 @@ export class SingleElement extends LitElement {
 
   @property({ attribute: false }) element!: ForesightElement
   @property({ attribute: false, hasChanged: () => true }) state!: ForesightElementState
-  @property() isPredicting: boolean = false
   @property() isExpanded: boolean = false
   @property() onToggle: ((elementId: string) => void) | undefined
 
@@ -153,7 +152,7 @@ export class SingleElement extends LitElement {
   }
 
   private getBorderColor(): string {
-    if (this.isPredicting) {
+    if (this.state.isCallbackRunning) {
       return "#ffeb3b"
     }
     if (!this.state.isActive) {
@@ -170,7 +169,7 @@ export class SingleElement extends LitElement {
   }
 
   private getStatusIndicatorClass(): string {
-    if (this.isPredicting) {
+    if (this.state.isCallbackRunning) {
       return "prefetching"
     }
     if (!this.state.isActive) {
@@ -186,7 +185,7 @@ export class SingleElement extends LitElement {
   }
 
   private getStatusText(): string {
-    if (this.isPredicting) {
+    if (this.state.isCallbackRunning) {
       return "callback active"
     }
     if (!this.state.isActive) {
@@ -203,7 +202,7 @@ export class SingleElement extends LitElement {
     if (!this.isExpanded) return ""
     const { elementBounds, ...rest } = this.state
     return JSON.stringify(
-      { status: this.getStatusText(), ...rest, hitSlop: elementBounds.hitSlop },
+      { ...rest, status: this.getStatusText(), hitSlop: elementBounds.hitSlop },
       null,
       2
     )
@@ -231,7 +230,7 @@ export class SingleElement extends LitElement {
           <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
             <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
             <span
-              class="element-name ${this.isPredicting
+              class="element-name ${this.state.isCallbackRunning
                 ? "callback-active"
                 : !this.state.isActive
                   ? "callback-inactive"

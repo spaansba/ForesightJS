@@ -60,11 +60,11 @@ function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
           className="min-w-20 min-h-20 bg-yellow-600 text-white transition-all duration-500"
           registerOptions={{ callback, hitSlop: 30, name: `${name}-font-change` }}
         >
-          <span className={`font-bold ${isResized ? "text-2xl" : "text-sm"}`}>Button</span>
+          <span className={`font-bold ${isResized ? "text-4xl" : "text-sm"}`}>Button</span>
         </BaseForesightButton>
       </Card>
 
-      <Card title="Transform scale" description="Visual only — ResizeObserver should NOT fire.">
+      <Card title="Transform scale" description="">
         <BaseForesightButton
           className={`${isResized ? "scale-150" : "scale-100"} size-20 bg-indigo-600 text-white transition-all duration-500`}
           registerOptions={{ callback, hitSlop: 30, name: `${name}-transform-scale` }}

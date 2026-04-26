@@ -335,6 +335,7 @@ export class ForesightManager {
       isRegistered: false,
       isActive: false,
       isPredicted: false,
+      isCallbackRunning: false,
     })
 
     this.elementEntries.delete(element)
@@ -377,11 +378,11 @@ export class ForesightManager {
 
     this.clearReactivateTimeout(entry)
 
-    if (entry.state.isPredicted || entry.state.isActive) {
+    if (entry.state.isCallbackRunning || entry.state.isActive) {
       return
     }
 
-    const next = this.updateElementState(entry, { isActive: true })
+    const next = this.updateElementState(entry, { isActive: true, isPredicted: false })
     this.activeElementCount++
     this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(element)
@@ -427,6 +428,7 @@ export class ForesightManager {
 
     this.updateElementState(entry, {
       isPredicted: true,
+      isCallbackRunning: true,
       hitCount: entry.state.hitCount + 1,
     })
   }
@@ -476,7 +478,7 @@ export class ForesightManager {
 
     entry.completedAt = Date.now()
     const next = this.updateElementState(entry, {
-      isPredicted: false,
+      isCallbackRunning: false,
       isActive: false,
       durationMs: elapsed,
       status,
