@@ -1108,4 +1108,146 @@ describe("ForesightManager", () => {
       expect(callback).toHaveBeenCalledTimes(1)
     })
   })
+
+  describe("Subscribe / getSnapshot", () => {
+    it("should notify subscriber when state changes", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn() })
+      result.subscribe(listener)
+
+      fire(manager, getEntry(manager, element))
+      // markElementAsRunning triggers a state update (isPredicted: true)
+      expect(listener).toHaveBeenCalled()
+    })
+
+    it("should stop notifying after unsubscribe", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn() })
+      const unsubscribe = result.subscribe(listener)
+
+      unsubscribe()
+
+      fire(manager, getEntry(manager, element))
+      await vi.runAllTimersAsync()
+
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it("should return correct state from getSnapshot immediately after registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result = manager.register({ element, callback: vi.fn(), name: "snap-test" })
+
+      const snapshot = result.getSnapshot()
+      expect(snapshot.name).toBe("snap-test")
+      expect(snapshot.isRegistered).toBe(true)
+      expect(snapshot.isActive).toBe(true)
+      expect(snapshot.isPredicted).toBe(false)
+    })
+
+    it("should return updated state from getSnapshot after state change", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result = manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
+      const entry = getEntry(manager, element)
+
+      expect(result.getSnapshot().isPredicted).toBe(false)
+
+      fire(manager, entry)
+
+      expect(result.getSnapshot().isPredicted).toBe(true)
+
+      await vi.runAllTimersAsync()
+
+      expect(result.getSnapshot().isPredicted).toBe(false)
+      expect(result.getSnapshot().isActive).toBe(false)
+    })
+
+    it("should support multiple independent subscribers", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn() })
+      const unsub1 = result.subscribe(listener1)
+      result.subscribe(listener2)
+
+      fire(manager, getEntry(manager, element))
+
+      expect(listener1).toHaveBeenCalled()
+      expect(listener2).toHaveBeenCalled()
+
+      const count1 = listener1.mock.calls.length
+      unsub1()
+
+      await vi.runAllTimersAsync()
+
+      // listener1 should not have been called again after unsub
+      expect(listener1).toHaveBeenCalledTimes(count1)
+      // listener2 should have received additional notifications
+      expect(listener2.mock.calls.length).toBeGreaterThan(count1)
+    })
+
+    it("should reflect latest state after unsubscribe and resubscribe", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result = manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
+      const entry = getEntry(manager, element)
+
+      const unsub = result.subscribe(vi.fn())
+      unsub()
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      // Resubscribe — getSnapshot must reflect state that changed while unsubscribed
+      const listener = vi.fn()
+      result.subscribe(listener)
+
+      expect(result.getSnapshot().isActive).toBe(false)
+      expect(result.getSnapshot().status).toBe("success")
+    })
+
+    it("should clear subscribers on unregister", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn() })
+      result.subscribe(listener)
+
+      manager.unregister(element)
+
+      // The unregister itself triggers a state update — listener is notified
+      const callCount = listener.mock.calls.length
+      expect(callCount).toBeGreaterThan(0)
+
+      // After unregister, no further notifications should be possible
+      // (subscribers.clear() was called)
+      const entry = result.getSnapshot()
+      expect(entry.isRegistered).toBe(false)
+    })
+
+    it("should provide a stable getSnapshot reference across re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result1 = manager.register({ element, callback: vi.fn() })
+      const result2 = manager.register({ element, callback: vi.fn() })
+
+      // Both results should read from the same internal entry
+      expect(result2.getSnapshot().registerCount).toBe(2)
+      expect(result1.getSnapshot().registerCount).toBe(2)
+    })
+  })
 })
