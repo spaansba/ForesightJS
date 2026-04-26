@@ -6,7 +6,7 @@ import styles from "./hero.module.css"
 import { PackageManagerTabs } from "./PackageManagerTabs"
 import { ForesightDevtools } from "js.foresight-devtools"
 
-export function Hero() {
+export const Hero = () => {
   const [stats, setStats] = useState({
     githubStars: 0,
     npmDownloads: 0,

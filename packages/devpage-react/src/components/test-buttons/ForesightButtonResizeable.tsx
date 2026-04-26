@@ -11,7 +11,7 @@ type CardProps = {
   children: React.ReactNode
 }
 
-function Card({ title, description, children }: CardProps) {
+const Card = ({ title, description, children }: CardProps) => {
   return (
     <article className="flex flex-col items-center gap-3 w-40">
       <h4 className="text-sm font-medium text-gray-900 self-start">{title}</h4>
@@ -21,7 +21,7 @@ function Card({ title, description, children }: CardProps) {
   )
 }
 
-function ForesightButtonResizeable({ name }: ForesightButtonResizeableProps) {
+const ForesightButtonResizeable = ({ name }: ForesightButtonResizeableProps) => {
   const isResized = useIsResized()
   const callback = async () => {
     const randomTimeout = Math.floor(Math.random() * 1000)

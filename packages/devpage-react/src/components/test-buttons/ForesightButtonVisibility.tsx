@@ -5,7 +5,7 @@ type ForesightButtonVisibilityProps = {
   name: string
 }
 
-function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
+const ForesightButtonVisibility = ({ name }: ForesightButtonVisibilityProps) => {
   const isVisible = useIsVisible()
 
   return (

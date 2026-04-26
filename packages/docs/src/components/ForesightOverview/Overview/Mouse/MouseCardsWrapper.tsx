@@ -3,7 +3,7 @@ import { ForesightCard } from "./ForesightCard"
 import { HoverCard } from "./HoverCard"
 import { RegularCard } from "./RegularCard"
 
-function MouseCardsWrapper() {
+const MouseCardsWrapper = () => {
   return (
     <div className={styles.loadingComparisonSection}>
       <div className={styles.comparisonHeader}>

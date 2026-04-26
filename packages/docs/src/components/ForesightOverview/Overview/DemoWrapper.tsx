@@ -2,7 +2,7 @@ import MobileMessage from "../MobileMessage"
 import styles from "./demowrapper.module.css"
 import Playground from "./Playground/Playground"
 
-function DemoWrapper() {
+const DemoWrapper = () => {
   return (
     <section id="playground" className={styles.playgroundSection}>
       <div className="container">

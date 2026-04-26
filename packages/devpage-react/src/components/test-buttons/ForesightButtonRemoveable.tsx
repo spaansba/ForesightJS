@@ -5,7 +5,7 @@ type ForesightButtonRemoveableProps = {
   name: string
 }
 
-function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
+const ForesightButtonRemoveable = ({ name }: ForesightButtonRemoveableProps) => {
   const shouldBeRemoved = useIsRemoved()
   if (shouldBeRemoved) {
     return null

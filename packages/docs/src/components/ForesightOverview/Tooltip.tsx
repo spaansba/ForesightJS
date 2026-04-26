@@ -8,7 +8,7 @@ interface TooltipProps {
   position?: "top" | "bottom" | "left" | "right"
 }
 
-function Tooltip({ children, content, position = "top" }: TooltipProps) {
+const Tooltip = ({ children, content, position = "top" }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false)
 
   return (

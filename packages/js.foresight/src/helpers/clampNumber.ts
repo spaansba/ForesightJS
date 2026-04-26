@@ -1,9 +1,9 @@
-export function clampNumber(
+export const clampNumber = (
   number: number,
   lowerBound: number,
   upperBound: number,
   settingName: string
-) {
+) => {
   if (number < lowerBound) {
     console.warn(
       `ForesightJS: "${settingName}" value ${number} is below minimum bound ${lowerBound}, clamping to ${lowerBound}`

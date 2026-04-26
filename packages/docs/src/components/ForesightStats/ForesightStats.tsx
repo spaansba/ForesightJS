@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Download, Star } from "lucide-react"
 import styles from "./stats.module.css"
 
-function ForesightStats() {
+const ForesightStats = () => {
   const [stats, setStats] = useState({
     npmDownloads: 0,
     githubStars: 0,

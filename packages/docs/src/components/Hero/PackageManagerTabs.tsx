@@ -7,7 +7,7 @@ const packageManagers = [
   { name: "yarn", command: "yarn add js.foresight" },
 ]
 
-export function PackageManagerTabs() {
+export const PackageManagerTabs = () => {
   const [activeTab, setActiveTab] = useState(0)
   const [copied, setCopied] = useState(false)
 

@@ -1,6 +1,6 @@
 import BaseForesightButton from "./BaseForesightButton"
 
-function ForesightButtonNoName() {
+const ForesightButtonNoName = () => {
   return (
     <article className="flex flex-col items-center gap-3 w-40">
       <h4 className="text-sm font-medium text-gray-900 self-start">Unnamed</h4>

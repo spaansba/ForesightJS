@@ -18,9 +18,9 @@ type UseForesightOptions = ForesightRegisterOptionsWithoutElement & {
   templateRefKey: string
 }
 
-export function useForesight<T extends HTMLElement | ComponentPublicInstance>(
+export const useForesight = <T extends HTMLElement | ComponentPublicInstance>(
   options: UseForesightOptions
-) {
+) => {
   const templateRef = useTemplateRef<T>(options.templateRefKey)
   const registerResults = ref<ForesightRegisterResult | null>(null)
   const state = shallowRef<ForesightElementState | null>(null)

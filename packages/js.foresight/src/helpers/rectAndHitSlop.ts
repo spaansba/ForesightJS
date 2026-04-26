@@ -10,7 +10,7 @@ import { clampNumber } from "./clampNumber"
  * @param hitSlop - A number for uniform slop, or a {@link Rect} object for specific slop per side.
  * @returns A {@link Rect} object with `top`, `left`, `right`, and `bottom` properties.
  */
-export function normalizeHitSlop(hitSlop: HitSlop): Rect {
+export const normalizeHitSlop = (hitSlop: HitSlop): Rect => {
   if (typeof hitSlop === "number") {
     const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP, "hitslop")
 
@@ -39,7 +39,7 @@ export function normalizeHitSlop(hitSlop: HitSlop): Rect {
  *                  (e.g., `hitSlop.left` expands the left boundary further to the left).
  * @returns A new {@link Rect} object representing the expanded area.
  */
-export function getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
+export const getExpandedRect = (baseRect: Rect | DOMRect, hitSlop: Rect): Rect => {
   return {
     left: baseRect.left - hitSlop.left,
     right: baseRect.right + hitSlop.right,
@@ -58,7 +58,7 @@ export function getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
  * @returns `true` if the rectangles have identical dimensions or if both are null/undefined,
  *          `false` otherwise.
  */
-export function areRectsEqual(rect1: Rect, rect2: Rect): boolean {
+export const areRectsEqual = (rect1: Rect, rect2: Rect): boolean => {
   if (!rect1 || !rect2) {
     return rect1 === rect2
   }
@@ -71,7 +71,7 @@ export function areRectsEqual(rect1: Rect, rect2: Rect): boolean {
   )
 }
 
-export function isPointInRectangle(point: Point, rect: Rect): boolean {
+export const isPointInRectangle = (point: Point, rect: Rect): boolean => {
   return (
     point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
   )

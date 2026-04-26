@@ -1,7 +1,7 @@
 "use client"
 import { useRef, useState } from "react"
 import styles from "./packagemanager.module.css"
-export function InstallCodeBlock({ code }) {
+export const InstallCodeBlock = ({ code }) => {
   const [copied, setCopied] = useState(false)
   const codeRef = useRef(null)
 

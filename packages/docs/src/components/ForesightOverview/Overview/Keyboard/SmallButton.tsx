@@ -1,7 +1,7 @@
 import { ForesightManager, type ElementReactivatedEvent } from "js.foresight"
 import React, { useEffect, useRef, useState } from "react"
 import styles from "./styles.module.css"
-function SmallButton({ index }: { index: number }) {
+const SmallButton = ({ index }: { index: number }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [loadTime, setLoadTime] = useState<number>(0)
@@ -22,8 +22,8 @@ function SmallButton({ index }: { index: number }) {
     return "Element"
   }
 
-  function handleElementReactivated(e: ElementReactivatedEvent) {
-    if (e.elementData.element === cardRef.current) {
+  const handleElementReactivated = (e: ElementReactivatedEvent) => {
+    if (e.element === cardRef.current) {
       setIsLoaded(false)
       setIsLoading(false)
     }

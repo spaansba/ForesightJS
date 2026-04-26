@@ -14,12 +14,12 @@ import type { CircularBuffer } from "./CircularBuffer"
  *                                       to predict the mouse position.
  * @param out - Output point to mutate with the predicted position.
  */
-export function predictNextMousePosition(
+export const predictNextMousePosition = (
   currentPoint: Point,
   buffer: CircularBuffer<MousePosition>,
   trajectoryPredictionTimeInMs: number,
   out: Point
-): void {
+): void => {
   const now = performance.now()
   // Create a copy of currentPoint for buffer storage (buffer needs independent copies)
   buffer.add({ point: { x: currentPoint.x, y: currentPoint.y }, time: now })

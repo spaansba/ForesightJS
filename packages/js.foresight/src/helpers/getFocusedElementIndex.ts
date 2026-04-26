@@ -12,12 +12,12 @@ import type { FocusableElement } from "tabbable"
  * @param targetElement - The new HTML element that has received focus.
  * @returns The index of the targetElement in the cache, or -1 if not found.
  */
-export function getFocusedElementIndex(
+export const getFocusedElementIndex = (
   isReversed: boolean,
   lastFocusedIndex: number | null,
   tabbableElementsCache: FocusableElement[],
   targetElement: HTMLElement
-): number {
+): number => {
   // First, try to predict the next index based on the last known position.
   if (lastFocusedIndex !== null && lastFocusedIndex > -1) {
     const predictedIndex = isReversed ? lastFocusedIndex - 1 : lastFocusedIndex + 1

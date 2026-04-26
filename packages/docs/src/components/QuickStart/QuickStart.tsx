@@ -2,7 +2,7 @@ import Link from "@docusaurus/Link"
 import { Highlight, themes } from "prism-react-renderer"
 import styles from "./quickstart.module.css"
 
-export function QuickStart() {
+export const QuickStart = () => {
   return (
     <section className={styles.quickStartSection}>
       <div className="container">

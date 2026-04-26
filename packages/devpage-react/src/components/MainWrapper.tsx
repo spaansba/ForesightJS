@@ -20,7 +20,7 @@ type SectionProps = {
   children: React.ReactNode
 }
 
-function Section({ title, toggleLabel, toggleOn, onToggle, children }: SectionProps) {
+const Section = ({ title, toggleLabel, toggleOn, onToggle, children }: SectionProps) => {
   return (
     <section className="border-t border-gray-300 pb-8">
       <div className="sticky top-12 z-[5] -mx-6 px-6 py-4 bg-stone-50/95 backdrop-blur flex items-center justify-between mb-6">

@@ -1,6 +1,6 @@
 import styles from "./features.module.css"
 
-export function Features() {
+export const Features = () => {
   return (
     <section className={styles.featuresSection}>
       <div className="container">

@@ -9,7 +9,7 @@ import type { Point, Rect } from "../types/types"
  * @param rect - The {@link Rect} to check for intersection.
  * @returns `true` if the line segment intersects the rectangle, `false` otherwise.
  */
-export function lineSegmentIntersectsRect(p1: Point, p2: Point, rect: Rect): boolean {
+export const lineSegmentIntersectsRect = (p1: Point, p2: Point, rect: Rect): boolean => {
   let t0 = 0.0
   let t1 = 1.0
   const dx = p2.x - p1.x

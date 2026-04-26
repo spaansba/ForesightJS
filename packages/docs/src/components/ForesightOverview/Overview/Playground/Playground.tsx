@@ -9,7 +9,7 @@ import ResetCardsButton from "../Mouse/ResetCardsButton"
 import DebugButton from "../../DebugButton"
 import { useState } from "react"
 
-function Playground() {
+const Playground = () => {
   const [resetTrigger, setResetTrigger] = useState(0)
   const handleResetAll = () => {
     setResetTrigger(prev => prev + 1)

@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import styles from "./packagemanager.module.css"
 import clsx from "clsx"
 import { InstallCodeBlock } from "./InstallCodeBlock"
-export function PackageManagerTabs() {
+export const PackageManagerTabs = () => {
   const [activeTab, setActiveTab] = useState("pnpm")
 
   const tabs = [

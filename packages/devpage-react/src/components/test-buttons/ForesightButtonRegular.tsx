@@ -4,7 +4,7 @@ type ForesightButtonRegularProps = {
   name: string
 }
 
-function ForesightButtonRegular({ name }: ForesightButtonRegularProps) {
+const ForesightButtonRegular = ({ name }: ForesightButtonRegularProps) => {
   return (
     <article className="flex flex-col items-center gap-3 w-40">
       <h4 className="text-sm font-medium text-gray-900 self-start">{name}</h4>

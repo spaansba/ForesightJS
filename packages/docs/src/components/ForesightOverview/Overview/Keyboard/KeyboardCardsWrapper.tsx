@@ -2,7 +2,7 @@ import React from "react"
 import styles from "./styles.module.css"
 import SmallButton from "./SmallButton"
 
-function KeyboardCardsWrapper() {
+const KeyboardCardsWrapper = () => {
   const buttonIds = Array.from({ length: 25 }, (_, i) => `btn-${i + 1}`)
 
   return (

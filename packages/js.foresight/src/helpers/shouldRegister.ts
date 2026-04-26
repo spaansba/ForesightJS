@@ -7,7 +7,7 @@ type ShouldRegister = {
   isLimitedConnection: boolean
 }
 
-export function evaluateRegistrationConditions(): ShouldRegister {
+export const evaluateRegistrationConditions = (): ShouldRegister => {
   const isTouchDevice = userUsesTouchDevice()
   const isLimitedConnection = hasConnectionLimitations()
   const shouldRegister = !isLimitedConnection
@@ -21,7 +21,7 @@ export function evaluateRegistrationConditions(): ShouldRegister {
  *
  * @returns `true` if the device is likely touch-enabled, `false` otherwise.
  */
-export function userUsesTouchDevice(): boolean {
+export const userUsesTouchDevice = (): boolean => {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return false
   }
@@ -38,7 +38,7 @@ export function userUsesTouchDevice(): boolean {
  *   prefetchResource('/api/data');
  * }
  */
-function hasConnectionLimitations(): boolean {
+const hasConnectionLimitations = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
   if (!connection) {

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { SimpleNavigation } from "../../components/SimpleNavigation"
 import { useDebug } from "../../contexts/DebugContext"
 
-function Mass() {
+const Mass = () => {
   const [resetKey, setResetKey] = useState(0)
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)

@@ -1,6 +1,6 @@
 import React from "react"
 
-function MobileMessage() {
+const MobileMessage = () => {
   return (
     <p>
       <strong>Note:</strong> ForesightJS now offers full touch device support (mobile/pen) as of

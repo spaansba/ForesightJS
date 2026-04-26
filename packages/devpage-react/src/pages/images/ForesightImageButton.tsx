@@ -29,7 +29,7 @@ const imageQueryOptions = (
     enabled: enabled,
   })
 
-export function ForesightImageButton({ image, setSelectedImage }: ForesightImageButtonProps) {
+export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImageButtonProps) => {
   const queryClient = useQueryClient()
   const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image, false, 0))
 
@@ -99,7 +99,7 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
   )
 }
 
-function Row({ label, value, on }: { label: string; value: React.ReactNode; on?: boolean }) {
+const Row = ({ label, value, on }: { label: string; value: React.ReactNode; on?: boolean }) => {
   return (
     <div className="flex justify-between py-1">
       <dt className="text-gray-500">{label}</dt>

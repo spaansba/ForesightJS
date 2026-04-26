@@ -138,10 +138,10 @@ export type SerializedEventData =
   | ManagerDataPayload
   | SerializationErrorPayload
 
-export function safeSerializeManagerData(
+export const safeSerializeManagerData = (
   data: ForesightManagerData,
   logId: string
-): ManagerDataPayload {
+): ManagerDataPayload => {
   const eventListeners: Record<string, number> = {}
   data.eventListeners.forEach((listeners, eventType) => {
     eventListeners[eventType] = listeners.length
@@ -180,10 +180,10 @@ export function safeSerializeManagerData(
  * @param event - The ForesightJS event to serialize
  * @returns Serialized event data or error object if serialization fails
  */
-export function safeSerializeEventData<K extends keyof ForesightEventMap>(
+export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
   event: ForesightEventMap[K],
   logId: string
-): SerializedEventData {
+): SerializedEventData => {
   try {
     // For different event types, extract only the relevant serializable data
     switch (event.type) {
@@ -340,11 +340,11 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
  * @param {number} ms  Duration in milliseconds
  * @returns {string}   Duration in seconds, e.g. “0.50 s” or “1.23 s”
  */
-function formatElapsed(ms: number): string {
+const formatElapsed = (ms: number): string => {
   return `${(ms / 1000).toFixed(4)} s`
 }
 
-function getOrdinalSuffix(n: number): string {
+const getOrdinalSuffix = (n: number): string => {
   const lastTwo = n % 100
   if (lastTwo >= 11 && lastTwo <= 13) {
     return `${n}th`

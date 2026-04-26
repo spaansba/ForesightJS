@@ -43,11 +43,11 @@ const NUMERIC_SETTING_CONFIGS: Record<NumericSettingKeys, { min: number; max: nu
  * Updates a numeric setting with clamping.
  * Returns true if the setting was changed.
  */
-function updateNumericSetting(
+const updateNumericSetting = (
   settings: ForesightManagerSettings,
   key: NumericSettingKeys,
   newValue: number | undefined
-): boolean {
+): boolean => {
   if (!shouldUpdateSetting(newValue, settings[key])) {
     return false
   }
@@ -62,11 +62,11 @@ function updateNumericSetting(
  * Updates a boolean setting.
  * Returns true if the setting was changed.
  */
-function updateBooleanSetting(
+const updateBooleanSetting = (
   settings: ForesightManagerSettings,
   key: ManagerBooleanSettingKeys,
   newValue: boolean | undefined
-): boolean {
+): boolean => {
   if (!shouldUpdateSetting(newValue, settings[key])) {
     return false
   }
@@ -80,10 +80,10 @@ function updateBooleanSetting(
  * Apply initial settings during construction (no event emission, no side effects).
  * Mutates the settings object directly.
  */
-export function initializeSettings(
+export const initializeSettings = (
   settings: ForesightManagerSettings,
   props: Partial<UpdateForsightManagerSettings>
-): void {
+): void => {
   // Numeric settings
   updateNumericSetting(settings, "trajectoryPredictionTime", props.trajectoryPredictionTime)
   updateNumericSetting(settings, "positionHistorySize", props.positionHistorySize)
@@ -131,10 +131,10 @@ export interface SettingsChangeResult {
  * Apply settings changes at runtime.
  * Returns information about what changed for the caller to handle side effects.
  */
-export function applySettingsChanges(
+export const applySettingsChanges = (
   settings: ForesightManagerSettings,
   props: Partial<UpdateForsightManagerSettings> | undefined
-): SettingsChangeResult {
+): SettingsChangeResult => {
   const changedSettings: UpdatedManagerSetting[] = []
   let positionHistorySizeChanged = false
   let scrollPredictionChanged = false

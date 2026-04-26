@@ -3,7 +3,7 @@ import React from "react"
 import styles from "./styles.module.css"
 import Tooltip from "./Tooltip"
 
-function DebugButton() {
+const DebugButton = () => {
   const { toggleDebugMode, debugMode } = useDebugMode()
 
   const tooltipText = debugMode

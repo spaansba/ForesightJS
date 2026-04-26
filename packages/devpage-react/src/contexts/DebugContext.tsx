@@ -9,7 +9,7 @@ interface DebugContextType {
 
 const DebugContext = createContext<DebugContextType | undefined>(undefined)
 
-export function DebugProvider({ children }: { children: ReactNode }) {
+export const DebugProvider = ({ children }: { children: ReactNode }) => {
   const [isDebugActive, setIsDebugActive] = useState(
     () => ForesightDevtools.instance.devtoolsSettings.show.controlPanel
   )
@@ -36,7 +36,7 @@ export function DebugProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useDebug() {
+export const useDebug = () => {
   const context = useContext(DebugContext)
   if (context === undefined) {
     throw new Error("useDebug must be used within a DebugProvider")

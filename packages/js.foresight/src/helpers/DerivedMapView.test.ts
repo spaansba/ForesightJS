@@ -3,7 +3,7 @@ import { DerivedMapView } from "./DerivedMapView"
 
 type Internal = { state: { name: string; active: boolean } }
 
-function makeSource() {
+const makeSource = () => {
   const source = new Map<string, Internal>()
   source.set("a", { state: { name: "alpha", active: true } })
   source.set("b", { state: { name: "beta", active: false } })

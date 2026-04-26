@@ -4,7 +4,7 @@ import Mass from "./pages/mass"
 import ImageGallery from "./pages/images"
 import { DebugProvider } from "./contexts/DebugContext"
 
-function App() {
+const App = () => {
   return (
     <DebugProvider>
       <Router>

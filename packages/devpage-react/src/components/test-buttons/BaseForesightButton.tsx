@@ -9,7 +9,7 @@ type ForesightButtonProps = {
   children?: React.ReactNode
 }
 
-function ForesightButton({ registerOptions, className = "", children }: ForesightButtonProps) {
+const ForesightButton = ({ registerOptions, className = "", children }: ForesightButtonProps) => {
   const reactivateAfter = useReactivateAfter()
   const merged: ForesightRegisterOptionsWithoutElement = {
     reactivateAfter,

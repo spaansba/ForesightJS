@@ -7,7 +7,7 @@ type BaseCardProps = {
   text: ReactNode
 }
 
-function BaseCard({ isLoading, isLoaded, text }: BaseCardProps) {
+const BaseCard = ({ isLoading, isLoaded, text }: BaseCardProps) => {
   return (
     <div className={styles.cardState}>
       {isLoading ? (

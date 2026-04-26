@@ -21,13 +21,16 @@ vi.mock("position-observer", () => {
 })
 
 // Helper to reset the singleton between tests
-function resetForesightManager() {
+const resetForesightManager = () => {
   // Access private static property to reset singleton
   // @ts-expect-error - accessing private static for test reset
   ForesightManager.manager = undefined
 }
 
-function getEntry(manager: ForesightManager, element: ForesightElement): ForesightElementInternal {
+const getEntry = (
+  manager: ForesightManager,
+  element: ForesightElement
+): ForesightElementInternal => {
   // @ts-expect-error - accessing private map for tests
   const entry = manager.elementEntries.get(element) as ForesightElementInternal | undefined
   if (!entry) {
@@ -37,19 +40,19 @@ function getEntry(manager: ForesightManager, element: ForesightElement): Foresig
   return entry
 }
 
-function fire(
+const fire = (
   manager: ForesightManager,
   entry: ForesightElementInternal,
   hitType: { kind: "mouse"; subType: "hover" | "trajectory" } = {
     kind: "mouse",
     subType: "hover",
   }
-) {
+) => {
   // @ts-expect-error - accessing private method for tests
   manager.callCallback(entry, hitType)
 }
 
-function createMockElement(id = "test-element"): ForesightElement {
+const createMockElement = (id = "test-element"): ForesightElement => {
   const element = document.createElement("div")
   element.id = id
   document.body.appendChild(element)
@@ -69,7 +72,7 @@ function createMockElement(id = "test-element"): ForesightElement {
   return element
 }
 
-function createMockNodeList(count: number): NodeListOf<ForesightElement> {
+const createMockNodeList = (count: number): NodeListOf<ForesightElement> => {
   const container = document.createElement("div")
   document.body.appendChild(container)
 
@@ -1412,10 +1415,10 @@ describe("ForesightManager", () => {
   })
 
   describe("Element State Lifecycle", () => {
-    function expectState(
+    const expectState = (
       state: ForesightElementState,
       expected: { isPredicted: boolean; isCallbackRunning: boolean; isActive: boolean }
-    ) {
+    ) => {
       expect(state.isPredicted).toBe(expected.isPredicted)
       expect(state.isCallbackRunning).toBe(expected.isCallbackRunning)
       expect(state.isActive).toBe(expected.isActive)
