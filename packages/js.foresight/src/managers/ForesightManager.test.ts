@@ -27,28 +27,25 @@ function resetForesightManager() {
   ForesightManager.manager = undefined
 }
 
-function getInternal(
-  manager: ForesightManager,
-  element: ForesightElement
-): ForesightElementInternal {
+function getEntry(manager: ForesightManager, element: ForesightElement): ForesightElementInternal {
   // @ts-expect-error - accessing private map for tests
-  const internal = manager.elements.get(element) as ForesightElementInternal | undefined
-  if (!internal) {
+  const entry = manager.elements.get(element) as ForesightElementInternal | undefined
+  if (!entry) {
     throw new Error("Element not registered")
   }
-  return internal
+  return entry
 }
 
 function fire(
   manager: ForesightManager,
-  internal: ForesightElementInternal,
+  entry: ForesightElementInternal,
   hitType: { kind: "mouse"; subType: "hover" | "trajectory" } = {
     kind: "mouse",
     subType: "hover",
   }
 ) {
   // @ts-expect-error - accessing private method for tests
-  manager.callCallback(internal, hitType)
+  manager.callCallback(entry, hitType)
 }
 
 function createMockElement(id = "test-element"): ForesightElement {
@@ -455,7 +452,7 @@ describe("ForesightManager", () => {
       const callback = vi.fn()
       manager.register({ element, callback, name: "test" })
 
-      fire(manager, getInternal(manager, element), { kind: "mouse", subType: "trajectory" })
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
 
       // Wait for async callback wrapper
       await vi.runAllTimersAsync()
@@ -487,7 +484,7 @@ describe("ForesightManager", () => {
       const errorCallback = vi.fn().mockRejectedValue(new Error("Callback failed"))
       manager.register({ element, callback: errorCallback, name: "test" })
 
-      fire(manager, getInternal(manager, element))
+      fire(manager, getEntry(manager, element))
 
       await vi.runAllTimersAsync()
 
@@ -507,15 +504,15 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
 
-      const internal = getInternal(manager, element)
-      expect(internal.state.isActive).toBe(true)
+      const entry = getEntry(manager, element)
+      expect(entry.state.isActive).toBe(true)
 
-      fire(manager, internal)
+      fire(manager, entry)
 
       await vi.runAllTimersAsync()
 
-      expect(internal.state.isActive).toBe(false)
-      expect(internal.state.isPredicted).toBe(false)
+      expect(entry.state.isActive).toBe(false)
+      expect(entry.state.isPredicted).toBe(false)
     })
 
     it("should update hit counters on callback invocation", async () => {
@@ -524,7 +521,7 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback: vi.fn() })
 
-      fire(manager, getInternal(manager, element), { kind: "mouse", subType: "trajectory" })
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
       await vi.runAllTimersAsync()
 
       const data = manager.getManagerData
@@ -538,10 +535,10 @@ describe("ForesightManager", () => {
       const callback = vi.fn()
 
       manager.register({ element, callback })
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
 
-      fire(manager, internal)
-      fire(manager, internal)
+      fire(manager, entry)
+      fire(manager, entry)
 
       await vi.runAllTimersAsync()
 
@@ -558,20 +555,20 @@ describe("ForesightManager", () => {
       manager.addEventListener("elementReactivated", reactivatedListener)
       manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
 
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
 
-      fire(manager, internal)
+      fire(manager, entry)
 
       // Only advance enough for the callback to complete, not the reactivation timer
       await vi.advanceTimersByTimeAsync(100)
 
-      expect(internal.state.isActive).toBe(false)
+      expect(entry.state.isActive).toBe(false)
       expect(reactivatedListener).not.toHaveBeenCalled()
 
       // Now advance past reactivateAfter
       await vi.advanceTimersByTimeAsync(5000)
 
-      expect(internal.state.isActive).toBe(true)
+      expect(entry.state.isActive).toBe(true)
       expect(reactivatedListener).toHaveBeenCalledWith(
         expect.objectContaining({ type: "elementReactivated" })
       )
@@ -585,13 +582,13 @@ describe("ForesightManager", () => {
       manager.addEventListener("elementReactivated", reactivatedListener)
       manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
 
-      const internal = getInternal(manager, element)
-      fire(manager, internal)
+      const entry = getEntry(manager, element)
+      fire(manager, entry)
       await vi.runAllTimersAsync()
 
       await vi.advanceTimersByTimeAsync(100000)
 
-      expect(internal.state.isActive).toBe(false)
+      expect(entry.state.isActive).toBe(false)
       expect(reactivatedListener).not.toHaveBeenCalled()
     })
 
@@ -600,16 +597,16 @@ describe("ForesightManager", () => {
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
 
-      fire(manager, internal)
+      fire(manager, entry)
       await vi.runAllTimersAsync()
 
-      expect(internal.state.isActive).toBe(false)
+      expect(entry.state.isActive).toBe(false)
 
       manager.reactivate(element)
 
-      expect(internal.state.isActive).toBe(true)
+      expect(entry.state.isActive).toBe(true)
     })
 
     it("should not reactivate non-existent element", () => {
@@ -628,10 +625,10 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback: vi.fn() })
 
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
       // Element should be checkable: visible (mocked), active, not predicted
-      expect(internal.state.isActive).toBe(true)
-      expect(internal.state.isPredicted).toBe(false)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isPredicted).toBe(false)
     })
 
     it("should remove from checkable set when callback starts running", async () => {
@@ -644,18 +641,18 @@ describe("ForesightManager", () => {
       })
 
       manager.register({ element, callback: () => slowCallback })
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
 
-      fire(manager, internal)
+      fire(manager, entry)
 
       // While callback is running, element should be predicted
-      expect(internal.state.isPredicted).toBe(true)
+      expect(entry.state.isPredicted).toBe(true)
 
       // Resolve the callback
       resolveCallback!()
       await vi.runAllTimersAsync()
 
-      expect(internal.state.isPredicted).toBe(false)
+      expect(entry.state.isPredicted).toBe(false)
     })
 
     it("should update checkable status via public method", () => {
@@ -663,15 +660,15 @@ describe("ForesightManager", () => {
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn() })
-      const internal = getInternal(manager, element)
+      const entry = getEntry(manager, element)
 
-      expect(internal.state.isActive).toBe(true)
+      expect(entry.state.isActive).toBe(true)
 
       // @ts-expect-error - accessing private method
-      manager.updateElementState(internal, { isIntersectingWithViewport: false })
-      manager.updateCheckableStatus(internal)
+      manager.updateElementState(entry, { isIntersectingWithViewport: false })
+      manager.updateCheckableStatus(entry)
 
-      expect(internal.state.isIntersectingWithViewport).toBe(false)
+      expect(entry.state.isIntersectingWithViewport).toBe(false)
     })
   })
 
@@ -769,7 +766,7 @@ describe("ForesightManager", () => {
 
       expect(manager.getManagerData.activeElementCount).toBe(2)
 
-      fire(manager, getInternal(manager, element1))
+      fire(manager, getEntry(manager, element1))
       await vi.runAllTimersAsync()
 
       expect(manager.getManagerData.activeElementCount).toBe(1)
@@ -952,8 +949,8 @@ describe("ForesightManager", () => {
         manager.register({ element: nodeList, callback })
 
         nodeList.forEach(el => {
-          const internal = getInternal(manager, el)
-          expect(internal.callback).toBe(callback)
+          const entry = getEntry(manager, el)
+          expect(entry.callback).toBe(callback)
         })
       })
 
@@ -1039,7 +1036,7 @@ describe("ForesightManager", () => {
 
         // Deactivate all elements
         for (const el of Array.from(nodeList)) {
-          fire(manager, getInternal(manager, el))
+          fire(manager, getEntry(manager, el))
         }
         await vi.runAllTimersAsync()
 
@@ -1073,7 +1070,7 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback, name: "test-element" })
 
-      fire(manager, getInternal(manager, element))
+      fire(manager, getEntry(manager, element))
       await vi.runAllTimersAsync()
 
       expect(callback).toHaveBeenCalledTimes(1)
@@ -1089,7 +1086,7 @@ describe("ForesightManager", () => {
       manager.register({ element: nodeList, callback })
 
       // Trigger callback on first element
-      const firstInternal = getInternal(manager, nodeList[0])
+      const firstInternal = getEntry(manager, nodeList[0])
       fire(manager, firstInternal)
       await vi.runAllTimersAsync()
 
@@ -1105,7 +1102,7 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback })
 
-      fire(manager, getInternal(manager, element), { kind: "mouse", subType: "trajectory" })
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
       await vi.runAllTimersAsync()
 
       expect(callback).toHaveBeenCalledTimes(1)

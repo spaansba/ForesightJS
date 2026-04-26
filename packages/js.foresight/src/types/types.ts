@@ -94,7 +94,6 @@ export type ForesightElementState = {
 
 export type ForesightRegisterResult = ForesightElementState & {
   /** Function to unregister the element
-   * @deprecated no longer need to call this manually, you can call Foresightmanager.instance.unregister if needed
    */
   unregister: () => void
   /**

@@ -72,23 +72,23 @@ export class DesktopHandler extends BaseForesightModule {
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
     const enableScrollPosition = this.settings.enableScrollPrediction
 
-    for (const entry of entries) {
-      const internal = this.elements.get(entry.target)
+    for (const positionEntry of entries) {
+      const entry = this.elements.get(positionEntry.target)
 
-      if (!internal) {
+      if (!entry) {
         continue
       }
 
       if (enableScrollPosition) {
-        this.scrollPredictor?.handleScrollPrefetch(internal, entry.boundingClientRect)
+        this.scrollPredictor?.handleScrollPrefetch(entry, positionEntry.boundingClientRect)
       } else {
         // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
-        this.checkForMouseHover(internal)
+        this.checkForMouseHover(entry)
       }
 
       // Must run AFTER handleScrollPrefetch — scroll direction is derived from
       // the difference between the old and new originalRect.
-      this.handlePositionChangeDataUpdates(internal, entry)
+      this.handlePositionChangeDataUpdates(entry, positionEntry)
     }
 
     if (enableScrollPosition) {
@@ -96,14 +96,14 @@ export class DesktopHandler extends BaseForesightModule {
     }
   }
 
-  private checkForMouseHover = (internal: ForesightElementInternal) => {
+  private checkForMouseHover = (entry: ForesightElementInternal) => {
     if (
       isPointInRectangle(
         this.trajectoryPositions.currentPoint,
-        internal.state.elementBounds.expandedRect
+        entry.state.elementBounds.expandedRect
       )
     ) {
-      this.callCallback(internal, {
+      this.callCallback(entry, {
         kind: "mouse",
         subType: "hover",
       })
@@ -111,12 +111,12 @@ export class DesktopHandler extends BaseForesightModule {
   }
 
   private handlePositionChangeDataUpdates = (
-    internal: ForesightElementInternal,
-    entry: PositionObserverEntry
+    entry: ForesightElementInternal,
+    positionEntry: PositionObserverEntry
   ) => {
     const updatedProps: UpdatedDataPropertyNames[] = []
-    const isNowIntersecting = entry.isIntersecting
-    const state = internal.state
+    const isNowIntersecting = positionEntry.isIntersecting
+    const state = entry.state
     const patch: Partial<ForesightElementState> = {}
 
     if (state.isIntersectingWithViewport !== isNowIntersecting) {
@@ -126,13 +126,16 @@ export class DesktopHandler extends BaseForesightModule {
 
     if (
       isNowIntersecting &&
-      !areRectsEqual(entry.boundingClientRect, state.elementBounds.originalRect)
+      !areRectsEqual(positionEntry.boundingClientRect, state.elementBounds.originalRect)
     ) {
       updatedProps.push("bounds")
       patch.elementBounds = {
         hitSlop: state.elementBounds.hitSlop,
-        originalRect: entry.boundingClientRect,
-        expandedRect: getExpandedRect(entry.boundingClientRect, state.elementBounds.hitSlop),
+        originalRect: positionEntry.boundingClientRect,
+        expandedRect: getExpandedRect(
+          positionEntry.boundingClientRect,
+          state.elementBounds.hitSlop
+        ),
       }
     }
 
@@ -140,12 +143,12 @@ export class DesktopHandler extends BaseForesightModule {
       return
     }
 
-    const next = this.updateElementState(internal, patch)
+    const next = this.updateElementState(entry, patch)
 
     if (this.hasListeners("elementDataUpdated")) {
       this.emit({
         type: "elementDataUpdated",
-        element: internal.element,
+        element: entry.element,
         state: next,
         updatedProps,
       })

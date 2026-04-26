@@ -9,7 +9,7 @@ import type {
 } from "../types/types"
 
 export type CallCallbackFunction = (
-  internal: ForesightElementInternal,
+  entry: ForesightElementInternal,
   callbackHitType: CallbackHitType
 ) => void
 
@@ -18,7 +18,7 @@ export type EmitFunction = <K extends ForesightEvent>(event: ForesightEventMap[K
 export type HasListenersFunction = <K extends ForesightEvent>(eventType: K) => boolean
 
 export type UpdateElementStateFunction = (
-  internal: ForesightElementInternal,
+  entry: ForesightElementInternal,
   patch: Partial<ForesightElementState>
 ) => ForesightElementState
 

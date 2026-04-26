@@ -41,8 +41,8 @@ export class ScrollPredictor extends BaseForesightModule {
     this.predictedScrollPoint = null
   }
 
-  public handleScrollPrefetch(internal: ForesightElementInternal, newRect: DOMRect): void {
-    const state = internal.state
+  public handleScrollPrefetch(entry: ForesightElementInternal, newRect: DOMRect): void {
+    const state = entry.state
     if (!state.isIntersectingWithViewport || state.isPredicted || !state.isActive) {
       return
     }
@@ -72,7 +72,7 @@ export class ScrollPredictor extends BaseForesightModule {
         state.elementBounds.expandedRect
       )
     ) {
-      this.callCallback(internal, {
+      this.callCallback(entry, {
         kind: "scroll",
         subType: this.scrollDirection,
       })
