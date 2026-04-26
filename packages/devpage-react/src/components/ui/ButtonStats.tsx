@@ -21,9 +21,7 @@ function ButtonStats({ state }: ButtonStatsProps) {
       {row("cb running", state?.isCallbackRunning ? "yes" : "no")}
       {row("status", state?.status ?? "—")}
       <details className="divide-y divide-gray-200">
-        <summary className="px-2 py-1 cursor-pointer text-gray-500 select-none">
-          full state
-        </summary>
+        <summary className="px-2 py-1 cursor-pointer text-gray-500 select-none">full state</summary>
         <pre className="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700">
           {state ? JSON.stringify(state, null, 2) : "null"}
         </pre>

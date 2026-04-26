@@ -212,7 +212,7 @@ export class ElementOverlays extends LitElement {
         }
       } else {
         // Shown — reapply overlay styles to all tracked elements
-        for (const [element, overlay] of this.overlayMap) {
+        for (const [element] of this.overlayMap) {
           const state = ForesightManager.instance.registeredElements.get(element)
           if (state) {
             this.applyOverlayToElement(element, state)
@@ -247,7 +247,7 @@ export class ElementOverlays extends LitElement {
     const { nameLabel } = overlay
     const { expandedRect } = state.elementBounds
 
-    if (!this.showNameTags) {
+    if (!this.showNameTags || state.name === "unnamed") {
       nameLabel.style.display = "none"
     } else {
       nameLabel.textContent = state.name

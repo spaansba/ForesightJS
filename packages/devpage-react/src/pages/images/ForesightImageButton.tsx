@@ -74,14 +74,20 @@ export function ForesightImageButton({ image, setSelectedImage }: ForesightImage
         </dl>
         <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
           <Row label="hits" value={state?.hitCount ?? 0} />
-          <Row label="predicted" value={state?.isPredicted ? "yes" : "no"} on={state?.isPredicted} />
-          <Row label="cb running" value={state?.isCallbackRunning ? "yes" : "no"} on={state?.isCallbackRunning} />
+          <Row
+            label="predicted"
+            value={state?.isPredicted ? "yes" : "no"}
+            on={state?.isPredicted}
+          />
+          <Row
+            label="cb running"
+            value={state?.isCallbackRunning ? "yes" : "no"}
+            on={state?.isCallbackRunning}
+          />
           <Row label="status" value={state?.status ?? "—"} />
         </dl>
         <details className="text-xs font-mono">
-          <summary className="cursor-pointer text-gray-500 select-none">
-            full state
-          </summary>
+          <summary className="cursor-pointer text-gray-500 select-none">full state</summary>
           <pre className="mt-1 overflow-auto max-h-40 text-[10px] text-gray-700">
             {state ? JSON.stringify(state, null, 2) : "null"}
           </pre>

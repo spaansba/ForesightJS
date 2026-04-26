@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForesight } from "../composables/useForesight"
-import { onMounted, watch } from "vue"
+import { onMounted } from "vue"
 import TestComponent from "../components/TestComponent.vue"
 
 const fakePrefetch = async (label: string) => {
@@ -14,7 +14,6 @@ const { templateRef, state: stateA } = useForesight<InstanceType<typeof TestComp
   callback: () => fakePrefetch("Simple Composable Button"),
   reactivateAfter: 2000,
 })
-
 
 const { state: stateB } = useForesight({
   templateRefKey: "buttonRef",
@@ -43,7 +42,9 @@ onMounted(() => {
         >
           Hover to predict
         </TestComponent>
-        <div class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
+        <div
+          class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
+        >
           <div class="flex justify-between px-2 py-1">
             <span class="text-gray-500">hits</span>
             <span class="text-gray-900">{{ stateA?.hitCount ?? 0 }}</span>
@@ -61,12 +62,11 @@ onMounted(() => {
             <span class="text-gray-900">{{ stateA?.status ?? "—" }}</span>
           </div>
           <details>
-            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">
-              full state
-            </summary>
-            <pre class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200">{{
-              stateA ? JSON.stringify(stateA, null, 2) : "null"
-            }}</pre>
+            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">full state</summary>
+            <pre
+              class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200"
+              >{{ stateA ? JSON.stringify(stateA, null, 2) : "null" }}</pre
+            >
           </details>
         </div>
       </article>
@@ -82,7 +82,9 @@ onMounted(() => {
         >
           Hover to predict
         </button>
-        <div class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
+        <div
+          class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
+        >
           <div class="flex justify-between px-2 py-1">
             <span class="text-gray-500">hits</span>
             <span class="text-gray-900">{{ stateB?.hitCount ?? 0 }}</span>
@@ -100,12 +102,11 @@ onMounted(() => {
             <span class="text-gray-900">{{ stateB?.status ?? "—" }}</span>
           </div>
           <details>
-            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">
-              full state
-            </summary>
-            <pre class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200">{{
-              stateB ? JSON.stringify(stateB, null, 2) : "null"
-            }}</pre>
+            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">full state</summary>
+            <pre
+              class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200"
+              >{{ stateB ? JSON.stringify(stateB, null, 2) : "null" }}</pre
+            >
           </details>
         </div>
       </article>

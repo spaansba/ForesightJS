@@ -222,7 +222,7 @@ describe("DerivedMapView", () => {
       source.set(1, { x: 10, y: 20 })
       source.set(2, { x: 30, y: 40 })
 
-      const view = new DerivedMapView(source, (entry) => entry.x + entry.y)
+      const view = new DerivedMapView(source, entry => entry.x + entry.y)
 
       expect(view.get(1)).toBe(30)
       expect(view.get(2)).toBe(70)

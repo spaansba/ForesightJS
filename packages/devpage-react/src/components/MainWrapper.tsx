@@ -66,7 +66,7 @@ export const Main = () => {
           toggleOn={isRemoved}
           onToggle={actions.toggleRemoved}
         >
-            <ForesightButtonRemoveable name="removeable" />
+          <ForesightButtonRemoveable name="removeable" />
         </Section>
 
         <Section
