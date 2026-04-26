@@ -1,3 +1,4 @@
+import { DerivedMapView } from "../helpers/DerivedMapView"
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
@@ -52,8 +53,12 @@ const NOOP_UNSUBSCRIBE = () => {}
 export class ForesightManager {
   private static manager: ForesightManager
 
-  private elements: Map<ForesightElement, ForesightElementInternal> = new Map()
-  private stateView: Map<ForesightElement, ForesightElementState> = new Map()
+  /** Internal entries containing full element data, callbacks, and subscribers. */
+  private elementEntries: Map<ForesightElement, ForesightElementInternal> = new Map()
+  /** Public read-only view exposing only external state, derived from {@link elementEntries}. */
+  public readonly registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> =
+    new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
+
   private checkableElements: Set<ForesightElementInternal> = new Set()
 
   private idCounter: number = 0
@@ -80,7 +85,7 @@ export class ForesightManager {
     }
 
     this.handlerDependencies = {
-      elements: this.elements,
+      elements: this.elementEntries,
       callCallback: this.callCallback.bind(this),
       emit: this.eventEmitter.emit.bind(this.eventEmitter),
       hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
@@ -181,10 +186,6 @@ export class ForesightManager {
     }
   }
 
-  public get registeredElements(): ReadonlyMap<ForesightElement, ForesightElementState> {
-    return this.stateView
-  }
-
   public register(options: ForesightRegisterNodeListOptions): ForesightRegisterResult[]
   public register(options: ForesightRegisterOptions): ForesightRegisterResult
   public register(
@@ -212,7 +213,7 @@ export class ForesightManager {
       }
     }
 
-    const previousEntry = this.elements.get(options.element)
+    const previousEntry = this.elementEntries.get(options.element)
 
     if (previousEntry) {
       const next = this.updateElementState(previousEntry, {
@@ -236,8 +237,7 @@ export class ForesightManager {
       this._globalSettings.defaultHitSlop
     )
 
-    this.elements.set(options.element, entry)
-    this.stateView.set(options.element, entry.state)
+    this.elementEntries.set(options.element, entry)
     this.activeElementCount++
     this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(options.element)
@@ -298,9 +298,6 @@ export class ForesightManager {
 
     const next = { ...current, ...patch }
     entry.state = next
-    if (this.elements.has(entry.element)) {
-      this.stateView.set(entry.element, next)
-    }
     for (const listener of entry.subscribers) {
       listener()
     }
@@ -319,16 +316,16 @@ export class ForesightManager {
   }
 
   private unregisterElement(
-    domElement: ForesightElement,
+    element: ForesightElement,
     unregisterReason?: ElementUnregisteredReason
   ): void {
-    const entry = this.elements.get(domElement)
+    const entry = this.elementEntries.get(element)
     if (!entry) {
       return
     }
 
     this.clearReactivateTimeout(entry)
-    this.currentlyActiveHandler?.unobserveElement(domElement)
+    this.currentlyActiveHandler?.unobserveElement(element)
 
     if (entry.state.isActive) {
       this.activeElementCount--
@@ -340,12 +337,11 @@ export class ForesightManager {
       isPredicted: false,
     })
 
-    this.elements.delete(domElement)
-    this.stateView.delete(domElement)
+    this.elementEntries.delete(element)
     this.checkableElements.delete(entry)
     entry.subscribers.clear()
 
-    const wasLastRegisteredElement = this.elements.size === 0 && this.isSetup
+    const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
     if (wasLastRegisteredElement) {
       this.devLog("All elements unregistered, removing global listeners")
       this.removeGlobalListeners()
@@ -353,7 +349,7 @@ export class ForesightManager {
 
     this.eventEmitter.emit({
       type: "elementUnregistered",
-      element: domElement,
+      element: element,
       state: finalState,
       timestamp: Date.now(),
       unregisterReason: unregisterReason ?? "by user",
@@ -369,8 +365,8 @@ export class ForesightManager {
     }
   }
 
-  private reactivateElement(domElement: ForesightElement): void {
-    const entry = this.elements.get(domElement)
+  private reactivateElement(element: ForesightElement): void {
+    const entry = this.elementEntries.get(element)
     if (!entry) {
       return
     }
@@ -388,11 +384,11 @@ export class ForesightManager {
     const next = this.updateElementState(entry, { isActive: true })
     this.activeElementCount++
     this.updateCheckableStatus(entry)
-    this.currentlyActiveHandler?.observeElement(domElement)
+    this.currentlyActiveHandler?.observeElement(element)
 
     this.eventEmitter.emit({
       type: "elementReactivated",
-      element: domElement,
+      element: element,
       state: next,
       timestamp: Date.now(),
     })
@@ -646,7 +642,7 @@ export class ForesightManager {
       return
     }
 
-    for (const element of this.elements.keys()) {
+    for (const element of this.elementEntries.keys()) {
       if (!element.isConnected) {
         this.unregister(element, "disconnected")
       }
@@ -697,7 +693,7 @@ export class ForesightManager {
   }
 
   private forceUpdateAllElementBounds(): void {
-    for (const entry of this.elements.values()) {
+    for (const entry of this.elementEntries.values()) {
       if (entry.state.isIntersectingWithViewport) {
         this.forceUpdateElementBounds(entry)
       }

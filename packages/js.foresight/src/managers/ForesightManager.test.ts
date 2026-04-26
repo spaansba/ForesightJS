@@ -29,7 +29,7 @@ function resetForesightManager() {
 
 function getEntry(manager: ForesightManager, element: ForesightElement): ForesightElementInternal {
   // @ts-expect-error - accessing private map for tests
-  const entry = manager.elements.get(element) as ForesightElementInternal | undefined
+  const entry = manager.elementEntries.get(element) as ForesightElementInternal | undefined
   if (!entry) {
     throw new Error("Element not registered")
   }
