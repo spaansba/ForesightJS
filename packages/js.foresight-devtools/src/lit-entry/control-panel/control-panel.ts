@@ -207,9 +207,11 @@ export class ControlPanel extends LitElement {
   private getStoredTab(): ControllerTabs {
     try {
       const tab = localStorage.getItem(this.localStorageSelectedTabKey)
+
       return (tab as ControllerTabs) || "logs"
     } catch (error) {
       console.error(error)
+
       return "logs"
     }
   }
@@ -223,6 +225,7 @@ export class ControlPanel extends LitElement {
     } catch (error) {
       console.error("ForesightDevtools: Failed to load corner from localStorage:", error)
     }
+
     return "bottom-right"
   }
 

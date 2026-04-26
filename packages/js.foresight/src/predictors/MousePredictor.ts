@@ -69,6 +69,7 @@ export class MousePredictor extends BaseForesightModule {
       if (!enablePrediction) {
         if (isPointInRectangle(currentPoint, expandedRect)) {
           this.callCallback(internal, { kind: "mouse", subType: "hover" })
+
           return
         }
 

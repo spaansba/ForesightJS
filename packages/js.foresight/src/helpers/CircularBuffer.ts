@@ -8,6 +8,7 @@ export class CircularBuffer<T> {
     if (capacity <= 0) {
       throw new Error("CircularBuffer capacity must be greater than 0")
     }
+
     this.capacity = capacity
     this.buffer = new Array(capacity)
   }
@@ -42,6 +43,7 @@ export class CircularBuffer<T> {
       return this.buffer[this.count - 1]
     } else {
       const lastIndex = (this.head - 1 + this.capacity) % this.capacity
+
       return this.buffer[lastIndex]
     }
   }
@@ -53,11 +55,13 @@ export class CircularBuffer<T> {
 
     if (this.count === 1) {
       const item = this.count < this.capacity ? this.buffer[0] : this.buffer[this.head]
+
       return [item, item]
     }
 
     const first = this.getFirst()
     const last = this.getLast()
+
     return [first, last]
   }
 

@@ -14,9 +14,11 @@ function SmallButton({ index }: { index: number }) {
     if (isLoading) {
       return "Fetching..."
     }
+
     if (isLoaded) {
       return "Fetched"
     }
+
     return "Element"
   }
 
@@ -28,6 +30,7 @@ function SmallButton({ index }: { index: number }) {
   }
   useEffect(() => {
     ForesightManager.instance.addEventListener("elementReactivated", handleElementReactivated)
+
     return () => {
       ForesightManager.instance.removeEventListener("elementReactivated", handleElementReactivated)
     }

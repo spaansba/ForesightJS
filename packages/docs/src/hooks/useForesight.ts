@@ -11,7 +11,9 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
   const elementRef = useRef<T>(null)
   const registerResults = useRef<ForesightRegisterResult | null>(null)
   useEffect(() => {
-    if (!elementRef.current) return
+    if (!elementRef.current) {
+      return
+    }
 
     registerResults.current = ForesightManager.instance.register({
       element: elementRef.current,

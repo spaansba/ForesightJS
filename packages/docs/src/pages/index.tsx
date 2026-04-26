@@ -11,6 +11,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext()
   const queryClient = new QueryClient()
+
   return (
     <PostHogProvider
       apiKey={siteConfig.customFields?.POSTHOG_KEY as string}

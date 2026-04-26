@@ -52,7 +52,9 @@ export class CopyIcon extends LitElement {
   @state() private copyTimeout: ReturnType<typeof setTimeout> | null = null
 
   private async handleClick(event: MouseEvent): Promise<void> {
-    if (this.isCopied) return
+    if (this.isCopied) {
+      return
+    }
 
     if (this.onCopy) {
       try {

@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint"
 import wcPlugin from "eslint-plugin-wc"
 import litPlugin from "eslint-plugin-lit"
 import pluginVue from "eslint-plugin-vue"
+import stylistic from "@stylistic/eslint-plugin"
 
 export default [
   // Global ignores
@@ -12,7 +13,6 @@ export default [
       "**/dist/**",
       "**/build/**",
       "**/node_modules/**",
-      "**/PositionObserver/**",
       "**/.vite/**",
       "**/scripts/**",
       "**/.docusaurus/**",
@@ -22,15 +22,27 @@ export default [
   // Base config for all projects
   js.configs.recommended,
   ...tseslint.configs.recommended,
-
   // General TypeScript/JavaScript files
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}"],
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.node,
       },
+    },
+    plugins: {
+      "@stylistic": stylistic,
+    },
+    rules: {
+      "func-style": ["error", "expression"],
+      eqeqeq: "error",
+      curly: "error",
+      "@stylistic/padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "*", next: "return" },
+        { blankLine: "always", prev: "if", next: "*" },
+      ],
     },
   },
 

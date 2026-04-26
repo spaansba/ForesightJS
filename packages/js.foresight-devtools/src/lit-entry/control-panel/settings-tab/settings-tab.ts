@@ -268,9 +268,14 @@ export class SettingsTab extends LitElement {
   private _handleDevtoolsSettingChange(e: CustomEvent<{ setting: string; value: boolean }>): void {
     const { setting, value } = e.detail
 
-    if (!setting.startsWith("show.")) return
+    if (!setting.startsWith("show.")) {
+      return
+    }
+
     const key = setting.slice("show.".length) as ShowKey
-    if (!SHOW_KEYS.includes(key)) return
+    if (!SHOW_KEYS.includes(key)) {
+      return
+    }
 
     this.devtoolsSettings = {
       ...this.devtoolsSettings,
@@ -314,6 +319,7 @@ export class SettingsTab extends LitElement {
     } catch (error) {
       console.warn("ForesightDevtools: Failed to load corner from localStorage:", error)
     }
+
     return "bottom-right"
   }
 
@@ -355,6 +361,7 @@ export class SettingsTab extends LitElement {
         .hasContent=${false}
       ></tab-content>`
     }
+
     const settings = this.managerSettings
 
     const chipTitle =

@@ -14,6 +14,7 @@ export class DerivedMapView<K, TSource, TDerived> implements ReadonlyMap<K, TDer
 
   get(key: K): TDerived | undefined {
     const entry = this.source.get(key)
+
     return entry === undefined ? undefined : this.derive(entry)
   }
 

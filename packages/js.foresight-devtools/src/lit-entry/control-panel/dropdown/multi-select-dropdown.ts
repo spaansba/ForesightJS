@@ -37,6 +37,7 @@ export class MultiSelectDropdown extends BaseDropdown {
     } else {
       this.selectedValues = [...this.selectedValues, option.value]
     }
+
     const newSelectionState = !isCurrentlySelected
     this.onSelectionChange?.(option.value, newSelectionState)
   }

@@ -59,6 +59,7 @@ global.performance = {
   ...global.performance,
   now: vi.fn(() => {
     mockTime += 16 // Simulate 60fps (16ms per frame)
+
     return mockTime
   }),
 }
@@ -82,6 +83,7 @@ export const createMockElement = (tag = "div", attributes: Record<string, string
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value)
   })
+
   return element
 }
 
@@ -125,6 +127,7 @@ export const simulateMouseEvent = (
     ...options,
   })
   element.dispatchEvent(event)
+
   return event
 }
 
@@ -140,6 +143,7 @@ export const simulateKeyboardEvent = (
     ...options,
   })
   element.dispatchEvent(event)
+
   return event
 }
 
@@ -153,6 +157,7 @@ export const simulateScrollEvent = (
     ...options,
   })
   element.dispatchEvent(event)
+
   return event
 }
 

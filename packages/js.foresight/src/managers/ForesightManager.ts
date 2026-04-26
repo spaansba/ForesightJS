@@ -205,6 +205,7 @@ export class ForesightManager {
 
     if (!shouldRegister) {
       const blocked = createBlockedSnapshot(isLimitedConnection)
+
       return {
         ...blocked,
         unregister: () => {},
@@ -331,6 +332,7 @@ export class ForesightManager {
     for (const listener of entry.subscribers) {
       listener()
     }
+
     return next
   }
 
@@ -604,12 +606,14 @@ export class ForesightManager {
       // Only process mouse movements for desktop handler (mouse/pen)
       if (!this.isUsingDesktopHandler) {
         this.rafId = null
+
         return
       }
 
       if (this.pendingPointerEvent) {
         this.desktopHandler?.processMouseMovement(this.pendingPointerEvent)
       }
+
       this.rafId = null
     })
   }

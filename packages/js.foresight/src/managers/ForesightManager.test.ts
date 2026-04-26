@@ -33,6 +33,7 @@ function getEntry(manager: ForesightManager, element: ForesightElement): Foresig
   if (!entry) {
     throw new Error("Element not registered")
   }
+
   return entry
 }
 

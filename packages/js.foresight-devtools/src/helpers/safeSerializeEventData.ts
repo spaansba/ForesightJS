@@ -310,6 +310,7 @@ export function safeSerializeEventData<K extends keyof ForesightEventMap>(
         }
       default: {
         const _exhaustiveCheck: never = event
+
         return {
           type: "serializationError",
           error: "Failed to serialize event data",
@@ -345,7 +346,10 @@ function formatElapsed(ms: number): string {
 
 function getOrdinalSuffix(n: number): string {
   const lastTwo = n % 100
-  if (lastTwo >= 11 && lastTwo <= 13) return `${n}th`
+  if (lastTwo >= 11 && lastTwo <= 13) {
+    return `${n}th`
+  }
+
   switch (n % 10) {
     case 1:
       return `${n}st`

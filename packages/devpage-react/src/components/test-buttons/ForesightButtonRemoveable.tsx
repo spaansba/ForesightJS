@@ -7,7 +7,9 @@ type ForesightButtonRemoveableProps = {
 
 function ForesightButtonRemoveable({ name }: ForesightButtonRemoveableProps) {
   const shouldBeRemoved = useIsRemoved()
-  if (shouldBeRemoved) return null
+  if (shouldBeRemoved) {
+    return null
+  }
 
   return (
     <article className="flex flex-col items-center gap-3 w-40">

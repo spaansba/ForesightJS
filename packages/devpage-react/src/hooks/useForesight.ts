@@ -18,7 +18,10 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
   const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
 
   useEffect(() => {
-    if (!elementRef.current) return
+    if (!elementRef.current) {
+      return
+    }
+
     const element = elementRef.current
 
     setRegisterResults(
@@ -36,7 +39,10 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
 
   // Re-register to push updated options to the manager
   useEffect(() => {
-    if (!elementRef.current) return
+    if (!elementRef.current) {
+      return
+    }
+
     ForesightManager.instance.register({
       ...optionsRef.current,
       element: elementRef.current,

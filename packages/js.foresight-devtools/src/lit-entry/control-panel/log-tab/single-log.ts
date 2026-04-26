@@ -107,6 +107,7 @@ export class SingleLog extends LitElement {
   private serializeLogDataWithoutSummary(log: SerializedEventData): string {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { summary: _, ...rest } = log
+
     return JSON.stringify(rest, null, 2)
   }
 
@@ -123,6 +124,7 @@ export class SingleLog extends LitElement {
       scrollTrajectoryUpdate: "#607d8b",
       deviceStrategyChanged: "#9c27b0",
     }
+
     return colorMap[logType] || "#555"
   }
 
@@ -140,6 +142,7 @@ export class SingleLog extends LitElement {
       managerDataPayload: "ManagerData",
       deviceStrategyChanged: "Strategy",
     }
+
     return eventNames[eventType] || eventType
   }
 
@@ -147,6 +150,7 @@ export class SingleLog extends LitElement {
     if (summary.length <= maxLength) {
       return summary
     }
+
     return summary.substring(0, maxLength) + "..."
   }
 

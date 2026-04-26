@@ -7,6 +7,7 @@ type ForesightButtonVisibilityProps = {
 
 function ForesightButtonVisibility({ name }: ForesightButtonVisibilityProps) {
   const isVisible = useIsVisible()
+
   return (
     <article className={`flex flex-col items-center gap-3 w-40 ${isVisible ? "" : "invisible"}`}>
       <h4 className="text-sm font-medium text-gray-900 self-start">Visibility</h4>

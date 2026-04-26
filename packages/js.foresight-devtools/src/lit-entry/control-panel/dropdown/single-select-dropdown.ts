@@ -31,11 +31,13 @@ export class SingleSelectDropdown extends BaseDropdown {
       this.selectedOptionValue = option.value
       this.onSelectionChange?.(option.value)
     }
+
     this._closeDropdown()
   }
 
   protected _getTriggerIcon(): TemplateResult {
     const selectedOption = this._getSelectedOption()
+
     return selectedOption ? selectedOption.icon : html``
   }
 
@@ -45,11 +47,13 @@ export class SingleSelectDropdown extends BaseDropdown {
 
   protected _getTriggerTitle(): string {
     const selected = this._getSelectedOption()
+
     return selected ? selected.title : "Change selection"
   }
 
   protected _getTriggerLabel(): string {
     const selected = this._getSelectedOption()
+
     return selected ? `Current selection: ${selected.label}` : "No selection"
   }
 

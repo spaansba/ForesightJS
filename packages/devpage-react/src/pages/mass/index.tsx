@@ -20,7 +20,9 @@ function Mass() {
   }, [])
 
   useEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current) {
+      return
+    }
 
     const buttons = containerRef.current.querySelectorAll("[data-foresight-btn]")
 

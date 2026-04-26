@@ -59,6 +59,7 @@ export class ForesightDevtools extends LitElement {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return
     }
+
     ForesightDevtools._instance = document.createElement("foresight-devtools") as ForesightDevtools
     document.body.appendChild(ForesightDevtools._instance)
   }
@@ -83,6 +84,7 @@ export class ForesightDevtools extends LitElement {
     if (!ForesightDevtools._instance) {
       return ForesightDevtools.initialize()
     }
+
     return ForesightDevtools._instance!
   }
 
@@ -110,8 +112,10 @@ export class ForesightDevtools extends LitElement {
   ): boolean {
     if (this.shouldUpdateSetting(newValue, this.devtoolsSettings.show[key])) {
       this.devtoolsSettings.show[key] = newValue!
+
       return true
     }
+
     return false
   }
 
@@ -125,14 +129,20 @@ export class ForesightDevtools extends LitElement {
   }
 
   public alterDevtoolsSettings(props?: DeepPartial<DevtoolsSettings>) {
-    if (props === undefined) return
+    if (props === undefined) {
+      return
+    }
 
     if (props.show) {
       let needsUpdate = false
       for (const key of SHOW_KEYS) {
-        if (this.updateShowSetting(key, props.show[key])) needsUpdate = true
+        if (this.updateShowSetting(key, props.show[key])) {
+          needsUpdate = true
+        }
       }
-      if (needsUpdate) this.requestUpdate()
+      if (needsUpdate) {
+        this.requestUpdate()
+      }
     }
 
     if (
@@ -143,6 +153,7 @@ export class ForesightDevtools extends LitElement {
     ) {
       this.devtoolsSettings.isControlPanelDefaultMinimized = props.isControlPanelDefaultMinimized!
     }
+
     if (this.shouldUpdateSetting(props.sortElementList, this.devtoolsSettings.sortElementList)) {
       this.devtoolsSettings.sortElementList = props.sortElementList!
     }
@@ -179,7 +190,9 @@ export class ForesightDevtools extends LitElement {
     if (!this.isInitialized) {
       return html``
     }
+
     const { show } = this.devtoolsSettings
+
     return html`
       ${show.controlPanel ? html`<control-panel></control-panel>` : ""}
       <debug-overlay

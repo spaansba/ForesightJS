@@ -13,6 +13,7 @@ import { clampNumber } from "./clampNumber"
 export function normalizeHitSlop(hitSlop: HitSlop): Rect {
   if (typeof hitSlop === "number") {
     const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP, "hitslop")
+
     return {
       top: clampedValue,
       left: clampedValue,
@@ -58,7 +59,10 @@ export function getExpandedRect(baseRect: Rect | DOMRect, hitSlop: Rect): Rect {
  *          `false` otherwise.
  */
 export function areRectsEqual(rect1: Rect, rect2: Rect): boolean {
-  if (!rect1 || !rect2) return rect1 === rect2
+  if (!rect1 || !rect2) {
+    return rect1 === rect2
+  }
+
   return (
     rect1.left === rect2.left &&
     rect1.right === rect2.right &&

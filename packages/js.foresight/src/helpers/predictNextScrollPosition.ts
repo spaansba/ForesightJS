@@ -26,5 +26,6 @@ export function predictNextScrollPosition(
     default:
       direction satisfies never
   }
+
   return predictedPoint
 }

@@ -4,6 +4,7 @@ import SmallButton from "./SmallButton"
 
 function KeyboardCardsWrapper() {
   const buttonIds = Array.from({ length: 25 }, (_, i) => `btn-${i + 1}`)
+
   return (
     <div className={styles.container}>
       <div className={styles.buttonGrid}>

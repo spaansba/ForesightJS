@@ -145,6 +145,7 @@ export class ElementTab extends LitElement {
     } else {
       newExpandedElementIds.add(elementId)
     }
+
     this.expandedElementIds = newExpandedElementIds
   }
 
@@ -241,7 +242,10 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementReactivated",
       (e: ElementReactivatedEvent) => {
-        if (!this.applyStateUpdate(e.element, e.state)) return
+        if (!this.applyStateUpdate(e.element, e.state)) {
+          return
+        }
+
         this.requestUpdate()
       },
       { signal }
@@ -254,6 +258,7 @@ export class ElementTab extends LitElement {
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
+
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -283,9 +288,13 @@ export class ElementTab extends LitElement {
   }
 
   private applyStateUpdate(element: ForesightElement, state: ForesightElementState): boolean {
-    if (!this.elementListItems.has(element)) return false
+    if (!this.elementListItems.has(element)) {
+      return false
+    }
+
     this.elementListItems.set(element, state)
     this._elementsCacheDirty = true
+
     return true
   }
 
@@ -297,6 +306,7 @@ export class ElementTab extends LitElement {
       clearTimeout(this._updateDebounceId)
       this._updateDebounceId = null
     }
+
     this._pendingElementUpdates.clear()
   }
 
@@ -373,10 +383,12 @@ export class ElementTab extends LitElement {
           if (a.state.isIntersectingWithViewport !== b.state.isIntersectingWithViewport) {
             return a.state.isIntersectingWithViewport ? -1 : 1
           }
+
           return this.sortByDocumentPosition(a, b)
         })
       default:
         this.sortOrder satisfies never
+
         return entries
     }
   }
@@ -406,8 +418,14 @@ export class ElementTab extends LitElement {
 
   private sortByDocumentPosition = (a: ElementListEntry, b: ElementListEntry) => {
     const position = a.element.compareDocumentPosition(b.element)
-    if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1
-    if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1
+    if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
+      return -1
+    }
+
+    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+      return 1
+    }
+
     return 0
   }
 

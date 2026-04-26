@@ -14,6 +14,7 @@ describe("predictNextMousePosition", () => {
     mockTime = 0
     vi.spyOn(performance, "now").mockImplementation(() => {
       mockTime += 16 // 16ms increments (60fps)
+
       return mockTime
     })
   })

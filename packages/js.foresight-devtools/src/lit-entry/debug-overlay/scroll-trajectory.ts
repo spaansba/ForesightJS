@@ -131,7 +131,10 @@ export class ScrollTrajectory extends LitElement {
   }
 
   private _setVisible(visible: boolean): void {
-    if (this._isVisible === visible) return
+    if (this._isVisible === visible) {
+      return
+    }
+
     this._isVisible = visible
     if (this._lineEl) {
       this._lineEl.style.display = visible ? "block" : "none"
@@ -157,6 +160,7 @@ export class ScrollTrajectory extends LitElement {
     if (!isEnabled) {
       this._setVisible(false)
     }
+
     const scrollMarginUpdate = e.updatedSettings.find(update => update.setting === "scrollMargin")
     if (scrollMarginUpdate) {
       this._scrollMargin = scrollMarginUpdate.newValue
@@ -167,7 +171,9 @@ export class ScrollTrajectory extends LitElement {
   }
 
   private handleScrollUpdate = (e: ScrollTrajectoryUpdateEvent) => {
-    if (!this._scrollPredictionIsEnabled) return
+    if (!this._scrollPredictionIsEnabled) {
+      return
+    }
 
     this._setVisible(true)
     this._latestCurrentPoint = e.currentPoint
@@ -182,6 +188,7 @@ export class ScrollTrajectory extends LitElement {
   private applyScrollTransform = () => {
     if (!this._latestCurrentPoint || !this._latestPredictedPoint) {
       this._isUpdateScheduled = false
+
       return
     }
 

@@ -54,6 +54,7 @@ function updateNumericSetting(
 
   const { min, max } = NUMERIC_SETTING_CONFIGS[key]
   settings[key] = clampNumber(newValue, min, max, key)
+
   return true
 }
 
@@ -71,6 +72,7 @@ function updateBooleanSetting(
   }
 
   settings[key] = newValue as boolean
+
   return true
 }
 
@@ -193,6 +195,7 @@ export function applySettingsChanges(
       if (key === "enableScrollPrediction") {
         scrollPredictionChanged = true
       }
+
       if (key === "enableTabPrediction") {
         tabPredictionChanged = true
       }

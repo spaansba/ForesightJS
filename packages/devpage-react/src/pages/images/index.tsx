@@ -44,6 +44,7 @@ const IMAGES: ForesightImage[] = [
 export default function ImageGallery() {
   const [selectedImage, setSelectedImage] = useState<ForesightImage | null>(null)
   ForesightDevtools.initialize()
+
   return (
     <div className="min-h-screen bg-stone-50 text-gray-900">
       <SimpleNavigation />

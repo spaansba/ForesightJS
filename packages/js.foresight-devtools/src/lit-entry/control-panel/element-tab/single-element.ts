@@ -155,6 +155,7 @@ export class SingleElement extends LitElement {
     if (this.state.isCallbackRunning) {
       return "#ffeb3b"
     }
+
     if (!this.state.isActive) {
       return "#999"
     }
@@ -172,6 +173,7 @@ export class SingleElement extends LitElement {
     if (this.state.isCallbackRunning) {
       return "prefetching"
     }
+
     if (!this.state.isActive) {
       return "inactive"
     }
@@ -188,6 +190,7 @@ export class SingleElement extends LitElement {
     if (this.state.isCallbackRunning) {
       return "callback active"
     }
+
     if (!this.state.isActive) {
       return "callback inactive"
     }
@@ -199,8 +202,12 @@ export class SingleElement extends LitElement {
   }
 
   private formatElementDetails(): string {
-    if (!this.isExpanded) return ""
+    if (!this.isExpanded) {
+      return ""
+    }
+
     const { elementBounds, ...rest } = this.state
+
     return JSON.stringify(
       { ...rest, status: this.getStatusText(), hitSlop: elementBounds.hitSlop },
       null,

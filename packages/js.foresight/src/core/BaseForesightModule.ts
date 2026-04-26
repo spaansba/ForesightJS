@@ -84,6 +84,7 @@ export abstract class BaseForesightModule {
       const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
       this._cachedLogStyle = `color: ${color}; font-weight: bold;`
     }
+
     console.log(`%c${this.moduleName}: ${message}`, this._cachedLogStyle)
   }
 

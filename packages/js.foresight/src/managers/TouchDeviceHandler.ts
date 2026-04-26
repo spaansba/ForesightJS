@@ -55,6 +55,7 @@ export class TouchDeviceHandler extends BaseForesightModule {
       case "none":
         this.predictor = null
         this.devLog(`Touch strategy set to "none" - no predictor connected`)
+
         return
       default:
         this.settings.touchDeviceStrategy satisfies never

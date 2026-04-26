@@ -262,6 +262,7 @@ export class LogTab extends LitElement {
       this.eventsEnabled.mouseTrajectoryUpdate ||
       this.eventsEnabled.scrollTrajectoryUpdate ||
       this.eventsEnabled.elementDataUpdated
+
     return hasConsoleOutput && hasFrequentEvents
   }
 
@@ -270,12 +271,15 @@ export class LogTab extends LitElement {
     if (enabledCount === 0) {
       return "Logging for all events is turned off"
     }
+
     if (this.logLocation === "console") {
       return "No logs to display. Logging location is set to console - check browser console for events."
     }
+
     if (this.logLocation === "none") {
       return "No logs to display. Logging location is set to none"
     }
+
     return "Interact with Foresight to generate events."
   }
 
@@ -286,6 +290,7 @@ export class LogTab extends LitElement {
     } else {
       newExpandedLogIds.add(logId)
     }
+
     this.expandedLogIds = newExpandedLogIds
   }
 
@@ -316,7 +321,10 @@ export class LogTab extends LitElement {
   }
 
   private addForesightEventListener(eventType: ForesightEvent): void {
-    if (this._eventListeners.has(eventType)) return
+    if (this._eventListeners.has(eventType)) {
+      return
+    }
+
     const handler = (event: ForesightEventMap[typeof eventType]) => {
       this.handleEvent(eventType, event)
     }
@@ -355,6 +363,7 @@ export class LogTab extends LitElement {
       scrollTrajectoryUpdate: "#607d8b",
       deviceStrategyChanged: "#9c27b0",
     }
+
     return colorMap[eventType] || "#ffffff"
   }
 
@@ -362,10 +371,12 @@ export class LogTab extends LitElement {
     if (this.logLocation === "none") {
       return
     }
+
     if (this.logLocation === "console" || this.logLocation === "both") {
       const color = this.getEventColor(eventType)
       console.log(`%c[ForesightJS] ${eventType}`, `color: ${color}; font-weight: bold;`, event)
     }
+
     if (this.logLocation === "controlPanel" || this.logLocation === "both") {
       this.addEventLog(event)
     }
@@ -376,6 +387,7 @@ export class LogTab extends LitElement {
     if (this.logs.length > this.MAX_LOGS) {
       this.logs.pop()
     }
+
     this.requestUpdate()
   }
 
@@ -383,9 +395,11 @@ export class LogTab extends LitElement {
     if (this.logLocation === "none") {
       return
     }
+
     if (this.logLocation === "console" || this.logLocation === "both") {
       console.log(ForesightManager.instance.getManagerData)
     }
+
     if (this.logLocation === "controlPanel" || this.logLocation === "both") {
       this.addManagerLog()
     }
@@ -403,8 +417,10 @@ export class LogTab extends LitElement {
     const log = safeSerializeEventData(event, (++this.logIdCounter).toString())
     if (log.type === "serializationError") {
       console.error(log.error, log.errorMessage)
+
       return
     }
+
     this.addLog(log)
   }
 

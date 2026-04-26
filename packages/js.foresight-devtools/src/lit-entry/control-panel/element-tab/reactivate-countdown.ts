@@ -72,6 +72,7 @@ export class ReactivateCountdown extends LitElement {
 
     if (!state) {
       this.clearCountdown()
+
       return
     }
 
@@ -101,6 +102,7 @@ export class ReactivateCountdown extends LitElement {
 
     if (state.reactivateAfter === Infinity) {
       this.remainingTime = Infinity
+
       return
     }
 
@@ -139,6 +141,7 @@ export class ReactivateCountdown extends LitElement {
       clearInterval(this.intervalId)
       this.intervalId = null
     }
+
     this.isCountdownActive = false
     this.remainingTime = 0
     this.lastDisplayedTime = ""

@@ -68,6 +68,7 @@ export class ForesightEventEmitter {
    */
   public hasListeners<K extends ForesightEvent>(eventType: K): boolean {
     const listeners = this.eventListeners.get(eventType)
+
     return listeners !== undefined && listeners.length > 0
   }
 

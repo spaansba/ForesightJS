@@ -103,7 +103,10 @@ export class MouseTrajectory extends LitElement {
   }
 
   private _setVisible(visible: boolean): void {
-    if (this._isVisible === visible) return
+    if (this._isVisible === visible) {
+      return
+    }
+
     this._isVisible = visible
     if (this._lineEl) {
       this._lineEl.style.display = visible ? "block" : "none"
@@ -133,7 +136,9 @@ export class MouseTrajectory extends LitElement {
   }
 
   private handleTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
-    if (!this._mousePredictionIsEnabled) return
+    if (!this._mousePredictionIsEnabled) {
+      return
+    }
 
     this._setVisible(true)
 

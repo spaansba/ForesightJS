@@ -30,6 +30,7 @@ export class TabPredictor extends BaseForesightModule {
     if (this.tabbableElementsCache.length) {
       this.devLog("Invalidating tabbable elements cache")
     }
+
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
   }

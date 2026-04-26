@@ -29,6 +29,7 @@ export function predictNextMousePosition(
   if (buffer.length < 2) {
     out.x = x
     out.y = y
+
     return
   }
 
@@ -36,6 +37,7 @@ export function predictNextMousePosition(
   if (!first || !last) {
     out.x = x
     out.y = y
+
     return
   }
 
@@ -43,6 +45,7 @@ export function predictNextMousePosition(
   if (dt === 0) {
     out.x = x
     out.y = y
+
     return
   }
 

@@ -8,6 +8,7 @@ function makeSource() {
   source.set("a", { state: { name: "alpha", active: true } })
   source.set("b", { state: { name: "beta", active: false } })
   source.set("c", { state: { name: "gamma", active: true } })
+
   return source
 }
 

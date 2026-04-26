@@ -122,7 +122,10 @@ export class ElementOverlays extends LitElement {
   private _styleElement: HTMLStyleElement | null = null
 
   private injectGlobalStylesheet(): void {
-    if (document.getElementById(STYLE_ID)) return
+    if (document.getElementById(STYLE_ID)) {
+      return
+    }
+
     const style = document.createElement("style")
     style.id = STYLE_ID
     style.textContent = GLOBAL_OVERLAY_CSS
@@ -171,6 +174,7 @@ export class ElementOverlays extends LitElement {
         if (e.updatedProps.includes("bounds") && e.state.isActive) {
           this.createOrUpdateElementOverlay(e.element, e.state)
         }
+
         if (e.updatedProps.includes("visibility")) {
           if (!e.state.isIntersectingWithViewport) {
             this.removeElementOverlay(e.element)
@@ -240,6 +244,7 @@ export class ElementOverlays extends LitElement {
     this.containerElement.appendChild(nameLabel)
     const overlay = { nameLabel }
     this.overlayMap.set(element, overlay)
+
     return overlay
   }
 
@@ -265,6 +270,7 @@ export class ElementOverlays extends LitElement {
     if (!overlay) {
       overlay = this.createNameLabel(element)
     }
+
     this.updateNameLabel(overlay, state)
   }
 

@@ -11,6 +11,7 @@ export function evaluateRegistrationConditions(): ShouldRegister {
   const isTouchDevice = userUsesTouchDevice()
   const isLimitedConnection = hasConnectionLimitations()
   const shouldRegister = !isLimitedConnection
+
   return { isTouchDevice, isLimitedConnection, shouldRegister }
 }
 
@@ -40,7 +41,9 @@ export function userUsesTouchDevice(): boolean {
 function hasConnectionLimitations(): boolean {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
-  if (!connection) return false
+  if (!connection) {
+    return false
+  }
 
   const minimumConnectionType =
     ForesightManager.instance.getManagerData.globalSettings.minimumConnectionType
