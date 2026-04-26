@@ -216,15 +216,7 @@ export class ForesightManager {
     const previousEntry = this.elementEntries.get(options.element)
 
     if (previousEntry) {
-      const next = this.updateElementState(previousEntry, {
-        registerCount: previousEntry.state.registerCount + 1,
-      })
-      return {
-        ...next,
-        unregister: () => {},
-        subscribe: this.makeSubscribe(previousEntry),
-        getSnapshot: () => previousEntry.state,
-      }
+      return this.reRegisterElement(previousEntry, options)
     }
 
     if (!this.isSetup) {
@@ -254,6 +246,44 @@ export class ForesightManager {
       unregister: () => {
         this.unregister(options.element)
       },
+      subscribe: this.makeSubscribe(entry),
+      getSnapshot: () => entry.state,
+    }
+  }
+
+  /**
+   * Handles re-registration of an already registered element.
+   * Updates the entry's callback, name, meta, and reactivateAfter from the new options,
+   * falling back to the existing values when an option is omitted.
+   * If a reactivation timeout is pending and reactivateAfter changed, the timeout is rescheduled.
+   */
+  private reRegisterElement(
+    entry: ForesightElementInternal,
+    options: ForesightRegisterOptions
+  ): ForesightRegisterResult {
+    entry.callback = options.callback
+
+    const reactivateAfter = options.reactivateAfter ?? entry.state.reactivateAfter
+    const next = this.updateElementState(entry, {
+      registerCount: entry.state.registerCount + 1,
+      name: options.name || entry.state.name,
+      meta: options.meta ?? entry.state.meta,
+      reactivateAfter,
+    })
+
+    // Reschedule the reactivation timeout if reactivateAfter changed while waiting
+    if (entry.reactivateTimeoutId !== undefined) {
+      this.clearReactivateTimeout(entry)
+      if (reactivateAfter !== Infinity) {
+        entry.reactivateTimeoutId = setTimeout(() => {
+          this.reactivate(options.element)
+        }, reactivateAfter)
+      }
+    }
+
+    return {
+      ...next,
+      unregister: () => {},
       subscribe: this.makeSubscribe(entry),
       getSnapshot: () => entry.state,
     }

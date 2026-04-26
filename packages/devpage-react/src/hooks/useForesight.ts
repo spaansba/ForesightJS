@@ -34,6 +34,16 @@ export default function useForesight<T extends HTMLElement = HTMLElement>(
     }
   }, [])
 
+  // Re-register to push updated options to the manager
+  useEffect(() => {
+    if (!elementRef.current) return
+    ForesightManager.instance.register({
+      ...optionsRef.current,
+      element: elementRef.current,
+      callback: state => optionsRef.current.callback(state),
+    })
+  }, [options.reactivateAfter, options.name, options.meta])
+
   const state = useSyncExternalStore<ForesightElementState | null>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,
     registerResults?.getSnapshot ?? GET_NULL_STATE,

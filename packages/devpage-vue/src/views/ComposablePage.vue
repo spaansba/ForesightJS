@@ -43,22 +43,32 @@ onMounted(() => {
         >
           Hover to predict
         </TestComponent>
-        <dl
-          class="w-40 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
-        >
+        <div class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">hits</dt>
-            <dd>{{ stateA?.hitCount ?? 0 }}</dd>
+            <span class="text-gray-500">hits</span>
+            <span class="text-gray-900">{{ stateA?.hitCount ?? 0 }}</span>
           </div>
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">predicted</dt>
-            <dd>{{ stateA?.isPredicted ? "yes" : "no" }}</dd>
+            <span class="text-gray-500">predicted</span>
+            <span class="text-gray-900">{{ stateA?.isPredicted ? "yes" : "no" }}</span>
           </div>
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">status</dt>
-            <dd>{{ stateA?.status ?? "—" }}</dd>
+            <span class="text-gray-500">cb running</span>
+            <span class="text-gray-900">{{ stateA?.isCallbackRunning ? "yes" : "no" }}</span>
           </div>
-        </dl>
+          <div class="flex justify-between px-2 py-1">
+            <span class="text-gray-500">status</span>
+            <span class="text-gray-900">{{ stateA?.status ?? "—" }}</span>
+          </div>
+          <details>
+            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">
+              full state
+            </summary>
+            <pre class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200">{{
+              stateA ? JSON.stringify(stateA, null, 2) : "null"
+            }}</pre>
+          </details>
+        </div>
       </article>
 
       <article class="flex flex-col items-start gap-3 w-56">
@@ -72,22 +82,32 @@ onMounted(() => {
         >
           Hover to predict
         </button>
-        <dl
-          class="w-40 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white"
-        >
+        <div class="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">hits</dt>
-            <dd>{{ stateB?.hitCount ?? 0 }}</dd>
+            <span class="text-gray-500">hits</span>
+            <span class="text-gray-900">{{ stateB?.hitCount ?? 0 }}</span>
           </div>
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">predicted</dt>
-            <dd>{{ stateB?.isPredicted ? "yes" : "no" }}</dd>
+            <span class="text-gray-500">predicted</span>
+            <span class="text-gray-900">{{ stateB?.isPredicted ? "yes" : "no" }}</span>
           </div>
           <div class="flex justify-between px-2 py-1">
-            <dt class="text-gray-500">status</dt>
-            <dd>{{ stateB?.status ?? "—" }}</dd>
+            <span class="text-gray-500">cb running</span>
+            <span class="text-gray-900">{{ stateB?.isCallbackRunning ? "yes" : "no" }}</span>
           </div>
-        </dl>
+          <div class="flex justify-between px-2 py-1">
+            <span class="text-gray-500">status</span>
+            <span class="text-gray-900">{{ stateB?.status ?? "—" }}</span>
+          </div>
+          <details>
+            <summary class="px-2 py-1 cursor-pointer text-gray-500 select-none">
+              full state
+            </summary>
+            <pre class="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700 border-t border-gray-200">{{
+              stateB ? JSON.stringify(stateB, null, 2) : "null"
+            }}</pre>
+          </details>
+        </div>
       </article>
     </section>
   </div>

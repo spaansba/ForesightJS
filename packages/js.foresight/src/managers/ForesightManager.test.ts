@@ -1257,6 +1257,159 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("Re-registration Updates Options", () => {
+    it("should update reactivateAfter on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
+      expect(manager.registeredElements.get(element)?.reactivateAfter).toBe(5000)
+
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 1000 })
+      expect(manager.registeredElements.get(element)?.reactivateAfter).toBe(1000)
+    })
+
+    it("should update callback on re-registration", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callbackA = vi.fn()
+      const callbackB = vi.fn()
+
+      manager.register({ element, callback: callbackA, reactivateAfter: 500 })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(callbackA).toHaveBeenCalledTimes(1)
+
+      // Reactivate, re-register with new callback, then fire again
+      await vi.advanceTimersByTimeAsync(500)
+      manager.register({ element, callback: callbackB })
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(callbackA).toHaveBeenCalledTimes(1)
+      expect(callbackB).toHaveBeenCalledTimes(1)
+    })
+
+    it("should update name on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), name: "old-name" })
+      expect(manager.registeredElements.get(element)?.name).toBe("old-name")
+
+      manager.register({ element, callback: vi.fn(), name: "new-name" })
+      expect(manager.registeredElements.get(element)?.name).toBe("new-name")
+    })
+
+    it("should update meta on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), meta: { route: "/a" } })
+      expect(manager.registeredElements.get(element)?.meta).toEqual({ route: "/a" })
+
+      manager.register({ element, callback: vi.fn(), meta: { route: "/b", priority: 1 } })
+      expect(manager.registeredElements.get(element)?.meta).toEqual({ route: "/b", priority: 1 })
+    })
+
+    it("should preserve previous values when options are omitted on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({
+        element,
+        callback: vi.fn(),
+        name: "my-name",
+        reactivateAfter: 3000,
+        meta: { x: 1 },
+      })
+
+      // Re-register without name, meta, or reactivateAfter
+      manager.register({ element, callback: vi.fn() })
+
+      const state = manager.registeredElements.get(element)!
+      expect(state.name).toBe("my-name")
+      expect(state.reactivateAfter).toBe(3000)
+      expect(state.meta).toEqual({ x: 1 })
+    })
+
+    it("should reschedule pending reactivation timeout when reactivateAfter changes", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const reactivatedListener = vi.fn()
+
+      manager.addEventListener("elementReactivated", reactivatedListener)
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
+      const entry = getEntry(manager, element)
+
+      // Fire callback to start the reactivation timer
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(entry.state.isActive).toBe(false)
+
+      // Re-register with shorter reactivateAfter while timer is pending
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 500 })
+      expect(entry.state.reactivateAfter).toBe(500)
+
+      // Original 5000ms timer should have been cleared
+      await vi.advanceTimersByTimeAsync(500)
+      expect(reactivatedListener).toHaveBeenCalledTimes(1)
+      expect(entry.state.isActive).toBe(true)
+    })
+
+    it("should cancel reactivation when re-registered with Infinity", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const reactivatedListener = vi.fn()
+
+      manager.addEventListener("elementReactivated", reactivatedListener)
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 2000 })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(entry.state.isActive).toBe(false)
+
+      // Re-register with Infinity — should cancel the pending timeout
+      manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
+
+      await vi.advanceTimersByTimeAsync(10000)
+      expect(reactivatedListener).not.toHaveBeenCalled()
+      expect(entry.state.isActive).toBe(false)
+    })
+
+    it("should not reschedule when there is no pending reactivation timeout", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const reactivatedListener = vi.fn()
+
+      manager.addEventListener("elementReactivated", reactivatedListener)
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
+
+      // Element is still active (no callback fired yet), no pending timeout
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 100 })
+
+      // No spurious reactivation should happen
+      await vi.advanceTimersByTimeAsync(200)
+      expect(reactivatedListener).not.toHaveBeenCalled()
+    })
+
+    it("should notify subscribers when options change on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
+      result.subscribe(listener)
+
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 1000 })
+
+      expect(listener).toHaveBeenCalled()
+    })
+  })
+
   describe("Element State Lifecycle", () => {
     function expectState(
       state: ForesightElementState,
