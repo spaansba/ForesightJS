@@ -9,6 +9,7 @@ import {
 } from "../helpers/createInitialState"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ElementObservingModule } from "../core/ElementObservingModule"
 import { applySettingsChanges, initializeSettings } from "./SettingsManager"
 import type {
   CallbackHits,
@@ -67,7 +68,7 @@ export class ForesightManager {
 
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
-  private currentlyActiveHandler: DesktopHandler | TouchDeviceHandler | null = null
+  private currentlyActiveHandler: ElementObservingModule | null = null
   private handlerDependencies: ForesightModuleDependencies
 
   private isSetup: boolean = false

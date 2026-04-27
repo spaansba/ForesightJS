@@ -1,4 +1,5 @@
-import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import { ElementObservingModule } from "../core/ElementObservingModule"
 import { MousePredictor } from "../predictors/MousePredictor"
 import type { ScrollPredictor } from "../predictors/ScrollPredictor"
 import type { TabPredictor } from "../predictors/TabPredictor"
@@ -14,7 +15,7 @@ import { CircularBuffer } from "../helpers/CircularBuffer"
 import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
 import { areRectsEqual, getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
-export class DesktopHandler extends BaseForesightModule {
+export class DesktopHandler extends ElementObservingModule {
   protected readonly moduleName = "DesktopHandler"
 
   private mousePredictor: MousePredictor
@@ -168,8 +169,13 @@ export class DesktopHandler extends BaseForesightModule {
 
   public invalidateTabCache = () => this.tabPredictor?.invalidateCache()
 
-  public observeElement = (element: ForesightElement) => this.positionObserver?.observe(element)
-  public unobserveElement = (element: ForesightElement) => this.positionObserver?.unobserve(element)
+  public observeElement(element: ForesightElement): void {
+    this.positionObserver?.observe(element)
+  }
+
+  public unobserveElement(element: ForesightElement): void {
+    this.positionObserver?.unobserve(element)
+  }
 
   public connectTabPredictor = async () => {
     if (!this.tabPredictor) {

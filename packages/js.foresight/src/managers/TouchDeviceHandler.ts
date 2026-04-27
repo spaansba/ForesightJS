@@ -1,14 +1,15 @@
 import type { ForesightElement } from "../types/types"
-import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import { ElementObservingModule } from "../core/ElementObservingModule"
 import type { ViewportPredictor } from "../predictors/ViewportPredictor"
 import type { TouchStartPredictor } from "../predictors/TouchStartPredictor"
 
-export class TouchDeviceHandler extends BaseForesightModule {
+export class TouchDeviceHandler extends ElementObservingModule {
   protected readonly moduleName = "TouchDeviceHandler"
 
   private viewportPredictor: ViewportPredictor | null = null
   private touchStartPredictor: TouchStartPredictor | null = null
-  private predictor: ViewportPredictor | TouchStartPredictor | null = null
+  private predictor: ElementObservingModule | null = null
   private storedDependencies: ForesightModuleDependencies
 
   constructor(dependencies: ForesightModuleDependencies) {
@@ -74,8 +75,13 @@ export class TouchDeviceHandler extends BaseForesightModule {
   }
   protected onConnect = () => this.setTouchPredictor()
 
-  public observeElement = (element: ForesightElement) => this.predictor?.observeElement(element)
-  public unobserveElement = (element: ForesightElement) => this.predictor?.unobserveElement(element)
+  public observeElement(element: ForesightElement): void {
+    this.predictor?.observeElement(element)
+  }
+
+  public unobserveElement(element: ForesightElement): void {
+    this.predictor?.unobserveElement(element)
+  }
 
   /** For debugging: returns which predictors have been lazy loaded */
   public get loadedPredictors() {
