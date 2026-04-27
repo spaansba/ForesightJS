@@ -201,7 +201,9 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
+    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions(
+      this._globalSettings.minimumConnectionType
+    )
 
     if (!shouldRegister) {
       const blocked = createBlockedSnapshot(isLimitedConnection)

@@ -1,5 +1,4 @@
 import { MinimumConnectionType } from "../types/types"
-import { ForesightManager } from "../managers/ForesightManager"
 
 type ShouldRegister = {
   shouldRegister: boolean
@@ -7,9 +6,11 @@ type ShouldRegister = {
   isLimitedConnection: boolean
 }
 
-export const evaluateRegistrationConditions = (): ShouldRegister => {
+export const evaluateRegistrationConditions = (
+  minimumConnectionType: MinimumConnectionType
+): ShouldRegister => {
   const isTouchDevice = userUsesTouchDevice()
-  const isLimitedConnection = hasConnectionLimitations()
+  const isLimitedConnection = hasConnectionLimitations(minimumConnectionType)
   const shouldRegister = !isLimitedConnection
 
   return { isTouchDevice, isLimitedConnection, shouldRegister }
@@ -38,15 +39,12 @@ export const userUsesTouchDevice = (): boolean => {
  *   prefetchResource('/api/data');
  * }
  */
-const hasConnectionLimitations = (): boolean => {
+const hasConnectionLimitations = (minimumConnectionType: MinimumConnectionType): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
   if (!connection) {
     return false
   }
-
-  const minimumConnectionType =
-    ForesightManager.instance.getManagerData.globalSettings.minimumConnectionType
 
   // Define array of connection types from slowest to fastest
   const connectionTypes: MinimumConnectionType[] = ["slow-2g", "2g", "3g", "4g"]
