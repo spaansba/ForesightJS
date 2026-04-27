@@ -23,6 +23,7 @@ import type {
   ForesightEventListener,
   ForesightManagerData,
   ForesightManagerSettings,
+  ForesightModules,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptions,
   ForesightRegisterResult,
@@ -162,9 +163,6 @@ export class ForesightManager {
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
-    const desktopPredictors = this.desktopHandler?.loadedPredictors
-    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
-
     return {
       registeredElements: this.registeredElements,
       globalSettings: this._globalSettings,
@@ -172,16 +170,23 @@ export class ForesightManager {
       eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
       activeElementCount: this.activeElementCount,
-      loadedModules: {
-        desktopHandler: this.desktopHandler !== null,
-        touchHandler: this.touchDeviceHandler !== null,
-        predictors: {
-          mouse: desktopPredictors?.mouse ?? false,
-          tab: desktopPredictors?.tab ?? false,
-          scroll: desktopPredictors?.scroll ?? false,
-          viewport: touchPredictors?.viewport ?? false,
-          touchStart: touchPredictors?.touchStart ?? false,
-        },
+      loadedModules: this.getLoadedModulesSnapshot(),
+    }
+  }
+
+  private getLoadedModulesSnapshot(): ForesightModules {
+    const desktopPredictors = this.desktopHandler?.loadedPredictors
+    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
+
+    return {
+      desktopHandler: this.desktopHandler !== null,
+      touchHandler: this.touchDeviceHandler !== null,
+      predictors: {
+        mouse: desktopPredictors?.mouse ?? false,
+        tab: desktopPredictors?.tab ?? false,
+        scroll: desktopPredictors?.scroll ?? false,
+        viewport: touchPredictors?.viewport ?? false,
+        touchStart: touchPredictors?.touchStart ?? false,
       },
     }
   }

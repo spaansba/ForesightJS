@@ -172,16 +172,18 @@ export type ForesightManagerData = {
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
-  loadedModules: {
-    desktopHandler: boolean
-    touchHandler: boolean
-    predictors: {
-      mouse: boolean
-      tab: boolean
-      scroll: boolean
-      viewport: boolean
-      touchStart: boolean
-    }
+  loadedModules: ForesightModules
+}
+
+export type ForesightModules = {
+  desktopHandler: boolean
+  touchHandler: boolean
+  predictors: {
+    mouse: boolean
+    tab: boolean
+    scroll: boolean
+    viewport: boolean
+    touchStart: boolean
   }
 }
 
