@@ -10,7 +10,7 @@ import type {
 } from "../types/types"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 
-export interface ScrollPredictorConfig {
+interface ScrollPredictorConfig {
   dependencies: ForesightModuleDependencies
   trajectoryPositions: Readonly<TrajectoryPositions>
 }
