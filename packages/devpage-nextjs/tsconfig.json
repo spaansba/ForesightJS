@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -20,31 +16,14 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "js.foresight": [
-        "../js.foresight/src/index.ts"
-      ],
-      "js.foresight/*": [
-        "../js.foresight/src/*"
-      ],
-      "@foresightjs/react": [
-        "../foresightjs-react/src/index.ts"
-      ],
-      "@foresightjs/react/*": [
-        "../foresightjs-react/src/*"
-      ],
-      "@/*": [
-        "./*"
-      ]
+      "js.foresight": ["../js.foresight/src/index.ts"],
+      "js.foresight/*": ["../js.foresight/src/*"],
+      "@foresightjs/react": ["../foresightjs-react/src/index.ts"],
+      "@foresightjs/react/*": ["../foresightjs-react/src/*"],
+      "@/*": ["./*"]
     },
     "strict": false
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
