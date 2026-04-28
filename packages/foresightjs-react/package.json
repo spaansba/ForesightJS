@@ -9,7 +9,10 @@
     "build:prod": "tsdown",
     "dev": "tsdown --sourcemap --watch",
     "lint": "eslint . --fix",
-    "prepublishOnly": "pnpm build:prod"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "prepublishOnly": "pnpm test:run && pnpm build:prod"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -56,9 +59,14 @@
     "js.foresight": "workspace:^"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.0",
+    "jsdom": "^29.0.1",
     "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "tsdown": "^0.21.7",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   }
 }
