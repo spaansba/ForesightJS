@@ -9,6 +9,7 @@ import {
 } from "../helpers/createInitialState"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ElementObservingModule } from "../core/ElementObservingModule"
 import { applySettingsChanges, initializeSettings } from "./SettingsManager"
 import type {
   CallbackHits,
@@ -23,6 +24,7 @@ import type {
   ForesightEventListener,
   ForesightManagerData,
   ForesightManagerSettings,
+  ForesightModules,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptions,
   ForesightRegisterResult,
@@ -66,7 +68,7 @@ export class ForesightManager {
 
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
-  private currentlyActiveHandler: DesktopHandler | TouchDeviceHandler | null = null
+  private currentlyActiveHandler: ElementObservingModule | null = null
   private handlerDependencies: ForesightModuleDependencies
 
   private isSetup: boolean = false
@@ -162,9 +164,6 @@ export class ForesightManager {
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
-    const desktopPredictors = this.desktopHandler?.loadedPredictors
-    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
-
     return {
       registeredElements: this.registeredElements,
       globalSettings: this._globalSettings,
@@ -172,16 +171,23 @@ export class ForesightManager {
       eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
       activeElementCount: this.activeElementCount,
-      loadedModules: {
-        desktopHandler: this.desktopHandler !== null,
-        touchHandler: this.touchDeviceHandler !== null,
-        predictors: {
-          mouse: desktopPredictors?.mouse ?? false,
-          tab: desktopPredictors?.tab ?? false,
-          scroll: desktopPredictors?.scroll ?? false,
-          viewport: touchPredictors?.viewport ?? false,
-          touchStart: touchPredictors?.touchStart ?? false,
-        },
+      loadedModules: this.getLoadedModulesSnapshot(),
+    }
+  }
+
+  private getLoadedModulesSnapshot(): ForesightModules {
+    const desktopPredictors = this.desktopHandler?.loadedPredictors
+    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
+
+    return {
+      desktopHandler: this.desktopHandler !== null,
+      touchHandler: this.touchDeviceHandler !== null,
+      predictors: {
+        mouse: desktopPredictors?.mouse ?? false,
+        tab: desktopPredictors?.tab ?? false,
+        scroll: desktopPredictors?.scroll ?? false,
+        viewport: touchPredictors?.viewport ?? false,
+        touchStart: touchPredictors?.touchStart ?? false,
       },
     }
   }
@@ -201,7 +207,9 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions()
+    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions(
+      this._globalSettings.minimumConnectionType
+    )
 
     if (!shouldRegister) {
       const blocked = createBlockedSnapshot(isLimitedConnection)

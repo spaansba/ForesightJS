@@ -8,16 +8,16 @@ import type {
   ForesightManagerSettings,
 } from "../types/types"
 
-export type CallCallbackFunction = (
+type CallCallbackFunction = (
   entry: ForesightElementInternal,
   callbackHitType: CallbackHitType
 ) => void
 
-export type EmitFunction = <K extends ForesightEvent>(event: ForesightEventMap[K]) => void
+type EmitFunction = <K extends ForesightEvent>(event: ForesightEventMap[K]) => void
 
 export type HasListenersFunction = <K extends ForesightEvent>(eventType: K) => boolean
 
-export type UpdateElementStateFunction = (
+type UpdateElementStateFunction = (
   entry: ForesightElementInternal,
   patch: Partial<ForesightElementState>
 ) => ForesightElementState

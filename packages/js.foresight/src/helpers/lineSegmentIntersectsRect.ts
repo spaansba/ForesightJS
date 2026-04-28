@@ -15,6 +15,8 @@ export const lineSegmentIntersectsRect = (p1: Point, p2: Point, rect: Rect): boo
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
 
+  // Hot path; canonical Liang-Barsky form is fastest in V8.
+  // fallow-ignore-next-line complexity
   const clipTest = (p: number, q: number): boolean => {
     if (p === 0) {
       // Line is parallel to this clipping edge

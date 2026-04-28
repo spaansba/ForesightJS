@@ -1,7 +1,8 @@
 import type { ForesightElement } from "../types/types"
-import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import { ElementObservingModule } from "../core/ElementObservingModule"
 
-export class TouchStartPredictor extends BaseForesightModule {
+export class TouchStartPredictor extends ElementObservingModule {
   protected readonly moduleName = "TouchStartPredictor"
 
   constructor(dependencies: ForesightModuleDependencies) {

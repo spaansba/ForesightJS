@@ -4,13 +4,7 @@ import { isPointInRectangle } from "../helpers/rectAndHitSlop"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { MouseTrajectoryUpdateEvent, TrajectoryPositions } from "../types/types"
 
-export interface MousePredictorSettings {
-  enableMousePrediction: boolean
-  trajectoryPredictionTime: number
-  positionHistorySize: number
-}
-
-export interface MousePredictorConfig {
+interface MousePredictorConfig {
   dependencies: ForesightModuleDependencies
   trajectoryPositions: TrajectoryPositions
 }

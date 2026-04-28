@@ -72,6 +72,90 @@ const createMockElement = (id = "test-element"): ForesightElement => {
   return element
 }
 
+const expectState = (
+  state: ForesightElementState,
+  expected: { isPredicted: boolean; isCallbackRunning: boolean; isActive: boolean }
+) => {
+  expect(state.isPredicted).toBe(expected.isPredicted)
+  expect(state.isCallbackRunning).toBe(expected.isCallbackRunning)
+}
+
+const runReactivationCycle = async (
+  manager: ForesightManager,
+  entry: ForesightElementInternal,
+  reactivateAfter: number
+) => {
+  fire(manager, entry)
+  await vi.advanceTimersByTimeAsync(0)
+  expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
+
+  await vi.advanceTimersByTimeAsync(reactivateAfter)
+  expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
+}
+
+const setupBasicTest = (registerOpts: Record<string, unknown> = {}) => {
+  const manager = ForesightManager.initialize()
+  const element = createMockElement()
+  const result = manager.register({ element, callback: vi.fn(), ...registerOpts })
+  const entry = getEntry(manager, element)
+
+  return { manager, element, entry, result }
+}
+
+const setupReactivationTest = (reactivateAfter: number = 5000) => {
+  const manager = ForesightManager.initialize()
+  const element = createMockElement()
+  const reactivatedListener = vi.fn()
+
+  manager.addEventListener("elementReactivated", reactivatedListener)
+  manager.register({ element, callback: vi.fn(), reactivateAfter })
+  const entry = getEntry(manager, element)
+
+  return { manager, element, entry, reactivatedListener }
+}
+
+const setupReactivationAfterFire = async (reactivateAfter: number) => {
+  const result = setupReactivationTest(reactivateAfter)
+  // Fire callback to start the reactivation timer
+  fire(result.manager, result.entry)
+  await vi.advanceTimersByTimeAsync(0)
+  expect(result.entry.state.isActive).toBe(false)
+
+  return result
+}
+
+const setupDeferredCallbackTest = (reactivateAfter: number = Infinity) => {
+  const manager = ForesightManager.initialize()
+  const element = createMockElement()
+  let resolveCallback!: () => void
+  const callback = vi.fn(() => new Promise<void>(resolve => (resolveCallback = resolve)))
+
+  manager.register({ element, callback, reactivateAfter })
+  const entry = getEntry(manager, element)
+
+  return { manager, element, entry, callback, resolve: () => resolveCallback() }
+}
+
+const expectPredictorNotLoaded = async (
+  predictor: "tab" | "scroll",
+  initSettings: Parameters<typeof ForesightManager.initialize>[0]
+) => {
+  vi.useRealTimers()
+  const manager = ForesightManager.initialize(initSettings)
+  const element = createMockElement()
+
+  manager.register({ element, callback: vi.fn() })
+
+  // Wait for handler to load first
+  await vi.waitFor(() => {
+    expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+  })
+
+  // Predictor should still be false
+  expect(manager.getManagerData.loadedModules.predictors[predictor]).toBe(false)
+  vi.useFakeTimers()
+}
+
 const createMockNodeList = (count: number): NodeListOf<ForesightElement> => {
   const container = document.createElement("div")
   document.body.appendChild(container)
@@ -308,11 +392,9 @@ describe("ForesightManager", () => {
     })
 
     it("should indicate when last element is unregistered", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager, element } = setupBasicTest()
       const listener = vi.fn()
 
-      manager.register({ element, callback: vi.fn() })
       manager.addEventListener("elementUnregistered", listener)
       manager.unregister(element)
 
@@ -503,12 +585,8 @@ describe("ForesightManager", () => {
     })
 
     it("should deactivate element after callback completes", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager, entry } = setupBasicTest({ reactivateAfter: Infinity })
 
-      manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-
-      const entry = getEntry(manager, element)
       expect(entry.state.isActive).toBe(true)
 
       fire(manager, entry)
@@ -553,14 +631,7 @@ describe("ForesightManager", () => {
 
   describe("Reactivation", () => {
     it("should reactivate element after timeout", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      const reactivatedListener = vi.fn()
-
-      manager.addEventListener("elementReactivated", reactivatedListener)
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
-
-      const entry = getEntry(manager, element)
+      const { manager, entry, reactivatedListener } = setupReactivationTest(5000)
 
       fire(manager, entry)
 
@@ -598,11 +669,7 @@ describe("ForesightManager", () => {
     })
 
     it("should support manual reactivation", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
 
       fire(manager, entry)
       await vi.runAllTimersAsync()
@@ -625,12 +692,8 @@ describe("ForesightManager", () => {
 
   describe("checkableElements Optimization", () => {
     it("should add element to checkable set on registration", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { entry } = setupBasicTest()
 
-      manager.register({ element, callback: vi.fn() })
-
-      const entry = getEntry(manager, element)
       // Element should be checkable: visible (mocked), active, not predicted
       expect(entry.state.isActive).toBe(true)
       expect(entry.state.isPredicted).toBe(false)
@@ -663,11 +726,7 @@ describe("ForesightManager", () => {
     })
 
     it("should update checkable status via public method", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-      const entry = getEntry(manager, element)
+      const { manager, entry } = setupBasicTest()
 
       expect(entry.state.isActive).toBe(true)
 
@@ -730,11 +789,9 @@ describe("ForesightManager", () => {
     })
 
     it("should update defaultHitSlop and recompute element bounds", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager } = setupBasicTest()
       const listener = vi.fn()
 
-      manager.register({ element, callback: vi.fn() })
       manager.addEventListener("managerSettingsChanged", listener)
 
       manager.alterGlobalSettings({ defaultHitSlop: 50 })
@@ -855,20 +912,7 @@ describe("ForesightManager", () => {
     })
 
     it("should not load tab predictor when disabled", async () => {
-      vi.useRealTimers()
-      const manager = ForesightManager.initialize({ enableTabPrediction: false })
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-
-      // Wait for handler to load first
-      await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
-      })
-
-      // Tab predictor should still be false
-      expect(manager.getManagerData.loadedModules.predictors.tab).toBe(false)
-      vi.useFakeTimers()
+      await expectPredictorNotLoaded("tab", { enableTabPrediction: false })
     })
 
     it("should lazy load scroll predictor when enabled", async () => {
@@ -885,20 +929,7 @@ describe("ForesightManager", () => {
     })
 
     it("should not load scroll predictor when disabled", async () => {
-      vi.useRealTimers()
-      const manager = ForesightManager.initialize({ enableScrollPrediction: false })
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-
-      // Wait for handler to load first
-      await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
-      })
-
-      // Scroll predictor should still be false
-      expect(manager.getManagerData.loadedModules.predictors.scroll).toBe(false)
-      vi.useFakeTimers()
+      await expectPredictorNotLoaded("scroll", { enableScrollPrediction: false })
     })
   })
 
@@ -1118,29 +1149,23 @@ describe("ForesightManager", () => {
 
   describe("Subscribe / getSnapshot", () => {
     it("should notify subscriber when state changes", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager, entry, result } = setupBasicTest()
       const listener = vi.fn()
-
-      const result = manager.register({ element, callback: vi.fn() })
       result.subscribe(listener)
 
-      fire(manager, getEntry(manager, element))
+      fire(manager, entry)
       // markElementAsRunning triggers a state update (isPredicted: true)
       expect(listener).toHaveBeenCalled()
     })
 
     it("should stop notifying after unsubscribe", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager, entry, result } = setupBasicTest()
       const listener = vi.fn()
-
-      const result = manager.register({ element, callback: vi.fn() })
       const unsubscribe = result.subscribe(listener)
 
       unsubscribe()
 
-      fire(manager, getEntry(manager, element))
+      fire(manager, entry)
       await vi.runAllTimersAsync()
 
       expect(listener).not.toHaveBeenCalled()
@@ -1160,11 +1185,7 @@ describe("ForesightManager", () => {
     })
 
     it("should return updated state from getSnapshot after state change", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      const result = manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, entry, result } = setupBasicTest({ reactivateAfter: Infinity })
 
       expect(result.getSnapshot().isPredicted).toBe(false)
       expect(result.getSnapshot().isCallbackRunning).toBe(false)
@@ -1208,11 +1229,7 @@ describe("ForesightManager", () => {
     })
 
     it("should reflect latest state after unsubscribe and resubscribe", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      const result = manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, entry, result } = setupBasicTest({ reactivateAfter: Infinity })
 
       const unsub = result.subscribe(vi.fn())
       unsub()
@@ -1229,11 +1246,8 @@ describe("ForesightManager", () => {
     })
 
     it("should clear subscribers on unregister", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const { manager, element, result } = setupBasicTest()
       const listener = vi.fn()
-
-      const result = manager.register({ element, callback: vi.fn() })
       result.subscribe(listener)
 
       manager.unregister(element)
@@ -1340,18 +1354,8 @@ describe("ForesightManager", () => {
     })
 
     it("should reschedule pending reactivation timeout when reactivateAfter changes", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      const reactivatedListener = vi.fn()
-
-      manager.addEventListener("elementReactivated", reactivatedListener)
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
-      const entry = getEntry(manager, element)
-
-      // Fire callback to start the reactivation timer
-      fire(manager, entry)
-      await vi.advanceTimersByTimeAsync(0)
-      expect(entry.state.isActive).toBe(false)
+      const { manager, element, entry, reactivatedListener } =
+        await setupReactivationAfterFire(5000)
 
       // Re-register with shorter reactivateAfter while timer is pending
       manager.register({ element, callback: vi.fn(), reactivateAfter: 500 })
@@ -1364,17 +1368,8 @@ describe("ForesightManager", () => {
     })
 
     it("should cancel reactivation when re-registered with Infinity", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      const reactivatedListener = vi.fn()
-
-      manager.addEventListener("elementReactivated", reactivatedListener)
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 2000 })
-      const entry = getEntry(manager, element)
-
-      fire(manager, entry)
-      await vi.advanceTimersByTimeAsync(0)
-      expect(entry.state.isActive).toBe(false)
+      const { manager, element, entry, reactivatedListener } =
+        await setupReactivationAfterFire(2000)
 
       // Re-register with Infinity — should cancel the pending timeout
       manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
@@ -1385,12 +1380,7 @@ describe("ForesightManager", () => {
     })
 
     it("should not reschedule when there is no pending reactivation timeout", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      const reactivatedListener = vi.fn()
-
-      manager.addEventListener("elementReactivated", reactivatedListener)
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
+      const { manager, element, reactivatedListener } = setupReactivationTest(5000)
 
       // Element is still active (no callback fired yet), no pending timeout
       manager.register({ element, callback: vi.fn(), reactivateAfter: 100 })
@@ -1415,23 +1405,8 @@ describe("ForesightManager", () => {
   })
 
   describe("Element State Lifecycle", () => {
-    const expectState = (
-      state: ForesightElementState,
-      expected: { isPredicted: boolean; isCallbackRunning: boolean; isActive: boolean }
-    ) => {
-      expect(state.isPredicted).toBe(expected.isPredicted)
-      expect(state.isCallbackRunning).toBe(expected.isCallbackRunning)
-      expect(state.isActive).toBe(expected.isActive)
-    }
-
     it("full lifecycle: register → predict → complete → reactivate", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      let resolveCallback!: () => void
-      const callback = vi.fn(() => new Promise<void>(resolve => (resolveCallback = resolve)))
-
-      manager.register({ element, callback, reactivateAfter: 1000 })
-      const entry = getEntry(manager, element)
+      const { manager, entry, resolve } = setupDeferredCallbackTest(1000)
 
       // 1. Registered: not predicted, not running, active
       expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
@@ -1441,7 +1416,7 @@ describe("ForesightManager", () => {
       expectState(entry.state, { isPredicted: true, isCallbackRunning: true, isActive: true })
 
       // 3. Callback completes: predicted, not running, not active
-      resolveCallback()
+      resolve()
       await vi.advanceTimersByTimeAsync(0) // flush microtask only, not reactivation timer
       expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
 
@@ -1451,11 +1426,7 @@ describe("ForesightManager", () => {
     })
 
     it("lifecycle ending in unregister instead of reactivation", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
 
       expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
 
@@ -1477,33 +1448,17 @@ describe("ForesightManager", () => {
       const entry = getEntry(manager, element)
 
       // First cycle
-      fire(manager, entry)
-      await vi.advanceTimersByTimeAsync(0)
-      expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
-
-      await vi.advanceTimersByTimeAsync(500)
-      expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
+      await runReactivationCycle(manager, entry, 500)
 
       // Second cycle
-      fire(manager, entry)
-      await vi.advanceTimersByTimeAsync(0)
-      expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
-
-      await vi.advanceTimersByTimeAsync(500)
-      expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
+      await runReactivationCycle(manager, entry, 500)
 
       expect(callback).toHaveBeenCalledTimes(2)
       expect(entry.state.hitCount).toBe(2)
     })
 
     it("isPredicted stays true while async callback is in flight", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      let resolveCallback!: () => void
-      const callback = vi.fn(() => new Promise<void>(resolve => (resolveCallback = resolve)))
-
-      manager.register({ element, callback, reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, entry, resolve } = setupDeferredCallbackTest()
 
       fire(manager, entry)
       expectState(entry.state, { isPredicted: true, isCallbackRunning: true, isActive: true })
@@ -1513,25 +1468,19 @@ describe("ForesightManager", () => {
       expectState(entry.state, { isPredicted: true, isCallbackRunning: true, isActive: true })
 
       // Now resolve it
-      resolveCallback()
+      resolve()
       await vi.runAllTimersAsync()
       expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
     })
 
     it("cannot fire during callback execution", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      let resolveCallback!: () => void
-      const callback = vi.fn(() => new Promise<void>(resolve => (resolveCallback = resolve)))
-
-      manager.register({ element, callback, reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, entry, callback, resolve } = setupDeferredCallbackTest()
 
       fire(manager, entry)
       fire(manager, entry) // ignored
       fire(manager, entry) // ignored
 
-      resolveCallback()
+      resolve()
       await vi.runAllTimersAsync()
 
       expect(callback).toHaveBeenCalledTimes(1)
@@ -1586,13 +1535,7 @@ describe("ForesightManager", () => {
     })
 
     it("unregistering mid-callback resets both flags", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-      let resolveCallback!: () => void
-      const callback = vi.fn(() => new Promise<void>(resolve => (resolveCallback = resolve)))
-
-      manager.register({ element, callback, reactivateAfter: Infinity })
-      const entry = getEntry(manager, element)
+      const { manager, element, entry, resolve } = setupDeferredCallbackTest()
 
       fire(manager, entry)
       expectState(entry.state, { isPredicted: true, isCallbackRunning: true, isActive: true })
@@ -1601,7 +1544,7 @@ describe("ForesightManager", () => {
       expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: false })
       expect(entry.state.isRegistered).toBe(false)
 
-      resolveCallback()
+      resolve()
       await vi.runAllTimersAsync()
     })
 

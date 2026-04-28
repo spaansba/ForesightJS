@@ -1,7 +1,8 @@
 import type { ForesightElement } from "../types/types"
-import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
+import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
+import { ElementObservingModule } from "../core/ElementObservingModule"
 
-export class ViewportPredictor extends BaseForesightModule {
+export class ViewportPredictor extends ElementObservingModule {
   protected readonly moduleName = "ViewportPredictor"
 
   private intersectionObserver: IntersectionObserver | null = null
@@ -18,9 +19,13 @@ export class ViewportPredictor extends BaseForesightModule {
     this.intersectionObserver = null
   }
 
-  public observeElement = (element: ForesightElement) => this.intersectionObserver?.observe(element)
-  public unobserveElement = (element: ForesightElement) =>
+  public observeElement(element: ForesightElement): void {
+    this.intersectionObserver?.observe(element)
+  }
+
+  public unobserveElement(element: ForesightElement): void {
     this.intersectionObserver?.unobserve(element)
+  }
 
   protected handleViewportEnter = (entries: IntersectionObserverEntry[]) => {
     for (const entry of entries) {

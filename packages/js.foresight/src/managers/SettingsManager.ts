@@ -118,7 +118,7 @@ export const initializeSettings = (
  * Result of applying settings changes at runtime.
  * Contains the list of changed settings for event emission.
  */
-export interface SettingsChangeResult {
+interface SettingsChangeResult {
   changedSettings: UpdatedManagerSetting[]
   positionHistorySizeChanged: boolean
   scrollPredictionChanged: boolean

@@ -45,7 +45,7 @@ export type TrajectoryPositions = {
  * Internal type representing the calculated boundaries of a foresight element,
  * including its original dimensions and the expanded hit area.
  */
-export type ElementBounds = {
+type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
   expandedRect: Readonly<Rect>
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
@@ -133,18 +133,18 @@ export type ForesightElementInternal = {
 
 export type callbackStatus = "error" | "success" | undefined
 
-export type MouseCallbackCounts = {
+type MouseCallbackCounts = {
   hover: number
   trajectory: number
 }
 
-export type TabCallbackCounts = {
+type TabCallbackCounts = {
   reverse: number
   forwards: number
 }
 
 export type ScrollDirection = "down" | "up" | "left" | "right" | "none"
-export type ScrollCallbackCounts = Record<`${Exclude<ScrollDirection, "none">}`, number>
+type ScrollCallbackCounts = Record<`${Exclude<ScrollDirection, "none">}`, number>
 
 export type CallbackHits = {
   total: number
@@ -172,16 +172,18 @@ export type ForesightManagerData = {
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
-  loadedModules: {
-    desktopHandler: boolean
-    touchHandler: boolean
-    predictors: {
-      mouse: boolean
-      tab: boolean
-      scroll: boolean
-      viewport: boolean
-      touchStart: boolean
-    }
+  loadedModules: ForesightModules
+}
+
+export type ForesightModules = {
+  desktopHandler: boolean
+  touchHandler: boolean
+  predictors: {
+    mouse: boolean
+    tab: boolean
+    scroll: boolean
+    viewport: boolean
+    touchStart: boolean
   }
 }
 
@@ -370,12 +372,6 @@ export type ManagerBooleanSettingKeys = {
     ? K
     : never
 }[keyof UpdateForsightManagerSettings]
-
-export type NumericSettingConfig = {
-  setting: NumericSettingKeys
-  min: number
-  max: number
-}
 
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
