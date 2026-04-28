@@ -13,7 +13,9 @@
     "sourceMap": true,
     "paths": {
       "js.foresight": ["./packages/js.foresight/src/index.ts"],
-      "js.foresight/*": ["./packages/js.foresight/src/*"]
+      "js.foresight/*": ["./packages/js.foresight/src/*"],
+      "@foresightjs/react": ["./packages/foresightjs-react/src/index.ts"],
+      "@foresightjs/react/*": ["./packages/foresightjs-react/src/*"]
     }
   },
   "exclude": ["node_modules", "**/node_modules/**", "dist", "**/dist/**", "build", "**/build/**"]

@@ -1,0 +1,64 @@
+{
+  "name": "@foresightjs/react",
+  "version": "0.1.0",
+  "description": "React bindings for ForesightJS - hooks and helpers to register elements with the ForesightManager from React components.",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsdown --sourcemap",
+    "build:prod": "tsdown",
+    "dev": "tsdown --sourcemap --watch",
+    "lint": "eslint . --fix",
+    "prepublishOnly": "pnpm build:prod"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "homepage": "https://foresightjs.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/foresightjs-react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "react",
+    "foresight",
+    "js.foresight",
+    "foresightjs",
+    "react-hooks",
+    "prefetch",
+    "interaction-prediction",
+    "mouse-trajectory",
+    "useForesight"
+  ],
+  "author": "Bart Spaans",
+  "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "js.foresight": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "react": "^19.2.4",
+    "tsdown": "^0.21.7",
+    "typescript": "^6.0.2"
+  }
+}

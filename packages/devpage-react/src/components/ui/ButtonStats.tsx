@@ -1,7 +1,8 @@
-import type { ForesightElementState } from "js.foresight"
-
 type ButtonStatsProps = {
-  state: ForesightElementState | null
+  hitCount: number
+  isPredicted: boolean
+  isCallbackRunning: boolean
+  status: string | undefined
 }
 
 const row = (label: string, value: React.ReactNode) => {
@@ -13,19 +14,13 @@ const row = (label: string, value: React.ReactNode) => {
   )
 }
 
-const ButtonStats = ({ state }: ButtonStatsProps) => {
+const ButtonStats = ({ hitCount, isPredicted, isCallbackRunning, status }: ButtonStatsProps) => {
   return (
     <div className="w-56 font-mono text-[11px] border border-gray-300 divide-y divide-gray-200 bg-white">
-      {row("hits", state?.hitCount ?? 0)}
-      {row("predicted", state?.isPredicted ? "yes" : "no")}
-      {row("cb running", state?.isCallbackRunning ? "yes" : "no")}
-      {row("status", state?.status ?? "—")}
-      <details className="divide-y divide-gray-200">
-        <summary className="px-2 py-1 cursor-pointer text-gray-500 select-none">full state</summary>
-        <pre className="px-2 py-1 overflow-auto max-h-60 text-[10px] text-gray-700">
-          {state ? JSON.stringify(state, null, 2) : "null"}
-        </pre>
-      </details>
+      {row("hits", hitCount)}
+      {row("predicted", isPredicted ? "yes" : "no")}
+      {row("cb running", isCallbackRunning ? "yes" : "no")}
+      {row("status", status ?? "—")}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { DerivedMapView } from "../helpers/DerivedMapView"
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
-  createBlockedSnapshot,
+  createUnregisteredSnapshot,
   createDefaultManagerSettings,
   createElementInternal,
   createInitialCallbackHits,
@@ -212,7 +212,7 @@ export class ForesightManager {
     )
 
     if (!shouldRegister) {
-      const blocked = createBlockedSnapshot(isLimitedConnection)
+      const blocked = createUnregisteredSnapshot(isLimitedConnection)
 
       return {
         ...blocked,

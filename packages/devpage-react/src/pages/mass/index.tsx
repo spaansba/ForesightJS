@@ -1,4 +1,4 @@
-import { ForesightManager } from "js.foresight"
+import { ForesightManager } from "@foresightjs/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { SimpleNavigation } from "../../components/SimpleNavigation"
 import { useDebug } from "../../contexts/DebugContext"

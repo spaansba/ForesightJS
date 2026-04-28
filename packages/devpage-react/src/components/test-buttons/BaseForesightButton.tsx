@@ -1,5 +1,5 @@
-import type { ForesightRegisterOptionsWithoutElement } from "js.foresight"
-import useForesight from "../../hooks/useForesight"
+import type { ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
+import { useForesight } from "@foresightjs/react"
 import ButtonStats from "../ui/ButtonStats"
 import { useReactivateAfter } from "../../stores/ButtonStateStore"
 
@@ -15,8 +15,8 @@ const ForesightButton = ({ registerOptions, className = "", children }: Foresigh
     reactivateAfter,
     ...registerOptions,
   }
-  const { elementRef, state } = useForesight<HTMLButtonElement>(merged)
-  const isPredicted = state?.isPredicted ?? false
+  const { elementRef, isPredicted, hitCount, isCallbackRunning, status } =
+    useForesight<HTMLButtonElement>(merged)
 
   return (
     <>
@@ -32,7 +32,12 @@ const ForesightButton = ({ registerOptions, className = "", children }: Foresigh
           <span className="text-center leading-tight">{registerOptions.name || "Unnamed"}</span>
         )}
       </button>
-      <ButtonStats state={state} />
+      <ButtonStats
+        hitCount={hitCount}
+        isPredicted={isPredicted}
+        isCallbackRunning={isCallbackRunning}
+        status={status}
+      />
     </>
   )
 }

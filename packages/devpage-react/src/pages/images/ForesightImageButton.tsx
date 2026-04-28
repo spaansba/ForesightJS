@@ -1,6 +1,6 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ForesightImage } from "."
-import useForesight from "../../hooks/useForesight"
+import { useForesight } from "@foresightjs/react"
 interface ForesightImageButtonProps {
   image: ForesightImage
   setSelectedImage: React.Dispatch<React.SetStateAction<ForesightImage | null>>
@@ -33,15 +33,20 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
   const queryClient = useQueryClient()
   const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image, false, 0))
 
-  const { elementRef, state } = useForesight<HTMLButtonElement>({
-    callback: async () => {
-      await queryClient.prefetchQuery(
-        imageQueryOptions(image, true, queryClient.getQueryState(["image", image])?.dataUpdateCount)
-      )
-    },
-    reactivateAfter: STALE_TIME,
-    name: image.name,
-  })
+  const { elementRef, isPredicted, hitCount, isCallbackRunning, status } =
+    useForesight<HTMLButtonElement>({
+      callback: async () => {
+        await queryClient.prefetchQuery(
+          imageQueryOptions(
+            image,
+            true,
+            queryClient.getQueryState(["image", image])?.dataUpdateCount
+          )
+        )
+      },
+      reactivateAfter: STALE_TIME,
+      name: image.name,
+    })
 
   const handleOnClick = async () => {
     const result = await queryClient.fetchQuery(
@@ -53,8 +58,6 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
       blob: result.blob,
     })
   }
-
-  const isPredicted = state?.isPredicted ?? false
 
   return (
     <button
@@ -75,25 +78,15 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
           <Row label="fromUrl" value={data?.fromUrl ?? "none"} on={!!data} />
         </dl>
         <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
-          <Row label="hits" value={state?.hitCount ?? 0} />
-          <Row
-            label="predicted"
-            value={state?.isPredicted ? "yes" : "no"}
-            on={state?.isPredicted}
-          />
+          <Row label="hits" value={hitCount} />
+          <Row label="predicted" value={isPredicted ? "yes" : "no"} on={isPredicted} />
           <Row
             label="cb running"
-            value={state?.isCallbackRunning ? "yes" : "no"}
-            on={state?.isCallbackRunning}
+            value={isCallbackRunning ? "yes" : "no"}
+            on={isCallbackRunning}
           />
-          <Row label="status" value={state?.status ?? "—"} />
+          <Row label="status" value={status ?? "—"} />
         </dl>
-        <details className="text-xs font-mono">
-          <summary className="cursor-pointer text-gray-500 select-none">full state</summary>
-          <pre className="mt-1 overflow-auto max-h-40 text-[10px] text-gray-700">
-            {state ? JSON.stringify(state, null, 2) : "null"}
-          </pre>
-        </details>
       </div>
     </button>
   )

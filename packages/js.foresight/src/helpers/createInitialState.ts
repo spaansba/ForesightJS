@@ -113,11 +113,21 @@ export const createElementInternal = (
 }
 
 /**
- * Sentinel snapshot returned when an element cannot be registered (touch device,
- * limited connection, etc.). Reuses the flat state shape so consumers don't need
+ * Snapshot of the flat state shape for an element that is not (yet) tracked by the
+ * manager. Reuses the same fields as a registered element so consumers don't need
  * to special-case `null`.
+ *
+ * Used in two situations:
+ * 1. The manager refuses to register the element (touch device, limited connection,
+ *    etc.) — pass `isLimitedConnection` to reflect that.
+ * 2. Framework wrappers (React, Vue) need an initial snapshot before `register()`
+ *    has run. `register()` requires a real DOM element, which only exists after
+ *    the consumer's first render commits, so the wrapper returns this snapshot
+ *    during that brief window. Pass `isLimitedConnection: false` for this case.
  */
-export const createBlockedSnapshot = (isLimitedConnection: boolean): ForesightElementState => {
+export const createUnregisteredSnapshot = (
+  isLimitedConnection: boolean
+): ForesightElementState => {
   return {
     id: "",
     name: "",
