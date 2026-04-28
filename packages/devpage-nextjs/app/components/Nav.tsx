@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { ForesightLink } from "./ForesightLink"
 
 export const Nav = () => {
   return (
@@ -8,18 +9,38 @@ export const Nav = () => {
           ForesightJS Next.js
         </Link>
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/" className="text-gray-700 hover:text-gray-900">
+          <ForesightLink
+            href="/"
+            name="nav-home"
+            hitSlop={10}
+            className="text-gray-700 hover:text-gray-900"
+          >
             Home
-          </Link>
-          <Link href="/about" className="text-gray-700 hover:text-gray-900">
+          </ForesightLink>
+          <ForesightLink
+            href="/about"
+            name="nav-about"
+            hitSlop={10}
+            className="text-gray-700 hover:text-gray-900"
+          >
             About
-          </Link>
-          <Link href="/contact" className="text-gray-700 hover:text-gray-900">
+          </ForesightLink>
+          <ForesightLink
+            href="/contact"
+            name="nav-contact"
+            hitSlop={10}
+            className="text-gray-700 hover:text-gray-900"
+          >
             Contact
-          </Link>
-          <Link href="/pricing" className="text-gray-700 hover:text-gray-900">
+          </ForesightLink>
+          <ForesightLink
+            href="/pricing"
+            name="nav-pricing"
+            hitSlop={10}
+            className="text-gray-700 hover:text-gray-900"
+          >
             Pricing
-          </Link>
+          </ForesightLink>
         </nav>
       </div>
     </header>

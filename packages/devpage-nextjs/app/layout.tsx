@@ -1,11 +1,18 @@
-import type { Metadata } from "next"
+"use client"
+
 import "./globals.css"
 import { Nav } from "./components/Nav"
+import { ForesightManager } from "@foresightjs/react"
+import { ForesightDevtools } from "js.foresight-devtools"
 
-export const metadata: Metadata = {
-  title: "ForesightJS Next.js devpage",
-  description: "Next.js development page for @foresightjs/react",
-}
+ForesightManager.initialize({
+  enableMousePrediction: true,
+  enableTabPrediction: true,
+  enableScrollPrediction: true,
+  enableManagerLogging: false,
+})
+
+ForesightDevtools.initialize({})
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
