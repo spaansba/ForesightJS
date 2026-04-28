@@ -53,6 +53,9 @@ export const SimpleNavigation = ({
           <Link to="/mass" className="text-gray-700 hover:text-gray-900">
             Mass test
           </Link>
+          <Link to="/react-router" className="text-gray-700 hover:text-gray-900">
+            React Router
+          </Link>
           <span className="w-px h-5 bg-gray-300" />
           <button
             onClick={toggleDebug}

@@ -80,11 +80,7 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
         <dl className="text-xs font-mono divide-y divide-gray-200 border-y border-gray-200">
           <Row label="hits" value={hitCount} />
           <Row label="predicted" value={isPredicted ? "yes" : "no"} on={isPredicted} />
-          <Row
-            label="cb running"
-            value={isCallbackRunning ? "yes" : "no"}
-            on={isCallbackRunning}
-          />
+          <Row label="cb running" value={isCallbackRunning ? "yes" : "no"} on={isCallbackRunning} />
           <Row label="status" value={status ?? "—"} />
         </dl>
       </div>

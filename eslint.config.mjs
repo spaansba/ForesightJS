@@ -16,6 +16,8 @@ export default [
       "**/.vite/**",
       "**/scripts/**",
       "**/.docusaurus/**",
+      "**/.next/**",
+      "**/next-env.d.ts",
     ],
   },
 

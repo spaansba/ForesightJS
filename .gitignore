@@ -1,7 +1,5 @@
 node_modules
 dist
-notes.txt
-/src/test
 .env
 .claude
 

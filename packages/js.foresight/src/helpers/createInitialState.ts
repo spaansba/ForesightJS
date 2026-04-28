@@ -112,6 +112,19 @@ export const createElementInternal = (
   }
 }
 
+// new DOMRectReadOnly(0, 0, 0, 0) doesn't work in ssr, so we use this constant instead
+const EMPTY_DOM_RECT: DOMRectReadOnly = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  toJSON: () => ({}),
+}
+
 /**
  * Snapshot of the flat state shape for an element that is not (yet) tracked by the
  * manager. Reuses the same fields as a registered element so consumers don't need
@@ -125,15 +138,13 @@ export const createElementInternal = (
  *    the consumer's first render commits, so the wrapper returns this snapshot
  *    during that brief window. Pass `isLimitedConnection: false` for this case.
  */
-export const createUnregisteredSnapshot = (
-  isLimitedConnection: boolean
-): ForesightElementState => {
+export const createUnregisteredSnapshot = (isLimitedConnection: boolean): ForesightElementState => {
   return {
     id: "",
     name: "",
     meta: {},
     elementBounds: {
-      originalRect: new DOMRectReadOnly(0, 0, 0, 0),
+      originalRect: EMPTY_DOM_RECT,
       expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
       hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     },
