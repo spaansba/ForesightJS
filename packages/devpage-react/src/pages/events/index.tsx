@@ -36,43 +36,35 @@ const formatElementName = (state: ForesightElementState): string => {
   return state.name || state.id.slice(0, 8)
 }
 
-const summarizeEvent = <K extends ForesightEvent>(type: K, event: ForesightEventMap[K]): string => {
-  switch (type) {
-    case "elementRegistered": {
-      const e = event as ForesightEventMap["elementRegistered"]
-      return `"${formatElementName(e.state)}" registered`
-    }
-    case "elementReactivated": {
-      const e = event as ForesightEventMap["elementReactivated"]
-      return `"${formatElementName(e.state)}" reactivated`
-    }
-    case "elementUnregistered": {
-      const e = event as ForesightEventMap["elementUnregistered"]
-      return `"${formatElementName(e.state)}" unregistered (${e.unregisterReason})`
-    }
-    case "callbackInvoked": {
-      const e = event as ForesightEventMap["callbackInvoked"]
-      return `"${formatElementName(e.state)}" callback invoked [${formatHitType(e.hitType)}]`
-    }
-    case "callbackCompleted": {
-      const e = event as ForesightEventMap["callbackCompleted"]
-      return `"${formatElementName(e.state)}" callback ${e.status ?? "done"} (${e.elapsed.toFixed(1)}ms) [${formatHitType(e.hitType)}]`
-    }
-    case "managerSettingsChanged": {
-      const e = event as ForesightEventMap["managerSettingsChanged"]
-      const changes = e.updatedSettings.map(s => s.setting).join(", ")
-      return `settings changed: ${changes}`
-    }
-    case "deviceStrategyChanged": {
-      const e = event as ForesightEventMap["deviceStrategyChanged"]
-      return `device strategy: ${e.oldStrategy} -> ${e.newStrategy}`
-    }
+const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {
+  switch (event.type) {
+    case "elementRegistered":
+      return `"${formatElementName(event.state)}" registered`
+
+    case "elementReactivated":
+      return `"${formatElementName(event.state)}" reactivated`
+
+    case "elementUnregistered":
+      return `"${formatElementName(event.state)}" unregistered (${event.unregisterReason})`
+
+    case "callbackInvoked":
+      return `"${formatElementName(event.state)}" callback invoked [${formatHitType(event.hitType)}]`
+
+    case "callbackCompleted":
+      return `"${formatElementName(event.state)}" callback ${event.status ?? "done"} (${event.elapsed.toFixed(1)}ms) [${formatHitType(event.hitType)}]`
+
+    case "managerSettingsChanged":
+      return `settings changed: ${event.updatedSettings.map(s => s.setting).join(", ")}`
+
+    case "deviceStrategyChanged":
+      return `device strategy: ${event.oldStrategy} -> ${event.newStrategy}`
+
     default:
-      return type
+      return event.type
   }
 }
 
-const EVENT_COLORS: Record<ForesightEvent, string> = {
+const EVENT_COLORS: Partial<Record<ForesightEvent, string>> = {
   elementRegistered: "text-green-700",
   elementReactivated: "text-blue-700",
   elementUnregistered: "text-red-700",
@@ -87,6 +79,7 @@ type EnabledEvents = Record<ForesightEvent, boolean>
 
 const DEFAULT_ENABLED: EnabledEvents = ALL_EVENTS.reduce((acc, e) => {
   acc[e] = true
+
   return acc
 }, {} as EnabledEvents)
 
@@ -115,6 +108,7 @@ const DemoElement = ({
         if (name === "error-callback") {
           throw new Error("Intentional error for demo")
         }
+
         await new Promise(resolve => setTimeout(resolve, delayMs))
       },
       name,
@@ -127,7 +121,7 @@ const DemoElement = ({
       <div
         ref={elementRef}
         className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none ${color} ${
-          isPredicted ? "outline outline-1 outline-amber-500" : ""
+          isPredicted ? "outline-1 outline-amber-500" : ""
         }`}
       >
         {label}
@@ -156,7 +150,7 @@ const ToggleElement = () => {
         <div
           ref={elementRef}
           className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none ${
-            isPredicted ? "outline outline-1 outline-amber-500" : ""
+            isPredicted ? "outline-1 outline-amber-500" : ""
           }`}
         >
           Toggleable
@@ -212,7 +206,7 @@ const EventLog = ({ entries }: { entries: EventLogEntry[] }) => {
   return (
     <div
       ref={logRef}
-      className="h-[500px] overflow-y-auto font-mono text-[11px] border border-gray-300 bg-white"
+      className="h-125 overflow-y-auto font-mono text-[11px] border border-gray-300 bg-white"
     >
       {entries.length === 0 ? (
         <p className="p-4 text-gray-400 text-xs">
@@ -227,7 +221,9 @@ const EventLog = ({ entries }: { entries: EventLogEntry[] }) => {
             <span className="text-gray-400 shrink-0 w-20 tabular-nums">
               {new Date(entry.timestamp).toLocaleTimeString()}
             </span>
-            <span className={`shrink-0 w-48 ${EVENT_COLORS[entry.type]}`}>{entry.type}</span>
+            <span className={`shrink-0 w-48 ${EVENT_COLORS[entry.type] ?? "text-gray-600"}`}>
+              {entry.type}
+            </span>
             <span className="text-gray-700 truncate">{entry.summary}</span>
           </div>
         ))
@@ -247,40 +243,46 @@ export default function Events() {
   enabledRef.current = enabled
 
   const pushEntry = useCallback((type: ForesightEvent, summary: string, timestamp: number) => {
-    if (isPausedRef.current) return
-    if (!enabledRef.current[type]) return
+    if (isPausedRef.current) {
+      return
+    }
+
+    if (!enabledRef.current[type]) {
+      return
+    }
 
     setEntries(prev => {
       const entry: EventLogEntry = { id: nextId.current++, type, timestamp, summary }
       const next = [entry, ...prev]
+
       return next.length > MAX_LOG_ENTRIES ? next.slice(0, MAX_LOG_ENTRIES) : next
     })
   }, [])
 
   // Subscribe to all event types - the filter is applied inside pushEntry
   useForesightEvent("elementRegistered", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("elementReactivated", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("elementUnregistered", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("elementDataUpdated", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), Date.now())
+    pushEntry(e.type, summarizeEvent(e), Date.now())
   })
   useForesightEvent("callbackInvoked", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("callbackCompleted", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("managerSettingsChanged", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
   useForesightEvent("deviceStrategyChanged", e => {
-    pushEntry(e.type, summarizeEvent(e.type, e), e.timestamp)
+    pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
 
   const toggleEvent = useCallback((event: ForesightEvent) => {
@@ -290,6 +292,7 @@ export default function Events() {
   const eventCounts = entries.reduce(
     (acc, entry) => {
       acc[entry.type] = (acc[entry.type] ?? 0) + 1
+
       return acc
     },
     {} as Partial<Record<ForesightEvent, number>>
@@ -357,7 +360,9 @@ export default function Events() {
         {ALL_EVENTS.filter(e => enabled[e]).map(event => (
           <div key={event} className="border border-gray-300 bg-white px-3 py-2">
             <div className="text-[10px] text-gray-500 truncate">{event}</div>
-            <div className={`text-lg font-semibold tabular-nums ${EVENT_COLORS[event]}`}>
+            <div
+              className={`text-lg font-semibold tabular-nums ${EVENT_COLORS[event] ?? "text-gray-600"}`}
+            >
               {eventCounts[event] ?? 0}
             </div>
           </div>
