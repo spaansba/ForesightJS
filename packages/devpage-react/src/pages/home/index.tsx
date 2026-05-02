@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useForesight } from "@foresightjs/react"
+import { useMemo, useState } from "react"
+import { useForesights } from "@foresightjs/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { pageQueryOptions, prefetchPage } from "./api"
 import { ForesightImageButton } from "./ForesightImageButton"
@@ -11,39 +11,6 @@ const PAGES = [
   { slug: "contact", label: "Contact" },
   { slug: "pricing", label: "Pricing" },
 ] as const
-
-type ForesightPageButtonProps = {
-  slug: string
-  label: string
-  isActive: boolean
-  onSelect: (slug: string) => void
-}
-
-const ForesightPageButton = ({ slug, label, isActive, onSelect }: ForesightPageButtonProps) => {
-  const queryClient = useQueryClient()
-  const reactivateAfter = useReactivateAfter()
-
-  const { elementRef, isPredicted } = useForesight<HTMLButtonElement>({
-    callback: () => prefetchPage(queryClient, slug),
-    name: slug,
-    hitSlop: 20,
-    reactivateAfter,
-  })
-
-  return (
-    <button
-      ref={elementRef}
-      onClick={() => onSelect(slug)}
-      className={`px-5 py-3 border text-sm font-medium transition-colors cursor-pointer ${
-        isActive
-          ? "border-gray-900 bg-gray-900 text-white"
-          : "border-gray-400 text-gray-800 hover:bg-gray-100"
-      } ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
-    >
-      {label}
-    </button>
-  )
-}
 
 const PageContent = ({ slug }: { slug: string }) => {
   const { data, isLoading, isFetching } = useQuery(pageQueryOptions(slug))
@@ -123,6 +90,54 @@ const ImageSection = () => {
   )
 }
 
+const PageButtons = ({
+  activePage,
+  onSelect,
+}: {
+  activePage: string | null
+  onSelect: (slug: string) => void
+}) => {
+  const queryClient = useQueryClient()
+  const reactivateAfter = useReactivateAfter()
+
+  const options = useMemo(
+    () =>
+      PAGES.map(({ slug }) => ({
+        callback: () => prefetchPage(queryClient, slug),
+        name: slug,
+        hitSlop: 20 as const,
+        reactivateAfter,
+      })),
+    [queryClient, reactivateAfter]
+  )
+
+  const results = useForesights<HTMLButtonElement>(options)
+
+  return (
+    <nav className="flex gap-3">
+      {PAGES.map(({ slug, label }, i) => {
+        const { elementRef, isPredicted } = results[i]
+        const isActive = activePage === slug
+
+        return (
+          <button
+            key={slug}
+            ref={elementRef}
+            onClick={() => onSelect(slug)}
+            className={`px-5 py-3 border text-sm font-medium transition-colors cursor-pointer ${
+              isActive
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-400 text-gray-800 hover:bg-gray-100"
+            } ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </nav>
+  )
+}
+
 const Home = () => {
   const [activePage, setActivePage] = useState<string | null>(null)
 
@@ -130,18 +145,7 @@ const Home = () => {
     <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
       <section className="space-y-4">
         <h1 className="text-xl font-semibold">Data prefetching</h1>
-        <nav className="flex gap-3">
-          {PAGES.map(({ slug, label }) => (
-            <ForesightPageButton
-              key={slug}
-              slug={slug}
-              label={label}
-              isActive={activePage === slug}
-              onSelect={setActivePage}
-            />
-          ))}
-        </nav>
-
+        <PageButtons activePage={activePage} onSelect={setActivePage} />
         {activePage && <PageContent slug={activePage} />}
       </section>
 
