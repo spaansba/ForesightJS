@@ -100,9 +100,7 @@ describe("useForesights", () => {
   it("forwards the latest callback (no stale closure)", () => {
     const cb1 = vi.fn()
     const cb2 = vi.fn()
-    const { rerender } = render(
-      <MultiProbe optionsArray={[{ name: "a", callback: cb1 }]} />
-    )
+    const { rerender } = render(<MultiProbe optionsArray={[{ name: "a", callback: cb1 }]} />)
     rerender(<MultiProbe optionsArray={[{ name: "a", callback: cb2 }]} />)
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
@@ -115,9 +113,7 @@ describe("useForesights", () => {
   })
 
   it("handles growing the array (new items added)", () => {
-    const { rerender } = render(
-      <MultiProbe optionsArray={[{ name: "a", callback: vi.fn() }]} />
-    )
+    const { rerender } = render(<MultiProbe optionsArray={[{ name: "a", callback: vi.fn() }]} />)
     expect(registerSpy).toHaveBeenCalledTimes(1)
 
     registerSpy.mockClear()
@@ -153,9 +149,7 @@ describe("useForesights", () => {
   })
 
   it("patches options without unregistering", () => {
-    const { rerender } = render(
-      <MultiProbe optionsArray={[{ name: "a", callback: vi.fn() }]} />
-    )
+    const { rerender } = render(<MultiProbe optionsArray={[{ name: "a", callback: vi.fn() }]} />)
     registerSpy.mockClear()
     unregisterSpy.mockClear()
 
