@@ -1,6 +1,7 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { ForesightImage } from "."
+import type { ForesightImage } from "./imageTypes"
 import { useForesight } from "@foresightjs/react"
+import { useReactivateAfter } from "../../stores/ButtonStateStore"
 interface ForesightImageButtonProps {
   image: ForesightImage
   setSelectedImage: React.Dispatch<React.SetStateAction<ForesightImage | null>>
@@ -31,6 +32,7 @@ const imageQueryOptions = (
 
 export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImageButtonProps) => {
   const queryClient = useQueryClient()
+  const reactivateAfter = useReactivateAfter()
   const { data, isFetching, isStale, isRefetching } = useQuery(imageQueryOptions(image, false, 0))
 
   const { elementRef, isPredicted, hitCount, isCallbackRunning, status } =
@@ -44,7 +46,7 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
           )
         )
       },
-      reactivateAfter: STALE_TIME,
+      reactivateAfter,
       name: image.name,
     })
 
@@ -63,8 +65,8 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
     <button
       ref={elementRef}
       onClick={handleOnClick}
-      className={`p-4 border bg-white text-left h-60 cursor-pointer ${
-        isPredicted ? "border-amber-500 outline outline-2 outline-amber-500" : "border-gray-300"
+      className={`p-4 border bg-white text-left cursor-pointer ${
+        isPredicted ? "border-amber-500 outline  outline-amber-500" : "border-gray-300"
       }`}
     >
       <div className="space-y-2">

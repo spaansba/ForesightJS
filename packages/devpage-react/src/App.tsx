@@ -1,19 +1,31 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-import { Main } from "./components/MainWrapper"
-import Mass from "./pages/mass"
-import ImageGallery from "./pages/images"
-import ReactRouterDemo from "./pages/react-router"
+import { lazy, Suspense } from "react"
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom"
+import { Navigation } from "./components/Navigation"
 import { DebugProvider } from "./contexts/DebugContext"
+
+const Home = lazy(() => import("./pages/home"))
+const Elements = lazy(() => import("./pages/elements"))
+const Mass = lazy(() => import("./pages/mass"))
+
+const Layout = () => (
+  <div className="min-h-screen bg-stone-50 text-gray-900">
+    <Navigation />
+    <Suspense>
+      <Outlet />
+    </Suspense>
+  </div>
+)
 
 const App = () => {
   return (
     <DebugProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Main />} />
-          <Route path="/mass" element={<Mass />} />
-          <Route path="/images" element={<ImageGallery />} />
-          <Route path="/react-router/*" element={<ReactRouterDemo />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/elements" element={<Elements />} />
+            <Route path="/mass" element={<Mass />} />
+          </Route>
         </Routes>
       </Router>
     </DebugProvider>

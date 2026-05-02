@@ -1,0 +1,9 @@
+{
+  "title": "Pricing",
+  "description": "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.",
+  "stats": [
+    { "label": "Metric A", "value": "2,048" },
+    { "label": "Metric B", "value": "76.5%" },
+    { "label": "Metric C", "value": "63 ms" }
+  ]
+}

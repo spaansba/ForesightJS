@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { ForesightManager } from "@foresightjs/react"
 
 type ButtonStateActions = {
   toggleVisibility: () => void
@@ -29,13 +30,20 @@ const useButtonStateStore = create<ButtonStateStore>(set => ({
     toggleResized: () => set(state => ({ isResized: !state.isResized })),
     toggleRemoved: () => set(state => ({ isRemoved: !state.isRemoved })),
     setReactivateAfter: ms => set({ reactivateAfter: ms }),
-    resetAll: () =>
+    resetAll: () => {
+      // Reactivate all registered ForesightManager elements
+      const manager = ForesightManager.instance
+      for (const element of manager.registeredElements.keys()) {
+        manager.reactivate(element)
+      }
+
       set(state => ({
         isVisible: true,
         isRemoved: false,
         isResized: true,
         resetKey: state.resetKey + 1,
-      })),
+      }))
+    },
   },
 }))
 

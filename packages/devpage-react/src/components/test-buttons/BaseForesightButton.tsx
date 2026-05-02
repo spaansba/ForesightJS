@@ -25,7 +25,7 @@ const ForesightButton = ({ registerOptions, className = "", children }: Foresigh
         id={registerOptions.name}
         data-predicted={isPredicted}
         className={`flex items-center justify-center text-slate-900 font-medium text-sm focus:outline-none ${
-          isPredicted ? "outline outline-2 outline-amber-500" : ""
+          isPredicted ? "outline outline-1 outline-amber-500" : ""
         } ${className}`}
       >
         {children ?? (

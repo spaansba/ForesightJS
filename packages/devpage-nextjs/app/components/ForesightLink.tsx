@@ -37,7 +37,7 @@ export const ForesightLink = ({
       prefetch={false}
       data-predicted={isPredicted}
       data-registered={isRegistered}
-      className={`${className ?? ""} ${isPredicted ? "outline-2 outline-amber-500" : ""}`}
+      className={`${className ?? ""} ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
     >
       {children}
     </Link>
