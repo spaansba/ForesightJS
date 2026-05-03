@@ -15,7 +15,9 @@
       "js.foresight": ["./packages/js.foresight/src/index.ts"],
       "js.foresight/*": ["./packages/js.foresight/src/*"],
       "@foresightjs/react": ["./packages/foresightjs-react/src/index.ts"],
-      "@foresightjs/react/*": ["./packages/foresightjs-react/src/*"]
+      "@foresightjs/react/*": ["./packages/foresightjs-react/src/*"],
+      "@foresightjs/vue": ["./packages/foresightjs-vue/src/index.ts"],
+      "@foresightjs/vue/*": ["./packages/foresightjs-vue/src/*"]
     }
   },
   "exclude": ["node_modules", "**/node_modules/**", "dist", "**/dist/**", "build", "**/build/**"]

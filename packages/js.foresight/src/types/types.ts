@@ -100,12 +100,10 @@ export type ForesightRegisterResult = ForesightElementState & {
   unregister: () => void
   /**
    * Subscribe to state changes for this element. Returns an unsubscribe function.
-   * Designed to be consumed by React's `useSyncExternalStore` and Vue's `shallowRef` watchers.
    */
   subscribe: (listener: () => void) => () => void
   /**
    * Returns the current immutable state snapshot for this element.
-   * The reference is stable until something changes, so it is safe to use with `useSyncExternalStore`.
    */
   getSnapshot: () => ForesightElementState
 }

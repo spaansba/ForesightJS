@@ -16,6 +16,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@foresightjs/vue": "workspace:*",
     "js.foresight": "workspace:*",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"

@@ -1390,6 +1390,26 @@ describe("ForesightManager", () => {
       expect(reactivatedListener).not.toHaveBeenCalled()
     })
 
+    it("should schedule reactivation when re-registered from Infinity to finite while predicted", async () => {
+      // Register with Infinity (no reactivation), then fire callback
+      const { manager, element, entry, reactivatedListener } =
+        await setupReactivationAfterFire(Infinity)
+
+      // Element is predicted, no timeout exists
+      expect(entry.state.isPredicted).toBe(true)
+      expect(entry.reactivateTimeoutId).toBeUndefined()
+
+      // Re-register with finite reactivateAfter
+      manager.register({ element, callback: vi.fn(), reactivateAfter: 1000 })
+      expect(entry.state.reactivateAfter).toBe(1000)
+
+      // Timeout should now be scheduled and fire after 1000ms
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(reactivatedListener).toHaveBeenCalledTimes(1)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isPredicted).toBe(false)
+    })
+
     it("should notify subscribers when options change on re-registration", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
