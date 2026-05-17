@@ -224,6 +224,7 @@ export class ElementTab extends LitElement {
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.element, e.state)
         this._elementsCacheDirty = true
+        this.requestUpdate()
       },
       { signal }
     )
