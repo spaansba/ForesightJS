@@ -13,6 +13,7 @@ import type {
   ElementReactivatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
+  ElementOptionsUpdatedEvent,
 } from "js.foresight"
 
 const STYLE_ID = "foresight-overlay-styles"
@@ -153,6 +154,15 @@ export class ElementOverlays extends LitElement {
       { signal }
     )
     ForesightManager.instance.addEventListener(
+      "elementOptionsUpdated",
+      (e: ElementOptionsUpdatedEvent) => {
+        if (e.state.isIntersectingWithViewport) {
+          this.createOrUpdateElementOverlay(e.element, e.state)
+        }
+      },
+      { signal }
+    )
+    ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
         this.removeElementOverlay(e.element)
@@ -171,14 +181,14 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementDataUpdated",
       (e: ElementDataUpdatedEvent) => {
-        if (e.updatedProps.includes("bounds") && e.state.isActive) {
-          this.createOrUpdateElementOverlay(e.element, e.state)
+        if (!e.state.isIntersectingWithViewport) {
+          this.removeElementOverlay(e.element)
+
+          return
         }
 
-        if (e.updatedProps.includes("visibility")) {
-          if (!e.state.isIntersectingWithViewport) {
-            this.removeElementOverlay(e.element)
-          }
+        if (e.state.isActive) {
+          this.createOrUpdateElementOverlay(e.element, e.state)
         }
       },
       { signal }

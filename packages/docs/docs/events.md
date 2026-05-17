@@ -115,6 +115,23 @@ type ElementRegisteredEvent = {
 
 ---
 
+#### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementOptionsUpdated</code>
+
+Fired when an already-registered element is re-registered with different options (e.g. changed `name`, `callback`, `reactivateAfter`, or `meta`).
+
+```typescript
+type ElementOptionsUpdatedEvent = {
+  type: "elementOptionsUpdated"
+  timestamp: number
+  element: ForesightElement
+  state: ForesightElementState
+}
+```
+
+**Related Types:** [`ForesightElementState`](/docs/getting-started/typescript#foresightelementstate)
+
+---
+
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementReactivated</code>
 
 Fired when an element is reactivated after its callback was triggered. This happens after `reactivateAfter` ms (default infinity) or with `ForesightManager.instance.reactivate(element)`.

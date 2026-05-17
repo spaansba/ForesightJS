@@ -6,7 +6,10 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+      "@foresightjs/vue": ["../foresightjs-vue/src/index.ts"],
+      "js.foresight": ["../js.foresight/src/index.ts"]
+    },
+    "verbatimModuleSyntax": false
   }
 }

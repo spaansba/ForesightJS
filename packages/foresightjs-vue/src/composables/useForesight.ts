@@ -5,9 +5,7 @@ import {
   toRefs,
   toValue,
   watch,
-  onMounted,
   onScopeDispose,
-  useTemplateRef,
   type ComponentPublicInstance,
   type MaybeRefOrGetter,
 } from "vue"
@@ -19,16 +17,34 @@ import {
   type ForesightRegisterResult,
 } from "js.foresight"
 
-export type UseForesightOptions = ForesightRegisterOptionsWithoutElement & {
-  templateRefKey: string
+export type MaybeElement = HTMLElement | SVGElement | ComponentPublicInstance | null | undefined
+
+export type MaybeElementRef = MaybeRefOrGetter<MaybeElement>
+
+/**
+ * Resolves a MaybeElement to a raw DOM Element or null.
+ * Handles ComponentPublicInstance by extracting $el.
+ */
+const resolveElement = (target: MaybeElement): Element | null => {
+  if (!target) return null
+  if (target instanceof Element) return target
+  return (target as ComponentPublicInstance).$el ?? null
 }
 
-export const useForesight = <T extends HTMLElement | ComponentPublicInstance>(
-  options: MaybeRefOrGetter<UseForesightOptions>
+/**
+ * Registers a single element with ForesightManager.
+ *
+ * Accepts the element target as a ref, getter, or raw element (first argument)
+ * and registration options as a plain object, ref, or getter (second argument).
+ *
+ * The composable watches the target and automatically registers when it becomes
+ * available, unregisters when removed, and handles element swaps.
+ */
+export const useForesight = (
+  target: MaybeElementRef,
+  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
 ) => {
   const resolvedOptions = computed(() => toValue(options))
-  const templateRef = useTemplateRef<T>(resolvedOptions.value.templateRefKey)
-
   const state = reactive(createUnregisteredSnapshot(false))
 
   let registerResults: ForesightRegisterResult | null = null
@@ -38,21 +54,12 @@ export const useForesight = <T extends HTMLElement | ComponentPublicInstance>(
     Object.assign(state, newState)
   }
 
-  const getElement = (): Element | null => {
-    if (!templateRef.value) {
-      return null
-    }
-
-    // Extract the underlying HTMLElement if the templateRef is a Vue component
-    return templateRef.value instanceof HTMLElement ? templateRef.value : templateRef.value.$el
-  }
-
   const registerElement = (element: Element) => {
     const resolved = resolvedOptions.value
 
     registerResults = ForesightManager.instance.register({
       element,
-      callback: (state: ForesightElementState) => resolvedOptions.value.callback(state),
+      callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
       hitSlop: resolved.hitSlop,
       name: resolved.name,
       meta: resolved.meta,
@@ -67,41 +74,50 @@ export const useForesight = <T extends HTMLElement | ComponentPublicInstance>(
     })
   }
 
-  onMounted(() => {
-    const element = getElement()
-    if (!element) {
-      return
-    }
-
-    registerElement(element)
-  })
-
-  watch(
-    resolvedOptions,
-    () => {
-      const element = getElement()
-      if (!element || !registerResults) {
-        return
-      }
-
-      // Tear down old subscription before re-registering with new options
-      unsubscribe?.()
-      registerElement(element)
-    },
-    { flush: "post" }
-  )
-
-  onScopeDispose(() => {
-    console.log("scope dispose")
+  const unregisterElement = () => {
     unsubscribe?.()
     unsubscribe = null
     registerResults?.unregister()
     registerResults = null
     updateState(createUnregisteredSnapshot(false))
+  }
+
+  // Watch the target element. flush:'post' ensures the DOM is updated.
+  watch(
+    () => resolveElement(toValue(target)),
+    (newEl, oldEl) => {
+      if (oldEl && oldEl !== newEl) {
+        unregisterElement()
+      }
+      if (newEl && newEl !== oldEl) {
+        registerElement(newEl)
+      }
+    },
+    { flush: "post" }
+  )
+
+  // Watch options for changes — patch without re-registering
+  watch(
+    resolvedOptions,
+    () => {
+      const el = resolveElement(toValue(target))
+      if (!el || !registerResults) return
+
+      const resolved = resolvedOptions.value
+      ForesightManager.instance.updateElementOptions(el, {
+        callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
+        hitSlop: resolved.hitSlop,
+        name: resolved.name,
+        meta: resolved.meta,
+        reactivateAfter: resolved.reactivateAfter,
+      })
+    },
+    { flush: "post" }
+  )
+
+  onScopeDispose(() => {
+    unregisterElement()
   })
 
-  return {
-    ...toRefs(readonly(state)),
-    templateRef,
-  }
+  return { ...toRefs(readonly(state)) }
 }

@@ -5,11 +5,12 @@ import {
   type ForesightCallback,
   type ForesightRegisterOptionsWithoutElement,
 } from "js.foresight"
-import { mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
   registerSpy.mockClear()
+  updateElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -92,9 +93,10 @@ describe("useForesight", () => {
 
     rerender(<ButtonProbe options={{ name: "y", callback: vi.fn() }} />)
 
-    expect(registerSpy).toHaveBeenCalled()
-    const lastCall = registerSpy.mock.calls[registerSpy.mock.calls.length - 1]
-    expect(lastCall?.[0].name).toBe("y")
+    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].name).toBe("y")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 

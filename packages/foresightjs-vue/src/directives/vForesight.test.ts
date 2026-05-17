@@ -2,11 +2,12 @@ import { defineComponent, h, ref, withDirectives } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
-import { mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { vForesight } from "./vForesight"
 
 beforeEach(() => {
   registerSpy.mockClear()
+  updateElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -75,9 +76,10 @@ describe("vForesight directive", () => {
     wrapper.vm.name = "second"
     await wrapper.vm.$nextTick()
 
-    expect(registerSpy).toHaveBeenCalled()
-    const lastCall = registerSpy.mock.calls[registerSpy.mock.calls.length - 1]
-    expect(lastCall?.[0].name).toBe("second")
+    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].name).toBe("second")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 
@@ -88,9 +90,7 @@ describe("vForesight directive", () => {
         return { callback: cb }
       },
       render() {
-        return withDirectives(h("button"), [
-          [vForesight, { name: "btn", callback: this.callback }],
-        ])
+        return withDirectives(h("button"), [[vForesight, { name: "btn", callback: this.callback }]])
       },
     })
 

@@ -1,17 +1,16 @@
 <script setup lang="ts">
+import { useTemplateRef } from "vue"
 import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/vue"
 import ForesightStats from "./ForesightStats.vue"
 
 const props = defineProps<{
   options: ForesightRegisterOptionsWithoutElement
-  templateRefKey: string
   label?: string
 }>()
 
-const { isPredicted, hitCount, isCallbackRunning, status } = useForesight(() => ({
-  ...props.options,
-  templateRefKey: props.templateRefKey,
-}))
+const btnRef = useTemplateRef<HTMLButtonElement>("btn")
+
+const { isPredicted, hitCount, isCallbackRunning, status } = useForesight(btnRef, () => props.options)
 </script>
 
 <template>
@@ -20,7 +19,7 @@ const { isPredicted, hitCount, isCallbackRunning, status } = useForesight(() => 
       <slot name="title">{{ options.name ?? "Unnamed" }}</slot>
     </h4>
     <button
-      :ref="templateRefKey"
+      ref="btn"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

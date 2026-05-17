@@ -16,17 +16,15 @@ type EventLogEntry = {
 
 const MAX_LOG_ENTRIES = 200
 
-const ELEMENT_EVENTS = [
+const ALL_EVENTS: ForesightEvent[] = [
   "elementRegistered",
   "elementReactivated",
   "elementUnregistered",
   "callbackInvoked",
   "callbackCompleted",
-] as const
-
-const MANAGER_EVENTS = ["managerSettingsChanged", "deviceStrategyChanged"] as const
-
-const ALL_EVENTS: ForesightEvent[] = [...ELEMENT_EVENTS, ...MANAGER_EVENTS]
+  "managerSettingsChanged",
+  "deviceStrategyChanged",
+]
 
 const formatHitType = (hitType: CallbackHitType): string => {
   return hitType.subType ? `${hitType.kind}:${hitType.subType}` : hitType.kind
@@ -74,14 +72,6 @@ const EVENT_COLORS: Partial<Record<ForesightEvent, string>> = {
   managerSettingsChanged: "text-cyan-700",
   deviceStrategyChanged: "text-teal-700",
 }
-
-type EnabledEvents = Record<ForesightEvent, boolean>
-
-const DEFAULT_ENABLED: EnabledEvents = ALL_EVENTS.reduce((acc, e) => {
-  acc[e] = true
-
-  return acc
-}, {} as EnabledEvents)
 
 const DEMO_ELEMENTS = [
   { name: "fast-callback", label: "Fast callback", color: "bg-green-200", delayMs: 50 },
@@ -171,35 +161,6 @@ const ToggleElement = () => {
   )
 }
 
-const EventFilterGroup = ({
-  label,
-  events,
-  enabled,
-  onToggle,
-}: {
-  label: string
-  events: readonly ForesightEvent[]
-  enabled: EnabledEvents
-  onToggle: (event: ForesightEvent) => void
-}) => (
-  <div>
-    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-      {events.map(event => (
-        <label key={event} className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={enabled[event]}
-            onChange={() => onToggle(event)}
-            className="accent-gray-900"
-          />
-          {event}
-        </label>
-      ))}
-    </div>
-  </div>
-)
-
 const EventLog = ({ entries }: { entries: EventLogEntry[] }) => {
   const logRef = useRef<HTMLDivElement>(null)
 
@@ -234,20 +195,12 @@ const EventLog = ({ entries }: { entries: EventLogEntry[] }) => {
 
 export default function Events() {
   const [entries, setEntries] = useState<EventLogEntry[]>([])
-  const [enabled, setEnabled] = useState<EnabledEvents>(DEFAULT_ENABLED)
   const [isPaused, setIsPaused] = useState(false)
   const nextId = useRef(0)
   const isPausedRef = useRef(isPaused)
   isPausedRef.current = isPaused
-  const enabledRef = useRef(enabled)
-  enabledRef.current = enabled
-
   const pushEntry = useCallback((type: ForesightEvent, summary: string, timestamp: number) => {
     if (isPausedRef.current) {
-      return
-    }
-
-    if (!enabledRef.current[type]) {
       return
     }
 
@@ -259,7 +212,7 @@ export default function Events() {
     })
   }, [])
 
-  // Subscribe to all event types - the filter is applied inside pushEntry
+  // Subscribe to all event types
   useForesightEvent("elementRegistered", e => {
     pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
@@ -284,10 +237,6 @@ export default function Events() {
   useForesightEvent("deviceStrategyChanged", e => {
     pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
-
-  const toggleEvent = useCallback((event: ForesightEvent) => {
-    setEnabled(prev => ({ ...prev, [event]: !prev[event] }))
-  }, [])
 
   const eventCounts = entries.reduce(
     (acc, entry) => {
@@ -335,29 +284,9 @@ export default function Events() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="border border-gray-300 bg-white p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-900">Filters</h2>
-          <span className="text-xs text-gray-400">{entries.length} events logged</span>
-        </div>
-        <EventFilterGroup
-          label="Element"
-          events={ELEMENT_EVENTS}
-          enabled={enabled}
-          onToggle={toggleEvent}
-        />
-        <EventFilterGroup
-          label="Manager"
-          events={MANAGER_EVENTS}
-          enabled={enabled}
-          onToggle={toggleEvent}
-        />
-      </div>
-
       {/* Summary counters */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {ALL_EVENTS.filter(e => enabled[e]).map(event => (
+        {ALL_EVENTS.map(event => (
           <div key={event} className="border border-gray-300 bg-white px-3 py-2">
             <div className="text-[10px] text-gray-500 truncate">{event}</div>
             <div
@@ -370,6 +299,7 @@ export default function Events() {
       </div>
 
       {/* Log */}
+      <span className="text-xs text-gray-400">{entries.length} / {MAX_LOG_ENTRIES} events logged</span>
       <EventLog entries={entries} />
     </main>
   )

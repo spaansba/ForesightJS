@@ -1,3 +1,5 @@
 export * from "js.foresight"
-export { useForesight, type UseForesightOptions } from "./composables/useForesight"
-export { vForesight } from "./directives/vForesight"
+export { useForesight, type MaybeElement, type MaybeElementRef } from "./composables/useForesight"
+export { useForesights, type UseForesightsSlot } from "./composables/useForesights"
+export { useForesightEvent } from "./composables/useForesightEvent"
+export { vForesight, type ForesightDirectiveValue } from "./directives/vForesight"

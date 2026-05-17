@@ -11,6 +11,7 @@ import type {
   ElementReactivatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
+  ElementOptionsUpdatedEvent,
 } from "js.foresight"
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
@@ -223,6 +224,18 @@ export class ElementTab extends LitElement {
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.element, e.state)
         this._elementsCacheDirty = true
+      },
+      { signal }
+    )
+
+    ForesightManager.instance.addEventListener(
+      "elementOptionsUpdated",
+      (e: ElementOptionsUpdatedEvent) => {
+        if (!this.applyStateUpdate(e.element, e.state)) {
+          return
+        }
+
+        this.requestUpdate()
       },
       { signal }
     )

@@ -20,7 +20,7 @@ export const vForesight: ObjectDirective<HTMLElement, ForesightDirectiveValue> =
   updated(el, binding) {
     const options =
       typeof binding.value === "function" ? { callback: binding.value } : binding.value
-    ForesightManager.instance.register({ element: el, ...options })
+    ForesightManager.instance.updateElementOptions(el, options)
   },
 
   unmounted(el) {

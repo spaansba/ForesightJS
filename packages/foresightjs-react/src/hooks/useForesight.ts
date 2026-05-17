@@ -53,9 +53,8 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       return
     }
 
-    ForesightManager.instance.register({
+    ForesightManager.instance.updateElementOptions(element, {
       ...optionsRef.current,
-      element,
       callback: (state: ForesightElementState) => optionsRef.current.callback(state),
     })
   }, [options.reactivateAfter, options.name, options.meta, element, registerResults])

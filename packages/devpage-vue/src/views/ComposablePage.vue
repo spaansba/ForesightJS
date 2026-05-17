@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, shallowRef } from "vue"
-import { useForesight, type UseForesightOptions } from "@foresightjs/vue"
+import { ref, shallowRef, useTemplateRef } from "vue"
+import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/vue"
 import ForesightStats from "../components/ForesightStats.vue"
 
 const fakePrefetch = async (label: string) => {
@@ -13,27 +13,29 @@ const fakePrefetch = async (label: string) => {
 // The difference is how the INPUT OPTIONS are passed, which controls whether
 // the options themselves can be changed reactively after setup.
 
+// Create refs for each element
+const plainObjRef = useTemplateRef<HTMLButtonElement>("plainObj")
+const refBtnRef = useTemplateRef<HTMLButtonElement>("refBtn")
+const getterBtnRef = useTemplateRef<HTMLButtonElement>("getterBtn")
+
 // 1. Plain object -> options are fixed, cannot be changed after setup
 const {
   isPredicted: isPredictedA,
   hitCount: hitCountA,
   isCallbackRunning: isRunningA,
   status: statusA,
-} = useForesight({
-  templateRefKey: "plainObj",
+} = useForesight(plainObjRef, {
   callback: () => fakePrefetch("Plain object"),
   name: "plain-object",
 })
 
 // 2. Ref -> swap the entire options object at once
-const optionsA: UseForesightOptions = {
-  templateRefKey: "refBtn",
+const optionsA: ForesightRegisterOptionsWithoutElement = {
   callback: () => fakePrefetch("Ref A"),
   name: "ref-a",
   reactivateAfter: Infinity,
-}     
-const optionsB: UseForesightOptions = {
-  templateRefKey: "refBtn",
+}
+const optionsB: ForesightRegisterOptionsWithoutElement = {
   callback: () => fakePrefetch("Ref B"),
   name: "ref-b",
   reactivateAfter: 1000,
@@ -44,7 +46,7 @@ const {
   hitCount: hitCountB,
   isCallbackRunning: isRunningB,
   status: statusB,
-} = useForesight(refOptions)
+} = useForesight(refBtnRef, refOptions)
 
 const swapRefOptions = () => {
   refOptions.value = refOptions.value === optionsA ? optionsB : optionsA
@@ -57,8 +59,7 @@ const {
   hitCount: hitCountC,
   isCallbackRunning: isRunningC,
   status: statusC,
-} = useForesight(() => ({
-  templateRefKey: "getterBtn",
+} = useForesight(getterBtnRef, () => ({
   callback: () => fakePrefetch("Getter"),
   name: "getter",
   reactivateAfter: reactivateAfter.value,
@@ -73,8 +74,8 @@ const toggleReactivation = () => {
   <div class="max-w-6xl mx-auto px-6 py-8">
     <h1 class="text-xl font-semibold mb-1">Composable test page</h1>
     <p class="mb-8 text-sm text-gray-600">
-      State output (isPredicted, hitCount, etc.) is always reactive.
-      The three input forms control whether the options themselves can change after setup.
+      State output (isPredicted, hitCount, etc.) is always reactive. The three input forms control
+      whether the options themselves can change after setup.
     </p>
 
     <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">
@@ -102,9 +103,7 @@ const toggleReactivation = () => {
       <!-- 2. Ref: swap entire options object -->
       <article class="flex flex-col items-start gap-3 w-56">
         <h4 class="text-sm font-medium">Ref</h4>
-        <p class="text-xs text-gray-500">
-          Swap entire options object. name: {{ refOptions.name }}
-        </p>
+        <p class="text-xs text-gray-500">Swap entire options object. name: {{ refOptions.name }}</p>
         <button
           ref="refBtn"
           :class="[
@@ -132,7 +131,8 @@ const toggleReactivation = () => {
       <article class="flex flex-col items-start gap-3 w-56">
         <h4 class="text-sm font-medium">Getter</h4>
         <p class="text-xs text-gray-500">
-          Deps tracked automatically. reactivateAfter: {{ reactivateAfter === Infinity ? "off" : `${reactivateAfter}ms` }}
+          Deps tracked automatically. reactivateAfter:
+          {{ reactivateAfter === Infinity ? "off" : `${reactivateAfter}ms` }}
         </p>
         <button
           ref="getterBtn"

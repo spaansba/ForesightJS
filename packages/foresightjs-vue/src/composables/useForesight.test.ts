@@ -1,28 +1,29 @@
-import { defineComponent, h, nextTick, ref } from "vue"
+import { defineComponent, h, nextTick, ref, useTemplateRef } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
-import { mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
   registerSpy.mockClear()
+  updateElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
-  mockState.currentSnapshot = createUnregisteredSnapshot(false)
+  mockState.currentSnapshot = null
 })
 
 describe("useForesight", () => {
-  it("registers the element on mount using templateRefKey", async () => {
+  it("registers the element on mount using a useTemplateRef target", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        return useForesight(() => ({
-          templateRefKey: "myBtn",
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        return useForesight(btnRef, {
           callback: cb,
           name: "test-btn",
-        }))
+        })
       },
       render() {
         return h("button", { ref: "myBtn", "data-testid": "el" })
@@ -38,15 +39,36 @@ describe("useForesight", () => {
     expect(arg.name).toBe("test-btn")
   })
 
-  it("accepts a plain object (not just a getter)", async () => {
+  it("accepts a plain ref() as target", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        return useForesight({
-          templateRefKey: "myBtn",
+        const el = ref<HTMLElement | null>(null)
+        const result = useForesight(el, { callback: cb, name: "raw-ref" })
+        return { ...result, el }
+      },
+      render() {
+        return h("button", { ref: "el", "data-testid": "el" })
+      },
+    })
+
+    mount(Component, { attachTo: document.body })
+    await nextTick()
+
+    expect(registerSpy).toHaveBeenCalledTimes(1)
+    const arg = registerSpy.mock.calls[0][0]
+    expect(arg.name).toBe("raw-ref")
+  })
+
+  it("accepts a getter as options (reactive deps tracked)", async () => {
+    const cb = vi.fn()
+    const Component = defineComponent({
+      setup() {
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        return useForesight(btnRef, () => ({
           callback: cb,
-          name: "plain-obj",
-        })
+          name: "getter-opts",
+        }))
       },
       render() {
         return h("button", { ref: "myBtn", "data-testid": "el" })
@@ -58,16 +80,14 @@ describe("useForesight", () => {
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     const arg = registerSpy.mock.calls[0][0]
-    expect(arg.name).toBe("plain-obj")
+    expect(arg.name).toBe("getter-opts")
   })
 
-  it("does not register when templateRef resolves to null", async () => {
+  it("does not register when target resolves to null", async () => {
     const Component = defineComponent({
       setup() {
-        return useForesight(() => ({
-          templateRefKey: "nonExistent",
-          callback: vi.fn(),
-        }))
+        const el = ref<HTMLElement | null>(null)
+        return useForesight(el, { callback: vi.fn() })
       },
       render() {
         return h("span", "no ref here")
@@ -83,10 +103,8 @@ describe("useForesight", () => {
   it("unregisters on unmount", async () => {
     const Component = defineComponent({
       setup() {
-        return useForesight(() => ({
-          templateRefKey: "myBtn",
-          callback: vi.fn(),
-        }))
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        return useForesight(btnRef, { callback: vi.fn() })
       },
       render() {
         return h("button", { ref: "myBtn" })
@@ -100,14 +118,63 @@ describe("useForesight", () => {
     expect(unregisterSpy).toHaveBeenCalledTimes(1)
   })
 
+  it("registers when target transitions from null to element", async () => {
+    const Component = defineComponent({
+      setup() {
+        const el = ref<HTMLElement | null>(null)
+        const result = useForesight(el, { callback: vi.fn(), name: "delayed" })
+        return { ...result, el }
+      },
+      render() {
+        return h("div", [h("button", { "data-testid": "btn" })])
+      },
+    })
+
+    const wrapper = mount(Component, { attachTo: document.body })
+    await nextTick()
+
+    expect(registerSpy).not.toHaveBeenCalled()
+
+    // Simulate target becoming available
+    wrapper.vm.el = wrapper.find("[data-testid=btn]").element as HTMLElement
+    await nextTick()
+
+    expect(registerSpy).toHaveBeenCalledTimes(1)
+    expect(registerSpy.mock.calls[0][0].name).toBe("delayed")
+  })
+
+  it("unregisters when target transitions from element to null", async () => {
+    const Component = defineComponent({
+      setup() {
+        const el = ref<HTMLElement | null>(null)
+        const result = useForesight(el, { callback: vi.fn(), name: "removable" })
+        return { ...result, el }
+      },
+      render() {
+        return h("div", [h("button", { "data-testid": "btn" })])
+      },
+    })
+
+    const wrapper = mount(Component, { attachTo: document.body })
+    await nextTick()
+
+    // Assign element
+    wrapper.vm.el = wrapper.find("[data-testid=btn]").element as HTMLElement
+    await nextTick()
+    expect(registerSpy).toHaveBeenCalledTimes(1)
+
+    // Remove element
+    wrapper.vm.el = null
+    await nextTick()
+    expect(unregisterSpy).toHaveBeenCalledTimes(1)
+  })
+
   it("forwards the callback to the manager", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        return useForesight(() => ({
-          templateRefKey: "myBtn",
-          callback: cb,
-        }))
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        return useForesight(btnRef, { callback: cb })
       },
       render() {
         return h("button", { ref: "myBtn" })
@@ -126,11 +193,8 @@ describe("useForesight", () => {
   it("returns flat refs with unregistered initial state", () => {
     const Component = defineComponent({
       setup() {
-        const { isRegistered } = useForesight(() => ({
-          templateRefKey: "myBtn",
-          callback: vi.fn(),
-        }))
-
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        const { isRegistered } = useForesight(btnRef, { callback: vi.fn() })
         return { isRegistered }
       },
       render() {
@@ -148,11 +212,8 @@ describe("useForesight", () => {
   it("reflects manager state updates pushed through subscribe", async () => {
     const Component = defineComponent({
       setup() {
-        const { isPredicted } = useForesight(() => ({
-          templateRefKey: "myBtn",
-          callback: vi.fn(),
-        }))
-
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
+        const { isPredicted } = useForesight(btnRef, { callback: vi.fn() })
         return { isPredicted }
       },
       render() {
@@ -182,9 +243,9 @@ describe("useForesight", () => {
 
     const Component = defineComponent({
       setup() {
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
         const cb = ref<ForesightCallback>(cb1)
-        const result = useForesight(() => ({
-          templateRefKey: "myBtn",
+        const result = useForesight(btnRef, () => ({
           name: "x",
           callback: cb.value,
         }))
@@ -213,9 +274,9 @@ describe("useForesight", () => {
   it("patches options on the same element without unregistering", async () => {
     const Component = defineComponent({
       setup() {
+        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
         const name = ref("first")
-        const result = useForesight(() => ({
-          templateRefKey: "myBtn",
+        const result = useForesight(btnRef, () => ({
           name: name.value,
           callback: vi.fn(),
         }))
@@ -235,9 +296,10 @@ describe("useForesight", () => {
     await nextTick()
     await nextTick()
 
-    expect(registerSpy).toHaveBeenCalled()
-    const lastCall = registerSpy.mock.calls[registerSpy.mock.calls.length - 1]
-    expect(lastCall?.[0].name).toBe("second")
+    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].name).toBe("second")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 })
