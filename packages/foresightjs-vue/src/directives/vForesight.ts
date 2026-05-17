@@ -7,17 +7,24 @@ import {
 
 export type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
 
-const resultMap = new WeakMap<HTMLElement, ForesightRegisterResult>()
+type ForesightDirectiveElement = HTMLElement | SVGElement
 
-export const vForesight: ObjectDirective<HTMLElement, ForesightDirectiveValue> = {
+const resultMap = new WeakMap<ForesightDirectiveElement, ForesightRegisterResult>()
+
+export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDirectiveValue> = {
   mounted(el, binding) {
     const options =
       typeof binding.value === "function" ? { callback: binding.value } : binding.value
+
     const result = ForesightManager.instance.register({ element: el, ...options })
     resultMap.set(el, result)
   },
 
   updated(el, binding) {
+    if (binding.value === binding.oldValue) {
+      return
+    }
+
     const options =
       typeof binding.value === "function" ? { callback: binding.value } : binding.value
     ForesightManager.instance.updateElementOptions(el, options)

@@ -53,7 +53,7 @@
   "llms": "https://foresightjs.com/llms.txt",
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "peerDependencies": {
-    "vue": "^3.3.0"
+    "vue": "^3.5.0"
   },
   "dependencies": {
     "js.foresight": "workspace:^"

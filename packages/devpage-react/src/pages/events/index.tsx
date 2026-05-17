@@ -299,7 +299,9 @@ export default function Events() {
       </div>
 
       {/* Log */}
-      <span className="text-xs text-gray-400">{entries.length} / {MAX_LOG_ENTRIES} events logged</span>
+      <span className="text-xs text-gray-400">
+        {entries.length} / {MAX_LOG_ENTRIES} events logged
+      </span>
       <EventLog entries={entries} />
     </main>
   )

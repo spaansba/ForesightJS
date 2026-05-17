@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router"
-import DirectivePage from "../views/DirectivePage.vue"
-import ComposablePage from "../views/ComposablePage.vue"
-import ForesightsPage from "../views/ForesightsPage.vue"
-import EventsPage from "../views/EventsPage.vue"
+import DirectivePage from "../views/directive/index.vue"
+import ComposablePage from "../views/composable/index.vue"
+import ForesightsPage from "../views/foresights/index.vue"
+import EventsPage from "../views/events/index.vue"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

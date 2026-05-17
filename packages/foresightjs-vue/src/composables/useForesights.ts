@@ -3,12 +3,11 @@ import {
   markRaw,
   reactive,
   readonly,
+  toRaw,
   toValue,
   watch,
   onScopeDispose,
-  type ComponentPublicInstance,
   type MaybeRefOrGetter,
-  type VNodeRef,
 } from "vue"
 import {
   ForesightManager,
@@ -17,13 +16,8 @@ import {
   type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-
-export type UseForesightsSlot = {
-  /** Callback ref — bind to `:ref="slot.setRef"` in `v-for` lists. */
-  setRef: VNodeRef
-  /** Reactive state for this slot. */
-  state: Readonly<ForesightElementState>
-}
+import type { MaybeElement } from "../types"
+import { resolveElement } from "../utils/resolveElement"
 
 type SlotInternal = {
   element: Element | null
@@ -35,27 +29,36 @@ type SlotInternal = {
 /**
  * Registers multiple elements with ForesightManager from a single composable.
  *
- * Returns a reactive array of `UseForesightsSlot` objects. Each slot exposes:
- * - `setRef`: a callback ref to bind via `:ref="slot.setRef"` in `v-for`.
- * - `state`: the reactive foresight state for that element.
+ * @param targets - Array of element targets (refs, getters, or raw elements).
+ * @param options - Array of registration options, one per target.
  *
- * The composable handles dynamic array growth/shrinkage, option patching
- * without tearing down registrations, and proper cleanup on scope disposal.
+ * Returns a reactive array of readonly state objects. Each `states[i]` contains
+ * `isPredicted`, `hitCount`, `isCallbackRunning`, `status`, and `isRegistered`.
+ *
+ * The composable watches both targets and options arrays, handles dynamic array
+ * growth/shrinkage, patches options without tearing down registrations, and
+ * cleans up on scope disposal.
  */
 export const useForesights = (
-  optionsArray: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
+  targets: MaybeRefOrGetter<MaybeElement[]>,
+  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
 ) => {
-  const resolvedOptions = computed(() => toValue(optionsArray))
+  const resolvedTargets = computed(() => toValue(targets).map(t => resolveElement(t) ?? null))
+  const resolvedOptions = computed(() => toValue(options))
 
   const internals: SlotInternal[] = reactive([])
-  const slots: UseForesightsSlot[] = reactive([])
+  const states: Readonly<ForesightElementState>[] = reactive([])
 
   const registerSlot = (index: number, element: Element) => {
     const internal = internals[index]
-    if (!internal) return
+    if (!internal) {
+      return
+    }
 
     const opts = resolvedOptions.value[index]
-    if (!opts) return
+    if (!opts) {
+      return
+    }
 
     const result = markRaw(
       ForesightManager.instance.register({
@@ -83,40 +86,36 @@ export const useForesights = (
     Object.assign(internal.state, createUnregisteredSnapshot(false))
   }
 
-  const createSetRef = (index: number): VNodeRef => {
-    return (ref: Element | ComponentPublicInstance | null) => {
-      const internal = internals[index]
-      if (!internal) return
+  const setSlotElement = (index: number, el: Element | null) => {
+    const internal = internals[index]
+    if (!internal) {
+      return
+    }
 
-      // Extract underlying element from component instances
-      const el: Element | null =
-        ref === null ? null : ref instanceof Element ? ref : (ref.$el as Element)
+    const prev = internal.element
+    if (prev === el) {
+      return
+    }
 
-      const prev = internal.element
-      if (prev === el) return
+    if (internal.result) {
+      unregisterSlot(internal)
+    }
 
-      // Unregister old element if it was registered
-      if (internal.result) {
-        unregisterSlot(internal)
-      }
+    internal.element = el
 
-      internal.element = el
-
-      // Register new element
-      if (el) {
-        registerSlot(index, el)
-      }
+    if (el) {
+      registerSlot(index, el)
     }
   }
 
-  // Reconcile slots when the options array length changes
+  // Reconcile array length: grow or shrink internals/states
   const reconcile = (newLength: number) => {
     const oldLength = internals.length
 
     // Shrink: unregister and remove excess slots
     while (internals.length > newLength) {
       const removed = internals.pop()!
-      slots.pop()
+      states.pop()
       if (removed.result) {
         unregisterSlot(removed)
       }
@@ -133,29 +132,43 @@ export const useForesights = (
       })
 
       internals.push(internal)
-      slots.push(
-        reactive({
-          setRef: createSetRef(i),
-          state: readonly(state),
-        })
-      )
+      states.push(readonly(state))
     }
   }
 
-  // Watch the array length to reconcile slots
+  // Watch targets length to reconcile slots
   watch(
-    () => resolvedOptions.value.length,
+    () => resolvedTargets.value.length,
     newLength => reconcile(newLength),
     { immediate: true }
   )
 
-  // Patch options on existing registrations without unregistering
+  // Watch resolved targets for element changes
+  watch(
+    resolvedTargets,
+    newEls => {
+      for (let i = 0; i < newEls.length; i++) {
+        setSlotElement(i, newEls[i])
+      }
+    },
+    { flush: "post" }
+  )
+
+  // Patch options on existing registrations without unregistering.
+  // Only patches slots whose options reference has actually changed.
   watch(
     resolvedOptions,
-    newOptions => {
+    (newOptions, oldOptions) => {
       for (let i = 0; i < newOptions.length; i++) {
         const internal = internals[i]
-        if (!internal?.element || !internal.result) continue
+        if (!internal?.element || !internal.result) {
+          continue
+        }
+
+        // Skip if the options object is the same reference
+        if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
+          continue
+        }
 
         ForesightManager.instance.updateElementOptions(internal.element, {
           ...newOptions[i],
@@ -173,8 +186,8 @@ export const useForesights = (
       }
     }
     internals.length = 0
-    slots.length = 0
+    states.length = 0
   })
 
-  return slots
+  return states
 }

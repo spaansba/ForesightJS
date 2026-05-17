@@ -226,10 +226,13 @@ export class ForesightManager {
     const previousEntry = this.elementEntries.get(options.element)
 
     if (previousEntry) {
-      const next = this.updateElementOptions(options.element, options)
+      this.updateElementOptions(options.element, options)
+      this.updateElementState(previousEntry, {
+        registerCount: previousEntry.state.registerCount + 1,
+      })
 
       return {
-        ...next,
+        ...previousEntry.state,
         unregister: () => {},
         subscribe: this.makeSubscribe(previousEntry),
         getSnapshot: () => previousEntry.state,
@@ -291,7 +294,6 @@ export class ForesightManager {
     const prevReactivateAfter = entry.state.reactivateAfter
     const reactivateAfter = options.reactivateAfter ?? prevReactivateAfter
     const next = this.updateElementState(entry, {
-      registerCount: entry.state.registerCount + 1,
       name: options.name || entry.state.name,
       meta: options.meta ?? entry.state.meta,
       reactivateAfter,

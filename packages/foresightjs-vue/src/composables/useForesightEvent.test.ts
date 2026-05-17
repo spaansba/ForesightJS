@@ -79,6 +79,7 @@ describe("useForesightEvent", () => {
       setup() {
         const cb = ref(listener1)
         useForesightEvent("callbackCompleted", cb)
+
         return { cb }
       },
       render() {
@@ -106,6 +107,7 @@ describe("useForesightEvent", () => {
       setup() {
         const cb = ref(listener1)
         useForesightEvent("callbackCompleted", cb)
+
         return { cb }
       },
       render() {
@@ -128,6 +130,7 @@ describe("useForesightEvent", () => {
       setup() {
         const eventType = ref<ForesightEvent>("callbackCompleted")
         useForesightEvent(() => eventType.value, listener)
+
         return { eventType }
       },
       render() {

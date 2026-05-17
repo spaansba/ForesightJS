@@ -4,9 +4,9 @@ import {
   readonly,
   toRefs,
   toValue,
+  useTemplateRef,
   watch,
   onScopeDispose,
-  type ComponentPublicInstance,
   type MaybeRefOrGetter,
 } from "vue"
 import {
@@ -16,34 +16,25 @@ import {
   type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-
-export type MaybeElement = HTMLElement | SVGElement | ComponentPublicInstance | null | undefined
-
-export type MaybeElementRef = MaybeRefOrGetter<MaybeElement>
-
-/**
- * Resolves a MaybeElement to a raw DOM Element or null.
- * Handles ComponentPublicInstance by extracting $el.
- */
-const resolveElement = (target: MaybeElement): Element | null => {
-  if (!target) return null
-  if (target instanceof Element) return target
-  return (target as ComponentPublicInstance).$el ?? null
-}
+import type { MaybeElementRef } from "../types"
+import { resolveElement } from "../utils/resolveElement"
 
 /**
  * Registers a single element with ForesightManager.
  *
- * Accepts the element target as a ref, getter, or raw element (first argument)
- * and registration options as a plain object, ref, or getter (second argument).
+ * @param target - Accepts the element target as a string, ref, getter, or raw element.
+ * @param options - Registration options as a plain object, ref, or getter.
  *
  * The composable watches the target and automatically registers when it becomes
  * available, unregisters when removed, and handles element swaps.
  */
 export const useForesight = (
-  target: MaybeElementRef,
+  target: MaybeElementRef | string,
   options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
 ) => {
+  const resolvedTarget: MaybeElementRef =
+    typeof target === "string" ? useTemplateRef(target) : target
+
   const resolvedOptions = computed(() => toValue(options))
   const state = reactive(createUnregisteredSnapshot(false))
 
@@ -84,11 +75,12 @@ export const useForesight = (
 
   // Watch the target element. flush:'post' ensures the DOM is updated.
   watch(
-    () => resolveElement(toValue(target)),
+    () => resolveElement(toValue(resolvedTarget)),
     (newEl, oldEl) => {
       if (oldEl && oldEl !== newEl) {
         unregisterElement()
       }
+
       if (newEl && newEl !== oldEl) {
         registerElement(newEl)
       }
@@ -100,8 +92,10 @@ export const useForesight = (
   watch(
     resolvedOptions,
     () => {
-      const el = resolveElement(toValue(target))
-      if (!el || !registerResults) return
+      const el = resolveElement(toValue(resolvedTarget))
+      if (!el || !registerResults) {
+        return
+      }
 
       const resolved = resolvedOptions.value
       ForesightManager.instance.updateElementOptions(el, {

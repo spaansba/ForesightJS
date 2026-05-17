@@ -122,4 +122,79 @@ describe("vForesight directive", () => {
 
     expect(cb).toHaveBeenCalled()
   })
+
+  it("registers SVG elements", () => {
+    const cb = vi.fn()
+    const Component = defineComponent({
+      setup() {
+        return { callback: cb }
+      },
+      render() {
+        return h("svg", {}, [
+          withDirectives(h("circle", { cx: 50, cy: 50, r: 40 }), [
+            [vForesight, { name: "svg-circle", callback: this.callback }],
+          ]),
+        ])
+      },
+    })
+
+    mount(Component, { attachTo: document.body })
+
+    expect(registerSpy).toHaveBeenCalledTimes(1)
+    const arg = registerSpy.mock.calls[0][0]
+    expect(arg.element).toBeInstanceOf(SVGElement)
+    expect(arg.name).toBe("svg-circle")
+  })
+
+  it("skips updateElementOptions when binding value has not changed", async () => {
+    const options = { name: "stable", callback: vi.fn() }
+    const Component = defineComponent({
+      setup() {
+        const counter = ref(0)
+
+        return { options, counter }
+      },
+      render() {
+        // counter in template forces re-render but directive value is same reference
+        return withDirectives(h("button", {}, `count: ${this.counter}`), [
+          [vForesight, this.options],
+        ])
+      },
+    })
+
+    const wrapper = mount(Component, { attachTo: document.body })
+    updateElementOptionsSpy.mockClear()
+
+    // Trigger a re-render without changing the directive value
+    wrapper.vm.counter = 1
+    await wrapper.vm.$nextTick()
+
+    expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+  })
+
+  it("calls updateElementOptions when binding value changes reference", async () => {
+    const cb = vi.fn()
+    const Component = defineComponent({
+      setup() {
+        const opts = ref<{ name: string; callback: () => void }>({ name: "first", callback: cb })
+
+        return { opts }
+      },
+      render() {
+        return withDirectives(h("button"), [[vForesight, this.opts]])
+      },
+    })
+
+    const wrapper = mount(Component, { attachTo: document.body })
+    updateElementOptionsSpy.mockClear()
+
+    // Assign a new object (different reference)
+    wrapper.vm.opts = { name: "second", callback: cb }
+    await wrapper.vm.$nextTick()
+
+    expect(updateElementOptionsSpy).toHaveBeenCalledTimes(1)
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].name).toBe("second")
+  })
 })
