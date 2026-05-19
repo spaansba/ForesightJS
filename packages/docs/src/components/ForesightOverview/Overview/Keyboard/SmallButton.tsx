@@ -1,4 +1,4 @@
-import { ForesightManager, type ElementReactivatedEvent } from "js.foresight"
+import { ForesightManager } from "js.foresight"
 import React, { useEffect, useRef, useState } from "react"
 import styles from "./styles.module.css"
 const SmallButton = ({ index }: { index: number }) => {
@@ -22,23 +22,9 @@ const SmallButton = ({ index }: { index: number }) => {
     return "Element"
   }
 
-  const handleElementReactivated = (e: ElementReactivatedEvent) => {
-    if (e.element === cardRef.current) {
-      setIsLoaded(false)
-      setIsLoading(false)
-    }
-  }
-  useEffect(() => {
-    ForesightManager.instance.addEventListener("elementReactivated", handleElementReactivated)
-
-    return () => {
-      ForesightManager.instance.removeEventListener("elementReactivated", handleElementReactivated)
-    }
-  }, [])
-
   useEffect(() => {
     if (cardRef.current) {
-      const { unregister } = ForesightManager.instance.register({
+      const { unregister, subscribe, getSnapshot } = ForesightManager.instance.register({
         element: cardRef.current,
         callback: async () => {
           if (!stateRef.current.isLoading && !stateRef.current.isLoaded) {
@@ -55,7 +41,22 @@ const SmallButton = ({ index }: { index: number }) => {
         meta: { buttonNr: index },
       })
 
-      return () => unregister()
+      let wasPredicted = getSnapshot().isPredicted
+      const unsubscribe = subscribe(() => {
+        const snap = getSnapshot()
+        // Detect reactivation: was predicted, now active and not predicted
+        if (wasPredicted && snap.isActive && !snap.isPredicted) {
+          setIsLoaded(false)
+          setIsLoading(false)
+        }
+
+        wasPredicted = snap.isPredicted
+      })
+
+      return () => {
+        unsubscribe()
+        unregister()
+      }
     }
   }, [cardRef])
 

@@ -128,9 +128,6 @@ The return will look something like this:
       "elementUnregistered": []
     },
     "2": {
-      "elementDataUpdated": []
-    },
-    "3": {
       "mouseTrajectoryUpdate": []
     },
     "4": {

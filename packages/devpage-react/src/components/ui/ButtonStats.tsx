@@ -20,7 +20,7 @@ const ButtonStats = ({ hitCount, isPredicted, isCallbackRunning, status }: Butto
       {row("hits", hitCount)}
       {row("predicted", isPredicted ? "yes" : "no")}
       {row("cb running", isCallbackRunning ? "yes" : "no")}
-      {row("status", status ?? "—")}
+      {row("status", status ?? "-")}
     </div>
   )
 }

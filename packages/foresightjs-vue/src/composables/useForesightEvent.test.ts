@@ -119,7 +119,7 @@ describe("useForesightEvent", () => {
     wrapper.vm.cb = listener2
     await nextTick()
 
-    // Should still be only one subscription — the initial one
+    // Should still be only one subscription - the initial one
     expect(addEventListenerSpy).toHaveBeenCalledTimes(1)
   })
 

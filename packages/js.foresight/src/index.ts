@@ -15,11 +15,8 @@ export type {
   ForesightEvent,
   ForesightEventMap,
   ElementRegisteredEvent,
-  ElementOptionsUpdatedEvent,
   DeviceStrategyChangedEvent,
-  ElementReactivatedEvent,
   ElementUnregisteredEvent,
-  ElementDataUpdatedEvent,
   CallbackInvokedEvent,
   CallbackCompletedEvent,
   MouseTrajectoryUpdateEvent,
@@ -34,5 +31,4 @@ export type {
   Point as ForesightPoint,
   ScrollDirection,
   ForesightManagerData,
-  UpdatedDataPropertyNames,
 } from "./types/types"

@@ -75,7 +75,7 @@ const Mass = () => {
 
       {isDebugActive && (
         <div className="mb-6 border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Debug mode is on with {buttonCount.toLocaleString()} elements — the overlay can tank frame
+          Debug mode is on with {buttonCount.toLocaleString()} elements - the overlay can tank frame
           rates.
         </div>
       )}

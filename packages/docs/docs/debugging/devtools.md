@@ -57,9 +57,7 @@ ForesightDevtools.initialize({
   logging: {
     logLocation: "controlPanel", // Where to log the Foresight Events
     callbackCompleted: true,
-    elementReactivated: true,
     callbackInvoked: true,
-    elementDataUpdated: false,
     elementRegistered: false,
     elementUnregistered: false,
     managerSettingsChanged: true,

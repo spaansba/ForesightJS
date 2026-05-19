@@ -183,21 +183,9 @@ export class LogTab extends LitElement {
         icon: FILTER_SVG,
       },
       {
-        value: "elementOptionsUpdated",
-        label: "Element Updated",
-        title: "Show element re-registration (options changed) events",
-        icon: FILTER_SVG,
-      },
-      {
         value: "elementUnregistered",
         label: "Element Unregistered",
         title: "Show element unregistration events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "elementReactivated",
-        label: "Element Reactivated",
-        title: "Show when element gets reactivated after stale time has passed",
         icon: FILTER_SVG,
       },
       {
@@ -265,9 +253,7 @@ export class LogTab extends LitElement {
   private shouldShowPerformanceWarning(): boolean {
     const hasConsoleOutput = this.logLocation === "console" || this.logLocation === "both"
     const hasFrequentEvents =
-      this.eventsEnabled.mouseTrajectoryUpdate ||
-      this.eventsEnabled.scrollTrajectoryUpdate ||
-      this.eventsEnabled.elementDataUpdated
+      this.eventsEnabled.mouseTrajectoryUpdate || this.eventsEnabled.scrollTrajectoryUpdate
 
     return hasConsoleOutput && hasFrequentEvents
   }
@@ -359,11 +345,8 @@ export class LogTab extends LitElement {
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
       elementRegistered: "#2196f3",
-      elementOptionsUpdated: "#2196f3",
-      elementReactivated: "#ff9800",
       callbackInvoked: "#00bcd4",
       callbackCompleted: "#4caf50",
-      elementDataUpdated: "#ffc107",
       elementUnregistered: "#ff9800",
       managerSettingsChanged: "#f44336",
       mouseTrajectoryUpdate: "#78909c",

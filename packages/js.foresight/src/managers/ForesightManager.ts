@@ -164,6 +164,30 @@ export class ForesightManager {
     return this.eventEmitter.hasListeners(eventType)
   }
 
+  /**
+   * Subscribe to state changes for a specific element.
+   * The listener is called (with no arguments) whenever the element's
+   * immutable state snapshot is replaced. Use {@link registeredElements}
+   * to read the latest state inside the listener.
+   *
+   * @returns An unsubscribe function, or `undefined` if the element is not registered.
+   */
+  public subscribeToElement(
+    element: ForesightElement,
+    listener: () => void
+  ): (() => void) | undefined {
+    const entry = this.elementEntries.get(element)
+    if (!entry) {
+      return undefined
+    }
+
+    entry.subscribers.add(listener)
+
+    return () => {
+      entry.subscribers.delete(listener)
+    }
+  }
+
   public get getManagerData(): Readonly<ForesightManagerData> {
     return {
       registeredElements: this.registeredElements,
@@ -314,13 +338,6 @@ export class ForesightManager {
       }
     }
 
-    this.eventEmitter.emit({
-      type: "elementOptionsUpdated",
-      timestamp: Date.now(),
-      element,
-      state: next,
-    })
-
     return next
   }
 
@@ -340,7 +357,7 @@ export class ForesightManager {
 
   /**
    * Replace the immutable state ref for an element and notify subscribers.
-   * No-op when every patch value already matches current state — preserves the
+   * No-op when every patch value already matches current state - preserves the
    * stable-reference contract relied on by useSyncExternalStore and shallowRef.
    */
   private updateElementState(
@@ -448,17 +465,10 @@ export class ForesightManager {
       return
     }
 
-    const next = this.updateElementState(entry, { isActive: true, isPredicted: false })
+    this.updateElementState(entry, { isActive: true, isPredicted: false })
     this.activeElementCount++
     this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(element)
-
-    this.eventEmitter.emit({
-      type: "elementReactivated",
-      element: element,
-      state: next,
-      timestamp: Date.now(),
-    })
   }
 
   private clearReactivateTimeout(entry: ForesightElementInternal): void {
@@ -782,19 +792,12 @@ export class ForesightManager {
       return
     }
 
-    const next = this.updateElementState(entry, {
+    this.updateElementState(entry, {
       elementBounds: {
         hitSlop: entry.state.elementBounds.hitSlop,
         originalRect: newOriginalRect,
         expandedRect,
       },
-    })
-
-    this.eventEmitter.emit({
-      type: "elementDataUpdated",
-      element: entry.element,
-      state: next,
-      updatedProps: ["bounds" as const],
     })
   }
 

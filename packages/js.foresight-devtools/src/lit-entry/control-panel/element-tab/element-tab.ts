@@ -7,11 +7,8 @@ import type {
   CallbackHits,
   CallbackHitType,
   CallbackInvokedEvent,
-  ElementDataUpdatedEvent,
-  ElementReactivatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
-  ElementOptionsUpdatedEvent,
 } from "js.foresight"
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
@@ -102,6 +99,7 @@ export class ElementTab extends LitElement {
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
   private _abortController: AbortController | null = null
+  private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   private _pendingElementUpdates: Map<ForesightElement, ForesightElementState> = new Map()
   private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
   // Cached sorted element lists to avoid repeated filtering in render
@@ -213,53 +211,45 @@ export class ElementTab extends LitElement {
     return lines.join("\n")
   }
 
+  private _subscribeToElement(element: ForesightElement): void {
+    if (this._elementSubscriptions.has(element)) {
+      return
+    }
+
+    const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
+      const state = ForesightManager.instance.registeredElements.get(element)
+      if (state) {
+        this._pendingElementUpdates.set(element, state)
+        this._scheduleDebouncedUpdate()
+      }
+    })
+
+    if (unsubscribe) {
+      this._elementSubscriptions.set(element, unsubscribe)
+    }
+  }
+
+  private _unsubscribeFromElement(element: ForesightElement): void {
+    this._elementSubscriptions.get(element)?.()
+    this._elementSubscriptions.delete(element)
+  }
+
   connectedCallback() {
     super.connectedCallback()
     this._abortController = new AbortController()
     const { signal } = this._abortController
     this.updateElementListFromManager()
 
+    for (const element of this.elementListItems.keys()) {
+      this._subscribeToElement(element)
+    }
+
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
         this.elementListItems.set(e.element, e.state)
+        this._subscribeToElement(e.element)
         this._elementsCacheDirty = true
-        this.requestUpdate()
-      },
-      { signal }
-    )
-
-    ForesightManager.instance.addEventListener(
-      "elementOptionsUpdated",
-      (e: ElementOptionsUpdatedEvent) => {
-        if (!this.applyStateUpdate(e.element, e.state)) {
-          return
-        }
-
-        this.requestUpdate()
-      },
-      { signal }
-    )
-
-    ForesightManager.instance.addEventListener(
-      "elementDataUpdated",
-      (e: ElementDataUpdatedEvent) => {
-        if (this.elementListItems.has(e.element)) {
-          // Batch updates and debounce to avoid excessive re-renders during scroll
-          this._pendingElementUpdates.set(e.element, e.state)
-          this._scheduleDebouncedUpdate()
-        }
-      },
-      { signal }
-    )
-
-    ForesightManager.instance.addEventListener(
-      "elementReactivated",
-      (e: ElementReactivatedEvent) => {
-        if (!this.applyStateUpdate(e.element, e.state)) {
-          return
-        }
-
         this.requestUpdate()
       },
       { signal }
@@ -268,6 +258,7 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
+        this._unsubscribeFromElement(e.element)
         this.elementListItems.delete(e.element)
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
@@ -282,9 +273,8 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
-        this.applyStateUpdate(e.element, e.state)
-        this._elementsCacheDirty = true
-        this.requestUpdate()
+        this._pendingElementUpdates.set(e.element, e.state)
+        this._scheduleDebouncedUpdate()
       },
       { signal }
     )
@@ -292,30 +282,22 @@ export class ElementTab extends LitElement {
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       (e: CallbackCompletedEvent) => {
-        this.applyStateUpdate(e.element, e.state)
         this.handleCallbackCompleted(e.hitType)
-        this._elementsCacheDirty = true
-        this.requestUpdate()
       },
       { signal }
     )
-  }
-
-  private applyStateUpdate(element: ForesightElement, state: ForesightElementState): boolean {
-    if (!this.elementListItems.has(element)) {
-      return false
-    }
-
-    this.elementListItems.set(element, state)
-    this._elementsCacheDirty = true
-
-    return true
   }
 
   disconnectedCallback() {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
+
+    for (const unsub of this._elementSubscriptions.values()) {
+      unsub()
+    }
+    this._elementSubscriptions.clear()
+
     if (this._updateDebounceId !== null) {
       clearTimeout(this._updateDebounceId)
       this._updateDebounceId = null

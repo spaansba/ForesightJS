@@ -39,11 +39,8 @@ export class ForesightDevtools extends LitElement {
     logging: {
       logLocation: "controlPanel",
       callbackCompleted: true,
-      elementReactivated: true,
       callbackInvoked: true,
-      elementDataUpdated: false,
       elementRegistered: false,
-      elementOptionsUpdated: false,
       elementUnregistered: false,
       managerSettingsChanged: true,
       mouseTrajectoryUpdate: false,
@@ -172,7 +169,6 @@ export class ForesightDevtools extends LitElement {
 
       this.updateLoggingSetting("callbackCompleted", props.logging.callbackCompleted)
       this.updateLoggingSetting("callbackInvoked", props.logging.callbackInvoked)
-      this.updateLoggingSetting("elementDataUpdated", props.logging.elementDataUpdated)
       this.updateLoggingSetting("elementRegistered", props.logging.elementRegistered)
       this.updateLoggingSetting("elementUnregistered", props.logging.elementUnregistered)
       this.updateLoggingSetting("managerSettingsChanged", props.logging.managerSettingsChanged)

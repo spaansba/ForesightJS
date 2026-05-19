@@ -18,7 +18,6 @@ const MAX_LOG_ENTRIES = 200
 
 const ALL_EVENTS: ForesightEvent[] = [
   "elementRegistered",
-  "elementReactivated",
   "elementUnregistered",
   "callbackInvoked",
   "callbackCompleted",
@@ -38,9 +37,6 @@ const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {
   switch (event.type) {
     case "elementRegistered":
       return `"${formatElementName(event.state)}" registered`
-
-    case "elementReactivated":
-      return `"${formatElementName(event.state)}" reactivated`
 
     case "elementUnregistered":
       return `"${formatElementName(event.state)}" unregistered (${event.unregisterReason})`
@@ -64,9 +60,7 @@ const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {
 
 const EVENT_COLORS: Partial<Record<ForesightEvent, string>> = {
   elementRegistered: "text-green-700",
-  elementReactivated: "text-blue-700",
   elementUnregistered: "text-red-700",
-  elementDataUpdated: "text-gray-600",
   callbackInvoked: "text-amber-700",
   callbackCompleted: "text-purple-700",
   managerSettingsChanged: "text-cyan-700",
@@ -216,14 +210,8 @@ export default function Events() {
   useForesightEvent("elementRegistered", e => {
     pushEntry(e.type, summarizeEvent(e), e.timestamp)
   })
-  useForesightEvent("elementReactivated", e => {
-    pushEntry(e.type, summarizeEvent(e), e.timestamp)
-  })
   useForesightEvent("elementUnregistered", e => {
     pushEntry(e.type, summarizeEvent(e), e.timestamp)
-  })
-  useForesightEvent("elementDataUpdated", e => {
-    pushEntry(e.type, summarizeEvent(e), Date.now())
   })
   useForesightEvent("callbackInvoked", e => {
     pushEntry(e.type, summarizeEvent(e), e.timestamp)
