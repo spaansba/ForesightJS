@@ -1,5 +1,4 @@
 import {
-  computed,
   reactive,
   readonly,
   toRaw,
@@ -47,29 +46,25 @@ export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
 export const useForesight = (
   options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
 ): UseForesightReturn => {
-  const resolvedOptions = computed(() => toValue(options))
   const state = reactive(createUnregisteredSnapshot(false))
 
   let currentElement: Element | null = null
   let registerResults: ForesightRegisterResult | null = null
   let unsubscribe: (() => void) | null = null
 
-  const updateState = (newState: ForesightElementState) => {
-    Object.assign(state, newState)
-  }
+  const callback = (s: ForesightElementState) => toValue(options).callback(s)
 
   const registerElement = (element: Element) => {
-    const currentOptions = resolvedOptions.value
     registerResults = ForesightManager.instance.register({
-      ...currentOptions,
+      ...toValue(options),
       element,
-      callback: (state: ForesightElementState) => resolvedOptions.value.callback(state),
+      callback,
     })
 
-    updateState(registerResults.getSnapshot())
+    Object.assign(state, registerResults.getSnapshot())
     unsubscribe = registerResults.subscribe(() => {
       if (registerResults) {
-        updateState(registerResults.getSnapshot())
+        Object.assign(state, registerResults.getSnapshot())
       }
     })
   }
@@ -79,7 +74,7 @@ export const useForesight = (
     unsubscribe = null
     registerResults?.unregister()
     registerResults = null
-    updateState(createUnregisteredSnapshot(false))
+    Object.assign(state, createUnregisteredSnapshot(false))
   }
 
   const setRef = (el: MaybeElement) => {
@@ -103,7 +98,7 @@ export const useForesight = (
   // Watch options for changes — patch without re-registering.
   // Skip when the raw reference hasn't changed (e.g. getter returning same object).
   watch(
-    resolvedOptions,
+    () => toValue(options),
     (newOptions, oldOptions) => {
       if (oldOptions && toRaw(newOptions) === toRaw(oldOptions)) {
         return
@@ -115,7 +110,7 @@ export const useForesight = (
 
       ForesightManager.instance.updateElementOptions(currentElement, {
         ...newOptions,
-        callback: (state: ForesightElementState) => resolvedOptions.value.callback(state),
+        callback,
       })
     },
     { flush: "post" }
