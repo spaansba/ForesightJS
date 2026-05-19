@@ -37,13 +37,12 @@ const swap = () => {
     >
       Hover to predict
     </button>
-    <ForesightStats
-      :is-predicted
-      :hit-count
-      :is-callback-running
-      :status
-    />
-    <button type="button" class="text-xs px-2 py-1 border border-gray-300 hover:bg-gray-100" @click="swap">
+    <ForesightStats :is-predicted :hit-count :is-callback-running :status />
+    <button
+      type="button"
+      class="text-xs px-2 py-1 border border-gray-300 hover:bg-gray-100"
+      @click="swap"
+    >
       Swap options
     </button>
   </article>

@@ -49,6 +49,8 @@ export class ReactivateCountdown extends LitElement {
   private intervalId: number | null = null
   private startTime: number = 0
   private lastDisplayedTime: string = ""
+  private countdownForElement: ForesightElement | null = null
+  private countdownReactivateAfter: number = 0
 
   connectedCallback() {
     super.connectedCallback()
@@ -91,8 +93,12 @@ export class ReactivateCountdown extends LitElement {
   }
 
   private startCountdown() {
-    // Don't restart if already counting down
-    if (this.isCountdownActive && this.intervalId !== null) {
+    // Don't restart if already counting down for the same element with the same duration
+    if (
+      this.isCountdownActive &&
+      this.countdownForElement === this.element &&
+      this.countdownReactivateAfter === this.state.reactivateAfter
+    ) {
       return
     }
 
@@ -103,6 +109,8 @@ export class ReactivateCountdown extends LitElement {
       return
     }
 
+    this.countdownForElement = this.element
+    this.countdownReactivateAfter = state.reactivateAfter
     this.isCountdownActive = true
 
     if (state.reactivateAfter === Infinity) {
@@ -150,6 +158,8 @@ export class ReactivateCountdown extends LitElement {
     this.isCountdownActive = false
     this.remainingTime = 0
     this.lastDisplayedTime = ""
+    this.countdownForElement = null
+    this.countdownReactivateAfter = 0
   }
 
   private handleTimerClick = (e: MouseEvent) => {
