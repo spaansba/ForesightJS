@@ -28,6 +28,7 @@ const swap = () => {
     <h4 class="text-sm font-medium">Ref options</h4>
     <p class="text-xs text-gray-500">Swap entire options object. name: {{ currentOptions.name }}</p>
     <button
+      type="button"
       :ref="setRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
@@ -37,12 +38,12 @@ const swap = () => {
       Hover to predict
     </button>
     <ForesightStats
-      :is-predicted="isPredicted"
-      :hit-count="hitCount"
-      :is-callback-running="isCallbackRunning"
-      :status="status"
+      :is-predicted
+      :hit-count
+      :is-callback-running
+      :status
     />
-    <button class="text-xs px-2 py-1 border border-gray-300 hover:bg-gray-100" @click="swap">
+    <button type="button" class="text-xs px-2 py-1 border border-gray-300 hover:bg-gray-100" @click="swap">
       Swap options
     </button>
   </article>

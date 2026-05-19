@@ -1,4 +1,4 @@
-import { defineComponent, h, nextTick, ref, type ComponentPublicInstance } from "vue"
+import { defineComponent, h, nextTick, ref } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"

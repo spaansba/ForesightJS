@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StringTargetButton from "./partials/StringTargetButton.vue"
+import FixedOptionsButton from "./partials/FixedOptionsButton.vue"
 import SwappableOptionsButton from "./partials/SwappableOptionsButton.vue"
 import GetterOptionsButton from "./partials/GetterOptionsButton.vue"
 </script>
@@ -13,7 +13,7 @@ import GetterOptionsButton from "./partials/GetterOptionsButton.vue"
     </p>
 
     <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">
-      <StringTargetButton />
+      <FixedOptionsButton />
       <SwappableOptionsButton />
       <GetterOptionsButton />
     </section>

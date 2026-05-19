@@ -43,7 +43,7 @@ const slots = useForesights(() =>
   }))
 )
 
-let nextId = items.value.length + 1
+let nextId = 4
 const addItem = () => {
   const id = nextId++
   const delayMs = 200 + Math.round(Math.random() * 800)
@@ -71,10 +71,15 @@ const removeItem = () => {
 <template>
   <div>
     <div class="flex gap-2 mb-4">
-      <button class="px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-100" @click="addItem">
+      <button
+        type="button"
+        class="px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-100"
+        @click="addItem"
+      >
         Add item
       </button>
       <button
+        type="button"
         class="px-3 py-1.5 text-xs border border-gray-300 hover:bg-gray-100"
         @click="removeItem"
       >
@@ -91,6 +96,7 @@ const removeItem = () => {
       >
         <h4 class="text-sm font-medium">{{ item.label }}</h4>
         <button
+          type="button"
           :ref="slots[i]?.setRef"
           :class="[
             'flex items-center justify-center size-40 text-white text-sm font-medium',

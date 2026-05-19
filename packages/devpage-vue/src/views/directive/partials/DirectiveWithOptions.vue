@@ -2,6 +2,7 @@
   <article class="flex flex-col items-start gap-3 w-56">
     <h4 class="text-sm font-medium">With options</h4>
     <button
+      type="button"
       v-foresight="{
         callback: () => console.log('Options button hovered'),
         hitSlop: { top: 20, bottom: 40, left: 20, right: 20 },

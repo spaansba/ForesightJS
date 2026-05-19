@@ -75,7 +75,10 @@ const isPaused = ref(false)
 let nextId = 0
 
 const pushEntry = (type: ForesightEvent, summary: string, timestamp: number) => {
-  if (isPaused.value) return
+  if (isPaused.value) {
+    return
+  }
+
   const entry: EventLogEntry = { id: nextId++, type, timestamp, summary }
   const next = [entry, ...entries.value]
   entries.value = next.length > MAX_LOG_ENTRIES ? next.slice(0, MAX_LOG_ENTRIES) : next
@@ -110,6 +113,7 @@ const eventCounts = computed(() =>
   entries.value.reduce(
     (acc, entry) => {
       acc[entry.type] = (acc[entry.type] ?? 0) + 1
+
       return acc
     },
     {} as Partial<Record<ForesightEvent, number>>
@@ -127,12 +131,14 @@ const clearLog = () => {
       <h1 class="text-xl font-semibold">Events</h1>
       <div class="flex gap-2">
         <button
+          type="button"
           class="px-2 py-1 text-xs border border-gray-400 text-gray-800 hover:bg-gray-100"
           @click="isPaused = !isPaused"
         >
           {{ isPaused ? "Resume" : "Pause" }}
         </button>
         <button
+          type="button"
           class="px-2 py-1 text-xs border border-gray-400 text-gray-800 hover:bg-gray-100"
           @click="clearLog"
         >
@@ -149,6 +155,6 @@ const clearLog = () => {
 
     <InteractiveTargets />
     <EventCounters :events="ALL_EVENTS" :counts="eventCounts" :colors="EVENT_COLORS" />
-    <EventLog :entries="entries" :max-entries="MAX_LOG_ENTRIES" :colors="EVENT_COLORS" />
+    <EventLog :entries :max-entries="MAX_LOG_ENTRIES" :colors="EVENT_COLORS" />
   </div>
 </template>

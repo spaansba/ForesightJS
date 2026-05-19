@@ -135,6 +135,7 @@ const toggle = useForesight({
           unmounted
         </div>
         <button
+          type="button"
           class="px-2 py-1 text-[10px] border border-gray-400 text-gray-700 hover:bg-gray-100"
           @click="toggleableMounted = !toggleableMounted"
         >

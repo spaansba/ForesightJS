@@ -13,6 +13,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesigh
     <h4 class="text-sm font-medium">Fixed options</h4>
     <p class="text-xs text-gray-500">Pass a plain options object.</p>
     <button
+      type="button"
       :ref="setRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
@@ -21,11 +22,6 @@ const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesigh
     >
       Hover to predict
     </button>
-    <ForesightStats
-      :is-predicted="isPredicted"
-      :hit-count="hitCount"
-      :is-callback-running="isCallbackRunning"
-      :status="status"
-    />
+    <ForesightStats :is-predicted :hit-count :is-callback-running :status />
   </article>
 </template>

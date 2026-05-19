@@ -13,6 +13,7 @@ const slots = useForesights([
     <article class="flex flex-col items-start gap-3 w-56">
       <h4 class="text-sm font-medium">Target A</h4>
       <button
+        type="button"
         :ref="slots[0].setRef"
         :class="[
           'flex items-center justify-center size-40 text-white text-sm font-medium',
@@ -32,6 +33,7 @@ const slots = useForesights([
     <article class="flex flex-col items-start gap-3 w-56">
       <h4 class="text-sm font-medium">Target B</h4>
       <button
+        type="button"
         :ref="slots[1].setRef"
         :class="[
           'flex items-center justify-center size-40 text-white text-sm font-medium',
