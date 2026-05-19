@@ -15,6 +15,7 @@ export type {
   ForesightEvent,
   ForesightEventMap,
   ElementRegisteredEvent,
+  ElementOptionsUpdatedEvent,
   DeviceStrategyChangedEvent,
   ElementReactivatedEvent,
   ElementUnregisteredEvent,

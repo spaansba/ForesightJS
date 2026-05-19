@@ -4,11 +4,12 @@ import {
   createUnregisteredSnapshot,
   type ForesightRegisterOptionsWithoutElement,
 } from "js.foresight"
-import { mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { useForesights } from "./useForesights"
 
 beforeEach(() => {
   registerSpy.mockClear()
+  updateElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -155,9 +156,10 @@ describe("useForesights", () => {
 
     rerender(<MultiProbe optionsArray={[{ name: "b", callback: vi.fn() }]} />)
 
-    expect(registerSpy).toHaveBeenCalled()
-    const lastCall = registerSpy.mock.calls[registerSpy.mock.calls.length - 1]
-    expect(lastCall?.[0].name).toBe("b")
+    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].name).toBe("b")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 

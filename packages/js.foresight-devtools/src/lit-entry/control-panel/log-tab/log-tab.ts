@@ -183,6 +183,12 @@ export class LogTab extends LitElement {
         icon: FILTER_SVG,
       },
       {
+        value: "elementOptionsUpdated",
+        label: "Element Updated",
+        title: "Show element re-registration (options changed) events",
+        icon: FILTER_SVG,
+      },
+      {
         value: "elementUnregistered",
         label: "Element Unregistered",
         title: "Show element unregistration events",
@@ -353,6 +359,7 @@ export class LogTab extends LitElement {
   private getEventColor(eventType: ForesightEvent): string {
     const colorMap: Record<ForesightEvent, string> = {
       elementRegistered: "#2196f3",
+      elementOptionsUpdated: "#2196f3",
       elementReactivated: "#ff9800",
       callbackInvoked: "#00bcd4",
       callbackCompleted: "#4caf50",

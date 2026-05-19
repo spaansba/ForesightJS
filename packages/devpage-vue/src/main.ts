@@ -2,7 +2,7 @@ import { createApp } from "vue"
 import App from "./App.vue"
 import router from "./router"
 import "./style.css"
-import { vForesight } from "@/directives/vForesight"
+import { vForesight } from "@foresightjs/vue"
 
 const app = createApp(App)
 

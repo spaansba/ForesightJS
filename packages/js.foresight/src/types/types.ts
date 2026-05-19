@@ -100,12 +100,10 @@ export type ForesightRegisterResult = ForesightElementState & {
   unregister: () => void
   /**
    * Subscribe to state changes for this element. Returns an unsubscribe function.
-   * Designed to be consumed by React's `useSyncExternalStore` and Vue's `shallowRef` watchers.
    */
   subscribe: (listener: () => void) => () => void
   /**
    * Returns the current immutable state snapshot for this element.
-   * The reference is stable until something changes, so it is safe to use with `useSyncExternalStore`.
    */
   getSnapshot: () => ForesightElementState
 }
@@ -376,6 +374,7 @@ export type ManagerBooleanSettingKeys = {
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
   elementRegistered: ElementRegisteredEvent
+  elementOptionsUpdated: ElementOptionsUpdatedEvent
   elementReactivated: ElementReactivatedEvent
   elementUnregistered: ElementUnregisteredEvent
   elementDataUpdated: ElementDataUpdatedEvent
@@ -389,6 +388,7 @@ export interface ForesightEventMap {
 
 export type ForesightEvent =
   | "elementRegistered"
+  | "elementOptionsUpdated"
   | "elementReactivated"
   | "elementUnregistered"
   | "elementDataUpdated"
@@ -407,6 +407,12 @@ export interface DeviceStrategyChangedEvent extends ForesightBaseEvent {
 
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
+  element: ForesightElement
+  state: ForesightElementState
+}
+
+export interface ElementOptionsUpdatedEvent extends ForesightBaseEvent {
+  type: "elementOptionsUpdated"
   element: ForesightElement
   state: ForesightElementState
 }

@@ -43,6 +43,7 @@ export class ForesightDevtools extends LitElement {
       callbackInvoked: true,
       elementDataUpdated: false,
       elementRegistered: false,
+      elementOptionsUpdated: false,
       elementUnregistered: false,
       managerSettingsChanged: true,
       mouseTrajectoryUpdate: false,

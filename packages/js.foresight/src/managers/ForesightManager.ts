@@ -27,6 +27,7 @@ import type {
   ForesightModules,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptions,
+  ForesightRegisterOptionsWithoutElement,
   ForesightRegisterResult,
   UpdateForsightManagerSettings,
 } from "../types/types"
@@ -225,7 +226,19 @@ export class ForesightManager {
     const previousEntry = this.elementEntries.get(options.element)
 
     if (previousEntry) {
-      return this.reRegisterElement(previousEntry, options)
+      this.updateElementOptions(options.element, options)
+      this.updateElementState(previousEntry, {
+        registerCount: previousEntry.state.registerCount + 1,
+      })
+
+      return {
+        ...previousEntry.state,
+        unregister: () => {
+          this.unregister(options.element)
+        },
+        subscribe: this.makeSubscribe(previousEntry),
+        getSnapshot: () => previousEntry.state,
+      }
     }
 
     if (!this.isSetup) {
@@ -261,41 +274,54 @@ export class ForesightManager {
   }
 
   /**
-   * Handles re-registration of an already registered element.
-   * Updates the entry's callback, name, meta, and reactivateAfter from the new options,
-   * falling back to the existing values when an option is omitted.
+   * Updates the options of an already-registered element.
+   * Only the provided fields are updated; omitted fields keep their current values.
    * If a reactivation timeout is pending and reactivateAfter changed, the timeout is rescheduled.
+   *
+   * @throws Error if the element is not registered.
    */
-  private reRegisterElement(
-    entry: ForesightElementInternal,
-    options: ForesightRegisterOptions
-  ): ForesightRegisterResult {
-    entry.callback = options.callback
+  public updateElementOptions(
+    element: ForesightElement,
+    options: Partial<ForesightRegisterOptionsWithoutElement>
+  ): ForesightElementState {
+    const entry = this.elementEntries.get(element)
+    if (!entry) {
+      throw new Error("Cannot update options: element is not registered.")
+    }
 
-    const reactivateAfter = options.reactivateAfter ?? entry.state.reactivateAfter
+    if (options.callback) {
+      entry.callback = options.callback
+    }
+
+    const prevReactivateAfter = entry.state.reactivateAfter
+    const reactivateAfter = options.reactivateAfter ?? prevReactivateAfter
     const next = this.updateElementState(entry, {
-      registerCount: entry.state.registerCount + 1,
       name: options.name || entry.state.name,
       meta: options.meta ?? entry.state.meta,
       reactivateAfter,
     })
 
-    // Reschedule the reactivation timeout if reactivateAfter changed while waiting
-    if (entry.reactivateTimeoutId !== undefined) {
-      this.clearReactivateTimeout(entry)
-      if (reactivateAfter !== Infinity) {
+    // Only clear and reschedule the reactivation timeout if reactivateAfter actually changed
+    if (reactivateAfter !== prevReactivateAfter) {
+      if (entry.reactivateTimeoutId !== undefined) {
+        this.clearReactivateTimeout(entry)
+      }
+
+      if (reactivateAfter !== Infinity && next.isPredicted) {
         entry.reactivateTimeoutId = setTimeout(() => {
-          this.reactivate(options.element)
+          this.reactivate(element)
         }, reactivateAfter)
       }
     }
 
-    return {
-      ...next,
-      unregister: () => {},
-      subscribe: this.makeSubscribe(entry),
-      getSnapshot: () => entry.state,
-    }
+    this.eventEmitter.emit({
+      type: "elementOptionsUpdated",
+      timestamp: Date.now(),
+      element,
+      state: next,
+    })
+
+    return next
   }
 
   /**

@@ -1275,19 +1275,19 @@ describe("ForesightManager", () => {
     })
   })
 
-  describe("Re-registration Updates Options", () => {
-    it("should update reactivateAfter on re-registration", () => {
+  describe("updateElementOptions", () => {
+    it("should update reactivateAfter", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
       expect(manager.registeredElements.get(element)?.reactivateAfter).toBe(5000)
 
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 1000 })
+      manager.updateElementOptions(element, { reactivateAfter: 1000 })
       expect(manager.registeredElements.get(element)?.reactivateAfter).toBe(1000)
     })
 
-    it("should update callback on re-registration", async () => {
+    it("should update callback", async () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
       const callbackA = vi.fn()
@@ -1300,9 +1300,9 @@ describe("ForesightManager", () => {
       await vi.advanceTimersByTimeAsync(0)
       expect(callbackA).toHaveBeenCalledTimes(1)
 
-      // Reactivate, re-register with new callback, then fire again
+      // Reactivate, update callback, then fire again
       await vi.advanceTimersByTimeAsync(500)
-      manager.register({ element, callback: callbackB })
+      manager.updateElementOptions(element, { callback: callbackB })
 
       fire(manager, entry)
       await vi.advanceTimersByTimeAsync(0)
@@ -1310,29 +1310,29 @@ describe("ForesightManager", () => {
       expect(callbackB).toHaveBeenCalledTimes(1)
     })
 
-    it("should update name on re-registration", () => {
+    it("should update name", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn(), name: "old-name" })
       expect(manager.registeredElements.get(element)?.name).toBe("old-name")
 
-      manager.register({ element, callback: vi.fn(), name: "new-name" })
+      manager.updateElementOptions(element, { name: "new-name" })
       expect(manager.registeredElements.get(element)?.name).toBe("new-name")
     })
 
-    it("should update meta on re-registration", () => {
+    it("should update meta", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn(), meta: { route: "/a" } })
       expect(manager.registeredElements.get(element)?.meta).toEqual({ route: "/a" })
 
-      manager.register({ element, callback: vi.fn(), meta: { route: "/b", priority: 1 } })
+      manager.updateElementOptions(element, { meta: { route: "/b", priority: 1 } })
       expect(manager.registeredElements.get(element)?.meta).toEqual({ route: "/b", priority: 1 })
     })
 
-    it("should preserve previous values when options are omitted on re-registration", () => {
+    it("should preserve previous values when options are omitted", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
@@ -1344,8 +1344,8 @@ describe("ForesightManager", () => {
         meta: { x: 1 },
       })
 
-      // Re-register without name, meta, or reactivateAfter
-      manager.register({ element, callback: vi.fn() })
+      // Update without name, meta, or reactivateAfter
+      manager.updateElementOptions(element, {})
 
       const state = manager.registeredElements.get(element)!
       expect(state.name).toBe("my-name")
@@ -1357,8 +1357,7 @@ describe("ForesightManager", () => {
       const { manager, element, entry, reactivatedListener } =
         await setupReactivationAfterFire(5000)
 
-      // Re-register with shorter reactivateAfter while timer is pending
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 500 })
+      manager.updateElementOptions(element, { reactivateAfter: 500 })
       expect(entry.state.reactivateAfter).toBe(500)
 
       // Original 5000ms timer should have been cleared
@@ -1367,12 +1366,11 @@ describe("ForesightManager", () => {
       expect(entry.state.isActive).toBe(true)
     })
 
-    it("should cancel reactivation when re-registered with Infinity", async () => {
+    it("should cancel reactivation when updated with Infinity", async () => {
       const { manager, element, entry, reactivatedListener } =
         await setupReactivationAfterFire(2000)
 
-      // Re-register with Infinity — should cancel the pending timeout
-      manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
+      manager.updateElementOptions(element, { reactivateAfter: Infinity })
 
       await vi.advanceTimersByTimeAsync(10000)
       expect(reactivatedListener).not.toHaveBeenCalled()
@@ -1383,14 +1381,55 @@ describe("ForesightManager", () => {
       const { manager, element, reactivatedListener } = setupReactivationTest(5000)
 
       // Element is still active (no callback fired yet), no pending timeout
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 100 })
+      manager.updateElementOptions(element, { reactivateAfter: 100 })
 
       // No spurious reactivation should happen
       await vi.advanceTimersByTimeAsync(200)
       expect(reactivatedListener).not.toHaveBeenCalled()
     })
 
-    it("should notify subscribers when options change on re-registration", () => {
+    it("should schedule reactivation when updated from Infinity to finite while predicted", async () => {
+      // Register with Infinity (no reactivation), then fire callback
+      const { manager, element, entry, reactivatedListener } =
+        await setupReactivationAfterFire(Infinity)
+
+      // Element is predicted, no timeout exists
+      expect(entry.state.isPredicted).toBe(true)
+      expect(entry.reactivateTimeoutId).toBeUndefined()
+
+      manager.updateElementOptions(element, { reactivateAfter: 1000 })
+      expect(entry.state.reactivateAfter).toBe(1000)
+
+      // Timeout should now be scheduled and fire after 1000ms
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(reactivatedListener).toHaveBeenCalledTimes(1)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isPredicted).toBe(false)
+    })
+
+    it("should not clear pending reactivation timeout when reactivateAfter is unchanged", async () => {
+      const { manager, element, entry, reactivatedListener } =
+        await setupReactivationAfterFire(2000)
+
+      // Element is predicted with a pending reactivation timeout
+      expect(entry.state.isPredicted).toBe(true)
+      expect(entry.state.isActive).toBe(false)
+      expect(entry.reactivateTimeoutId).toBeDefined()
+
+      // Update options without changing reactivateAfter (simulates what Vue's watcher does)
+      manager.updateElementOptions(element, { name: "updated-name" })
+
+      // The reactivation timeout should still be intact
+      expect(entry.reactivateTimeoutId).toBeDefined()
+
+      // After the original timeout period, element should reactivate
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(reactivatedListener).toHaveBeenCalledTimes(1)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isPredicted).toBe(false)
+    })
+
+    it("should notify subscribers when options change", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
       const listener = vi.fn()
@@ -1398,9 +1437,29 @@ describe("ForesightManager", () => {
       const result = manager.register({ element, callback: vi.fn(), reactivateAfter: 5000 })
       result.subscribe(listener)
 
-      manager.register({ element, callback: vi.fn(), reactivateAfter: 1000 })
+      manager.updateElementOptions(element, { reactivateAfter: 1000 })
 
       expect(listener).toHaveBeenCalled()
+    })
+
+    it("should throw when element is not registered", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      expect(() => manager.updateElementOptions(element, { name: "test" })).toThrow(
+        "Cannot update options: element is not registered."
+      )
+    })
+
+    it("should still work through register() for backwards compatibility", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), name: "original" })
+      manager.register({ element, callback: vi.fn(), name: "updated" })
+
+      expect(manager.registeredElements.get(element)?.name).toBe("updated")
+      expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
   })
 

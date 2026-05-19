@@ -35,6 +35,15 @@ interface ElementRegisteredPayload extends PayloadBase {
   meta: Record<string, unknown>
 }
 
+interface ElementOptionsUpdatedPayload extends PayloadBase {
+  type: "elementOptionsUpdated"
+  name: string
+  id: string
+  state: ForesightElementState
+  hitslop: HitSlop
+  meta: Record<string, unknown>
+}
+
 interface ElementUnregisteredEvent extends PayloadBase {
   type: "elementUnregistered"
   name: string
@@ -126,6 +135,7 @@ interface ManagerDataPayload extends PayloadBase {
 
 export type SerializedEventData =
   | ElementRegisteredPayload
+  | ElementOptionsUpdatedPayload
   | ElementUnregisteredEvent
   | ElementReactivatedPayload
   | ElementDataUpdatedPayload
@@ -201,6 +211,18 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
             event.state.registerCount > 1
               ? `${event.state.name} - ${getOrdinalSuffix(event.state.registerCount)} time`
               : event.state.name,
+        }
+      case "elementOptionsUpdated":
+        return {
+          type: "elementOptionsUpdated",
+          name: event.state.name,
+          id: event.element.id || "",
+          state: event.state,
+          hitslop: event.state.elementBounds.hitSlop,
+          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
+          meta: event.state.meta,
+          logId: logId,
+          summary: event.state.name,
         }
       case "elementReactivated":
         return {

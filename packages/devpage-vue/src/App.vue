@@ -25,6 +25,20 @@ ForesightDevtools.initialize({})
           >
             Composable
           </RouterLink>
+          <RouterLink
+            to="/foresights"
+            class="text-gray-700 hover:text-gray-900"
+            active-class="text-gray-900 font-medium"
+          >
+            Foresights
+          </RouterLink>
+          <RouterLink
+            to="/events"
+            class="text-gray-700 hover:text-gray-900"
+            active-class="text-gray-900 font-medium"
+          >
+            Events
+          </RouterLink>
         </nav>
       </div>
     </header>
