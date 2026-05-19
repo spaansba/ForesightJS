@@ -298,6 +298,169 @@ describe("useForesights", () => {
     expect(registerSpy.mock.calls[2][0].name).toBe("z")
   })
 
+  describe("enabled option", () => {
+    it("does not register when enabled is false", async () => {
+      const Component = defineComponent({
+        setup() {
+          const slots = useForesights([
+            { name: "a", callback: vi.fn(), enabled: false },
+            { name: "b", callback: vi.fn(), enabled: false },
+          ])
+
+          return { slots }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).not.toHaveBeenCalled()
+    })
+
+    it("only registers enabled slots", async () => {
+      const Component = defineComponent({
+        setup() {
+          const slots = useForesights([
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: false },
+            { name: "c", callback: vi.fn() },
+          ])
+
+          return { slots }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+            h("button", { ref: this.slots[2].setRef, "data-testid": "el-2" }),
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      const names = registerSpy.mock.calls.map(c => c[0].name)
+      expect(names).toContain("a")
+      expect(names).toContain("c")
+      expect(names).not.toContain("b")
+    })
+
+    it("returns unregistered snapshot for disabled slots", async () => {
+      const Component = defineComponent({
+        setup() {
+          const slots = useForesights([{ name: "a", callback: vi.fn(), enabled: false }])
+
+          return { slots }
+        },
+        render() {
+          return h("button", {
+            ref: this.slots[0].setRef,
+            "data-testid": "el",
+            "data-registered": this.slots[0]?.isRegistered,
+          })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(wrapper.get("[data-testid=el]").attributes("data-registered")).toBe("false")
+    })
+
+    it("registers when enabled toggles from false to true", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: enabled.value },
+          ])
+
+          return { slots, enabled }
+        },
+        render() {
+          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).not.toHaveBeenCalled()
+
+      wrapper.vm.enabled = true
+      await nextTick()
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].name).toBe("a")
+    })
+
+    it("unregisters when enabled toggles from true to false", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(true)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: enabled.value },
+          ])
+
+          return { slots, enabled }
+        },
+        render() {
+          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("toggles individual slots independently", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabledB = ref(true)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: enabledB.value },
+          ])
+
+          return { slots, enabledB }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      unregisterSpy.mockClear()
+
+      // Disable only slot "b"
+      wrapper.vm.enabledB = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe("comment node filtering", () => {
     it("does not register when setRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({

@@ -1,10 +1,8 @@
 import { act, render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import {
-  createUnregisteredSnapshot,
-  type ForesightRegisterOptionsWithoutElement,
-} from "js.foresight"
+import { createUnregisteredSnapshot } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import type { UseForesightOptions } from "../types"
 import { useForesights } from "./useForesights"
 
 beforeEach(() => {
@@ -17,7 +15,7 @@ beforeEach(() => {
 })
 
 type ProbeProps = {
-  optionsArray: ForesightRegisterOptionsWithoutElement[]
+  optionsArray: UseForesightOptions[]
 }
 
 const MultiProbe = ({ optionsArray }: ProbeProps) => {
@@ -183,5 +181,92 @@ describe("useForesights", () => {
     expect(registerSpy.mock.calls[0][0].name).toBe("x")
     expect(registerSpy.mock.calls[1][0].name).toBe("y")
     expect(registerSpy.mock.calls[2][0].name).toBe("z")
+  })
+
+  describe("enabled option", () => {
+    it("does not register when enabled is false", () => {
+      render(
+        <MultiProbe
+          optionsArray={[
+            { name: "a", callback: vi.fn(), enabled: false },
+            { name: "b", callback: vi.fn(), enabled: false },
+          ]}
+        />
+      )
+      expect(registerSpy).not.toHaveBeenCalled()
+    })
+
+    it("only registers enabled slots", () => {
+      render(
+        <MultiProbe
+          optionsArray={[
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: false },
+            { name: "c", callback: vi.fn() },
+          ]}
+        />
+      )
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      const names = registerSpy.mock.calls.map(c => c[0].name)
+      expect(names).toContain("a")
+      expect(names).toContain("c")
+      expect(names).not.toContain("b")
+    })
+
+    it("returns unregistered snapshot for disabled slots", () => {
+      const { getByTestId } = render(
+        <MultiProbe optionsArray={[{ name: "a", callback: vi.fn(), enabled: false }]} />
+      )
+      expect(getByTestId("el-0").getAttribute("data-registered")).toBe("false")
+    })
+
+    it("registers when enabled toggles from false to true", () => {
+      const { rerender } = render(
+        <MultiProbe optionsArray={[{ name: "a", callback: vi.fn(), enabled: false }]} />
+      )
+      expect(registerSpy).not.toHaveBeenCalled()
+
+      rerender(<MultiProbe optionsArray={[{ name: "a", callback: vi.fn(), enabled: true }]} />)
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].name).toBe("a")
+    })
+
+    it("unregisters when enabled toggles from true to false", () => {
+      const { rerender } = render(
+        <MultiProbe optionsArray={[{ name: "a", callback: vi.fn(), enabled: true }]} />
+      )
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      rerender(<MultiProbe optionsArray={[{ name: "a", callback: vi.fn(), enabled: false }]} />)
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("toggles individual slots independently", () => {
+      const { rerender } = render(
+        <MultiProbe
+          optionsArray={[
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: true },
+          ]}
+        />
+      )
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      registerSpy.mockClear()
+
+      // Disable only slot "b"
+      rerender(
+        <MultiProbe
+          optionsArray={[
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: false },
+          ]}
+        />
+      )
+
+      // "a" is re-registered, "b" is not
+      const registeredNames = registerSpy.mock.calls.map(c => c[0].name)
+      expect(registeredNames).toContain("a")
+      expect(registeredNames).not.toContain("b")
+    })
   })
 })
