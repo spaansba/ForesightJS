@@ -9,11 +9,8 @@ import {
 import type {
   CallbackCompletedEvent,
   CallbackInvokedEvent,
-  ElementDataUpdatedEvent,
-  ElementReactivatedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
-  ElementOptionsUpdatedEvent,
 } from "js.foresight"
 
 const STYLE_ID = "foresight-overlay-styles"
@@ -79,6 +76,7 @@ interface CallbackAnimation {
 export class ElementOverlays extends LitElement {
   @state() private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
   @state() private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
+  private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   @query("#overlays-container") private containerElement!: HTMLElement
 
   @property({ type: Boolean }) showNameTags = true
@@ -147,56 +145,29 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
+        this._subscribeToElement(e.element)
         if (e.state.isIntersectingWithViewport) {
           this.createOrUpdateElementOverlay(e.element, e.state)
         }
-      },
-      { signal }
-    )
-    ForesightManager.instance.addEventListener(
-      "elementOptionsUpdated",
-      (e: ElementOptionsUpdatedEvent) => {
-        if (!e.state.isIntersectingWithViewport || !e.state.isActive) {
-          this.removeElementOverlay(e.element)
-
-          return
-        }
-
-        this.createOrUpdateElementOverlay(e.element, e.state)
       },
       { signal }
     )
     ForesightManager.instance.addEventListener(
       "elementUnregistered",
       (e: ElementUnregisteredEvent) => {
+        this._unsubscribeFromElement(e.element)
         this.removeElementOverlay(e.element)
       },
       { signal }
     )
-    ForesightManager.instance.addEventListener(
-      "elementReactivated",
-      (e: ElementReactivatedEvent) => {
-        if (e.state.isIntersectingWithViewport) {
-          this.createOrUpdateElementOverlay(e.element, e.state)
-        }
-      },
-      { signal }
-    )
-    ForesightManager.instance.addEventListener(
-      "elementDataUpdated",
-      (e: ElementDataUpdatedEvent) => {
-        if (!e.state.isIntersectingWithViewport) {
-          this.removeElementOverlay(e.element)
 
-          return
-        }
-
-        if (e.state.isActive) {
-          this.createOrUpdateElementOverlay(e.element, e.state)
-        }
-      },
-      { signal }
-    )
+    // Subscribe to already-registered elements
+    for (const [element, state] of ForesightManager.instance.registeredElements) {
+      this._subscribeToElement(element)
+      if (state.isIntersectingWithViewport && state.isActive) {
+        this.createOrUpdateElementOverlay(element, state)
+      }
+    }
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
@@ -224,12 +195,12 @@ export class ElementOverlays extends LitElement {
     super.attributeChangedCallback(name, oldVal, newVal)
     if (name === "hidden") {
       if (newVal !== null) {
-        // Hidden — remove overlay styles from all elements
+        // Hidden - remove overlay styles from all elements
         for (const element of this.overlayMap.keys()) {
           this.removeOverlayFromElement(element)
         }
       } else {
-        // Shown — reapply overlay styles to all tracked elements
+        // Shown - reapply overlay styles to all tracked elements
         for (const [element] of this.overlayMap) {
           const state = ForesightManager.instance.registeredElements.get(element)
           if (state) {
@@ -238,6 +209,32 @@ export class ElementOverlays extends LitElement {
         }
       }
     }
+  }
+
+  private _subscribeToElement(element: ForesightElement): void {
+    if (this._elementSubscriptions.has(element)) {
+      return
+    }
+
+    const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
+      const state = ForesightManager.instance.registeredElements.get(element)
+      if (!state || !state.isIntersectingWithViewport || !state.isActive) {
+        this.removeElementOverlay(element)
+
+        return
+      }
+
+      this.createOrUpdateElementOverlay(element, state)
+    })
+
+    if (unsubscribe) {
+      this._elementSubscriptions.set(element, unsubscribe)
+    }
+  }
+
+  private _unsubscribeFromElement(element: ForesightElement): void {
+    this._elementSubscriptions.get(element)?.()
+    this._elementSubscriptions.delete(element)
   }
 
   private applyOverlayToElement(element: ForesightElement, state: ForesightElementState): void {
@@ -355,6 +352,11 @@ export class ElementOverlays extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
+
+    for (const unsub of this._elementSubscriptions.values()) {
+      unsub()
+    }
+    this._elementSubscriptions.clear()
 
     // Clean up overlay attributes from all tracked elements
     for (const element of this.overlayMap.keys()) {

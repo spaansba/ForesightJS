@@ -9,7 +9,6 @@ import type {
   HitSlop,
   ForesightPoint,
   ScrollDirection,
-  UpdatedDataPropertyNames,
   UpdatedManagerSetting,
 } from "js.foresight"
 
@@ -35,15 +34,6 @@ interface ElementRegisteredPayload extends PayloadBase {
   meta: Record<string, unknown>
 }
 
-interface ElementOptionsUpdatedPayload extends PayloadBase {
-  type: "elementOptionsUpdated"
-  name: string
-  id: string
-  state: ForesightElementState
-  hitslop: HitSlop
-  meta: Record<string, unknown>
-}
-
 interface ElementUnregisteredEvent extends PayloadBase {
   type: "elementUnregistered"
   name: string
@@ -51,23 +41,6 @@ interface ElementUnregisteredEvent extends PayloadBase {
   state: ForesightElementState
   meta: Record<string, unknown>
   wasLastRegisteredElement: boolean
-}
-
-interface ElementReactivatedPayload extends PayloadBase {
-  type: "elementReactivated"
-  name: string
-  id: string
-  state: ForesightElementState
-  meta: Record<string, unknown>
-}
-
-interface ElementDataUpdatedPayload extends PayloadBase {
-  type: "elementDataUpdated"
-  name: string
-  updatedProps: UpdatedDataPropertyNames[]
-  state: ForesightElementState
-  isIntersecting: boolean
-  meta: Record<string, unknown>
 }
 
 interface CallbackInvokedPayload extends PayloadBase {
@@ -135,10 +108,7 @@ interface ManagerDataPayload extends PayloadBase {
 
 export type SerializedEventData =
   | ElementRegisteredPayload
-  | ElementOptionsUpdatedPayload
   | ElementUnregisteredEvent
-  | ElementReactivatedPayload
-  | ElementDataUpdatedPayload
   | CallbackInvokedPayload
   | CallbackCompletedPayload
   | MouseTrajectoryUpdatePayload
@@ -212,32 +182,6 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
               ? `${event.state.name} - ${getOrdinalSuffix(event.state.registerCount)} time`
               : event.state.name,
         }
-      case "elementOptionsUpdated":
-        return {
-          type: "elementOptionsUpdated",
-          name: event.state.name,
-          id: event.element.id || "",
-          state: event.state,
-          hitslop: event.state.elementBounds.hitSlop,
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          meta: event.state.meta,
-          logId: logId,
-          summary: event.state.name,
-        }
-      case "elementReactivated":
-        return {
-          type: "elementReactivated",
-          name: event.state.name,
-          id: event.element.id || "",
-          state: event.state,
-          localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
-          meta: event.state.meta,
-          logId: logId,
-          summary:
-            event.state.registerCount > 1
-              ? `${event.state.name} - ${getOrdinalSuffix(event.state.registerCount)} time`
-              : event.state.name,
-        }
       case "elementUnregistered":
         return {
           type: "elementUnregistered",
@@ -249,18 +193,6 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           logId: logId,
           summary: `${event.state.name} - ${event.unregisterReason}`,
-        }
-      case "elementDataUpdated":
-        return {
-          type: "elementDataUpdated",
-          name: event.state.name,
-          updatedProps: event.updatedProps || [],
-          state: event.state,
-          isIntersecting: event.state.isIntersectingWithViewport,
-          meta: event.state.meta,
-          localizedTimestamp: new Date().toLocaleTimeString(),
-          logId: logId,
-          summary: `${event.state.name} - ${event.updatedProps.toString()}`,
         }
       case "callbackInvoked":
         return {

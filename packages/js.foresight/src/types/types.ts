@@ -374,10 +374,7 @@ export type ManagerBooleanSettingKeys = {
 // This map connects the string name of an event to its data type
 export interface ForesightEventMap {
   elementRegistered: ElementRegisteredEvent
-  elementOptionsUpdated: ElementOptionsUpdatedEvent
-  elementReactivated: ElementReactivatedEvent
   elementUnregistered: ElementUnregisteredEvent
-  elementDataUpdated: ElementDataUpdatedEvent
   callbackInvoked: CallbackInvokedEvent
   callbackCompleted: CallbackCompletedEvent
   mouseTrajectoryUpdate: MouseTrajectoryUpdateEvent
@@ -388,10 +385,7 @@ export interface ForesightEventMap {
 
 export type ForesightEvent =
   | "elementRegistered"
-  | "elementOptionsUpdated"
-  | "elementReactivated"
   | "elementUnregistered"
-  | "elementDataUpdated"
   | "callbackInvoked"
   | "callbackCompleted"
   | "mouseTrajectoryUpdate"
@@ -407,18 +401,6 @@ export interface DeviceStrategyChangedEvent extends ForesightBaseEvent {
 
 export interface ElementRegisteredEvent extends ForesightBaseEvent {
   type: "elementRegistered"
-  element: ForesightElement
-  state: ForesightElementState
-}
-
-export interface ElementOptionsUpdatedEvent extends ForesightBaseEvent {
-  type: "elementOptionsUpdated"
-  element: ForesightElement
-  state: ForesightElementState
-}
-
-export interface ElementReactivatedEvent extends ForesightBaseEvent {
-  type: "elementReactivated"
   element: ForesightElement
   state: ForesightElementState
 }
@@ -440,15 +422,6 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
  * - any other string
  */
 export type ElementUnregisteredReason = "disconnected" | "apiCall" | "devtools" | (string & {})
-
-export interface ElementDataUpdatedEvent extends Omit<ForesightBaseEvent, "timestamp"> {
-  type: "elementDataUpdated"
-  element: ForesightElement
-  state: ForesightElementState
-  updatedProps: UpdatedDataPropertyNames[]
-}
-
-export type UpdatedDataPropertyNames = "bounds" | "visibility"
 
 export interface CallbackInvokedEvent extends ForesightBaseEvent {
   type: "callbackInvoked"

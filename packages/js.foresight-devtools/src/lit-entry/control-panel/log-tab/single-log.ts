@@ -114,11 +114,8 @@ export class SingleLog extends LitElement {
   private getLogTypeColor(logType: string): string {
     const colorMap: Record<string, string> = {
       elementRegistered: "#2196f3",
-      elementOptionsUpdated: "#2196f3",
-      elementReactivated: "#ff9800",
       callbackInvoked: "#00bcd4",
       callbackCompleted: "#4caf50",
-      elementDataUpdated: "#ffc107",
       elementUnregistered: "#ff9800",
       managerSettingsChanged: "#f44336",
       mouseTrajectoryUpdate: "#78909c",
@@ -132,10 +129,7 @@ export class SingleLog extends LitElement {
   private getEventDisplayName(eventType: string): string {
     const eventNames: Record<string, string> = {
       elementRegistered: "Registered",
-      elementOptionsUpdated: "Updated",
-      elementReactivated: "Reactivated",
       elementUnregistered: "Unregistered",
-      elementDataUpdated: "Data Updated",
       callbackInvoked: "Invoked",
       callbackCompleted: "Completed",
       mouseTrajectoryUpdate: "Mouse",

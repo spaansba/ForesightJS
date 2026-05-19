@@ -20,7 +20,7 @@ import type { MaybeElement } from "../types"
 import { resolveElement } from "../utils/resolveElement"
 
 export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
-  /** Template ref function — bind to an element with `:ref="setRef"`. */
+  /** Template ref function - bind to an element with `:ref="setRef"`. */
   setRef: (el: MaybeElement) => void
 }
 
@@ -95,7 +95,7 @@ export const useForesight = (
     }
   }
 
-  // Watch options for changes — patch without re-registering.
+  // Watch options for changes - patch without re-registering.
   // Skip when the raw reference hasn't changed (e.g. getter returning same object).
   watch(
     () => toValue(options),

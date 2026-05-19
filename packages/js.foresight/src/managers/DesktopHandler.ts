@@ -9,7 +9,6 @@ import type {
   ForesightElementInternal,
   ForesightElementState,
   TrajectoryPositions,
-  UpdatedDataPropertyNames,
 } from "../types/types"
 import { CircularBuffer } from "../helpers/CircularBuffer"
 import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
@@ -87,7 +86,7 @@ export class DesktopHandler extends ElementObservingModule {
         this.checkForMouseHover(entry)
       }
 
-      // Must run AFTER handleScrollPrefetch — scroll direction is derived from
+      // Must run AFTER handleScrollPrefetch - scroll direction is derived from
       // the difference between the old and new originalRect.
       this.handlePositionChangeDataUpdates(entry, positionEntry)
     }
@@ -115,13 +114,11 @@ export class DesktopHandler extends ElementObservingModule {
     entry: ForesightElementInternal,
     positionEntry: PositionObserverEntry
   ) => {
-    const updatedProps: UpdatedDataPropertyNames[] = []
     const isNowIntersecting = positionEntry.isIntersecting
     const state = entry.state
     const patch: Partial<ForesightElementState> = {}
 
     if (state.isIntersectingWithViewport !== isNowIntersecting) {
-      updatedProps.push("visibility")
       patch.isIntersectingWithViewport = isNowIntersecting
     }
 
@@ -129,7 +126,6 @@ export class DesktopHandler extends ElementObservingModule {
       isNowIntersecting &&
       !areRectsEqual(positionEntry.boundingClientRect, state.elementBounds.originalRect)
     ) {
-      updatedProps.push("bounds")
       patch.elementBounds = {
         hitSlop: state.elementBounds.hitSlop,
         originalRect: positionEntry.boundingClientRect,
@@ -140,20 +136,11 @@ export class DesktopHandler extends ElementObservingModule {
       }
     }
 
-    if (updatedProps.length === 0) {
+    if (Object.keys(patch).length === 0) {
       return
     }
 
-    const next = this.updateElementState(entry, patch)
-
-    if (this.hasListeners("elementDataUpdated")) {
-      this.emit({
-        type: "elementDataUpdated",
-        element: entry.element,
-        state: next,
-        updatedProps,
-      })
-    }
+    this.updateElementState(entry, patch)
   }
 
   protected onDisconnect(): void {

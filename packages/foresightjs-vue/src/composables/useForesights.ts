@@ -20,7 +20,7 @@ import { resolveElement } from "../utils/resolveElement"
 import type { MaybeElement } from "../types"
 
 export type UseForesightSlot = Readonly<ForesightElementState> & {
-  /** Template ref function — bind to an element with `:ref="slot.setRef"`. */
+  /** Template ref function - bind to an element with `:ref="slot.setRef"`. */
   setRef: (el: MaybeElement) => void
 }
 
@@ -38,7 +38,7 @@ type Slot = {
  *   The array length determines the number of slots.
  *
  * Returns a reactive array of `UseForesightSlot` objects. Each slot contains:
- * - `setRef` — a template ref function to bind an element (`:ref="slot.setRef"`)
+ * - `setRef` - a template ref function to bind an element (`:ref="slot.setRef"`)
  * - All `ForesightElementState` properties (`isPredicted`, `hitCount`, etc.)
  *
  * @example

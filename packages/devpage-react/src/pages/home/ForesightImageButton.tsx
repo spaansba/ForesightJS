@@ -83,7 +83,7 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
           <Row label="hits" value={hitCount} />
           <Row label="predicted" value={isPredicted ? "yes" : "no"} on={isPredicted} />
           <Row label="cb running" value={isCallbackRunning ? "yes" : "no"} on={isCallbackRunning} />
-          <Row label="status" value={status ?? "—"} />
+          <Row label="status" value={status ?? "-"} />
         </dl>
       </div>
     </button>

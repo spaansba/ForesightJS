@@ -135,21 +135,18 @@ The return will look something like this:
       "elementUnregistered": []
     },
     "2": {
-      "elementDataUpdated": []
-    },
-    "3": {
       "mouseTrajectoryUpdate": []
     },
-    "4": {
+    "3": {
       "scrollTrajectoryUpdate": []
     },
-    "5": {
+    "4": {
       "managerSettingsChanged": []
     },
-    "6": {
+    "5": {
       "callbackInvoked": []
     },
-    "7": {
+    "6": {
       "callbackCompleted": []
     }
   },

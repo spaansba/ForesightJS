@@ -19,7 +19,7 @@ import StaticForesightTargets from "./partials/StaticForesightTargets.vue"
     <h2 class="text-lg font-medium mt-8 mb-2">Static targets</h2>
     <p class="mb-4 text-sm text-gray-600">
       Bind elements via <code class="text-xs bg-gray-100 px-1 py-0.5">:ref="slots[i].setRef"</code>
-      — no separate ref management needed.
+      - no separate ref management needed.
     </p>
     <section class="border-t border-gray-300 py-8">
       <StaticForesightTargets />

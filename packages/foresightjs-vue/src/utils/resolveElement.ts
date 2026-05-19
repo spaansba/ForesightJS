@@ -16,7 +16,7 @@ export const resolveElement = <T extends MaybeElement>(target: T): ResolvedEleme
   }
 
   const el = (target as ComponentPublicInstance).$el
-  // Filter comment nodes — a component with v-if="false" or empty template
+  // Filter comment nodes - a component with v-if="false" or empty template
   // leaves a #comment placeholder that has no size or position.
   if (el instanceof Node && el.nodeType === Node.COMMENT_NODE) {
     return null

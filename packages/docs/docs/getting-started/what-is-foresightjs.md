@@ -79,7 +79,7 @@ ForesightJS is designed for developers who want to squeeze every drop of perform
 
 #### Problem 1: On-Hover Prefetching Still Has Latency
 
-Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires—time that could be used for prefetching.
+Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires-time that could be used for prefetching.
 
 #### Problem 2: Viewport-Based Prefetching is Wasteful
 

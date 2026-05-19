@@ -24,7 +24,7 @@ const ForesightButtonVisibility = ({ name }: ForesightButtonVisibilityProps) => 
         }}
       />
       <p className="text-xs text-gray-600">
-        Toggles via CSS only — MutationObserver should not unregister.
+        Toggles via CSS only - MutationObserver should not unregister.
       </p>
     </article>
   )

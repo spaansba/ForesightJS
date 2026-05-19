@@ -132,7 +132,7 @@ const EMPTY_DOM_RECT: DOMRectReadOnly = {
  *
  * Used in two situations:
  * 1. The manager refuses to register the element (touch device, limited connection,
- *    etc.) — pass `isLimitedConnection` to reflect that.
+ *    etc.) - pass `isLimitedConnection` to reflect that.
  * 2. Framework wrappers (React, Vue) need an initial snapshot before `register()`
  *    has run. `register()` requires a real DOM element, which only exists after
  *    the consumer's first render commits, so the wrapper returns this snapshot

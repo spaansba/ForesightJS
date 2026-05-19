@@ -23,7 +23,7 @@ defineProps<{
     </div>
     <div class="flex justify-between px-2 py-1">
       <span class="text-gray-500">status</span>
-      <span class="text-gray-900">{{ status ?? "—" }}</span>
+      <span class="text-gray-900">{{ status ?? "-" }}</span>
     </div>
   </div>
 </template>

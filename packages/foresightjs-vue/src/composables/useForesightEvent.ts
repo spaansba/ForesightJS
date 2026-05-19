@@ -6,7 +6,7 @@ type ListenerArg<K extends ForesightEvent> = MaybeRef<(event: ForesightEventMap[
 /**
  * Subscribes to a ForesightManager event for the lifetime of the calling scope.
  *
- * The listener is always invoked with its latest reference — no stale closures
+ * The listener is always invoked with its latest reference - no stale closures
  * when passed as a `ref()`. Changing `eventType` automatically tears down the
  * previous subscription and creates a new one; changing only the `listener`
  * does not re-subscribe.

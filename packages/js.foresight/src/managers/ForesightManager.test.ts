@@ -4,6 +4,7 @@ import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
+  ForesightRegisterOptions,
 } from "../types/types"
 
 // Mock position-observer before importing ForesightManager
@@ -93,7 +94,9 @@ const runReactivationCycle = async (
   expectState(entry.state, { isPredicted: false, isCallbackRunning: false, isActive: true })
 }
 
-const setupBasicTest = (registerOpts: Record<string, unknown> = {}) => {
+const setupBasicTest = (
+  registerOpts: Partial<Omit<ForesightRegisterOptions, "element" | "callback">> = {}
+) => {
   const manager = ForesightManager.initialize()
   const element = createMockElement()
   const result = manager.register({ element, callback: vi.fn(), ...registerOpts })
@@ -105,13 +108,11 @@ const setupBasicTest = (registerOpts: Record<string, unknown> = {}) => {
 const setupReactivationTest = (reactivateAfter: number = 5000) => {
   const manager = ForesightManager.initialize()
   const element = createMockElement()
-  const reactivatedListener = vi.fn()
 
-  manager.addEventListener("elementReactivated", reactivatedListener)
   manager.register({ element, callback: vi.fn(), reactivateAfter })
   const entry = getEntry(manager, element)
 
-  return { manager, element, entry, reactivatedListener }
+  return { manager, element, entry }
 }
 
 const setupReactivationAfterFire = async (reactivateAfter: number) => {
@@ -631,7 +632,7 @@ describe("ForesightManager", () => {
 
   describe("Reactivation", () => {
     it("should reactivate element after timeout", async () => {
-      const { manager, entry, reactivatedListener } = setupReactivationTest(5000)
+      const { manager, entry } = setupReactivationTest(5000)
 
       fire(manager, entry)
 
@@ -639,23 +640,17 @@ describe("ForesightManager", () => {
       await vi.advanceTimersByTimeAsync(100)
 
       expect(entry.state.isActive).toBe(false)
-      expect(reactivatedListener).not.toHaveBeenCalled()
 
       // Now advance past reactivateAfter
       await vi.advanceTimersByTimeAsync(5000)
 
       expect(entry.state.isActive).toBe(true)
-      expect(reactivatedListener).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "elementReactivated" })
-      )
     })
 
     it("should not reactivate if reactivateAfter is Infinity", async () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
-      const reactivatedListener = vi.fn()
 
-      manager.addEventListener("elementReactivated", reactivatedListener)
       manager.register({ element, callback: vi.fn(), reactivateAfter: Infinity })
 
       const entry = getEntry(manager, element)
@@ -665,7 +660,6 @@ describe("ForesightManager", () => {
       await vi.advanceTimersByTimeAsync(100000)
 
       expect(entry.state.isActive).toBe(false)
-      expect(reactivatedListener).not.toHaveBeenCalled()
     })
 
     it("should support manual reactivation", async () => {
@@ -1237,7 +1231,7 @@ describe("ForesightManager", () => {
       fire(manager, entry)
       await vi.runAllTimersAsync()
 
-      // Resubscribe — getSnapshot must reflect state that changed while unsubscribed
+      // Resubscribe - getSnapshot must reflect state that changed while unsubscribed
       const listener = vi.fn()
       result.subscribe(listener)
 
@@ -1252,7 +1246,7 @@ describe("ForesightManager", () => {
 
       manager.unregister(element)
 
-      // The unregister itself triggers a state update — listener is notified
+      // The unregister itself triggers a state update - listener is notified
       const callCount = listener.mock.calls.length
       expect(callCount).toBeGreaterThan(0)
 
@@ -1272,6 +1266,94 @@ describe("ForesightManager", () => {
       // Both results should read from the same internal entry
       expect(result2.getSnapshot().registerCount).toBe(2)
       expect(result1.getSnapshot().registerCount).toBe(2)
+    })
+  })
+
+  describe("subscribeToElement", () => {
+    it("should return undefined for an unregistered element", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result = manager.subscribeToElement(element, vi.fn())
+      expect(result).toBeUndefined()
+    })
+
+    it("should notify listener when element state changes", () => {
+      const { manager, element, entry } = setupBasicTest()
+      const listener = vi.fn()
+
+      manager.subscribeToElement(element, listener)
+
+      fire(manager, entry)
+      expect(listener).toHaveBeenCalled()
+    })
+
+    it("should stop notifying after unsubscribe", async () => {
+      const { manager, element, entry } = setupBasicTest()
+      const listener = vi.fn()
+
+      const unsubscribe = manager.subscribeToElement(element, listener)!
+      unsubscribe()
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it("should allow reading latest state via registeredElements inside listener", () => {
+      const { manager, element, entry } = setupBasicTest()
+      let capturedState: ForesightElementState | undefined
+
+      manager.subscribeToElement(element, () => {
+        capturedState = manager.registeredElements.get(element)
+      })
+
+      fire(manager, entry)
+
+      expect(capturedState).toBeDefined()
+      expect(capturedState!.isPredicted).toBe(true)
+    })
+
+    it("should clean up subscribers when element is unregistered", () => {
+      const { manager, element } = setupBasicTest()
+      const listener = vi.fn()
+
+      manager.subscribeToElement(element, listener)
+
+      manager.unregister(element)
+
+      // Listener is called during unregister (state update to isRegistered: false)
+      const callCount = listener.mock.calls.length
+      expect(callCount).toBeGreaterThan(0)
+
+      // After unregister, subscribing again should return undefined
+      const result = manager.subscribeToElement(element, vi.fn())
+      expect(result).toBeUndefined()
+    })
+
+    it("should support multiple independent subscribers", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
+
+      const unsub1 = manager.subscribeToElement(element, listener1)!
+      manager.subscribeToElement(element, listener2)
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(listener1).toHaveBeenCalled()
+      expect(listener2).toHaveBeenCalled()
+
+      const count1 = listener1.mock.calls.length
+      unsub1()
+
+      // Trigger another state change via manual reactivation
+      manager.reactivate(element)
+
+      expect(listener1).toHaveBeenCalledTimes(count1)
+      expect(listener2.mock.calls.length).toBeGreaterThan(count1)
     })
   })
 
@@ -1354,44 +1436,40 @@ describe("ForesightManager", () => {
     })
 
     it("should reschedule pending reactivation timeout when reactivateAfter changes", async () => {
-      const { manager, element, entry, reactivatedListener } =
-        await setupReactivationAfterFire(5000)
+      const { manager, element, entry } = await setupReactivationAfterFire(5000)
 
       manager.updateElementOptions(element, { reactivateAfter: 500 })
       expect(entry.state.reactivateAfter).toBe(500)
 
-      // Original 5000ms timer should have been cleared
+      // Original 5000ms timer should have been cleared, new 500ms timer fires
       await vi.advanceTimersByTimeAsync(500)
-      expect(reactivatedListener).toHaveBeenCalledTimes(1)
       expect(entry.state.isActive).toBe(true)
     })
 
     it("should cancel reactivation when updated with Infinity", async () => {
-      const { manager, element, entry, reactivatedListener } =
-        await setupReactivationAfterFire(2000)
+      const { manager, element, entry } = await setupReactivationAfterFire(2000)
 
       manager.updateElementOptions(element, { reactivateAfter: Infinity })
 
       await vi.advanceTimersByTimeAsync(10000)
-      expect(reactivatedListener).not.toHaveBeenCalled()
       expect(entry.state.isActive).toBe(false)
     })
 
     it("should not reschedule when there is no pending reactivation timeout", async () => {
-      const { manager, element, reactivatedListener } = setupReactivationTest(5000)
+      const { manager, element, entry } = setupReactivationTest(5000)
 
       // Element is still active (no callback fired yet), no pending timeout
+      expect(entry.state.isActive).toBe(true)
       manager.updateElementOptions(element, { reactivateAfter: 100 })
 
-      // No spurious reactivation should happen
+      // No spurious reactivation should happen - element should stay active (never deactivated)
       await vi.advanceTimersByTimeAsync(200)
-      expect(reactivatedListener).not.toHaveBeenCalled()
+      expect(entry.state.isActive).toBe(true)
     })
 
     it("should schedule reactivation when updated from Infinity to finite while predicted", async () => {
       // Register with Infinity (no reactivation), then fire callback
-      const { manager, element, entry, reactivatedListener } =
-        await setupReactivationAfterFire(Infinity)
+      const { manager, element, entry } = await setupReactivationAfterFire(Infinity)
 
       // Element is predicted, no timeout exists
       expect(entry.state.isPredicted).toBe(true)
@@ -1402,14 +1480,12 @@ describe("ForesightManager", () => {
 
       // Timeout should now be scheduled and fire after 1000ms
       await vi.advanceTimersByTimeAsync(1000)
-      expect(reactivatedListener).toHaveBeenCalledTimes(1)
       expect(entry.state.isActive).toBe(true)
       expect(entry.state.isPredicted).toBe(false)
     })
 
     it("should not clear pending reactivation timeout when reactivateAfter is unchanged", async () => {
-      const { manager, element, entry, reactivatedListener } =
-        await setupReactivationAfterFire(2000)
+      const { manager, element, entry } = await setupReactivationAfterFire(2000)
 
       // Element is predicted with a pending reactivation timeout
       expect(entry.state.isPredicted).toBe(true)
@@ -1424,7 +1500,6 @@ describe("ForesightManager", () => {
 
       // After the original timeout period, element should reactivate
       await vi.advanceTimersByTimeAsync(2000)
-      expect(reactivatedListener).toHaveBeenCalledTimes(1)
       expect(entry.state.isActive).toBe(true)
       expect(entry.state.isPredicted).toBe(false)
     })
