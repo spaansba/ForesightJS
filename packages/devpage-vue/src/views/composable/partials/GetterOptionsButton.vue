@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue"
+import { ref } from "vue"
 import { useForesight } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
 
-const btnRef = useTemplateRef<HTMLButtonElement>("btn")
 const reactivateAfter = ref(Infinity)
 
-const { isPredicted, hitCount, isCallbackRunning, status } = useForesight(btnRef, () => ({
+const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(() => ({
   callback: () => console.log("Getter prefetch"),
   name: "getter",
   reactivateAfter: reactivateAfter.value,
@@ -25,7 +24,7 @@ const toggle = () => {
       {{ reactivateAfter === Infinity ? "off" : `${reactivateAfter}ms` }}
     </p>
     <button
-      ref="btn"
+      :ref="setRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

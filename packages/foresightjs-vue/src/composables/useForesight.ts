@@ -2,12 +2,13 @@ import {
   computed,
   reactive,
   readonly,
+  toRaw,
   toRefs,
   toValue,
-  useTemplateRef,
-  watch,
   onScopeDispose,
+  watch,
   type MaybeRefOrGetter,
+  type ToRefs,
 } from "vue"
 import {
   ForesightManager,
@@ -16,28 +17,40 @@ import {
   type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { MaybeElementRef } from "../types"
+import type { MaybeElement } from "../types"
 import { resolveElement } from "../utils/resolveElement"
+
+export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
+  /** Template ref function — bind to an element with `:ref="setRef"`. */
+  setRef: (el: MaybeElement) => void
+}
 
 /**
  * Registers a single element with ForesightManager.
  *
- * @param target - Accepts the element target as a string, ref, getter, or raw element.
  * @param options - Registration options as a plain object, ref, or getter.
  *
- * The composable watches the target and automatically registers when it becomes
- * available, unregisters when removed, and handles element swaps.
+ * Returns reactive refs for all element state (`isPredicted`, `hitCount`, etc.)
+ * plus a `setRef` function to bind the target element.
+ *
+ * @example
+ * ```ts
+ * const { isPredicted, setRef } = useForesight({
+ *   callback: () => prefetch('/about'),
+ *   name: 'about-link',
+ * })
+ * ```
+ * ```vue
+ * <a :ref="setRef" href="/about">About</a>
+ * ```
  */
 export const useForesight = (
-  target: MaybeElementRef | string,
   options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
-) => {
-  const resolvedTarget: MaybeElementRef =
-    typeof target === "string" ? useTemplateRef(target) : target
-
+): UseForesightReturn => {
   const resolvedOptions = computed(() => toValue(options))
   const state = reactive(createUnregisteredSnapshot(false))
 
+  let currentElement: Element | null = null
   let registerResults: ForesightRegisterResult | null = null
   let unsubscribe: (() => void) | null = null
 
@@ -46,15 +59,11 @@ export const useForesight = (
   }
 
   const registerElement = (element: Element) => {
-    const resolved = resolvedOptions.value
-
+    const opts = resolvedOptions.value
     registerResults = ForesightManager.instance.register({
+      ...opts,
       element,
       callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
-      hitSlop: resolved.hitSlop,
-      name: resolved.name,
-      meta: resolved.meta,
-      reactivateAfter: resolved.reactivateAfter,
     })
 
     updateState(registerResults.getSnapshot())
@@ -73,37 +82,40 @@ export const useForesight = (
     updateState(createUnregisteredSnapshot(false))
   }
 
-  // Watch the target element. flush:'post' ensures the DOM is updated.
-  watch(
-    () => resolveElement(toValue(resolvedTarget)),
-    (newEl, oldEl) => {
-      if (oldEl && oldEl !== newEl) {
-        unregisterElement()
-      }
+  const setRef = (el: MaybeElement) => {
+    const resolved = resolveElement(el) ?? null
 
-      if (newEl && newEl !== oldEl) {
-        registerElement(newEl)
-      }
-    },
-    { flush: "post" }
-  )
+    if (resolved === currentElement) {
+      return
+    }
 
-  // Watch options for changes — patch without re-registering
+    if (currentElement && registerResults) {
+      unregisterElement()
+    }
+
+    currentElement = resolved
+
+    if (resolved) {
+      registerElement(resolved)
+    }
+  }
+
+  // Watch options for changes — patch without re-registering.
+  // Skip when the raw reference hasn't changed (e.g. getter returning same object).
   watch(
     resolvedOptions,
-    () => {
-      const el = resolveElement(toValue(resolvedTarget))
-      if (!el || !registerResults) {
+    (newOpts, oldOpts) => {
+      if (oldOpts && toRaw(newOpts) === toRaw(oldOpts)) {
         return
       }
 
-      const resolved = resolvedOptions.value
-      ForesightManager.instance.updateElementOptions(el, {
+      if (!currentElement || !registerResults) {
+        return
+      }
+
+      ForesightManager.instance.updateElementOptions(currentElement, {
+        ...newOpts,
         callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
-        hitSlop: resolved.hitSlop,
-        name: resolved.name,
-        meta: resolved.meta,
-        reactivateAfter: resolved.reactivateAfter,
       })
     },
     { flush: "post" }
@@ -113,5 +125,5 @@ export const useForesight = (
     unregisterElement()
   })
 
-  return { ...toRefs(readonly(state)) }
+  return { ...toRefs(readonly(state)), setRef }
 }

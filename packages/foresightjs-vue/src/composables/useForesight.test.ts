@@ -1,12 +1,4 @@
-import {
-  defineComponent,
-  h,
-  nextTick,
-  ref,
-  useTemplateRef,
-  type ComponentPublicInstance,
-  type Ref,
-} from "vue"
+import { defineComponent, h, nextTick, ref, type ComponentPublicInstance } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
@@ -23,19 +15,17 @@ beforeEach(() => {
 })
 
 describe("useForesight", () => {
-  it("registers the element on mount using a useTemplateRef target", async () => {
+  it("registers the element when setRef is bound via :ref", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-
-        return useForesight(btnRef, {
+        return useForesight({
           callback: cb,
           name: "test-btn",
         })
       },
       render() {
-        return h("button", { ref: "myBtn", "data-testid": "el" })
+        return h("button", { ref: this.setRef, "data-testid": "el" })
       },
     })
 
@@ -48,41 +38,17 @@ describe("useForesight", () => {
     expect(arg.name).toBe("test-btn")
   })
 
-  it("accepts a plain ref() as target", async () => {
-    const cb = vi.fn()
-    const Component = defineComponent({
-      setup() {
-        const el = ref<HTMLElement | null>(null)
-        const result = useForesight(el, { callback: cb, name: "raw-ref" })
-
-        return { ...result, el }
-      },
-      render() {
-        return h("button", { ref: "el", "data-testid": "el" })
-      },
-    })
-
-    mount(Component, { attachTo: document.body })
-    await nextTick()
-
-    expect(registerSpy).toHaveBeenCalledTimes(1)
-    const arg = registerSpy.mock.calls[0][0]
-    expect(arg.name).toBe("raw-ref")
-  })
-
   it("accepts a getter as options (reactive deps tracked)", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-
-        return useForesight(btnRef, () => ({
+        return useForesight(() => ({
           callback: cb,
           name: "getter-opts",
         }))
       },
       render() {
-        return h("button", { ref: "myBtn", "data-testid": "el" })
+        return h("button", { ref: this.setRef, "data-testid": "el" })
       },
     })
 
@@ -94,12 +60,10 @@ describe("useForesight", () => {
     expect(arg.name).toBe("getter-opts")
   })
 
-  it("does not register when target resolves to null", async () => {
+  it("does not register when setRef is never called", async () => {
     const Component = defineComponent({
       setup() {
-        const el = ref<HTMLElement | null>(null)
-
-        return useForesight(el, { callback: vi.fn() })
+        return useForesight({ callback: vi.fn() })
       },
       render() {
         return h("span", "no ref here")
@@ -115,12 +79,10 @@ describe("useForesight", () => {
   it("unregisters on unmount", async () => {
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-
-        return useForesight(btnRef, { callback: vi.fn() })
+        return useForesight({ callback: vi.fn() })
       },
       render() {
-        return h("button", { ref: "myBtn" })
+        return h("button", { ref: this.setRef })
       },
     })
 
@@ -131,55 +93,26 @@ describe("useForesight", () => {
     expect(unregisterSpy).toHaveBeenCalledTimes(1)
   })
 
-  it("registers when target transitions from null to element", async () => {
+  it("unregisters when element is removed (setRef receives null)", async () => {
     const Component = defineComponent({
       setup() {
-        const el = ref<HTMLElement | null>(null)
-        const result = useForesight(el, { callback: vi.fn(), name: "delayed" })
+        const show = ref(true)
+        const result = useForesight({ callback: vi.fn(), name: "removable" })
 
-        return { ...result, el }
+        return { ...result, show }
       },
       render() {
-        return h("div", [h("button", { "data-testid": "btn" })])
+        return this.show
+          ? h("button", { ref: this.setRef, "data-testid": "btn" })
+          : h("span", "gone")
       },
     })
 
     const wrapper = mount(Component, { attachTo: document.body })
     await nextTick()
-
-    expect(registerSpy).not.toHaveBeenCalled()
-
-    // Simulate target becoming available
-    wrapper.vm.el = wrapper.find("[data-testid=btn]").element as HTMLElement
-    await nextTick()
-
-    expect(registerSpy).toHaveBeenCalledTimes(1)
-    expect(registerSpy.mock.calls[0][0].name).toBe("delayed")
-  })
-
-  it("unregisters when target transitions from element to null", async () => {
-    const Component = defineComponent({
-      setup() {
-        const el = ref<HTMLElement | null>(null)
-        const result = useForesight(el, { callback: vi.fn(), name: "removable" })
-
-        return { ...result, el }
-      },
-      render() {
-        return h("div", [h("button", { "data-testid": "btn" })])
-      },
-    })
-
-    const wrapper = mount(Component, { attachTo: document.body })
-    await nextTick()
-
-    // Assign element
-    wrapper.vm.el = wrapper.find("[data-testid=btn]").element as HTMLElement
-    await nextTick()
     expect(registerSpy).toHaveBeenCalledTimes(1)
 
-    // Remove element
-    wrapper.vm.el = null
+    wrapper.vm.show = false
     await nextTick()
     expect(unregisterSpy).toHaveBeenCalledTimes(1)
   })
@@ -188,12 +121,10 @@ describe("useForesight", () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-
-        return useForesight(btnRef, { callback: cb })
+        return useForesight({ callback: cb })
       },
       render() {
-        return h("button", { ref: "myBtn" })
+        return h("button", { ref: this.setRef })
       },
     })
 
@@ -209,10 +140,7 @@ describe("useForesight", () => {
   it("returns flat refs with unregistered initial state", () => {
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-        const { isRegistered } = useForesight(btnRef, { callback: vi.fn() })
-
-        return { isRegistered }
+        return useForesight({ callback: vi.fn() })
       },
       render() {
         return h("span", {
@@ -229,14 +157,11 @@ describe("useForesight", () => {
   it("reflects manager state updates pushed through subscribe", async () => {
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
-        const { isPredicted } = useForesight(btnRef, { callback: vi.fn() })
-
-        return { isPredicted }
+        return useForesight({ callback: vi.fn() })
       },
       render() {
         return h("button", {
-          ref: "myBtn",
+          ref: this.setRef,
           "data-testid": "el",
           "data-predicted": this.isPredicted,
         })
@@ -261,9 +186,8 @@ describe("useForesight", () => {
 
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
         const cb = ref<ForesightCallback>(cb1)
-        const result = useForesight(btnRef, () => ({
+        const result = useForesight(() => ({
           name: "x",
           callback: cb.value,
         }))
@@ -271,7 +195,7 @@ describe("useForesight", () => {
         return { ...result, cb }
       },
       render() {
-        return h("button", { ref: "myBtn", "data-testid": "el" })
+        return h("button", { ref: this.setRef, "data-testid": "el" })
       },
     })
 
@@ -292,9 +216,8 @@ describe("useForesight", () => {
   it("patches options on the same element without unregistering", async () => {
     const Component = defineComponent({
       setup() {
-        const btnRef = useTemplateRef<HTMLButtonElement>("myBtn")
         const name = ref("first")
-        const result = useForesight(btnRef, () => ({
+        const result = useForesight(() => ({
           name: name.value,
           callback: vi.fn(),
         }))
@@ -302,7 +225,7 @@ describe("useForesight", () => {
         return { ...result, name }
       },
       render() {
-        return h("button", { ref: "myBtn", "data-testid": "el" })
+        return h("button", { ref: this.setRef, "data-testid": "el" })
       },
     })
 
@@ -321,74 +244,20 @@ describe("useForesight", () => {
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 
-  describe("string target (useTemplateRef shorthand)", () => {
-    it("registers when passing a string ref name", async () => {
-      const cb = vi.fn()
+  describe("element swaps via setRef", () => {
+    it("re-registers when setRef receives a different element", async () => {
       const Component = defineComponent({
         setup() {
-          return useForesight("myBtn", { callback: cb, name: "string-ref" })
-        },
-        render() {
-          return h("button", { ref: "myBtn", "data-testid": "el" })
-        },
-      })
+          const useSpan = ref(false)
+          const result = useForesight({ callback: vi.fn(), name: "swap" })
 
-      mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(registerSpy).toHaveBeenCalledTimes(1)
-      const arg = registerSpy.mock.calls[0][0]
-      expect(arg.element).toBeInstanceOf(HTMLButtonElement)
-      expect(arg.name).toBe("string-ref")
-    })
-
-    it("does not register when string ref has no matching template element", async () => {
-      const Component = defineComponent({
-        setup() {
-          return useForesight("nonexistent", { callback: vi.fn() })
-        },
-        render() {
-          return h("button", { "data-testid": "el" })
-        },
-      })
-
-      mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(registerSpy).not.toHaveBeenCalled()
-    })
-
-    it("unregisters on unmount with string target", async () => {
-      const Component = defineComponent({
-        setup() {
-          return useForesight("myBtn", { callback: vi.fn() })
-        },
-        render() {
-          return h("button", { ref: "myBtn" })
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      wrapper.unmount()
-      expect(unregisterSpy).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe("dynamic refs (element swaps)", () => {
-    it("re-registers when ref swaps to a different element", async () => {
-      const Component = defineComponent({
-        setup() {
-          const el = ref<HTMLElement | null>(null)
-          const result = useForesight(el, { callback: vi.fn(), name: "swap" })
-
-          return { ...result, el }
+          return { ...result, useSpan }
         },
         render() {
           return h("div", [
-            h("button", { "data-testid": "btn-a" }),
-            h("span", { "data-testid": "btn-b" }),
+            this.useSpan
+              ? h("span", { ref: this.setRef, "data-testid": "b" })
+              : h("button", { ref: this.setRef, "data-testid": "a" }),
           ])
         },
       })
@@ -396,91 +265,20 @@ describe("useForesight", () => {
       const wrapper = mount(Component, { attachTo: document.body })
       await nextTick()
 
-      // Assign first element
-      wrapper.vm.el = wrapper.find("[data-testid=btn-a]").element as HTMLElement
-      await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      expect(registerSpy.mock.calls[0][0].element).toBe(wrapper.find("[data-testid=btn-a]").element)
+      expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(HTMLButtonElement)
 
-      // Swap to different element
-      wrapper.vm.el = wrapper.find("[data-testid=btn-b]").element as HTMLElement
+      wrapper.vm.useSpan = true
       await nextTick()
 
       expect(unregisterSpy).toHaveBeenCalledTimes(1)
       expect(registerSpy).toHaveBeenCalledTimes(2)
-      expect(registerSpy.mock.calls[1][0].element).toBe(wrapper.find("[data-testid=btn-b]").element)
-    })
-
-    it("handles rapid element swaps correctly", async () => {
-      const Component = defineComponent({
-        setup() {
-          const el = ref<HTMLElement | null>(null)
-          const result = useForesight(el, { callback: vi.fn(), name: "rapid" })
-
-          return { ...result, el }
-        },
-        render() {
-          return h("div", [
-            h("button", { "data-testid": "a" }),
-            h("span", { "data-testid": "b" }),
-            h("div", { "data-testid": "c" }),
-          ])
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      // Assign, then immediately swap before next tick
-      wrapper.vm.el = wrapper.find("[data-testid=a]").element as HTMLElement
-      wrapper.vm.el = wrapper.find("[data-testid=b]").element as HTMLElement
-      wrapper.vm.el = wrapper.find("[data-testid=c]").element as HTMLElement
-      await nextTick()
-
-      // flush:'post' means only the final value is observed
-      expect(registerSpy).toHaveBeenCalledTimes(1)
-      expect(registerSpy.mock.calls[0][0].element).toBe(wrapper.find("[data-testid=c]").element)
-    })
-
-    it("works with a getter that returns different elements", async () => {
-      const Component = defineComponent({
-        setup() {
-          const which = ref<"a" | "b">("a")
-          const elA = ref<HTMLElement | null>(null)
-          const elB = ref<HTMLElement | null>(null)
-          const result = useForesight(() => (which.value === "a" ? elA.value : elB.value), {
-            callback: vi.fn(),
-            name: "getter-swap",
-          })
-
-          return { ...result, which, elA, elB }
-        },
-        render() {
-          return h("div", [
-            h("button", { ref: "elA", "data-testid": "a" }),
-            h("span", { ref: "elB", "data-testid": "b" }),
-          ])
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(registerSpy).toHaveBeenCalledTimes(1)
-      expect(registerSpy.mock.calls[0][0].element).toBe(wrapper.find("[data-testid=a]").element)
-
-      // Switch to element B
-      wrapper.vm.which = "b"
-      await nextTick()
-
-      expect(unregisterSpy).toHaveBeenCalledTimes(1)
-      expect(registerSpy).toHaveBeenCalledTimes(2)
-      expect(registerSpy.mock.calls[1][0].element).toBe(wrapper.find("[data-testid=b]").element)
+      expect(registerSpy.mock.calls[1][0].element).toBeInstanceOf(HTMLSpanElement)
     })
   })
 
   describe("comment node filtering", () => {
-    it("does not register when component ref resolves to a comment node", async () => {
+    it("does not register when setRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({
         props: { show: { type: Boolean, default: false } },
         render() {
@@ -491,16 +289,13 @@ describe("useForesight", () => {
       const Component = defineComponent({
         components: { ChildComponent },
         setup() {
-          const childRef = ref<InstanceType<typeof ChildComponent> | null>(null)
-          const result = useForesight(childRef as Ref<ComponentPublicInstance | null>, {
+          return useForesight({
             callback: vi.fn(),
             name: "comment",
           })
-
-          return { ...result, childRef }
         },
         render() {
-          return h(ChildComponent, { ref: "childRef", show: false })
+          return h(ChildComponent, { ref: this.setRef, show: false })
         },
       })
 
@@ -510,7 +305,7 @@ describe("useForesight", () => {
       expect(registerSpy).not.toHaveBeenCalled()
     })
 
-    it("registers when component ref resolves to a real element", async () => {
+    it("registers when setRef receives a real component element", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child-el" }, "visible")
@@ -520,16 +315,13 @@ describe("useForesight", () => {
       const Component = defineComponent({
         components: { ChildComponent },
         setup() {
-          const childRef = ref<InstanceType<typeof ChildComponent> | null>(null)
-          const result = useForesight(childRef as Ref<ComponentPublicInstance | null>, {
+          return useForesight({
             callback: vi.fn(),
             name: "component-ref",
           })
-
-          return { ...result, childRef }
         },
         render() {
-          return h(ChildComponent, { ref: "childRef" })
+          return h(ChildComponent, { ref: this.setRef })
         },
       })
 
@@ -540,7 +332,7 @@ describe("useForesight", () => {
       expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(HTMLDivElement)
     })
 
-    it("registers when v-if transitions component from unmounted to mounted (ref null -> instance)", async () => {
+    it("registers when v-if transitions component from unmounted to mounted", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child" }, "hello")
@@ -551,75 +343,28 @@ describe("useForesight", () => {
         components: { ChildComponent },
         setup() {
           const show = ref(false)
-          const childRef = ref<InstanceType<typeof ChildComponent> | null>(null)
-          const result = useForesight(childRef as Ref<ComponentPublicInstance | null>, {
+          const result = useForesight({
             callback: vi.fn(),
             name: "v-if-toggle",
           })
 
-          return { ...result, show, childRef }
+          return { ...result, show }
         },
         render() {
-          return this.show ? h(ChildComponent, { ref: "childRef" }) : h("span", "placeholder")
+          return this.show ? h(ChildComponent, { ref: this.setRef }) : h("span", "placeholder")
         },
       })
 
       const wrapper = mount(Component, { attachTo: document.body })
       await nextTick()
 
-      // Initially not rendered, ref is null
       expect(registerSpy).not.toHaveBeenCalled()
 
-      // Toggle on — ref goes from null to ComponentPublicInstance
       wrapper.vm.show = true
       await nextTick()
 
       expect(registerSpy).toHaveBeenCalledTimes(1)
       expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(HTMLDivElement)
-    })
-
-    it("does NOT auto-detect when same component instance changes $el from comment to element", async () => {
-      // This test documents a known limitation: when a component INSTANCE stays
-      // the same but its internal render changes (comment -> real element),
-      // our watcher won't detect it because the ref value (the instance) is unchanged.
-      const ChildComponent = defineComponent({
-        props: { show: { type: Boolean, default: false } },
-        render() {
-          return this.show ? h("div", "visible") : null
-        },
-      })
-
-      const Component = defineComponent({
-        components: { ChildComponent },
-        setup() {
-          const childRef = ref<InstanceType<typeof ChildComponent> | null>(null)
-          const result = useForesight(childRef as Ref<ComponentPublicInstance | null>, {
-            callback: vi.fn(),
-            name: "internal-toggle",
-          })
-
-          return { ...result, childRef }
-        },
-        render() {
-          return h(ChildComponent, { ref: "childRef", show: this.show })
-        },
-        data() {
-          return { show: false }
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(registerSpy).not.toHaveBeenCalled()
-
-      // Component stays mounted, but its render output changes
-      await wrapper.setData({ show: true })
-      await nextTick()
-
-      // The watcher does NOT fire because the ref still points to the same
-      // ComponentPublicInstance — $el is not a reactive dependency.
-      expect(registerSpy).not.toHaveBeenCalled()
     })
   })
 })

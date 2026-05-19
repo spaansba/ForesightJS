@@ -1,12 +1,4 @@
-import {
-  computed,
-  defineComponent,
-  h,
-  ref,
-  shallowRef,
-  nextTick,
-  type ComponentPublicInstance,
-} from "vue"
+import { defineComponent, h, ref, shallowRef, nextTick, type ComponentPublicInstance } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
@@ -23,25 +15,20 @@ beforeEach(() => {
 })
 
 describe("useForesights", () => {
-  it("registers all elements when targets are available", async () => {
+  it("registers all elements when setRef is called", async () => {
     const Component = defineComponent({
       setup() {
-        const elA = ref<HTMLElement | null>(null)
-        const elB = ref<HTMLElement | null>(null)
-        const states = useForesights(
-          computed(() => [elA.value, elB.value]),
-          [
-            { name: "a", callback: vi.fn() },
-            { name: "b", callback: vi.fn() },
-          ]
-        )
+        const slots = useForesights([
+          { name: "a", callback: vi.fn() },
+          { name: "b", callback: vi.fn() },
+        ])
 
-        return { states, elA, elB }
+        return { slots }
       },
       render() {
         return h("div", [
-          h("button", { ref: "elA", "data-testid": "el-0" }),
-          h("button", { ref: "elB", "data-testid": "el-1" }),
+          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -59,22 +46,17 @@ describe("useForesights", () => {
   it("unregisters all on unmount", async () => {
     const Component = defineComponent({
       setup() {
-        const elA = ref<HTMLElement | null>(null)
-        const elB = ref<HTMLElement | null>(null)
-        const states = useForesights(
-          computed(() => [elA.value, elB.value]),
-          [
-            { name: "a", callback: vi.fn() },
-            { name: "b", callback: vi.fn() },
-          ]
-        )
+        const slots = useForesights([
+          { name: "a", callback: vi.fn() },
+          { name: "b", callback: vi.fn() },
+        ])
 
-        return { states, elA, elB }
+        return { slots }
       },
       render() {
         return h("div", [
-          h("button", { ref: "elA", "data-testid": "el-0" }),
-          h("button", { ref: "elB", "data-testid": "el-1" }),
+          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -86,18 +68,17 @@ describe("useForesights", () => {
     expect(unregisterSpy).toHaveBeenCalledTimes(2)
   })
 
-  it("returns unregistered initial state before targets resolve", () => {
+  it("returns unregistered initial state before setRef is called", () => {
     const Component = defineComponent({
       setup() {
-        const el = ref<HTMLElement | null>(null)
-        const states = useForesights(() => [el.value], [{ callback: vi.fn() }])
+        const slots = useForesights([{ callback: vi.fn() }])
 
-        return { states }
+        return { slots }
       },
       render() {
         return h("span", {
           "data-testid": "state",
-          "data-registered": this.states[0]?.isRegistered,
+          "data-registered": this.slots[0]?.isRegistered,
         })
       },
     })
@@ -109,26 +90,21 @@ describe("useForesights", () => {
   it("reflects state updates pushed through subscribe", async () => {
     const Component = defineComponent({
       setup() {
-        const elA = ref<HTMLElement | null>(null)
-        const elB = ref<HTMLElement | null>(null)
-        const states = useForesights(
-          computed(() => [elA.value, elB.value]),
-          [
-            { name: "a", callback: vi.fn() },
-            { name: "b", callback: vi.fn() },
-          ]
-        )
+        const slots = useForesights([
+          { name: "a", callback: vi.fn() },
+          { name: "b", callback: vi.fn() },
+        ])
 
-        return { states, elA, elB }
+        return { slots }
       },
       render() {
         return h("div", [
           h("button", {
-            ref: "elA",
+            ref: this.slots[0].setRef,
             "data-testid": "el-0",
-            "data-predicted": this.states[0]?.isPredicted,
+            "data-predicted": this.slots[0]?.isPredicted,
           }),
-          h("button", { ref: "elB", "data-testid": "el-1" }),
+          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -151,17 +127,13 @@ describe("useForesights", () => {
 
     const Component = defineComponent({
       setup() {
-        const el = ref<HTMLElement | null>(null)
         const cb = ref<ForesightCallback>(cb1)
-        const states = useForesights(
-          () => [el.value],
-          () => [{ name: "a", callback: cb.value }]
-        )
+        const slots = useForesights(() => [{ name: "a", callback: cb.value }])
 
-        return { states, cb, el }
+        return { slots, cb }
       },
       render() {
-        return h("button", { ref: "el", "data-testid": "el-0" })
+        return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
       },
     })
 
@@ -182,20 +154,17 @@ describe("useForesights", () => {
   it("handles growing the array (new items added)", async () => {
     const Component = defineComponent({
       setup() {
-        const els = ref<(HTMLElement | null)[]>([null])
         const options = ref([{ name: "a", callback: vi.fn() }])
-        const states = useForesights(() => els.value, options)
+        const slots = useForesights(options)
 
-        return { states, els, options }
+        return { slots, options }
       },
       render() {
         return h(
           "div",
-          this.els.map((_: unknown, i: number) =>
+          this.slots.map((slot: any, i: number) =>
             h("button", {
-              ref: (el: unknown) => {
-                this.els[i] = el as HTMLElement | null
-              },
+              ref: slot.setRef,
               "data-testid": `el-${i}`,
             })
           )
@@ -209,7 +178,6 @@ describe("useForesights", () => {
     expect(registerSpy).toHaveBeenCalledTimes(1)
     registerSpy.mockClear()
 
-    wrapper.vm.els = [wrapper.vm.els[0], null]
     wrapper.vm.options = [
       { name: "a", callback: vi.fn() },
       { name: "b", callback: vi.fn() },
@@ -225,22 +193,21 @@ describe("useForesights", () => {
   it("handles shrinking the array (items removed)", async () => {
     const Component = defineComponent({
       setup() {
-        const elA = ref<HTMLElement | null>(null)
-        const elB = ref<HTMLElement | null>(null)
-        const targets = computed(() => [elA.value, elB.value])
         const options = ref([
           { name: "a", callback: vi.fn() },
           { name: "b", callback: vi.fn() },
         ])
-        const states = useForesights(() => options.value.map((_, i) => targets.value[i]), options)
+        const slots = useForesights(options)
 
-        return { states, elA, elB, options }
+        return { slots, options }
       },
       render() {
-        return h("div", [
-          h("button", { ref: "elA", "data-testid": "el-0" }),
-          h("button", { ref: "elB", "data-testid": "el-1" }),
-        ])
+        return h(
+          "div",
+          this.slots.map((slot: any, i: number) =>
+            h("button", { ref: slot.setRef, "data-testid": `el-${i}` })
+          )
+        )
       },
     })
 
@@ -257,17 +224,13 @@ describe("useForesights", () => {
   it("patches options without unregistering", async () => {
     const Component = defineComponent({
       setup() {
-        const el = ref<HTMLElement | null>(null)
         const name = ref("first")
-        const states = useForesights(
-          () => [el.value],
-          () => [{ name: name.value, callback: vi.fn() }]
-        )
+        const slots = useForesights(() => [{ name: name.value, callback: vi.fn() }])
 
-        return { states, name, el }
+        return { slots, name }
       },
       render() {
-        return h("button", { ref: "el", "data-testid": "el-0" })
+        return h("button", { ref: this.slots[0]?.setRef, "data-testid": "el-0" })
       },
     })
 
@@ -290,15 +253,12 @@ describe("useForesights", () => {
   it("works with an empty array", async () => {
     const Component = defineComponent({
       setup() {
-        const states = useForesights(
-          () => [],
-          () => []
-        )
+        const slots = useForesights(() => [])
 
-        return { states }
+        return { slots }
       },
       render() {
-        return h("div", `count: ${this.states.length}`)
+        return h("div", `count: ${this.slots.length}`)
       },
     })
 
@@ -312,25 +272,19 @@ describe("useForesights", () => {
   it("registers three elements", async () => {
     const Component = defineComponent({
       setup() {
-        const elX = ref<HTMLElement | null>(null)
-        const elY = ref<HTMLElement | null>(null)
-        const elZ = ref<HTMLElement | null>(null)
-        const states = useForesights(
-          computed(() => [elX.value, elY.value, elZ.value]),
-          [
-            { name: "x", callback: vi.fn() },
-            { name: "y", callback: vi.fn() },
-            { name: "z", callback: vi.fn() },
-          ]
-        )
+        const slots = useForesights([
+          { name: "x", callback: vi.fn() },
+          { name: "y", callback: vi.fn() },
+          { name: "z", callback: vi.fn() },
+        ])
 
-        return { states, elX, elY, elZ }
+        return { slots }
       },
       render() {
         return h("div", [
-          h("button", { ref: "elX", "data-testid": "el-0" }),
-          h("button", { ref: "elY", "data-testid": "el-1" }),
-          h("button", { ref: "elZ", "data-testid": "el-2" }),
+          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          h("button", { ref: this.slots[2].setRef, "data-testid": "el-2" }),
         ])
       },
     })
@@ -345,7 +299,7 @@ describe("useForesights", () => {
   })
 
   describe("comment node filtering", () => {
-    it("does not register when a target resolves to a comment node", async () => {
+    it("does not register when setRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({
         props: { show: { type: Boolean, default: false } },
         render() {
@@ -356,16 +310,12 @@ describe("useForesights", () => {
       const Component = defineComponent({
         components: { ChildComponent },
         setup() {
-          const childRef = ref<ComponentPublicInstance | null>(null)
-          const states = useForesights(
-            () => [childRef.value],
-            [{ callback: vi.fn(), name: "comment-slot" }]
-          )
+          const slots = useForesights([{ callback: vi.fn(), name: "comment-slot" }])
 
-          return { states, childRef }
+          return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: "childRef", show: false })
+          return h(ChildComponent, { ref: this.slots[0].setRef, show: false })
         },
       })
 
@@ -375,7 +325,7 @@ describe("useForesights", () => {
       expect(registerSpy).not.toHaveBeenCalled()
     })
 
-    it("registers when a target resolves to a real component element", async () => {
+    it("registers when setRef receives a real component element", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child" }, "visible")
@@ -385,16 +335,12 @@ describe("useForesights", () => {
       const Component = defineComponent({
         components: { ChildComponent },
         setup() {
-          const childRef = ref<ComponentPublicInstance | null>(null)
-          const states = useForesights(
-            () => [childRef.value],
-            [{ callback: vi.fn(), name: "real-slot" }]
-          )
+          const slots = useForesights([{ callback: vi.fn(), name: "real-slot" }])
 
-          return { states, childRef }
+          return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: "childRef" })
+          return h(ChildComponent, { ref: this.slots[0].setRef })
         },
       })
 
@@ -411,18 +357,14 @@ describe("useForesights", () => {
       const stableOpts = { name: "stable", callback: vi.fn() }
       const Component = defineComponent({
         setup() {
-          const el = ref<HTMLElement | null>(null)
           const counter = ref(0)
-          const states = useForesights(
-            () => [el.value],
-            () => [stableOpts]
-          )
+          const slots = useForesights(() => [stableOpts])
 
-          return { states, counter, el }
+          return { slots, counter }
         },
         render() {
           return h("button", {
-            ref: "el",
+            ref: this.slots[0].setRef,
             "data-testid": "el-0",
             "data-counter": this.counter,
           })
@@ -447,20 +389,15 @@ describe("useForesights", () => {
 
       const Component = defineComponent({
         setup() {
-          const elA = ref<HTMLElement | null>(null)
-          const elB = ref<HTMLElement | null>(null)
           const options = shallowRef([optsA, optsB])
-          const states = useForesights(
-            computed(() => [elA.value, elB.value]),
-            options
-          )
+          const slots = useForesights(options)
 
-          return { states, options, elA, elB }
+          return { slots, options }
         },
         render() {
           return h("div", [
-            h("button", { ref: "elA", "data-testid": "el-0" }),
-            h("button", { ref: "elB", "data-testid": "el-1" }),
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
           ])
         },
       })
@@ -483,63 +420,64 @@ describe("useForesights", () => {
     })
   })
 
-  describe("target reactivity", () => {
-    it("unregisters when a target becomes null", async () => {
+  describe("setRef reactivity", () => {
+    it("unregisters when setRef receives null", async () => {
       const Component = defineComponent({
         setup() {
-          const el = ref<HTMLElement | null>(null)
-          const states = useForesights(() => [el.value], [{ name: "removable", callback: vi.fn() }])
+          const show = ref(true)
+          const slots = useForesights([{ name: "removable", callback: vi.fn() }])
 
-          return { states, el }
+          return { slots, show }
         },
         render() {
-          return h("div", [h("button", { "data-testid": "btn" })])
+          return this.show
+            ? h("button", { ref: this.slots[0].setRef, "data-testid": "btn" })
+            : h("span", "gone")
         },
       })
 
       const wrapper = mount(Component, { attachTo: document.body })
       await nextTick()
-
-      // Assign element
-      wrapper.vm.el = wrapper.find("[data-testid=btn]").element as HTMLElement
-      await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
 
-      // Remove element
-      wrapper.vm.el = null
+      // Toggling show will cause Vue to call setRef(null) then the element is removed
+      wrapper.vm.show = false
       await nextTick()
       expect(unregisterSpy).toHaveBeenCalledTimes(1)
     })
 
-    it("handles target swap (old unregistered, new registered)", async () => {
+    it("handles element swap via setRef", async () => {
       const Component = defineComponent({
         setup() {
-          const el = ref<HTMLElement | null>(null)
-          const states = useForesights(() => [el.value], [{ name: "swap", callback: vi.fn() }])
+          const useSpan = ref(false)
+          const slots = useForesights([{ name: "swap", callback: vi.fn() }])
 
-          return { states, el }
+          return { slots, useSpan }
         },
         render() {
-          return h("div", [h("button", { "data-testid": "a" }), h("span", { "data-testid": "b" })])
+          return h("div", [
+            this.useSpan
+              ? h("span", { ref: this.slots[0].setRef, "data-testid": "b" })
+              : h("button", { ref: this.slots[0].setRef, "data-testid": "a" }),
+          ])
         },
       })
 
       const wrapper = mount(Component, { attachTo: document.body })
       await nextTick()
-
-      wrapper.vm.el = wrapper.find("[data-testid=a]").element as HTMLElement
-      await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(HTMLButtonElement)
 
-      wrapper.vm.el = wrapper.find("[data-testid=b]").element as HTMLElement
+      wrapper.vm.useSpan = true
       await nextTick()
 
+      // Old element unregistered, new one registered
       expect(unregisterSpy).toHaveBeenCalledTimes(1)
       expect(registerSpy).toHaveBeenCalledTimes(2)
       expect(registerSpy.mock.calls[1][0].element).toBeInstanceOf(HTMLSpanElement)
     })
 
-    it("resolves ComponentPublicInstance targets to their $el", async () => {
+    it("resolves ComponentPublicInstance targets via setRef", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child-root" }, "content")
@@ -549,16 +487,12 @@ describe("useForesights", () => {
       const Component = defineComponent({
         components: { ChildComponent },
         setup() {
-          const childRef = ref<ComponentPublicInstance | null>(null)
-          const states = useForesights(
-            () => [childRef.value],
-            [{ name: "comp-target", callback: vi.fn() }]
-          )
+          const slots = useForesights([{ name: "comp-target", callback: vi.fn() }])
 
-          return { states, childRef }
+          return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: "childRef" })
+          return h(ChildComponent, { ref: this.slots[0].setRef })
         },
       })
 

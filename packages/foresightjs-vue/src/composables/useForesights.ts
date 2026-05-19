@@ -16,8 +16,13 @@ import {
   type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { MaybeElement } from "../types"
 import { resolveElement } from "../utils/resolveElement"
+import type { MaybeElement } from "../types"
+
+export type UseForesightSlot = Readonly<ForesightElementState> & {
+  /** Template ref function — bind to an element with `:ref="slot.setRef"`. */
+  setRef: (el: MaybeElement) => void
+}
 
 type SlotInternal = {
   element: Element | null
@@ -29,25 +34,37 @@ type SlotInternal = {
 /**
  * Registers multiple elements with ForesightManager from a single composable.
  *
- * @param targets - Array of element targets (refs, getters, or raw elements).
- * @param options - Array of registration options, one per target.
+ * @param options - Array of registration options (plain array, ref, or getter).
+ *   The array length determines the number of slots.
  *
- * Returns a reactive array of readonly state objects. Each `states[i]` contains
- * `isPredicted`, `hitCount`, `isCallbackRunning`, `status`, and `isRegistered`.
+ * Returns a reactive array of `UseForesightSlot` objects. Each slot contains:
+ * - `setRef` — a template ref function to bind an element (`:ref="slot.setRef"`)
+ * - All `ForesightElementState` properties (`isPredicted`, `hitCount`, etc.)
  *
- * The composable watches both targets and options arrays, handles dynamic array
- * growth/shrinkage, patches options without tearing down registrations, and
- * cleans up on scope disposal.
+ * @example
+ * ```ts
+ * const items = ref([{ name: 'a' }, { name: 'b' }])
+ *
+ * const slots = useForesights(() =>
+ *   items.value.map(item => ({
+ *     callback: () => prefetch(item.name),
+ *     name: item.name,
+ *   }))
+ * )
+ * ```
+ * ```vue
+ * <button v-for="(item, i) in items" :ref="slots[i].setRef">
+ *   {{ slots[i].isPredicted ? 'predicted!' : item.name }}
+ * </button>
+ * ```
  */
 export const useForesights = (
-  targets: MaybeRefOrGetter<MaybeElement[]>,
   options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
-) => {
-  const resolvedTargets = computed(() => toValue(targets).map(t => resolveElement(t) ?? null))
+): UseForesightSlot[] => {
   const resolvedOptions = computed(() => toValue(options))
 
   const internals: SlotInternal[] = reactive([])
-  const states: Readonly<ForesightElementState>[] = reactive([])
+  const slots: UseForesightSlot[] = reactive([])
 
   const registerSlot = (index: number, element: Element) => {
     const internal = internals[index]
@@ -108,14 +125,20 @@ export const useForesights = (
     }
   }
 
-  // Reconcile array length: grow or shrink internals/states
+  // Create a stable setRef function for a given slot index.
+  // Vue calls template ref functions with the element (or null on unmount).
+  const createSetRef = (index: number) => (el: MaybeElement) => {
+    setSlotElement(index, resolveElement(el) ?? null)
+  }
+
+  // Reconcile array length: grow or shrink internals/slots
   const reconcile = (newLength: number) => {
     const oldLength = internals.length
 
     // Shrink: unregister and remove excess slots
     while (internals.length > newLength) {
       const removed = internals.pop()!
-      states.pop()
+      slots.pop()
       if (removed.result) {
         unregisterSlot(removed)
       }
@@ -123,7 +146,11 @@ export const useForesights = (
 
     // Grow: add new slots
     for (let i = oldLength; i < newLength; i++) {
-      const state = reactive(createUnregisteredSnapshot(false)) as ForesightElementState
+      const state = reactive({
+        ...createUnregisteredSnapshot(false),
+        setRef: createSetRef(i),
+      }) as ForesightElementState & { setRef: (el: MaybeElement) => void }
+
       const internal: SlotInternal = reactive({
         element: null,
         result: null,
@@ -132,26 +159,15 @@ export const useForesights = (
       })
 
       internals.push(internal)
-      states.push(readonly(state))
+      slots.push(readonly(state) as UseForesightSlot)
     }
   }
 
-  // Watch targets length to reconcile slots
+  // Watch options length to reconcile slots
   watch(
-    () => resolvedTargets.value.length,
+    () => resolvedOptions.value.length,
     newLength => reconcile(newLength),
     { immediate: true }
-  )
-
-  // Watch resolved targets for element changes
-  watch(
-    resolvedTargets,
-    newEls => {
-      for (let i = 0; i < newEls.length; i++) {
-        setSlotElement(i, newEls[i])
-      }
-    },
-    { flush: "post" }
   )
 
   // Patch options on existing registrations without unregistering.
@@ -159,7 +175,8 @@ export const useForesights = (
   watch(
     resolvedOptions,
     (newOptions, oldOptions) => {
-      for (let i = 0; i < newOptions.length; i++) {
+      const len = Math.min(newOptions.length, internals.length)
+      for (let i = 0; i < len; i++) {
         const internal = internals[i]
         if (!internal?.element || !internal.result) {
           continue
@@ -186,8 +203,8 @@ export const useForesights = (
       }
     }
     internals.length = 0
-    states.length = 0
+    slots.length = 0
   })
 
-  return states
+  return slots
 }

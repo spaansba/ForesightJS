@@ -3,28 +3,62 @@ import { ref } from "vue"
 import { useForesights } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 const items = ref([
-  { name: "about", label: "About" },
-  { name: "contact", label: "Contact" },
-  { name: "pricing", label: "Pricing" },
+  {
+    name: "prefetch-route",
+    label: "Prefetch route",
+    color: "bg-blue-500 hover:bg-blue-600",
+    callback: async () => {
+      await sleep(100)
+      console.log("Prefetched /dashboard route bundle")
+    },
+  },
+  {
+    name: "preload-image",
+    label: "Preload image",
+    color: "bg-emerald-500 hover:bg-emerald-600",
+    callback: async () => {
+      await sleep(300)
+      console.log("Preloaded hero-banner.webp")
+    },
+  },
+  {
+    name: "warm-api",
+    label: "Warm API cache",
+    color: "bg-violet-500 hover:bg-violet-600",
+    callback: async () => {
+      await sleep(500)
+      console.log("Warmed /api/user/profile cache")
+    },
+  },
 ])
 
-const elRefs = ref<(HTMLElement | null)[]>([])
-
-const states = useForesights(
-  () => elRefs.value.slice(0, items.value.length),
-  () =>
-    items.value.map(item => ({
-      callback: () => console.log(`${item.label} prefetch`),
-      name: item.name,
-      hitSlop: 20,
-      reactivateAfter: 2000,
-    }))
+const slots = useForesights(() =>
+  items.value.map(item => ({
+    callback: item.callback,
+    name: item.name,
+    reactivateAfter: 3000,
+  }))
 )
 
+let nextId = items.value.length + 1
 const addItem = () => {
-  const id = items.value.length + 1
-  items.value = [...items.value, { name: `item-${id}`, label: `Item ${id}` }]
+  const id = nextId++
+  const delayMs = 200 + Math.round(Math.random() * 800)
+  items.value = [
+    ...items.value,
+    {
+      name: `task-${id}`,
+      label: `Task ${id} (${delayMs}ms)`,
+      color: "bg-gray-500 hover:bg-gray-600",
+      callback: async () => {
+        await sleep(delayMs)
+        console.log(`Task ${id} completed in ${delayMs}ms`)
+      },
+    },
+  ]
 }
 
 const removeItem = () => {
@@ -57,24 +91,20 @@ const removeItem = () => {
       >
         <h4 class="text-sm font-medium">{{ item.label }}</h4>
         <button
-          :ref="
-            el => {
-              elRefs[i] = el as HTMLElement
-            }
-          "
+          :ref="slots[i]?.setRef"
           :class="[
             'flex items-center justify-center size-40 text-white text-sm font-medium',
-            states[i]?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
+            slots[i]?.isPredicted ? 'bg-amber-500' : item.color,
           ]"
         >
           Hover to predict
         </button>
         <ForesightStats
-          v-if="states[i]"
-          :is-predicted="states[i].isPredicted"
-          :hit-count="states[i].hitCount"
-          :is-callback-running="states[i].isCallbackRunning"
-          :status="states[i].status"
+          v-if="slots[i]"
+          :is-predicted="slots[i].isPredicted"
+          :hit-count="slots[i].hitCount"
+          :is-callback-running="slots[i].isCallbackRunning"
+          :status="slots[i].status"
         />
       </article>
     </section>

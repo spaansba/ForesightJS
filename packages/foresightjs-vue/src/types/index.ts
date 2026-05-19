@@ -1,6 +1,6 @@
 import type { ComponentPublicInstance, MaybeRefOrGetter } from "vue"
 
-export type MaybeElement = HTMLElement | SVGElement | ComponentPublicInstance | null | undefined
+export type MaybeElement = Element | ComponentPublicInstance | null | undefined
 
 export type MaybeElementRef = MaybeRefOrGetter<MaybeElement>
 

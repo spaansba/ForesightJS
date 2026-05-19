@@ -233,7 +233,9 @@ export class ForesightManager {
 
       return {
         ...previousEntry.state,
-        unregister: () => {},
+        unregister: () => {
+          this.unregister(options.element)
+        },
         subscribe: this.makeSubscribe(previousEntry),
         getSnapshot: () => previousEntry.state,
       }

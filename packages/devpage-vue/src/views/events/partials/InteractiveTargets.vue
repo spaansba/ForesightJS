@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue"
+import { ref } from "vue"
 import { useForesight } from "@foresightjs/vue"
 
 const toggleableMounted = ref(true)
 
-const fastRef = useTemplateRef<HTMLDivElement>("fast-callback")
-const slowRef = useTemplateRef<HTMLDivElement>("slow-callback")
-const errorRef = useTemplateRef<HTMLDivElement>("error-callback")
-const toggleRef = useTemplateRef<HTMLDivElement>("toggleable")
-
-const fast = useForesight(fastRef, {
+const fast = useForesight({
   callback: async () => {
     await new Promise(resolve => setTimeout(resolve, 50))
   },
@@ -18,7 +13,7 @@ const fast = useForesight(fastRef, {
   reactivateAfter: 2000,
 })
 
-const slow = useForesight(slowRef, {
+const slow = useForesight({
   callback: async () => {
     await new Promise(resolve => setTimeout(resolve, 1500))
   },
@@ -27,7 +22,7 @@ const slow = useForesight(slowRef, {
   reactivateAfter: 2000,
 })
 
-const error = useForesight(errorRef, {
+const error = useForesight({
   callback: async () => {
     throw new Error("Intentional error")
   },
@@ -36,7 +31,7 @@ const error = useForesight(errorRef, {
   reactivateAfter: 2000,
 })
 
-const toggle = useForesight(toggleRef, {
+const toggle = useForesight({
   callback: () => {},
   name: "toggleable",
   hitSlop: 20,
@@ -49,7 +44,7 @@ const toggle = useForesight(toggleRef, {
     <div class="flex flex-wrap gap-6">
       <div class="flex flex-col items-center gap-2">
         <div
-          ref="fast-callback"
+          :ref="fast.setRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-green-200',
@@ -74,7 +69,7 @@ const toggle = useForesight(toggleRef, {
 
       <div class="flex flex-col items-center gap-2">
         <div
-          ref="slow-callback"
+          :ref="slow.setRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-amber-200',
@@ -99,7 +94,7 @@ const toggle = useForesight(toggleRef, {
 
       <div class="flex flex-col items-center gap-2">
         <div
-          ref="error-callback"
+          :ref="error.setRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-red-200',
@@ -125,7 +120,7 @@ const toggle = useForesight(toggleRef, {
       <div class="flex flex-col items-center gap-2">
         <div
           v-if="toggleableMounted"
-          ref="toggleable"
+          :ref="toggle.setRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none',
             toggle.isPredicted.value ? 'outline-1 outline-amber-500' : '',

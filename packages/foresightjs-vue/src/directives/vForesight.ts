@@ -5,7 +5,7 @@ import {
   type ForesightRegisterResult,
 } from "js.foresight"
 
-export type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
+type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
 
 type ForesightDirectiveElement = HTMLElement | SVGElement
 

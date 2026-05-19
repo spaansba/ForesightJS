@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { shallowRef, useTemplateRef } from "vue"
+import { shallowRef } from "vue"
 import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
-
-const btnRef = useTemplateRef<HTMLButtonElement>("btn")
 
 const optionsA: ForesightRegisterOptionsWithoutElement = {
   callback: () => console.log("Ref A prefetch"),
@@ -18,7 +16,7 @@ const optionsB: ForesightRegisterOptionsWithoutElement = {
 
 const currentOptions = shallowRef(optionsA)
 
-const { isPredicted, hitCount, isCallbackRunning, status } = useForesight(btnRef, currentOptions)
+const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(currentOptions)
 
 const swap = () => {
   currentOptions.value = currentOptions.value === optionsA ? optionsB : optionsA
@@ -30,7 +28,7 @@ const swap = () => {
     <h4 class="text-sm font-medium">Ref options</h4>
     <p class="text-xs text-gray-500">Swap entire options object. name: {{ currentOptions.name }}</p>
     <button
-      ref="btn"
+      :ref="setRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

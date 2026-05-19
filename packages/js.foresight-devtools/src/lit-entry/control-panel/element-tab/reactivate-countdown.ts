@@ -91,6 +91,11 @@ export class ReactivateCountdown extends LitElement {
   }
 
   private startCountdown() {
+    // Don't restart if already counting down
+    if (this.isCountdownActive && this.intervalId !== null) {
+      return
+    }
+
     this.clearCountdown()
 
     const state = this.state
