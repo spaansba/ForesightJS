@@ -3,23 +3,21 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
+import type { UseForesightOptions, UseForesightResult } from "../types"
 
 const NOOP_SUBSCRIBE = () => () => {}
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const GET_INITIAL_SNAPSHOT = () => INITIAL_SNAPSHOT
 
-export type UseForesightResult<T extends HTMLElement> = ForesightElementState & {
-  elementRef: (node: T | null) => void
-}
-
 export const useForesight = <T extends HTMLElement = HTMLElement>(
-  options: ForesightRegisterOptionsWithoutElement
+  options: UseForesightOptions
 ): UseForesightResult<T> => {
   const optionsRef = useRef(options)
   optionsRef.current = options
+
+  const enabled = options.enabled !== false
 
   const [element, setElement] = useState<T | null>(null)
   const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
@@ -28,9 +26,9 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
     setElement(node)
   }, [])
 
-  // Register/unregister when the DOM node attaches or swaps.
+  // Register/unregister when the DOM node attaches or swaps, or when enabled changes.
   useEffect(() => {
-    if (!element) {
+    if (!element || !enabled) {
       return
     }
 
@@ -45,7 +43,7 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       result.unregister()
       setRegisterResults(null)
     }
-  }, [element])
+  }, [element, enabled])
 
   // Patch options on the existing registration without tearing it down.
   useEffect(() => {

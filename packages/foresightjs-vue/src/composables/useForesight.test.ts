@@ -277,6 +277,146 @@ describe("useForesight", () => {
     })
   })
 
+  describe("enabled option", () => {
+    it("does not register when enabled is false", async () => {
+      const Component = defineComponent({
+        setup() {
+          return useForesight({
+            callback: vi.fn(),
+            name: "disabled-btn",
+            enabled: false,
+          })
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).not.toHaveBeenCalled()
+    })
+
+    it("registers when enabled is true (explicit)", async () => {
+      const Component = defineComponent({
+        setup() {
+          return useForesight({
+            callback: vi.fn(),
+            name: "enabled-btn",
+            enabled: true,
+          })
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("registers when enabled is undefined (default)", async () => {
+      const Component = defineComponent({
+        setup() {
+          return useForesight({
+            callback: vi.fn(),
+            name: "default-btn",
+          })
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("returns unregistered snapshot when disabled", async () => {
+      const Component = defineComponent({
+        setup() {
+          return useForesight({
+            callback: vi.fn(),
+            enabled: false,
+          })
+        },
+        render() {
+          return h("button", {
+            ref: this.setRef,
+            "data-testid": "el",
+            "data-registered": this.isRegistered,
+          })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(wrapper.get("[data-testid=el]").attributes("data-registered")).toBe("false")
+    })
+
+    it("registers when enabled toggles from false to true", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+          const result = useForesight(() => ({
+            callback: vi.fn(),
+            name: "toggle-btn",
+            enabled: enabled.value,
+          }))
+
+          return { ...result, enabled }
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).not.toHaveBeenCalled()
+
+      wrapper.vm.enabled = true
+      await nextTick()
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("unregisters when enabled toggles from true to false", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(true)
+          const result = useForesight(() => ({
+            callback: vi.fn(),
+            name: "toggle-btn",
+            enabled: enabled.value,
+          }))
+
+          return { ...result, enabled }
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe("comment node filtering", () => {
     it("does not register when setRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({

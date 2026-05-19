@@ -3,10 +3,9 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { UseForesightResult } from "./useForesight"
+import type { UseForesightOptions, UseForesightResult } from "../types"
 
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const NOOP_SUBSCRIBE = () => () => {}
@@ -18,7 +17,7 @@ type SlotEntry = {
 }
 
 export const useForesights = <T extends HTMLElement = HTMLElement>(
-  optionsArray: ForesightRegisterOptionsWithoutElement[]
+  optionsArray: UseForesightOptions[]
 ): UseForesightResult<T>[] => {
   const optionsRef = useRef(optionsArray)
   optionsRef.current = optionsArray
@@ -57,15 +56,17 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
     return existing
   }, [])
 
-  // Register/unregister when elements change or the array length changes
+  // Register/unregister when elements change, array length changes, or enabled toggles
+  const enabledFlags = optionsArray.map(o => o.enabled !== false)
+
   useEffect(() => {
     const prevResults = new Map(slotsRef.current)
     const nextSlots = new Map<number, SlotEntry>()
 
-    // Register each slot that has an element
+    // Register each slot that has an element and is enabled
     for (let i = 0; i < optionsArray.length; i++) {
       const el = elements.get(i)
-      if (!el) {
+      if (!el || optionsRef.current[i].enabled === false) {
         continue
       }
 
@@ -101,7 +102,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
       }
       slotsRef.current = new Map()
     }
-  }, [optionsArray.length, elements])
+  }, [optionsArray.length, elements, ...enabledFlags])
 
   // Patch options on existing registrations without tearing them down
   useEffect(() => {

@@ -7,22 +7,15 @@ import {
   onScopeDispose,
   watch,
   type MaybeRefOrGetter,
-  type ToRefs,
 } from "vue"
 import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { MaybeElement } from "../types"
+import type { UseForesightOptions, UseForesightReturn } from "../types"
 import { resolveElement } from "../utils/resolveElement"
-
-export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
-  /** Template ref function - bind to an element with `:ref="setRef"`. */
-  setRef: (el: MaybeElement) => void
-}
 
 /**
  * Registers a single element with ForesightManager.
@@ -44,7 +37,7 @@ export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
  * ```
  */
 export const useForesight = (
-  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
+  options: MaybeRefOrGetter<UseForesightOptions>
 ): UseForesightReturn => {
   const state = reactive(createUnregisteredSnapshot(false))
 
@@ -90,12 +83,12 @@ export const useForesight = (
 
     currentElement = resolved
 
-    if (resolved) {
+    if (resolved && toValue(options).enabled !== false) {
       registerElement(resolved)
     }
   }
 
-  // Watch options for changes - patch without re-registering.
+  // Watch options for changes - handle enabled toggle and patch without re-registering.
   // Skip when the raw reference hasn't changed (e.g. getter returning same object).
   watch(
     () => toValue(options),
@@ -104,6 +97,24 @@ export const useForesight = (
         return
       }
 
+      const wasEnabled = oldOptions ? oldOptions.enabled !== false : true
+      const isEnabled = newOptions.enabled !== false
+
+      // enabled toggled off → unregister
+      if (wasEnabled && !isEnabled && registerResults) {
+        unregisterElement()
+
+        return
+      }
+
+      // enabled toggled on → register if element is available
+      if (!wasEnabled && isEnabled && currentElement && !registerResults) {
+        registerElement(currentElement)
+
+        return
+      }
+
+      // Still enabled, patch options
       if (!currentElement || !registerResults) {
         return
       }

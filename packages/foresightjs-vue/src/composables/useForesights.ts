@@ -13,11 +13,10 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
 import { resolveElement } from "../utils/resolveElement"
-import type { MaybeElement } from "../types"
+import type { MaybeElement, UseForesightOptions } from "../types"
 
 export type UseForesightSlot = Readonly<ForesightElementState> & {
   /** Template ref function - bind to an element with `:ref="slot.setRef"`. */
@@ -59,7 +58,7 @@ type Slot = {
  * ```
  */
 export const useForesights = (
-  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
+  options: MaybeRefOrGetter<UseForesightOptions[]>
 ): UseForesightSlot[] => {
   const resolvedOptions = computed(() => toValue(options))
   const managed: Slot[] = []
@@ -67,7 +66,7 @@ export const useForesights = (
 
   const register = (slot: Slot, index: number) => {
     const slotOptions = resolvedOptions.value[index]
-    if (!slotOptions) {
+    if (!slotOptions || slotOptions.enabled === false) {
       return
     }
 
@@ -137,11 +136,27 @@ export const useForesights = (
       // Update existing slots whose options changed
       for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
         const slot = managed[i]
-        if (!slot.element || !slot.result) {
+
+        if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
           continue
         }
 
-        if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
+        const wasEnabled = oldOptions ? oldOptions[i]?.enabled !== false : true
+        const isEnabled = newOptions[i].enabled !== false
+
+        // enabled toggled off → unregister
+        if (wasEnabled && !isEnabled && slot.result) {
+          unregister(slot)
+          continue
+        }
+
+        // enabled toggled on → register if element is available
+        if (!wasEnabled && isEnabled && slot.element && !slot.result) {
+          register(slot, i)
+          continue
+        }
+
+        if (!slot.element || !slot.result) {
           continue
         }
 

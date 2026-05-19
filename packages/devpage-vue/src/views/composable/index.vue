@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EnabledToggleButton from "./partials/EnabledToggleButton.vue"
 import FixedOptionsButton from "./partials/FixedOptionsButton.vue"
 import SwappableOptionsButton from "./partials/SwappableOptionsButton.vue"
 import GetterOptionsButton from "./partials/GetterOptionsButton.vue"
@@ -16,6 +17,7 @@ import GetterOptionsButton from "./partials/GetterOptionsButton.vue"
       <FixedOptionsButton />
       <SwappableOptionsButton />
       <GetterOptionsButton />
+      <EnabledToggleButton />
     </section>
   </div>
 </template>
