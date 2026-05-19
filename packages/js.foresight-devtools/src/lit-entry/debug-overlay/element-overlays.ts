@@ -156,9 +156,13 @@ export class ElementOverlays extends LitElement {
     ForesightManager.instance.addEventListener(
       "elementOptionsUpdated",
       (e: ElementOptionsUpdatedEvent) => {
-        if (e.state.isIntersectingWithViewport) {
-          this.createOrUpdateElementOverlay(e.element, e.state)
+        if (!e.state.isIntersectingWithViewport || !e.state.isActive) {
+          this.removeElementOverlay(e.element)
+
+          return
         }
+
+        this.createOrUpdateElementOverlay(e.element, e.state)
       },
       { signal }
     )
