@@ -1,4 +1,4 @@
-import { defineComponent, h, ref, shallowRef, nextTick } from "vue"
+import { defineComponent, h, ref, shallowRef, nextTick, type VNodeRef } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
@@ -162,7 +162,7 @@ describe("useForesights", () => {
       render() {
         return h(
           "div",
-          this.slots.map((slot: { setRef: (el: Element | null) => void }, i: number) =>
+          this.slots.map((slot: { setRef: VNodeRef }, i: number) =>
             h("button", {
               ref: slot.setRef,
               "data-testid": `el-${i}`,
@@ -204,7 +204,7 @@ describe("useForesights", () => {
       render() {
         return h(
           "div",
-          this.slots.map((slot: { setRef: (el: Element | null) => void }, i: number) =>
+          this.slots.map((slot: { setRef: VNodeRef }, i: number) =>
             h("button", { ref: slot.setRef, "data-testid": `el-${i}` })
           )
         )

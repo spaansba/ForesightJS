@@ -3,6 +3,7 @@ import type {
   ForesightCallback,
   ForesightElementState,
   ForesightRegisterOptions,
+  ForesightRegisterOptionsWithoutElement,
 } from "js.foresight"
 
 export const mockState = {
@@ -12,7 +13,8 @@ export const mockState = {
 }
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
-export const updateElementOptionsSpy = vi.fn()
+export const updateElementOptionsSpy =
+  vi.fn<(element: unknown, opts: Partial<ForesightRegisterOptionsWithoutElement>) => void>()
 export const unregisterSpy = vi.fn<() => void>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const addEventListenerSpy =
