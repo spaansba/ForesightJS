@@ -218,7 +218,7 @@ export class ElementTab extends LitElement {
 
     const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
       const state = ForesightManager.instance.registeredElements.get(element)
-      if (state) {
+      if (state && state.isRegistered) {
         this._pendingElementUpdates.set(element, state)
         this._scheduleDebouncedUpdate()
       }
