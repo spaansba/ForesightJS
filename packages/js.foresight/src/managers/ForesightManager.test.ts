@@ -1269,6 +1269,94 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("subscribeToElement", () => {
+    it("should return undefined for an unregistered element", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result = manager.subscribeToElement(element, vi.fn())
+      expect(result).toBeUndefined()
+    })
+
+    it("should notify listener when element state changes", () => {
+      const { manager, element, entry } = setupBasicTest()
+      const listener = vi.fn()
+
+      manager.subscribeToElement(element, listener)
+
+      fire(manager, entry)
+      expect(listener).toHaveBeenCalled()
+    })
+
+    it("should stop notifying after unsubscribe", async () => {
+      const { manager, element, entry } = setupBasicTest()
+      const listener = vi.fn()
+
+      const unsubscribe = manager.subscribeToElement(element, listener)!
+      unsubscribe()
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(listener).not.toHaveBeenCalled()
+    })
+
+    it("should allow reading latest state via registeredElements inside listener", () => {
+      const { manager, element, entry } = setupBasicTest()
+      let capturedState: ForesightElementState | undefined
+
+      manager.subscribeToElement(element, () => {
+        capturedState = manager.registeredElements.get(element)
+      })
+
+      fire(manager, entry)
+
+      expect(capturedState).toBeDefined()
+      expect(capturedState!.isPredicted).toBe(true)
+    })
+
+    it("should clean up subscribers when element is unregistered", () => {
+      const { manager, element } = setupBasicTest()
+      const listener = vi.fn()
+
+      manager.subscribeToElement(element, listener)
+
+      manager.unregister(element)
+
+      // Listener is called during unregister (state update to isRegistered: false)
+      const callCount = listener.mock.calls.length
+      expect(callCount).toBeGreaterThan(0)
+
+      // After unregister, subscribing again should return undefined
+      const result = manager.subscribeToElement(element, vi.fn())
+      expect(result).toBeUndefined()
+    })
+
+    it("should support multiple independent subscribers", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
+
+      const unsub1 = manager.subscribeToElement(element, listener1)!
+      manager.subscribeToElement(element, listener2)
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(listener1).toHaveBeenCalled()
+      expect(listener2).toHaveBeenCalled()
+
+      const count1 = listener1.mock.calls.length
+      unsub1()
+
+      // Trigger another state change via manual reactivation
+      manager.reactivate(element)
+
+      expect(listener1).toHaveBeenCalledTimes(count1)
+      expect(listener2.mock.calls.length).toBeGreaterThan(count1)
+    })
+  })
+
   describe("updateElementOptions", () => {
     it("should update reactivateAfter", () => {
       const manager = ForesightManager.initialize()
