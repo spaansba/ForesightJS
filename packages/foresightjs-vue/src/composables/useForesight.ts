@@ -59,11 +59,11 @@ export const useForesight = (
   }
 
   const registerElement = (element: Element) => {
-    const opts = resolvedOptions.value
+    const currentOptions = resolvedOptions.value
     registerResults = ForesightManager.instance.register({
-      ...opts,
+      ...currentOptions,
       element,
-      callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
+      callback: (state: ForesightElementState) => resolvedOptions.value.callback(state),
     })
 
     updateState(registerResults.getSnapshot())
@@ -104,8 +104,8 @@ export const useForesight = (
   // Skip when the raw reference hasn't changed (e.g. getter returning same object).
   watch(
     resolvedOptions,
-    (newOpts, oldOpts) => {
-      if (oldOpts && toRaw(newOpts) === toRaw(oldOpts)) {
+    (newOptions, oldOptions) => {
+      if (oldOptions && toRaw(newOptions) === toRaw(oldOptions)) {
         return
       }
 
@@ -114,8 +114,8 @@ export const useForesight = (
       }
 
       ForesightManager.instance.updateElementOptions(currentElement, {
-        ...newOpts,
-        callback: (s: ForesightElementState) => resolvedOptions.value.callback(s),
+        ...newOptions,
+        callback: (state: ForesightElementState) => resolvedOptions.value.callback(state),
       })
     },
     { flush: "post" }

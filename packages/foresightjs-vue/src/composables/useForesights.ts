@@ -24,11 +24,11 @@ export type UseForesightSlot = Readonly<ForesightElementState> & {
   setRef: (el: MaybeElement) => void
 }
 
-type SlotInternal = {
+type Slot = {
   element: Element | null
   result: ForesightRegisterResult | null
   unsubscribe: (() => void) | null
-  state: ForesightElementState
+  state: ForesightElementState & { setRef: (el: MaybeElement) => void }
 }
 
 /**
@@ -62,147 +62,113 @@ export const useForesights = (
   options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
 ): UseForesightSlot[] => {
   const resolvedOptions = computed(() => toValue(options))
-
-  const internals: SlotInternal[] = reactive([])
+  const managed: Slot[] = []
   const slots: UseForesightSlot[] = reactive([])
 
-  const registerSlot = (index: number, element: Element) => {
-    const internal = internals[index]
-    if (!internal) {
-      return
-    }
-
-    const opts = resolvedOptions.value[index]
-    if (!opts) {
+  const register = (slot: Slot, index: number) => {
+    const slotOptions = resolvedOptions.value[index]
+    if (!slotOptions) {
       return
     }
 
     const result = markRaw(
       ForesightManager.instance.register({
-        ...opts,
-        element,
+        ...slotOptions,
+        element: slot.element!,
         callback: (state: ForesightElementState) => resolvedOptions.value[index]?.callback(state),
       })
     )
 
-    internal.result = result
-    Object.assign(internal.state, result.getSnapshot())
+    slot.result = result
+    Object.assign(slot.state, result.getSnapshot())
 
-    internal.unsubscribe = result.subscribe(() => {
-      if (internal.result) {
-        Object.assign(internal.state, internal.result.getSnapshot())
+    slot.unsubscribe = result.subscribe(() => {
+      if (slot.result) {
+        Object.assign(slot.state, slot.result.getSnapshot())
       }
     })
   }
 
-  const unregisterSlot = (internal: SlotInternal) => {
-    internal.unsubscribe?.()
-    internal.unsubscribe = null
-    internal.result?.unregister()
-    internal.result = null
-    Object.assign(internal.state, createUnregisteredSnapshot(false))
+  const unregister = (slot: Slot) => {
+    slot.unsubscribe?.()
+    slot.unsubscribe = null
+    slot.result?.unregister()
+    slot.result = null
+    Object.assign(slot.state, createUnregisteredSnapshot(false))
   }
 
-  const setSlotElement = (index: number, el: Element | null) => {
-    const internal = internals[index]
-    if (!internal) {
-      return
-    }
+  const createSlot = (index: number): Slot => {
+    const state = reactive({
+      ...createUnregisteredSnapshot(false),
+      setRef: (el: MaybeElement) => {
+        const resolved = resolveElement(el) ?? null
+        const slot = managed[index]
+        if (!slot || slot.element === resolved) {
+          return
+        }
 
-    const prev = internal.element
-    if (prev === el) {
-      return
-    }
+        if (slot.result) {
+          unregister(slot)
+        }
 
-    if (internal.result) {
-      unregisterSlot(internal)
-    }
+        slot.element = resolved
+        if (resolved) {
+          register(slot, index)
+        }
+      },
+    }) as Slot["state"]
 
-    internal.element = el
-
-    if (el) {
-      registerSlot(index, el)
-    }
+    return { element: null, result: null, unsubscribe: null, state }
   }
 
-  // Create a stable setRef function for a given slot index.
-  // Vue calls template ref functions with the element (or null on unmount).
-  const createSetRef = (index: number) => (el: MaybeElement) => {
-    setSlotElement(index, resolveElement(el) ?? null)
-  }
-
-  // Reconcile array length: grow or shrink internals/slots
-  const reconcile = (newLength: number) => {
-    const oldLength = internals.length
-
-    // Shrink: unregister and remove excess slots
-    while (internals.length > newLength) {
-      const removed = internals.pop()!
-      slots.pop()
-      if (removed.result) {
-        unregisterSlot(removed)
-      }
-    }
-
-    // Grow: add new slots
-    for (let i = oldLength; i < newLength; i++) {
-      const state = reactive({
-        ...createUnregisteredSnapshot(false),
-        setRef: createSetRef(i),
-      }) as ForesightElementState & { setRef: (el: MaybeElement) => void }
-
-      const internal: SlotInternal = reactive({
-        element: null,
-        result: null,
-        unsubscribe: null,
-        state,
-      })
-
-      internals.push(internal)
-      slots.push(readonly(state) as UseForesightSlot)
-    }
-  }
-
-  // Watch options length to reconcile slots
-  watch(
-    () => resolvedOptions.value.length,
-    newLength => reconcile(newLength),
-    { immediate: true }
-  )
-
-  // Patch options on existing registrations without unregistering.
-  // Only patches slots whose options reference has actually changed.
+  // Single watch handles both length changes and option updates
   watch(
     resolvedOptions,
     (newOptions, oldOptions) => {
-      const len = Math.min(newOptions.length, internals.length)
-      for (let i = 0; i < len; i++) {
-        const internal = internals[i]
-        if (!internal?.element || !internal.result) {
+      // Shrink
+      while (managed.length > newOptions.length) {
+        const removed = managed.pop()!
+        slots.pop()
+        if (removed.result) {
+          unregister(removed)
+        }
+      }
+
+      // Update existing slots whose options changed
+      for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
+        const slot = managed[i]
+        if (!slot.element || !slot.result) {
           continue
         }
 
-        // Skip if the options object is the same reference
         if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
           continue
         }
 
-        ForesightManager.instance.updateElementOptions(internal.element, {
+        ForesightManager.instance.updateElementOptions(slot.element, {
           ...newOptions[i],
           callback: (state: ForesightElementState) => resolvedOptions.value[i]?.callback(state),
         })
       }
+
+      // Grow
+      const previousLength = managed.length
+      for (let i = previousLength; i < newOptions.length; i++) {
+        const slot = createSlot(i)
+        managed.push(slot)
+        slots.push(readonly(slot.state) as UseForesightSlot)
+      }
     },
-    { flush: "post" }
+    { immediate: true }
   )
 
   onScopeDispose(() => {
-    for (const internal of internals) {
-      if (internal.result) {
-        unregisterSlot(internal)
+    for (const slot of managed) {
+      if (slot.result) {
+        unregister(slot)
       }
     }
-    internals.length = 0
+    managed.length = 0
     slots.length = 0
   })
 
