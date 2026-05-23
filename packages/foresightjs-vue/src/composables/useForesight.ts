@@ -14,7 +14,7 @@ import {
   type ForesightElementState,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { UseForesightOptions, UseForesightReturn } from "../types"
+import type { MaybeElement, UseForesightOptions, UseForesightReturn } from "../types"
 import { resolveElement } from "../utils/resolveElement"
 
 /**

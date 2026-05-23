@@ -57,7 +57,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
   }, [])
 
   // Register/unregister when elements change, array length changes, or enabled toggles
-  const enabledFlags = optionsArray.map(o => o.enabled !== false)
+  const enabledKey = optionsArray.map(o => o.enabled !== false).join()
 
   useEffect(() => {
     const prevResults = new Map(slotsRef.current)
@@ -102,9 +102,13 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
       }
       slotsRef.current = new Map()
     }
-  }, [optionsArray.length, elements, ...enabledFlags])
+  }, [optionsArray.length, elements, enabledKey])
 
   // Patch options on existing registrations without tearing them down
+  const patchKey = optionsArray
+    .map(o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${o.meta ?? ""}`)
+    .join("|")
+
   useEffect(() => {
     for (let i = 0; i < optionsArray.length; i++) {
       const slot = slotsRef.current.get(i)
@@ -117,12 +121,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
         callback: (state: ForesightElementState) => optionsRef.current[i].callback(state),
       })
     }
-  }, [
-    optionsArray.length,
-    ...optionsArray.map(o => o.reactivateAfter),
-    ...optionsArray.map(o => o.name),
-    ...optionsArray.map(o => o.meta),
-  ])
+  }, [optionsArray.length, patchKey])
 
   // Subscribe to all active registrations. Re-subscribes when the set of results changes.
   const subscribe = useCallback(
