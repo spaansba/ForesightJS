@@ -70,22 +70,6 @@ export const useForesight = (
     Object.assign(state, createUnregisteredSnapshot(false))
   }
 
-  // Register on element attach, patch options (incl. enabled) on change.
-  // `setRef` owns unregistering when the element detaches or swaps.
-  const syncRegistration = () => {
-    const element = currentElement
-    if (!element) {
-      return
-    }
-
-    const currentOptions = toValue(options)
-    if (registerResults) {
-      ForesightManager.instance.updateElementOptions(element, { ...currentOptions, callback })
-    } else {
-      registerElement(element, currentOptions)
-    }
-  }
-
   const setRef = (el: MaybeElement) => {
     const resolved = resolveElement(el) ?? null
 
@@ -99,11 +83,13 @@ export const useForesight = (
     }
 
     currentElement = resolved
-    syncRegistration()
+    if (resolved) {
+      registerElement(resolved, toValue(options))
+    }
   }
 
-  // Re-sync whenever options change. Skip when the raw reference hasn't changed
-  // (e.g. getter returning the same object).
+  // Patch options (incl. enabled) on change. Skip when the raw reference hasn't
+  // changed (e.g. getter returning the same object).
   watch(
     () => toValue(options),
     (newOptions, oldOptions) => {
@@ -111,7 +97,9 @@ export const useForesight = (
         return
       }
 
-      syncRegistration()
+      if (currentElement && registerResults) {
+        ForesightManager.instance.updateElementOptions(currentElement, { ...newOptions, callback })
+      }
     },
     { flush: "post" }
   )

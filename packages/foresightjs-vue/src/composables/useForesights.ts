@@ -96,27 +96,10 @@ export const useForesights = (
     Object.assign(slot.state, createUnregisteredSnapshot(false))
   }
 
-  // Register on element attach, patch options (incl. enabled) on change.
-  // `setRef` owns unregistering when the element detaches or swaps.
-  const syncSlot = (slot: Slot, index: number) => {
-    const slotOptions = resolvedOptions.value[index]
-    if (!slot.element || !slotOptions) {
-      return
-    }
-
-    if (slot.result) {
-      ForesightManager.instance.updateElementOptions(slot.element, {
-        ...slotOptions,
-        callback: (state: ForesightElementState) => resolvedOptions.value[index]?.callback(state),
-      })
-    } else {
-      register(slot, index)
-    }
-  }
-
   const createSlot = (index: number): Slot => {
     const state = reactive({
       ...createUnregisteredSnapshot(false),
+      // `setRef` owns unregistering when the element detaches or swaps.
       setRef: (el: MaybeElement) => {
         const resolved = resolveElement(el) ?? null
         const slot = managed[index]
@@ -129,7 +112,9 @@ export const useForesights = (
         }
 
         slot.element = resolved
-        syncSlot(slot, index)
+        if (resolved) {
+          register(slot, index)
+        }
       },
     }) as Slot["state"]
 
@@ -149,13 +134,19 @@ export const useForesights = (
         }
       }
 
-      // Re-sync existing slots whose options changed
+      // Patch existing slots whose options changed
       for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
         if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
           continue
         }
 
-        syncSlot(managed[i], i)
+        const slot = managed[i]
+        if (slot.element && slot.result) {
+          ForesightManager.instance.updateElementOptions(slot.element, {
+            ...newOptions[i],
+            callback: (state: ForesightElementState) => resolvedOptions.value[i]?.callback(state),
+          })
+        }
       }
 
       // Grow
