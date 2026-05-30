@@ -276,9 +276,10 @@ export class ForesightManager {
     )
 
     this.elementEntries.set(options.element, entry)
+    this.updateCheckableStatus(entry)
+
     if (entry.state.isEnabled) {
       this.activeElementCount++
-      this.updateCheckableStatus(entry)
       this.currentlyActiveHandler?.observeElement(options.element)
     }
 
@@ -501,13 +502,15 @@ export class ForesightManager {
       if (entry.state.isActive) {
         this.activeElementCount--
       }
-      this.checkableElements.delete(entry)
+
       this.updateElementState(entry, {
         isEnabled: false,
         isActive: false,
         isPredicted: false,
         isCallbackRunning: false,
       })
+
+      this.updateCheckableStatus(entry)
     }
   }
 
@@ -518,7 +521,8 @@ export class ForesightManager {
 
   public updateCheckableStatus(entry: ForesightElementInternal): void {
     const state = entry.state
-    const isCheckable = state.isIntersectingWithViewport && state.isActive && !state.isPredicted
+    const isCheckable =
+      state.isEnabled && state.isIntersectingWithViewport && state.isActive && !state.isPredicted
 
     if (isCheckable) {
       this.checkableElements.add(entry)
