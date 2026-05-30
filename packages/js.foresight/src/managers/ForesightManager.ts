@@ -276,9 +276,11 @@ export class ForesightManager {
     )
 
     this.elementEntries.set(options.element, entry)
-    this.activeElementCount++
-    this.updateCheckableStatus(entry)
-    this.currentlyActiveHandler?.observeElement(options.element)
+    if (entry.state.isEnabled) {
+      this.activeElementCount++
+      this.updateCheckableStatus(entry)
+      this.currentlyActiveHandler?.observeElement(options.element)
+    }
 
     this.eventEmitter.emit({
       type: "elementRegistered",
@@ -315,6 +317,10 @@ export class ForesightManager {
 
     if (options.callback) {
       entry.callback = options.callback
+    }
+
+    if (options.enabled !== undefined) {
+      this.setElementEnabled(entry, element, options.enabled !== false)
     }
 
     const prevReactivateAfter = entry.state.reactivateAfter
@@ -451,7 +457,7 @@ export class ForesightManager {
 
   private reactivateElement(element: ForesightElement): void {
     const entry = this.elementEntries.get(element)
-    if (!entry) {
+    if (!entry || !entry.state.isEnabled) {
       return
     }
 
@@ -469,6 +475,40 @@ export class ForesightManager {
     this.activeElementCount++
     this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(element)
+  }
+
+  /**
+   * Toggle prediction for a registered element without unregistering it.
+   * Disabling deactivates and stops observing; enabling reactivates it.
+   */
+  private setElementEnabled(
+    entry: ForesightElementInternal,
+    element: ForesightElement,
+    enabled: boolean
+  ): void {
+    if (entry.state.isEnabled === enabled) {
+      return
+    }
+
+    if (enabled) {
+      this.updateElementState(entry, { isEnabled: true, isActive: true, isPredicted: false })
+      this.activeElementCount++
+      this.updateCheckableStatus(entry)
+      this.currentlyActiveHandler?.observeElement(element)
+    } else {
+      this.clearReactivateTimeout(entry)
+      this.currentlyActiveHandler?.unobserveElement(element)
+      if (entry.state.isActive) {
+        this.activeElementCount--
+      }
+      this.checkableElements.delete(entry)
+      this.updateElementState(entry, {
+        isEnabled: false,
+        isActive: false,
+        isPredicted: false,
+        isCallbackRunning: false,
+      })
+    }
   }
 
   private clearReactivateTimeout(entry: ForesightElementInternal): void {

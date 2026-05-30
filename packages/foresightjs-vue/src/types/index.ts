@@ -9,16 +9,7 @@ export type ResolvedElement<T extends MaybeElement> = T extends ComponentPublicI
   ? Exclude<MaybeElement, ComponentPublicInstance>
   : T | undefined
 
-export type UseForesightOptions = ForesightRegisterOptionsWithoutElement & {
-  /**
-   * Set to `false` to prevent the element from being registered with ForesightManager.
-   * When disabled, the composable returns the unregistered initial snapshot.
-   * When toggled back to `true`, the element is registered again.
-   *
-   * @default true
-   */
-  enabled?: boolean
-}
+export type UseForesightOptions = ForesightRegisterOptionsWithoutElement
 
 export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
   /** Template ref function - bind to an element with `:ref="setRef"`. */

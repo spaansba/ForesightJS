@@ -56,17 +56,15 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
     return existing
   }, [])
 
-  // Register/unregister when elements change, array length changes, or enabled toggles
-  const enabledKey = optionsArray.map(o => o.enabled !== false).join()
-
+  // Register/unregister when elements change or the array length changes
   useEffect(() => {
     const prevResults = new Map(slotsRef.current)
     const nextSlots = new Map<number, SlotEntry>()
 
-    // Register each slot that has an element and is enabled
+    // Register each slot that has an element
     for (let i = 0; i < optionsArray.length; i++) {
       const el = elements.get(i)
-      if (!el || optionsRef.current[i].enabled === false) {
+      if (!el) {
         continue
       }
 
@@ -102,11 +100,11 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
       }
       slotsRef.current = new Map()
     }
-  }, [optionsArray.length, elements, enabledKey])
+  }, [optionsArray.length, elements])
 
   // Patch options on existing registrations without tearing them down
   const patchKey = optionsArray
-    .map(o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${o.meta ?? ""}`)
+    .map(o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${o.meta ?? ""},${o.enabled ?? ""}`)
     .join("|")
 
   useEffect(() => {

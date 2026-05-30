@@ -47,9 +47,9 @@ export const useForesight = (
 
   const callback = (s: ForesightElementState) => toValue(options).callback(s)
 
-  const registerElement = (element: Element) => {
+  const registerElement = (element: Element, registerOptions: UseForesightOptions) => {
     registerResults = ForesightManager.instance.register({
-      ...toValue(options),
+      ...registerOptions,
       element,
       callback,
     })
@@ -70,6 +70,22 @@ export const useForesight = (
     Object.assign(state, createUnregisteredSnapshot(false))
   }
 
+  // Register on element attach, patch options (incl. enabled) on change.
+  // `setRef` owns unregistering when the element detaches or swaps.
+  const syncRegistration = () => {
+    const element = currentElement
+    if (!element) {
+      return
+    }
+
+    const currentOptions = toValue(options)
+    if (registerResults) {
+      ForesightManager.instance.updateElementOptions(element, { ...currentOptions, callback })
+    } else {
+      registerElement(element, currentOptions)
+    }
+  }
+
   const setRef = (el: MaybeElement) => {
     const resolved = resolveElement(el) ?? null
 
@@ -77,19 +93,17 @@ export const useForesight = (
       return
     }
 
+    // Tear down the old registration before swapping the element.
     if (currentElement && registerResults) {
       unregisterElement()
     }
 
     currentElement = resolved
-
-    if (resolved && toValue(options).enabled !== false) {
-      registerElement(resolved)
-    }
+    syncRegistration()
   }
 
-  // Watch options for changes - handle enabled toggle and patch without re-registering.
-  // Skip when the raw reference hasn't changed (e.g. getter returning same object).
+  // Re-sync whenever options change. Skip when the raw reference hasn't changed
+  // (e.g. getter returning the same object).
   watch(
     () => toValue(options),
     (newOptions, oldOptions) => {
@@ -97,32 +111,7 @@ export const useForesight = (
         return
       }
 
-      const wasEnabled = oldOptions ? oldOptions.enabled !== false : true
-      const isEnabled = newOptions.enabled !== false
-
-      // enabled toggled off → unregister
-      if (wasEnabled && !isEnabled && registerResults) {
-        unregisterElement()
-
-        return
-      }
-
-      // enabled toggled on → register if element is available
-      if (!wasEnabled && isEnabled && currentElement && !registerResults) {
-        registerElement(currentElement)
-
-        return
-      }
-
-      // Still enabled, patch options
-      if (!currentElement || !registerResults) {
-        return
-      }
-
-      ForesightManager.instance.updateElementOptions(currentElement, {
-        ...newOptions,
-        callback,
-      })
+      syncRegistration()
     },
     { flush: "post" }
   )

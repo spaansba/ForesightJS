@@ -76,6 +76,9 @@ export type ForesightElementState = {
   isRegistered: boolean
   /** Whether the element is currently eligible to fire its callback. */
   isActive: boolean
+  /** Whether prediction is enabled for this element. When `false` the element
+   * stays registered but inactive. */
+  isEnabled: boolean
   /** True once the element's callback has been triggered by a prediction hit. Stays true until the element is reactivated or unregistered. */
   isPredicted: boolean
   /** True while the callback is executing (between invocation and completion). The callback is awaited, so this stays true for async callbacks until they resolve or reject. */
@@ -345,6 +348,12 @@ export type ForesightRegisterOptionsWithoutElement = {
    * @default Infinity
    */
   reactivateAfter?: number
+  /**
+   * When `false` the element stays registered but inactive: excluded from
+   * prediction and never fires its callback.
+   * @default true
+   */
+  enabled?: boolean
 }
 
 /**

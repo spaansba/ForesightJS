@@ -299,31 +299,7 @@ describe("useForesights", () => {
   })
 
   describe("enabled option", () => {
-    it("does not register when enabled is false", async () => {
-      const Component = defineComponent({
-        setup() {
-          const slots = useForesights([
-            { name: "a", callback: vi.fn(), enabled: false },
-            { name: "b", callback: vi.fn(), enabled: false },
-          ])
-
-          return { slots }
-        },
-        render() {
-          return h("div", [
-            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
-          ])
-        },
-      })
-
-      mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(registerSpy).not.toHaveBeenCalled()
-    })
-
-    it("only registers enabled slots", async () => {
+    it("registers every slot, carrying each slot's enabled flag", async () => {
       const Component = defineComponent({
         setup() {
           const slots = useForesights([
@@ -346,63 +322,12 @@ describe("useForesights", () => {
       mount(Component, { attachTo: document.body })
       await nextTick()
 
-      expect(registerSpy).toHaveBeenCalledTimes(2)
-      const names = registerSpy.mock.calls.map(c => c[0].name)
-      expect(names).toContain("a")
-      expect(names).toContain("c")
-      expect(names).not.toContain("b")
+      expect(registerSpy).toHaveBeenCalledTimes(3)
+      const byName = Object.fromEntries(registerSpy.mock.calls.map(c => [c[0].name, c[0].enabled]))
+      expect(byName).toEqual({ a: true, b: false, c: undefined })
     })
 
-    it("returns unregistered snapshot for disabled slots", async () => {
-      const Component = defineComponent({
-        setup() {
-          const slots = useForesights([{ name: "a", callback: vi.fn(), enabled: false }])
-
-          return { slots }
-        },
-        render() {
-          return h("button", {
-            ref: this.slots[0].setRef,
-            "data-testid": "el",
-            "data-registered": this.slots[0]?.isRegistered,
-          })
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(wrapper.get("[data-testid=el]").attributes("data-registered")).toBe("false")
-    })
-
-    it("registers when enabled toggles from false to true", async () => {
-      const Component = defineComponent({
-        setup() {
-          const enabled = ref(false)
-          const slots = useForesights(() => [
-            { name: "a", callback: vi.fn(), enabled: enabled.value },
-          ])
-
-          return { slots, enabled }
-        },
-        render() {
-          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-      expect(registerSpy).not.toHaveBeenCalled()
-
-      wrapper.vm.enabled = true
-      await nextTick()
-      await nextTick()
-
-      expect(registerSpy).toHaveBeenCalledTimes(1)
-      expect(registerSpy.mock.calls[0][0].name).toBe("a")
-    })
-
-    it("unregisters when enabled toggles from true to false", async () => {
+    it("patches a slot's enabled (true → false) without unregistering", async () => {
       const Component = defineComponent({
         setup() {
           const enabled = ref(true)
@@ -425,10 +350,40 @@ describe("useForesights", () => {
       await nextTick()
       await nextTick()
 
-      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
     })
 
-    it("toggles individual slots independently", async () => {
+    it("patches a slot's enabled (false → true) without re-registering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: enabled.value },
+          ])
+
+          return { slots, enabled }
+        },
+        render() {
+          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = true
+      await nextTick()
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(true)
+    })
+
+    it("patches slots independently", async () => {
       const Component = defineComponent({
         setup() {
           const enabledB = ref(true)
@@ -450,14 +405,16 @@ describe("useForesights", () => {
       const wrapper = mount(Component, { attachTo: document.body })
       await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(2)
-      unregisterSpy.mockClear()
+      updateElementOptionsSpy.mockClear()
 
       // Disable only slot "b"
       wrapper.vm.enabledB = false
       await nextTick()
       await nextTick()
 
-      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
     })
   })
 

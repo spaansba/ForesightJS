@@ -66,7 +66,7 @@ export const useForesights = (
 
   const register = (slot: Slot, index: number) => {
     const slotOptions = resolvedOptions.value[index]
-    if (!slotOptions || slotOptions.enabled === false) {
+    if (!slotOptions) {
       return
     }
 
@@ -96,6 +96,24 @@ export const useForesights = (
     Object.assign(slot.state, createUnregisteredSnapshot(false))
   }
 
+  // Register on element attach, patch options (incl. enabled) on change.
+  // `setRef` owns unregistering when the element detaches or swaps.
+  const syncSlot = (slot: Slot, index: number) => {
+    const slotOptions = resolvedOptions.value[index]
+    if (!slot.element || !slotOptions) {
+      return
+    }
+
+    if (slot.result) {
+      ForesightManager.instance.updateElementOptions(slot.element, {
+        ...slotOptions,
+        callback: (state: ForesightElementState) => resolvedOptions.value[index]?.callback(state),
+      })
+    } else {
+      register(slot, index)
+    }
+  }
+
   const createSlot = (index: number): Slot => {
     const state = reactive({
       ...createUnregisteredSnapshot(false),
@@ -111,9 +129,7 @@ export const useForesights = (
         }
 
         slot.element = resolved
-        if (resolved) {
-          register(slot, index)
-        }
+        syncSlot(slot, index)
       },
     }) as Slot["state"]
 
@@ -133,37 +149,13 @@ export const useForesights = (
         }
       }
 
-      // Update existing slots whose options changed
+      // Re-sync existing slots whose options changed
       for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
-        const slot = managed[i]
-
         if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
           continue
         }
 
-        const wasEnabled = oldOptions ? oldOptions[i]?.enabled !== false : true
-        const isEnabled = newOptions[i].enabled !== false
-
-        // enabled toggled off → unregister
-        if (wasEnabled && !isEnabled && slot.result) {
-          unregister(slot)
-          continue
-        }
-
-        // enabled toggled on → register if element is available
-        if (!wasEnabled && isEnabled && slot.element && !slot.result) {
-          register(slot, i)
-          continue
-        }
-
-        if (!slot.element || !slot.result) {
-          continue
-        }
-
-        ForesightManager.instance.updateElementOptions(slot.element, {
-          ...newOptions[i],
-          callback: (state: ForesightElementState) => resolvedOptions.value[i]?.callback(state),
-        })
+        syncSlot(managed[i], i)
       }
 
       // Grow

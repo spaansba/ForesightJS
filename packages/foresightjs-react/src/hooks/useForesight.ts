@@ -17,8 +17,6 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
   const optionsRef = useRef(options)
   optionsRef.current = options
 
-  const enabled = options.enabled !== false
-
   const [element, setElement] = useState<T | null>(null)
   const [registerResults, setRegisterResults] = useState<ForesightRegisterResult | null>(null)
 
@@ -26,9 +24,9 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
     setElement(node)
   }, [])
 
-  // Register/unregister when the DOM node attaches or swaps, or when enabled changes.
+  // Register/unregister when the DOM node attaches or swaps.
   useEffect(() => {
-    if (!element || !enabled) {
+    if (!element) {
       return
     }
 
@@ -43,7 +41,7 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       result.unregister()
       setRegisterResults(null)
     }
-  }, [element, enabled])
+  }, [element])
 
   // Patch options on the existing registration without tearing it down.
   useEffect(() => {
@@ -55,7 +53,14 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       ...optionsRef.current,
       callback: (state: ForesightElementState) => optionsRef.current.callback(state),
     })
-  }, [options.reactivateAfter, options.name, options.meta, element, registerResults])
+  }, [
+    options.reactivateAfter,
+    options.name,
+    options.meta,
+    options.enabled,
+    element,
+    registerResults,
+  ])
 
   const state = useSyncExternalStore<ForesightElementState>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,

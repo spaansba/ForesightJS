@@ -1707,4 +1707,59 @@ describe("ForesightManager", () => {
       consoleError.mockRestore()
     })
   })
+
+  describe("enabled option", () => {
+    it("registers as inactive when enabled is false", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: false })
+
+      expect(manager.registeredElements.has(element)).toBe(true)
+      expect(entry.state.isRegistered).toBe(true)
+      expect(entry.state.isEnabled).toBe(false)
+      expect(entry.state.isActive).toBe(false)
+    })
+
+    it("does not fire its callback while disabled", () => {
+      const callback = vi.fn()
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      manager.register({ element, callback, enabled: false })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it("activates without re-registering when toggled on", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: false })
+      expect(entry.state.isActive).toBe(false)
+
+      manager.updateElementOptions(element, { enabled: true })
+
+      expect(entry.state.isEnabled).toBe(true)
+      expect(entry.state.isActive).toBe(true)
+      expect(manager.registeredElements.get(element)?.registerCount).toBe(1)
+    })
+
+    it("deactivates without unregistering when toggled off", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: true })
+      expect(entry.state.isActive).toBe(true)
+
+      manager.updateElementOptions(element, { enabled: false })
+
+      expect(entry.state.isRegistered).toBe(true)
+      expect(entry.state.isEnabled).toBe(false)
+      expect(entry.state.isActive).toBe(false)
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
+    it("leaves enabled unchanged when the option is omitted on patch", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: false })
+
+      manager.updateElementOptions(element, { name: "renamed" })
+
+      expect(entry.state.isEnabled).toBe(false)
+      expect(entry.state.name).toBe("renamed")
+    })
+  })
 })

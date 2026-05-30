@@ -278,7 +278,7 @@ describe("useForesight", () => {
   })
 
   describe("enabled option", () => {
-    it("does not register when enabled is false", async () => {
+    it("registers as disabled when enabled is false", async () => {
       const Component = defineComponent({
         setup() {
           return useForesight({
@@ -295,10 +295,11 @@ describe("useForesight", () => {
       mount(Component, { attachTo: document.body })
       await nextTick()
 
-      expect(registerSpy).not.toHaveBeenCalled()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBe(false)
     })
 
-    it("registers when enabled is true (explicit)", async () => {
+    it("registers as enabled when enabled is true (explicit)", async () => {
       const Component = defineComponent({
         setup() {
           return useForesight({
@@ -316,6 +317,7 @@ describe("useForesight", () => {
       await nextTick()
 
       expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBe(true)
     })
 
     it("registers when enabled is undefined (default)", async () => {
@@ -335,60 +337,10 @@ describe("useForesight", () => {
       await nextTick()
 
       expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBeUndefined()
     })
 
-    it("returns unregistered snapshot when disabled", async () => {
-      const Component = defineComponent({
-        setup() {
-          return useForesight({
-            callback: vi.fn(),
-            enabled: false,
-          })
-        },
-        render() {
-          return h("button", {
-            ref: this.setRef,
-            "data-testid": "el",
-            "data-registered": this.isRegistered,
-          })
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-
-      expect(wrapper.get("[data-testid=el]").attributes("data-registered")).toBe("false")
-    })
-
-    it("registers when enabled toggles from false to true", async () => {
-      const Component = defineComponent({
-        setup() {
-          const enabled = ref(false)
-          const result = useForesight(() => ({
-            callback: vi.fn(),
-            name: "toggle-btn",
-            enabled: enabled.value,
-          }))
-
-          return { ...result, enabled }
-        },
-        render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
-        },
-      })
-
-      const wrapper = mount(Component, { attachTo: document.body })
-      await nextTick()
-      expect(registerSpy).not.toHaveBeenCalled()
-
-      wrapper.vm.enabled = true
-      await nextTick()
-      await nextTick()
-
-      expect(registerSpy).toHaveBeenCalledTimes(1)
-    })
-
-    it("unregisters when enabled toggles from true to false", async () => {
+    it("patches enabled (true → false) without unregistering", async () => {
       const Component = defineComponent({
         setup() {
           const enabled = ref(true)
@@ -413,7 +365,39 @@ describe("useForesight", () => {
       await nextTick()
       await nextTick()
 
-      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+
+    it("patches enabled (false → true) without re-registering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+          const result = useForesight(() => ({
+            callback: vi.fn(),
+            name: "toggle-btn",
+            enabled: enabled.value,
+          }))
+
+          return { ...result, enabled }
+        },
+        render() {
+          return h("button", { ref: this.setRef, "data-testid": "el" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = true
+      await nextTick()
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(true)
     })
   })
 
