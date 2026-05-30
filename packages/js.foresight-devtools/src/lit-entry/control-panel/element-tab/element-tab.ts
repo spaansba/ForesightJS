@@ -400,12 +400,21 @@ export class ElementTab extends LitElement {
       return
     }
 
-    const sorted = this.getSortedElements()
-    this._cachedActiveElements = sorted.filter(entry => entry.state.isActive)
-    this._cachedInactiveElements = sorted.filter(
-      entry => !entry.state.isActive && entry.state.isEnabled
-    )
-    this._cachedDisabledElements = sorted.filter(entry => !entry.state.isEnabled)
+    const active: ElementListEntry[] = []
+    const inactive: ElementListEntry[] = []
+    const disabled: ElementListEntry[] = []
+    for (const entry of this.getSortedElements()) {
+      if (!entry.state.isEnabled) {
+        disabled.push(entry)
+      } else if (entry.state.isActive) {
+        active.push(entry)
+      } else {
+        inactive.push(entry)
+      }
+    }
+    this._cachedActiveElements = active
+    this._cachedInactiveElements = inactive
+    this._cachedDisabledElements = disabled
     this._elementsCacheDirty = false
   }
 
@@ -440,6 +449,43 @@ export class ElementTab extends LitElement {
     return 0
   }
 
+  private renderElementSection(
+    label: string,
+    modifierClass: string,
+    elements: ElementListEntry[],
+    collapsed: boolean,
+    toggleCollapsed: () => void
+  ) {
+    if (elements.length === 0) {
+      return ""
+    }
+
+    return html`
+      <div class="element-section">
+        <h3
+          class="section-header ${modifierClass} ${collapsed ? "collapsed" : ""}"
+          @click=${toggleCollapsed}
+        >
+          ${label} (${elements.length})
+        </h3>
+        ${!collapsed
+          ? map(
+              elements,
+              entry => html`
+                <single-element
+                  .element=${entry.element}
+                  .state=${entry.state}
+                  .isExpanded=${this.expandedElementIds.has(entry.state.id)}
+                  .onToggle=${this.handleElementToggle}
+                >
+                </single-element>
+              `
+            )
+          : ""}
+      </div>
+    `
+  }
+
   render() {
     return html`
       <tab-header>
@@ -460,91 +506,33 @@ export class ElementTab extends LitElement {
         .noContentMessage=${this.noContentMessage}
         .hasContent=${!!this.elementListItems.size}
       >
-        ${this.activeElements.length > 0
-          ? html`
-              <div class="element-section">
-                <h3
-                  class="section-header active ${this.activeSectionCollapsed ? "collapsed" : ""}"
-                  @click=${() => {
-                    this.activeSectionCollapsed = !this.activeSectionCollapsed
-                  }}
-                >
-                  Active Elements (${this.activeElements.length})
-                </h3>
-                ${!this.activeSectionCollapsed
-                  ? map(this.activeElements, entry => {
-                      return html`
-                        <single-element
-                          .element=${entry.element}
-                          .state=${entry.state}
-                          .isExpanded=${this.expandedElementIds.has(entry.state.id)}
-                          .onToggle=${this.handleElementToggle}
-                        >
-                        </single-element>
-                      `
-                    })
-                  : ""}
-              </div>
-            `
-          : ""}
-        ${this.inactiveElements.length > 0
-          ? html`
-              <div class="element-section">
-                <h3
-                  class="section-header inactive ${this.inactiveSectionCollapsed
-                    ? "collapsed"
-                    : ""}"
-                  @click=${() => {
-                    this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
-                  }}
-                >
-                  Inactive Elements (${this.inactiveElements.length})
-                </h3>
-                ${!this.inactiveSectionCollapsed
-                  ? map(this.inactiveElements, entry => {
-                      return html`
-                        <single-element
-                          .element=${entry.element}
-                          .state=${entry.state}
-                          .isExpanded=${this.expandedElementIds.has(entry.state.id)}
-                          .onToggle=${this.handleElementToggle}
-                        >
-                        </single-element>
-                      `
-                    })
-                  : ""}
-              </div>
-            `
-          : ""}
-        ${this.disabledElements.length > 0
-          ? html`
-              <div class="element-section">
-                <h3
-                  class="section-header disabled ${this.disabledSectionCollapsed
-                    ? "collapsed"
-                    : ""}"
-                  @click=${() => {
-                    this.disabledSectionCollapsed = !this.disabledSectionCollapsed
-                  }}
-                >
-                  Disabled Elements (${this.disabledElements.length})
-                </h3>
-                ${!this.disabledSectionCollapsed
-                  ? map(this.disabledElements, entry => {
-                      return html`
-                        <single-element
-                          .element=${entry.element}
-                          .state=${entry.state}
-                          .isExpanded=${this.expandedElementIds.has(entry.state.id)}
-                          .onToggle=${this.handleElementToggle}
-                        >
-                        </single-element>
-                      `
-                    })
-                  : ""}
-              </div>
-            `
-          : ""}
+        ${this.renderElementSection(
+          "Active Elements",
+          "active",
+          this.activeElements,
+          this.activeSectionCollapsed,
+          () => {
+            this.activeSectionCollapsed = !this.activeSectionCollapsed
+          }
+        )}
+        ${this.renderElementSection(
+          "Inactive Elements",
+          "inactive",
+          this.inactiveElements,
+          this.inactiveSectionCollapsed,
+          () => {
+            this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
+          }
+        )}
+        ${this.renderElementSection(
+          "Disabled Elements",
+          "disabled",
+          this.disabledElements,
+          this.disabledSectionCollapsed,
+          () => {
+            this.disabledSectionCollapsed = !this.disabledSectionCollapsed
+          }
+        )}
       </tab-content>
     `
   }

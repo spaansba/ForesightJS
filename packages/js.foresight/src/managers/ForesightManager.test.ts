@@ -1761,5 +1761,36 @@ describe("ForesightManager", () => {
       expect(entry.state.isEnabled).toBe(false)
       expect(entry.state.name).toBe("renamed")
     })
+
+    it("tears down global listeners when the last active element is disabled", () => {
+      const { manager, element } = setupBasicTest({ enabled: true })
+      // @ts-expect-error - accessing private field for tests
+      expect(manager.isSetup).toBe(true)
+
+      manager.updateElementOptions(element, { enabled: false })
+
+      // @ts-expect-error - accessing private field for tests
+      expect(manager.isSetup).toBe(false)
+    })
+
+    it("re-arms global listeners when re-enabled after firing left the manager idle", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
+
+      // Firing the only element drops the active count to zero, which tears the
+      // global mouse/trajectory listeners down (isSetup → false).
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      // @ts-expect-error - accessing private field for tests
+      expect(manager.isSetup).toBe(false)
+
+      // Disabling then re-enabling from devtools must bring the listeners back,
+      // otherwise the element reads as enabled but never predicts again.
+      manager.updateElementOptions(element, { enabled: false })
+      manager.updateElementOptions(element, { enabled: true })
+
+      // @ts-expect-error - accessing private field for tests
+      expect(manager.isSetup).toBe(true)
+      expect(entry.state.isActive).toBe(true)
+    })
   })
 })

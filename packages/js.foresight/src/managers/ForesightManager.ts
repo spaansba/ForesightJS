@@ -492,9 +492,13 @@ export class ForesightManager {
     }
 
     if (enabled) {
-      this.updateElementState(entry, { isEnabled: true, isActive: true, isPredicted: false })
+      // Global listeners may have been torn down when the active count last hit
+      // zero; re-arm them so prediction actually resumes.
+      if (!this.isSetup) {
+        this.initializeGlobalListeners()
+      }
+
       this.activeElementCount++
-      this.updateCheckableStatus(entry)
       this.currentlyActiveHandler?.observeElement(element)
     } else {
       this.clearReactivateTimeout(entry)
@@ -502,15 +506,19 @@ export class ForesightManager {
       if (entry.state.isActive) {
         this.activeElementCount--
       }
+    }
 
-      this.updateElementState(entry, {
-        isEnabled: false,
-        isActive: false,
-        isPredicted: false,
-        isCallbackRunning: false,
-      })
+    this.updateElementState(entry, {
+      isEnabled: enabled,
+      isActive: enabled,
+      isPredicted: false,
+      isCallbackRunning: false,
+    })
+    this.updateCheckableStatus(entry)
 
-      this.updateCheckableStatus(entry)
+    // Disabling the last active element leaves nothing to predict on.
+    if (this.activeElementCount === 0) {
+      this.removeGlobalListeners()
     }
   }
 
