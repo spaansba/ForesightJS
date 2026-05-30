@@ -9,6 +9,7 @@ import {
   useIsVisible,
   useResetKey,
 } from "../../stores/ButtonStateStore"
+import ForesightButtonEnabled from "../../components/test-buttons/ForesightButtonEnabled"
 import ForesightButtonError from "../../components/test-buttons/ForesightButtonError"
 
 type SectionProps = {
@@ -72,6 +73,10 @@ export default function Elements() {
         onToggle={actions.toggleVisibility}
       >
         <ForesightButtonVisibility name="visibility" />
+      </Section>
+
+      <Section title="Enabled toggle">
+        <ForesightButtonEnabled name="enabled" />
       </Section>
 
       <Section title="Edge cases">

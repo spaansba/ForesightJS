@@ -7,22 +7,15 @@ import {
   onScopeDispose,
   watch,
   type MaybeRefOrGetter,
-  type ToRefs,
 } from "vue"
 import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { MaybeElement } from "../types"
+import type { MaybeElement, UseForesightOptions, UseForesightReturn } from "../types"
 import { resolveElement } from "../utils/resolveElement"
-
-export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
-  /** Template ref function - bind to an element with `:ref="setRef"`. */
-  setRef: (el: MaybeElement) => void
-}
 
 /**
  * Registers a single element with ForesightManager.
@@ -44,7 +37,7 @@ export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
  * ```
  */
 export const useForesight = (
-  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement>
+  options: MaybeRefOrGetter<UseForesightOptions>
 ): UseForesightReturn => {
   const state = reactive(createUnregisteredSnapshot(false))
 
@@ -54,9 +47,9 @@ export const useForesight = (
 
   const callback = (s: ForesightElementState) => toValue(options).callback(s)
 
-  const registerElement = (element: Element) => {
+  const registerElement = (element: Element, registerOptions: UseForesightOptions) => {
     registerResults = ForesightManager.instance.register({
-      ...toValue(options),
+      ...registerOptions,
       element,
       callback,
     })
@@ -84,19 +77,19 @@ export const useForesight = (
       return
     }
 
+    // Tear down the old registration before swapping the element.
     if (currentElement && registerResults) {
       unregisterElement()
     }
 
     currentElement = resolved
-
     if (resolved) {
-      registerElement(resolved)
+      registerElement(resolved, toValue(options))
     }
   }
 
-  // Watch options for changes - patch without re-registering.
-  // Skip when the raw reference hasn't changed (e.g. getter returning same object).
+  // Patch options (incl. enabled) on change. Skip when the raw reference hasn't
+  // changed (e.g. getter returning the same object).
   watch(
     () => toValue(options),
     (newOptions, oldOptions) => {
@@ -104,14 +97,9 @@ export const useForesight = (
         return
       }
 
-      if (!currentElement || !registerResults) {
-        return
+      if (currentElement && registerResults) {
+        ForesightManager.instance.updateElementOptions(currentElement, { ...newOptions, callback })
       }
-
-      ForesightManager.instance.updateElementOptions(currentElement, {
-        ...newOptions,
-        callback,
-      })
     },
     { flush: "post" }
   )

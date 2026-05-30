@@ -21,7 +21,8 @@ export {
   type TouchDeviceStrategy,
   type MinimumConnectionType,
 } from "js.foresight"
-export { useForesight, type UseForesightReturn } from "./composables/useForesight"
+export { type UseForesightOptions, type UseForesightReturn } from "./types"
+export { useForesight } from "./composables/useForesight"
 export { useForesights, type UseForesightSlot } from "./composables/useForesights"
 export { useForesightEvent } from "./composables/useForesightEvent"
 export { vForesight } from "./directives/vForesight"

@@ -3,10 +3,9 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { UseForesightResult } from "./useForesight"
+import type { UseForesightOptions, UseForesightResult } from "../types"
 
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const NOOP_SUBSCRIBE = () => () => {}
@@ -18,7 +17,7 @@ type SlotEntry = {
 }
 
 export const useForesights = <T extends HTMLElement = HTMLElement>(
-  optionsArray: ForesightRegisterOptionsWithoutElement[]
+  optionsArray: UseForesightOptions[]
 ): UseForesightResult<T>[] => {
   const optionsRef = useRef(optionsArray)
   optionsRef.current = optionsArray
@@ -104,6 +103,10 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
   }, [optionsArray.length, elements])
 
   // Patch options on existing registrations without tearing them down
+  const patchKey = optionsArray
+    .map(o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${o.meta ?? ""},${o.enabled ?? ""}`)
+    .join("|")
+
   useEffect(() => {
     for (let i = 0; i < optionsArray.length; i++) {
       const slot = slotsRef.current.get(i)
@@ -116,12 +119,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
         callback: (state: ForesightElementState) => optionsRef.current[i].callback(state),
       })
     }
-  }, [
-    optionsArray.length,
-    ...optionsArray.map(o => o.reactivateAfter),
-    ...optionsArray.map(o => o.name),
-    ...optionsArray.map(o => o.meta),
-  ])
+  }, [optionsArray.length, patchKey])
 
   // Subscribe to all active registrations. Re-subscribes when the set of results changes.
   const subscribe = useCallback(

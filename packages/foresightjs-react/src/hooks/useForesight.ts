@@ -3,20 +3,16 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
+import type { UseForesightOptions, UseForesightResult } from "../types"
 
 const NOOP_SUBSCRIBE = () => () => {}
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const GET_INITIAL_SNAPSHOT = () => INITIAL_SNAPSHOT
 
-export type UseForesightResult<T extends HTMLElement> = ForesightElementState & {
-  elementRef: (node: T | null) => void
-}
-
 export const useForesight = <T extends HTMLElement = HTMLElement>(
-  options: ForesightRegisterOptionsWithoutElement
+  options: UseForesightOptions
 ): UseForesightResult<T> => {
   const optionsRef = useRef(options)
   optionsRef.current = options
@@ -57,7 +53,14 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       ...optionsRef.current,
       callback: (state: ForesightElementState) => optionsRef.current.callback(state),
     })
-  }, [options.reactivateAfter, options.name, options.meta, element, registerResults])
+  }, [
+    options.reactivateAfter,
+    options.name,
+    options.meta,
+    options.enabled,
+    element,
+    registerResults,
+  ])
 
   const state = useSyncExternalStore<ForesightElementState>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,

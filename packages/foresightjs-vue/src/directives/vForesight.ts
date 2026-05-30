@@ -1,37 +1,46 @@
 import type { ObjectDirective } from "vue"
-import {
-  ForesightManager,
-  type ForesightRegisterOptionsWithoutElement,
-  type ForesightRegisterResult,
-} from "js.foresight"
+import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
+import type { UseForesightOptions } from "../types"
 
-type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
+/** Shorthand: pass just the callback instead of a full options object. */
+type CallbackShorthand = () => void
+
+type ForesightDirectiveValue = UseForesightOptions | CallbackShorthand
 
 type ForesightDirectiveElement = HTMLElement | SVGElement
 
 const resultMap = new WeakMap<ForesightDirectiveElement, ForesightRegisterResult>()
 
+const isCallbackShorthand = (value: ForesightDirectiveValue): value is CallbackShorthand =>
+  typeof value === "function"
+
+const resolveOptions = (value: ForesightDirectiveValue): UseForesightOptions =>
+  isCallbackShorthand(value) ? { callback: value } : value
+
+const register = (element: ForesightDirectiveElement, options: UseForesightOptions) => {
+  resultMap.set(element, ForesightManager.instance.register({ element, ...options }))
+}
+
+const unregister = (element: ForesightDirectiveElement) => {
+  resultMap.get(element)?.unregister()
+  resultMap.delete(element)
+}
+
 export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDirectiveValue> = {
   mounted(element, binding) {
-    const options =
-      typeof binding.value === "function" ? { callback: binding.value } : binding.value
-
-    const result = ForesightManager.instance.register({ element, ...options })
-    resultMap.set(element, result)
+    register(element, resolveOptions(binding.value))
   },
 
+  // Patch options (incl. enabled) on change without tearing down.
   updated(element, binding) {
     if (binding.value === binding.oldValue) {
       return
     }
 
-    const options =
-      typeof binding.value === "function" ? { callback: binding.value } : binding.value
-    ForesightManager.instance.updateElementOptions(element, options)
+    ForesightManager.instance.updateElementOptions(element, resolveOptions(binding.value))
   },
 
   unmounted(element) {
-    resultMap.get(element)?.unregister()
-    resultMap.delete(element)
+    unregister(element)
   },
 }

@@ -13,11 +13,10 @@ import {
   ForesightManager,
   createUnregisteredSnapshot,
   type ForesightElementState,
-  type ForesightRegisterOptionsWithoutElement,
   type ForesightRegisterResult,
 } from "js.foresight"
 import { resolveElement } from "../utils/resolveElement"
-import type { MaybeElement } from "../types"
+import type { MaybeElement, UseForesightOptions } from "../types"
 
 export type UseForesightSlot = Readonly<ForesightElementState> & {
   /** Template ref function - bind to an element with `:ref="slot.setRef"`. */
@@ -59,7 +58,7 @@ type Slot = {
  * ```
  */
 export const useForesights = (
-  options: MaybeRefOrGetter<ForesightRegisterOptionsWithoutElement[]>
+  options: MaybeRefOrGetter<UseForesightOptions[]>
 ): UseForesightSlot[] => {
   const resolvedOptions = computed(() => toValue(options))
   const managed: Slot[] = []
@@ -100,6 +99,7 @@ export const useForesights = (
   const createSlot = (index: number): Slot => {
     const state = reactive({
       ...createUnregisteredSnapshot(false),
+      // `setRef` owns unregistering when the element detaches or swaps.
       setRef: (el: MaybeElement) => {
         const resolved = resolveElement(el) ?? null
         const slot = managed[index]
@@ -134,21 +134,19 @@ export const useForesights = (
         }
       }
 
-      // Update existing slots whose options changed
+      // Patch existing slots whose options changed
       for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
-        const slot = managed[i]
-        if (!slot.element || !slot.result) {
-          continue
-        }
-
         if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
           continue
         }
 
-        ForesightManager.instance.updateElementOptions(slot.element, {
-          ...newOptions[i],
-          callback: (state: ForesightElementState) => resolvedOptions.value[i]?.callback(state),
-        })
+        const slot = managed[i]
+        if (slot.element && slot.result) {
+          ForesightManager.instance.updateElementOptions(slot.element, {
+            ...newOptions[i],
+            callback: (state: ForesightElementState) => resolvedOptions.value[i]?.callback(state),
+          })
+        }
       }
 
       // Grow

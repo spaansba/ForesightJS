@@ -1,11 +1,8 @@
 import { act, render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import {
-  createUnregisteredSnapshot,
-  type ForesightCallback,
-  type ForesightRegisterOptionsWithoutElement,
-} from "js.foresight"
+import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import type { UseForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
@@ -18,7 +15,7 @@ beforeEach(() => {
 })
 
 type ProbeProps = {
-  options: ForesightRegisterOptionsWithoutElement
+  options: UseForesightOptions
   attach?: boolean
 }
 
@@ -133,5 +130,47 @@ describe("useForesight", () => {
     }
     const { getByTestId } = render(<Capture />)
     expect(getByTestId("state").getAttribute("data-registered")).toBe("false")
+  })
+
+  describe("enabled option", () => {
+    it("registers as disabled when enabled is false", () => {
+      render(<ButtonProbe options={{ callback: vi.fn(), enabled: false }} />)
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBe(false)
+    })
+
+    it("registers as enabled when enabled is true (explicit)", () => {
+      render(<ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: true }} />)
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBe(true)
+    })
+
+    it("registers when enabled is undefined (default)", () => {
+      render(<ButtonProbe options={{ callback: vi.fn(), name: "x" }} />)
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBeUndefined()
+    })
+
+    it("patches enabled (false → true) without re-registering", () => {
+      const { rerender } = render(
+        <ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: false }} />
+      )
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      rerender(<ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: true }} />)
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(true)
+    })
+
+    it("patches enabled (true → false) without unregistering", () => {
+      const { rerender } = render(
+        <ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: true }} />
+      )
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      rerender(<ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: false }} />)
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(false)
+    })
   })
 })

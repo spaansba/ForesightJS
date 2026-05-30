@@ -298,6 +298,126 @@ describe("useForesights", () => {
     expect(registerSpy.mock.calls[2][0].name).toBe("z")
   })
 
+  describe("enabled option", () => {
+    it("registers every slot, carrying each slot's enabled flag", async () => {
+      const Component = defineComponent({
+        setup() {
+          const slots = useForesights([
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: false },
+            { name: "c", callback: vi.fn() },
+          ])
+
+          return { slots }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+            h("button", { ref: this.slots[2].setRef, "data-testid": "el-2" }),
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(3)
+      const byName = Object.fromEntries(registerSpy.mock.calls.map(c => [c[0].name, c[0].enabled]))
+      expect(byName).toEqual({ a: true, b: false, c: undefined })
+    })
+
+    it("patches a slot's enabled (true → false) without unregistering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(true)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: enabled.value },
+          ])
+
+          return { slots, enabled }
+        },
+        render() {
+          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+
+    it("patches a slot's enabled (false → true) without re-registering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: enabled.value },
+          ])
+
+          return { slots, enabled }
+        },
+        render() {
+          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = true
+      await nextTick()
+      await nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(true)
+    })
+
+    it("patches slots independently", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabledB = ref(true)
+          const slots = useForesights(() => [
+            { name: "a", callback: vi.fn(), enabled: true },
+            { name: "b", callback: vi.fn(), enabled: enabledB.value },
+          ])
+
+          return { slots, enabledB }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      updateElementOptionsSpy.mockClear()
+
+      // Disable only slot "b"
+      wrapper.vm.enabledB = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+  })
+
   describe("comment node filtering", () => {
     it("does not register when setRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({

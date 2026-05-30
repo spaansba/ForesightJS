@@ -172,6 +172,76 @@ describe("vForesight directive", () => {
     expect(updateElementOptionsSpy).not.toHaveBeenCalled()
   })
 
+  describe("enabled option", () => {
+    it("registers as disabled when enabled is false", () => {
+      const Component = defineComponent({
+        setup() {
+          return { callback: vi.fn() }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "disabled-btn", callback: this.callback, enabled: false }],
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].enabled).toBe(false)
+    })
+
+    it("patches enabled (false → true) without re-registering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+
+          return { callback: vi.fn(), enabled }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "toggle-btn", callback: this.callback, enabled: this.enabled }],
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = true
+      await wrapper.vm.$nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(true)
+    })
+
+    it("patches enabled (true → false) without unregistering", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(true)
+
+          return { callback: vi.fn(), enabled }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "toggle-btn", callback: this.callback, enabled: this.enabled }],
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = false
+      await wrapper.vm.$nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+  })
+
   it("calls updateElementOptions when binding value changes reference", async () => {
     const cb = vi.fn()
     const Component = defineComponent({

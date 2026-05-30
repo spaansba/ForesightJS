@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DirectiveSimple from "./partials/DirectiveSimple.vue"
 import DirectiveWithOptions from "./partials/DirectiveWithOptions.vue"
+import DirectiveEnabledToggle from "./partials/DirectiveEnabledToggle.vue"
 </script>
 
 <template>
@@ -11,6 +12,7 @@ import DirectiveWithOptions from "./partials/DirectiveWithOptions.vue"
     <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">
       <DirectiveSimple />
       <DirectiveWithOptions />
+      <DirectiveEnabledToggle />
     </section>
   </div>
 </template>

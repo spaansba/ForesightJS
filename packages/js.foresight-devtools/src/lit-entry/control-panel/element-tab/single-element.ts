@@ -8,7 +8,7 @@ import { customElement, property, state } from "lit/decorators.js"
 import "../base-tab/expandable-item"
 import "./reactivate-countdown"
 import { ForesightManager } from "js.foresight"
-import { UNREGISTER_SVG } from "../../../svg/svg-icons"
+import { DISABLED_SVG, ENABLE_SVG, UNREGISTER_SVG } from "../../../svg/svg-icons"
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
@@ -61,7 +61,9 @@ export class SingleElement extends LitElement {
         box-shadow: 0 0 0 2px rgba(186, 104, 200, 0.4);
       }
 
-      .unregister-button {
+      .unregister-button,
+      .toggle-enabled-button,
+      .enable-button {
         all: unset;
         display: flex;
         align-items: center;
@@ -73,9 +75,26 @@ export class SingleElement extends LitElement {
         color: #999;
       }
 
+      .unregister-button svg,
+      .toggle-enabled-button svg,
+      .enable-button svg {
+        width: 12px;
+        height: 12px;
+      }
+
       .unregister-button:hover {
         background-color: rgba(255, 107, 107, 0.1);
         color: #ff6b6b;
+      }
+
+      .toggle-enabled-button:hover {
+        background-color: rgba(255, 165, 0, 0.1);
+        color: #ffa726;
+      }
+
+      .enable-button:hover {
+        background-color: rgba(76, 175, 80, 0.1);
+        color: #4caf50;
       }
 
       .element-name {
@@ -220,6 +239,13 @@ export class SingleElement extends LitElement {
     ForesightManager.instance.unregister(this.element, "devtools")
   }
 
+  private handleToggleEnabled = (e: MouseEvent) => {
+    e.stopPropagation()
+    ForesightManager.instance.updateElementOptions(this.element, {
+      enabled: !this.state.isEnabled,
+    })
+  }
+
   render() {
     // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
     const isNotVisible =
@@ -245,8 +271,27 @@ export class SingleElement extends LitElement {
             >
               ${this.state.name || "unnamed"}
             </span>
-            <reactivate-countdown .element=${this.element} .state=${this.state}>
-            </reactivate-countdown>
+            ${this.state.isEnabled
+              ? html`
+                  <reactivate-countdown .element=${this.element} .state=${this.state}>
+                  </reactivate-countdown>
+                  <button
+                    class="toggle-enabled-button"
+                    @click="${this.handleToggleEnabled}"
+                    title="Disable element"
+                  >
+                    ${DISABLED_SVG}
+                  </button>
+                `
+              : html`
+                  <button
+                    class="enable-button"
+                    @click="${this.handleToggleEnabled}"
+                    title="Enable element"
+                  >
+                    ${ENABLE_SVG}
+                  </button>
+                `}
             <button
               class="unregister-button"
               @click="${this.handleUnregister}"

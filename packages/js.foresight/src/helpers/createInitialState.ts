@@ -73,10 +73,11 @@ export const createElementInternal = (
   id: string,
   defaultHitSlop: Exclude<HitSlop, number>
 ): ForesightElementInternal => {
-  const { element, callback, hitSlop, name, meta, reactivateAfter } = options
+  const { element, callback, hitSlop, name, meta, reactivateAfter, enabled } = options
 
   const initialRect = element.getBoundingClientRect()
   const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
+  const isEnabled = enabled !== false
 
   const state: ForesightElementState = {
     id,
@@ -90,7 +91,8 @@ export const createElementInternal = (
     isLimitedConnection: false,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
-    isActive: true,
+    isActive: isEnabled,
+    isEnabled,
     isPredicted: false,
     isCallbackRunning: false,
     hitCount: 0,
@@ -152,6 +154,7 @@ export const createUnregisteredSnapshot = (isLimitedConnection: boolean): Foresi
     isIntersectingWithViewport: false,
     isRegistered: false,
     isActive: false,
+    isEnabled: false,
     isPredicted: false,
     isCallbackRunning: false,
     hitCount: 0,

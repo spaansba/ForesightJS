@@ -276,9 +276,12 @@ export class ForesightManager {
     )
 
     this.elementEntries.set(options.element, entry)
-    this.activeElementCount++
     this.updateCheckableStatus(entry)
-    this.currentlyActiveHandler?.observeElement(options.element)
+
+    if (entry.state.isEnabled) {
+      this.activeElementCount++
+      this.currentlyActiveHandler?.observeElement(options.element)
+    }
 
     this.eventEmitter.emit({
       type: "elementRegistered",
@@ -315,6 +318,10 @@ export class ForesightManager {
 
     if (options.callback) {
       entry.callback = options.callback
+    }
+
+    if (options.enabled !== undefined) {
+      this.setElementEnabled(entry, element, options.enabled !== false)
     }
 
     const prevReactivateAfter = entry.state.reactivateAfter
@@ -451,7 +458,7 @@ export class ForesightManager {
 
   private reactivateElement(element: ForesightElement): void {
     const entry = this.elementEntries.get(element)
-    if (!entry) {
+    if (!entry || !entry.state.isEnabled) {
       return
     }
 
@@ -471,6 +478,50 @@ export class ForesightManager {
     this.currentlyActiveHandler?.observeElement(element)
   }
 
+  /**
+   * Toggle prediction for a registered element without unregistering it.
+   * Disabling deactivates and stops observing; enabling reactivates it.
+   */
+  private setElementEnabled(
+    entry: ForesightElementInternal,
+    element: ForesightElement,
+    enabled: boolean
+  ): void {
+    if (entry.state.isEnabled === enabled) {
+      return
+    }
+
+    if (enabled) {
+      // Global listeners may have been torn down when the active count last hit
+      // zero; re-arm them so prediction actually resumes.
+      if (!this.isSetup) {
+        this.initializeGlobalListeners()
+      }
+
+      this.activeElementCount++
+      this.currentlyActiveHandler?.observeElement(element)
+    } else {
+      this.clearReactivateTimeout(entry)
+      this.currentlyActiveHandler?.unobserveElement(element)
+      if (entry.state.isActive) {
+        this.activeElementCount--
+      }
+    }
+
+    this.updateElementState(entry, {
+      isEnabled: enabled,
+      isActive: enabled,
+      isPredicted: false,
+      isCallbackRunning: false,
+    })
+    this.updateCheckableStatus(entry)
+
+    // Disabling the last active element leaves nothing to predict on.
+    if (this.activeElementCount === 0) {
+      this.removeGlobalListeners()
+    }
+  }
+
   private clearReactivateTimeout(entry: ForesightElementInternal): void {
     clearTimeout(entry.reactivateTimeoutId)
     entry.reactivateTimeoutId = undefined
@@ -478,7 +529,8 @@ export class ForesightManager {
 
   public updateCheckableStatus(entry: ForesightElementInternal): void {
     const state = entry.state
-    const isCheckable = state.isIntersectingWithViewport && state.isActive && !state.isPredicted
+    const isCheckable =
+      state.isEnabled && state.isIntersectingWithViewport && state.isActive && !state.isPredicted
 
     if (isCheckable) {
       this.checkableElements.add(entry)
