@@ -224,7 +224,7 @@ export class ElementTab extends LitElement {
 
     const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
       const state = ForesightManager.instance.registeredElements.get(element)
-      if (state) {
+      if (state && state.isRegistered) {
         this._pendingElementUpdates.set(element, state)
         this._scheduleDebouncedUpdate()
       }
@@ -266,6 +266,8 @@ export class ElementTab extends LitElement {
       (e: ElementUnregisteredEvent) => {
         this._unsubscribeFromElement(e.element)
         this.elementListItems.delete(e.element)
+        // Drop any queued update so a later debounce flush can't re-add it.
+        this._pendingElementUpdates.delete(e.element)
         if (!this.elementListItems.size) {
           this.noContentMessage = "No Elements Registered To The Foresight Manager"
         }
