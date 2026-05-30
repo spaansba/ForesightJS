@@ -172,6 +172,96 @@ describe("vForesight directive", () => {
     expect(updateElementOptionsSpy).not.toHaveBeenCalled()
   })
 
+  describe("enabled option", () => {
+    it("does not register when enabled is false", () => {
+      const Component = defineComponent({
+        setup() {
+          return { callback: vi.fn() }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "disabled-btn", callback: this.callback, enabled: false }],
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+
+      expect(registerSpy).not.toHaveBeenCalled()
+    })
+
+    it("registers when enabled toggles from false to true", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(false)
+
+          return { callback: vi.fn(), enabled }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "toggle-btn", callback: this.callback, enabled: this.enabled }],
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      expect(registerSpy).not.toHaveBeenCalled()
+
+      wrapper.vm.enabled = true
+      await wrapper.vm.$nextTick()
+
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls[0][0].name).toBe("toggle-btn")
+    })
+
+    it("unregisters when enabled toggles from true to false", async () => {
+      const Component = defineComponent({
+        setup() {
+          const enabled = ref(true)
+
+          return { callback: vi.fn(), enabled }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: "toggle-btn", callback: this.callback, enabled: this.enabled }],
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+
+      wrapper.vm.enabled = false
+      await wrapper.vm.$nextTick()
+
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not patch options while disabled", async () => {
+      const Component = defineComponent({
+        setup() {
+          const name = ref("first")
+
+          return { callback: vi.fn(), name }
+        },
+        render() {
+          return withDirectives(h("button", { "data-testid": "el" }), [
+            [vForesight, { name: this.name, callback: this.callback, enabled: false }],
+          ])
+        },
+      })
+
+      const wrapper = mount(Component, { attachTo: document.body })
+
+      wrapper.vm.name = "second"
+      await wrapper.vm.$nextTick()
+
+      expect(registerSpy).not.toHaveBeenCalled()
+      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    })
+  })
+
   it("calls updateElementOptions when binding value changes reference", async () => {
     const cb = vi.fn()
     const Component = defineComponent({

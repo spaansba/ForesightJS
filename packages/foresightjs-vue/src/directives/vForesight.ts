@@ -1,23 +1,53 @@
 import type { ObjectDirective } from "vue"
-import {
-  ForesightManager,
-  type ForesightRegisterOptionsWithoutElement,
-  type ForesightRegisterResult,
-} from "js.foresight"
+import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
+import type { UseForesightOptions } from "../types"
 
-type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
+/** Shorthand: pass just the callback instead of a full options object. */
+type CallbackShorthand = () => void
+
+type ForesightDirectiveValue = UseForesightOptions | CallbackShorthand
 
 type ForesightDirectiveElement = HTMLElement | SVGElement
 
 const resultMap = new WeakMap<ForesightDirectiveElement, ForesightRegisterResult>()
 
+const isCallbackShorthand = (value: ForesightDirectiveValue) => typeof value === "function"
+
+const resolveOptions = (value: ForesightDirectiveValue): UseForesightOptions =>
+  isCallbackShorthand(value) ? { callback: value } : value
+
+// Shorthand form has no `enabled`, so it's always enabled.
+const isEnabled = (value: ForesightDirectiveValue): boolean =>
+  isCallbackShorthand(value) || value.enabled !== false
+
+const register = (element: ForesightDirectiveElement, options: UseForesightOptions) => {
+  resultMap.set(element, ForesightManager.instance.register({ element, ...options }))
+}
+
+const unregister = (element: ForesightDirectiveElement) => {
+  resultMap.get(element)?.unregister()
+  resultMap.delete(element)
+}
+
+// Reconcile the element's registration with its current value. The WeakMap is
+// the source of truth for whether the element is currently registered.
+const sync = (element: ForesightDirectiveElement, value: ForesightDirectiveValue) => {
+  const registered = resultMap.has(element)
+  const shouldBeRegistered = isEnabled(value)
+
+  if (registered && !shouldBeRegistered) {
+    unregister(element) // enabled toggled off
+  } else if (!registered && shouldBeRegistered) {
+    register(element, resolveOptions(value)) // first mount or enabled toggled on
+  } else if (registered) {
+    // still enabled → patch options without tearing down
+    ForesightManager.instance.updateElementOptions(element, resolveOptions(value))
+  }
+}
+
 export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDirectiveValue> = {
   mounted(element, binding) {
-    const options =
-      typeof binding.value === "function" ? { callback: binding.value } : binding.value
-
-    const result = ForesightManager.instance.register({ element, ...options })
-    resultMap.set(element, result)
+    sync(element, binding.value)
   },
 
   updated(element, binding) {
@@ -25,13 +55,10 @@ export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDir
       return
     }
 
-    const options =
-      typeof binding.value === "function" ? { callback: binding.value } : binding.value
-    ForesightManager.instance.updateElementOptions(element, options)
+    sync(element, binding.value)
   },
 
   unmounted(element) {
-    resultMap.get(element)?.unregister()
-    resultMap.delete(element)
+    unregister(element)
   },
 }
