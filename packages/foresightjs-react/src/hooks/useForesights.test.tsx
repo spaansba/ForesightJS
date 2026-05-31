@@ -250,4 +250,34 @@ describe("useForesights", () => {
       expect(enabledByName.b).toBe(false)
     })
   })
+
+  describe("meta option", () => {
+    it("patches when only an item's meta content changes", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <MultiProbe optionsArray={[{ name: "a", callback: cb, meta: { v: 1 } }]} />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      rerender(<MultiProbe optionsArray={[{ name: "a", callback: cb, meta: { v: 2 } }]} />)
+
+      const metaCalls = updateElementOptionsSpy.mock.calls.filter(
+        c => (c[1].meta as { v?: number } | undefined)?.v === 2
+      )
+      expect(metaCalls.length).toBeGreaterThan(0)
+    })
+
+    it("does not re-patch when meta content is unchanged across renders", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <MultiProbe optionsArray={[{ name: "a", callback: cb, meta: { v: 1 } }]} />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      // New object, identical content - must not trigger a patch.
+      rerender(<MultiProbe optionsArray={[{ name: "a", callback: cb, meta: { v: 1 } }]} />)
+
+      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    })
+  })
 })

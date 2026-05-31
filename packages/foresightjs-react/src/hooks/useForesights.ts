@@ -11,6 +11,24 @@ const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const NOOP_SUBSCRIBE = () => () => {}
 const EMPTY_SNAPSHOTS: ForesightElementState[] = []
 
+/**
+ * Serialize `meta` for the patch key so a change to its contents re-triggers the
+ * patch effect. Interpolating the object directly would always stringify to
+ * "[object Object]", hiding every content change. Falls back to String() when
+ * the object can't be serialized (e.g. circular references).
+ */
+const serializeMeta = (meta: Record<string, unknown> | undefined): string => {
+  if (!meta) {
+    return ""
+  }
+
+  try {
+    return JSON.stringify(meta)
+  } catch {
+    return String(meta)
+  }
+}
+
 type SlotEntry = {
   element: Element
   result: ForesightRegisterResult
@@ -104,7 +122,9 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
 
   // Patch options on existing registrations without tearing them down
   const patchKey = optionsArray
-    .map(o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${o.meta ?? ""},${o.enabled ?? ""}`)
+    .map(
+      o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${serializeMeta(o.meta)},${o.enabled ?? ""}`
+    )
     .join("|")
 
   useEffect(() => {
