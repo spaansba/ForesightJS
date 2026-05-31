@@ -71,13 +71,16 @@ export const createDefaultManagerSettings = (): ForesightManagerSettings => {
 export const createElementInternal = (
   options: ForesightRegisterOptions,
   id: string,
-  defaultHitSlop: Exclude<HitSlop, number>
+  defaultHitSlop: Exclude<HitSlop, number>,
+  isLimitedConnection: boolean
 ): ForesightElementInternal => {
   const { element, callback, hitSlop, name, meta, reactivateAfter, enabled } = options
 
   const initialRect = element.getBoundingClientRect()
   const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
   const isEnabled = enabled !== false
+
+  const isInitiallyActive = isEnabled && !isLimitedConnection
 
   const state: ForesightElementState = {
     id,
@@ -88,10 +91,10 @@ export const createElementInternal = (
       expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
       hitSlop: normalizedHitSlop,
     },
-    isLimitedConnection: false,
+    isLimitedConnection,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
-    isActive: isEnabled,
+    isActive: isInitiallyActive,
     isEnabled,
     isPredicted: false,
     isCallbackRunning: false,

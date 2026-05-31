@@ -2,7 +2,6 @@ import { DerivedMapView } from "../helpers/DerivedMapView"
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
-  createUnregisteredSnapshot,
   createDefaultManagerSettings,
   createElementInternal,
   createInitialCallbackHits,
@@ -33,8 +32,6 @@ import type {
 } from "../types/types"
 import type { DesktopHandler } from "./DesktopHandler"
 import type { TouchDeviceHandler } from "./TouchDeviceHandler"
-
-const NOOP_UNSUBSCRIBE = () => {}
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -232,20 +229,13 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions(
+    // On a limited connection (data saver / slow network) the element is
+    // registered so it can be patched and tracked, but stays inactive (never
+    // predicted, never fires its callback) to avoid consuming data.
+    // See createElementInternal / setElementEnabled.
+    const { isLimitedConnection } = evaluateRegistrationConditions(
       this._globalSettings.minimumConnectionType
     )
-
-    if (!shouldRegister) {
-      const blocked = createUnregisteredSnapshot(isLimitedConnection)
-
-      return {
-        ...blocked,
-        unregister: () => {},
-        subscribe: () => NOOP_UNSUBSCRIBE,
-        getSnapshot: () => blocked,
-      }
-    }
 
     const previousEntry = this.elementEntries.get(options.element)
 
@@ -272,13 +262,16 @@ export class ForesightManager {
     const entry = createElementInternal(
       options,
       this.generateId(),
-      this._globalSettings.defaultHitSlop
+      this._globalSettings.defaultHitSlop,
+      isLimitedConnection
     )
 
     this.elementEntries.set(options.element, entry)
     this.updateCheckableStatus(entry)
 
-    if (entry.state.isEnabled) {
+    // Inactive elements (disabled or limited connection) are not observed or
+    // counted as active until they are (re)activated.
+    if (entry.state.isActive) {
       this.activeElementCount++
       this.currentlyActiveHandler?.observeElement(options.element)
     }
@@ -491,7 +484,11 @@ export class ForesightManager {
       return
     }
 
-    if (enabled) {
+    // A limited connection keeps the element inactive even when enabled, so a
+    // data saver never starts firing callbacks just because enabled flipped.
+    const isActive = enabled && !entry.state.isLimitedConnection
+
+    if (isActive) {
       // Global listeners may have been torn down when the active count last hit
       // zero; re-arm them so prediction actually resumes.
       if (!this.isSetup) {
@@ -510,7 +507,7 @@ export class ForesightManager {
 
     this.updateElementState(entry, {
       isEnabled: enabled,
-      isActive: enabled,
+      isActive,
       isPredicted: false,
       isCallbackRunning: false,
     })

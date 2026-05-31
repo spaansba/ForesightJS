@@ -72,12 +72,16 @@ export type ForesightElementState = {
   isLimitedConnection: boolean
   /** Whether the element is currently intersecting the viewport. */
   isIntersectingWithViewport: boolean
-  /** Whether the element is currently being tracked by the manager. False on touch devices, limited connections, or after unregister. */
+  /** Whether the element is currently tracked by the manager. True from registration
+   * until unregister (DOM removal or a manual unregister call). On a limited connection
+   * the element is still registered but inactive - check `isLimitedConnection` / `isActive`. */
   isRegistered: boolean
-  /** Whether the element is currently eligible to fire its callback. */
+  /** Whether the element is currently eligible to fire its callback. False when the
+   * element is disabled (`isEnabled: false`) or on a limited connection. */
   isActive: boolean
   /** Whether prediction is enabled for this element. When `false` the element
-   * stays registered but inactive. */
+   * stays registered but inactive. Note: an enabled element is still inactive on a
+   * limited connection (see `isLimitedConnection`). */
   isEnabled: boolean
   /** True once the element's callback has been triggered by a prediction hit. Stays true until the element is reactivated or unregistered. */
   isPredicted: boolean
