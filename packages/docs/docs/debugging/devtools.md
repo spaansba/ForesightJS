@@ -82,7 +82,7 @@ The Settings tab provides real-time controls for all [Global Configurations](/do
 
 #### Elements Tab
 
-The Elements tab displays a overview of all currently registered elements within the `ForesightManage`r. Each element entry shows its current status through color-coded indicators:
+The Elements tab displays a overview of all currently registered elements within the `ForesightManage`r, grouped into **Active** and **Inactive** sections. Each element entry shows its current status through a color-coded indicator:
 
 - 🟢 **Green** - Active visible elements in desktop mode
 - ⚫ **Grey** - Active invisible elements in desktop mode
@@ -90,7 +90,14 @@ The Elements tab displays a overview of all currently registered elements within
 - 🟡 **Yellow** - Elements which callbacks are currently executing
 - 🔘 **Light Gray** - Inactive elements
 
-Each element can also be expanded to reveal its [`ForesightElementData`](/docs/next/getting-started/typescript#foresightelementdata) information including settings, callback status, and metadata. A countdown timer appears for elements in their reactivation cooldown period (`reactivateAfter`), clicking this timer will instantly reactivate the element.
+Inactive elements also carry one or more **reason badges** explaining _why_ they are inactive (an element can have several at once, e.g. `disabled` while `detached`):
+
+- `disabled` - turned off via the [`enabled`](/docs/configuration/element-settings) option
+- `detached` - removed from the DOM; the element is [parked](/docs/configuration/element-settings#isregistered) (registered but inactive) and resumes when it reconnects
+- `limited` - on a [limited connection](/docs/configuration/element-settings#islimitedconnection) (data saver / slow network)
+- `fired` - already ran its callback and is waiting on `reactivateAfter` (with the default `Infinity` it stays fired)
+
+Each element can also be expanded to reveal its [`ForesightElementData`](/docs/next/getting-started/typescript#foresightelementdata) information including settings, callback status, and metadata. For `fired` elements with a finite `reactivateAfter`, a countdown timer appears for their reactivation cooldown period; clicking this timer will instantly reactivate the element.
 
 #### Log Tab
 

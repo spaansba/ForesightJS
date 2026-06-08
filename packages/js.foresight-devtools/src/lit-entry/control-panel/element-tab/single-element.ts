@@ -26,6 +26,7 @@ export class SingleElement extends LitElement {
         align-items: center;
         gap: 8px;
         flex: 1;
+        min-width: 0;
       }
 
       .status-indicator {
@@ -54,6 +55,26 @@ export class SingleElement extends LitElement {
       .status-indicator.inactive {
         background-color: #999;
         box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
+      }
+
+      .reason-tags {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 7px;
+        flex-shrink: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10px;
+      }
+
+      .reason-tag {
+        white-space: nowrap;
+        color: color-mix(in srgb, var(--reason-color) 80%, #fff);
+      }
+
+      .reason-tag::before {
+        content: "/";
+        margin-right: 3px;
+        color: #555;
       }
 
       .status-indicator.touch-device {
@@ -99,6 +120,7 @@ export class SingleElement extends LitElement {
 
       .element-name {
         flex-grow: 1;
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -170,6 +192,54 @@ export class SingleElement extends LitElement {
     this._abortController = null
   }
 
+  private getInactiveReasons(): { label: string; color: string; description: string }[] {
+    const reasons: { label: string; color: string; description: string }[] = []
+
+    if (!this.state.isEnabled) {
+      reasons.push({
+        label: "disabled",
+        color: "#9e9e9e",
+        description: "Element is disabled, so its callback won't run until you re-enable it.",
+      })
+    }
+
+    if (!this.element.isConnected) {
+      reasons.push({
+        label: "detached",
+        color: "#7986cb",
+        description: "Element is no longer in the DOM. Foresight can't track or predict it.",
+      })
+    }
+
+    if (this.state.isLimitedConnection) {
+      reasons.push({
+        label: "limited",
+        color: "#ffb74d",
+        description:
+          "Element is on a limited connection (e.g. Save-Data or slow network), so prediction is paused.",
+      })
+    }
+
+    // Already fired its callback; stays inactive until reactivated, which by
+    // default (`reactivateAfter: Infinity`) never happens.
+    if (
+      this.state.isEnabled &&
+      this.element.isConnected &&
+      !this.state.isLimitedConnection &&
+      !this.state.isActive &&
+      this.state.isPredicted
+    ) {
+      reasons.push({
+        label: "fired",
+        color: "#4dd0e1",
+        description:
+          "Callback already fired. Stays inactive until reactivated (never, unless reactivateAfter is set).",
+      })
+    }
+
+    return reasons
+  }
+
   private getBorderColor(): string {
     if (this.state.isCallbackRunning) {
       return "#ffeb3b"
@@ -211,7 +281,9 @@ export class SingleElement extends LitElement {
     }
 
     if (!this.state.isActive) {
-      return "callback inactive"
+      const reasons = this.getInactiveReasons()
+
+      return reasons.length ? `inactive: ${reasons.map(r => r.label).join(", ")}` : "inactive"
     }
 
     const baseStatus = this.state.isIntersectingWithViewport ? "in viewport" : "not in viewport"
@@ -250,6 +322,7 @@ export class SingleElement extends LitElement {
     // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
     const isNotVisible =
       !this.state.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
+    const inactiveReasons = this.getInactiveReasons()
 
     return html`
       <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
@@ -271,6 +344,21 @@ export class SingleElement extends LitElement {
             >
               ${this.state.name || "unnamed"}
             </span>
+            ${inactiveReasons.length
+              ? html`
+                  <span class="reason-tags">
+                    ${inactiveReasons.map(
+                      reason =>
+                        html`<span
+                          class="reason-tag"
+                          style="--reason-color: ${reason.color}"
+                          title="${reason.label}: ${reason.description}"
+                          >${reason.label}</span
+                        >`
+                    )}
+                  </span>
+                `
+              : ""}
             ${this.state.isEnabled
               ? html`
                   <reactivate-countdown .element=${this.element} .state=${this.state}>

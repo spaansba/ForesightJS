@@ -53,7 +53,7 @@ The hook returns an object containing:
 
 **Important:** Due to React's rendering lifecycle, both `elementRef` and `registerResults` will be `null` during the initial render. The element gets registered only after the component mounts and the ref is attached.
 
-This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Instead, always check the registration status using `registerResults.isRegistered` or device capabilities like `registerResults.isTouchDevice` and `registerResults.isLimitedConnection`.
+This means while implementing fallback prefetching logic, don't check if `registerResults` is `null`. Note that `isRegistered` stays `true` on a limited connection (the element is registered but inactive), so to decide whether to run your own fallback prefetch check `isLimitedConnection` (and `isActive`) rather than `isRegistered`.
 
 ### Basic Usage
 

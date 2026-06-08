@@ -117,7 +117,7 @@ type ElementRegisteredEvent = {
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementUnregistered</code>
 
-Fired when an element is removed from `ForesightManager`'s tracking. This only happens when the element is removed from the `DOM` or via developer actions like `ForesightManager.instance.unregister(element)`
+Fired when an element is removed from `ForesightManager`'s tracking via `ForesightManager.instance.unregister(element)`. Detaching an element from the DOM no longer unregisters it. It is parked (kept registered but inactive) and resumed on reattach, so no `elementUnregistered` event fires for that. The `"disconnected"` reason is therefore no longer emitted.
 
 ```typescript
 type ElementUnregisteredEvent = {

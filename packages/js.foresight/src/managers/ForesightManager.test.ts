@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
+import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
 import type {
   ForesightElement,
   ForesightElementInternal,
@@ -1791,6 +1792,241 @@ describe("ForesightManager", () => {
       // @ts-expect-error - accessing private field for tests
       expect(manager.isSetup).toBe(true)
       expect(entry.state.isActive).toBe(true)
+    })
+  })
+
+  describe("limited connection / data saver", () => {
+    // shouldRegister is globally mocked in test-setup.ts; drive its return value
+    // so registration sees a limited connection (data saver / slow network).
+    const setLimited = (isLimitedConnection: boolean) =>
+      vi.mocked(evaluateRegistrationConditions).mockReturnValue({
+        shouldRegister: !isLimitedConnection,
+        isTouchDevice: false,
+        isLimitedConnection,
+      })
+
+    beforeEach(() => setLimited(true))
+    afterEach(() => setLimited(false))
+
+    it("registers the element but keeps it inactive", () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      expect(manager.registeredElements.has(element)).toBe(true)
+      expect(entry.state.isRegistered).toBe(true)
+      expect(entry.state.isLimitedConnection).toBe(true)
+      expect(entry.state.isEnabled).toBe(true)
+      expect(entry.state.isActive).toBe(false)
+    })
+
+    it("returns a real register result (isRegistered:true, isLimitedConnection:true, isActive:false)", () => {
+      const { result } = setupBasicTest()
+
+      expect(result.isRegistered).toBe(true)
+      expect(result.isLimitedConnection).toBe(true)
+      expect(result.isActive).toBe(false)
+      expect(typeof result.unregister).toBe("function")
+      expect(typeof result.subscribe).toBe("function")
+    })
+
+    it("does not fire its callback on a limited connection", () => {
+      const callback = vi.fn()
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      manager.register({ element, callback })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it("does not count the element as active or observe it", () => {
+      const { manager, element } = setupBasicTest()
+
+      expect(manager.getManagerData.activeElementCount).toBe(0)
+      // @ts-expect-error - accessing private handler for tests
+      const handler = manager.currentlyActiveHandler
+      if (handler) {
+        expect(handler.observeElement).not.toHaveBeenCalledWith(element)
+      }
+    })
+
+    it("does not throw when options are patched on a limited connection", () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      expect(() => manager.updateElementOptions(element, { name: "renamed" })).not.toThrow()
+      expect(entry.state.name).toBe("renamed")
+    })
+
+    it("stays inactive when enabled is toggled on during a limited connection", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: false })
+      expect(entry.state.isActive).toBe(false)
+
+      manager.updateElementOptions(element, { enabled: true })
+
+      // Enabling must not start prediction on a limited connection.
+      expect(entry.state.isEnabled).toBe(true)
+      expect(entry.state.isActive).toBe(false)
+      expect(manager.getManagerData.activeElementCount).toBe(0)
+    })
+
+    it("registers as active when the connection is not limited", () => {
+      setLimited(false)
+      const { entry } = setupBasicTest()
+
+      expect(entry.state.isLimitedConnection).toBe(false)
+      expect(entry.state.isActive).toBe(true)
+    })
+  })
+
+  describe("DOM disconnect / reconnect (KeepAlive, Teleport, re-parenting)", () => {
+    // Invoke the MutationObserver callback directly for deterministic tests; the
+    // park/resume decision reads the element's real isConnected state.
+    const triggerDomCheck = (
+      manager: ForesightManager,
+      added: Element[] = [],
+      removed: Element[] = []
+    ) => {
+      // @ts-expect-error - private method invoked directly for tests
+      manager.handleDomMutations([
+        {
+          type: "childList",
+          addedNodes: added,
+          removedNodes: removed,
+        } as unknown as MutationRecord,
+      ])
+    }
+
+    it("parks the element (registered but inactive) when detached", () => {
+      const { manager, element, entry } = setupBasicTest()
+      expect(entry.state.isActive).toBe(true)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+
+      expect(manager.registeredElements.has(element)).toBe(true)
+      expect(entry.state.isRegistered).toBe(true)
+      expect(entry.state.isActive).toBe(false)
+    })
+
+    it("does not unregister or emit elementUnregistered on disconnect", () => {
+      const { manager, element } = setupBasicTest()
+      const onUnregister = vi.fn()
+      manager.addEventListener("elementUnregistered", onUnregister)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+
+      expect(onUnregister).not.toHaveBeenCalled()
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
+    it("does not fire its callback while detached", () => {
+      const callback = vi.fn()
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      manager.register({ element, callback })
+      const entry = getEntry(manager, element)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      fire(manager, entry)
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it("resumes (re-activates) when reconnected", () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      expect(entry.state.isActive).toBe(false)
+
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+
+      expect(entry.state.isRegistered).toBe(true)
+      expect(entry.state.isActive).toBe(true)
+    })
+
+    it("keeps global listeners alive while a parked element waits to reconnect", () => {
+      const { manager, element } = setupBasicTest()
+      // @ts-expect-error - private field
+      expect(manager.isSetup).toBe(true)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+
+      // No active element, but listeners must stay so reconnection is detected.
+      expect(manager.getManagerData.activeElementCount).toBe(0)
+      // @ts-expect-error - private field
+      expect(manager.isSetup).toBe(true)
+    })
+
+    it("can still be explicitly unregistered while parked", () => {
+      const { manager, element, result } = setupBasicTest()
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+
+      result.unregister()
+
+      expect(manager.registeredElements.has(element)).toBe(false)
+    })
+
+    it("stays inactive on reconnect when the element is disabled", () => {
+      const { manager, element, entry } = setupBasicTest({ enabled: false })
+      expect(entry.state.isActive).toBe(false)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+
+      expect(entry.state.isEnabled).toBe(false)
+      expect(entry.state.isActive).toBe(false)
+    })
+
+    it("does not reactivate a fired element on reconnect (reactivateAfter: Infinity)", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
+
+      // Fire the callback, then let it finalize: element becomes inactive + predicted.
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(entry.state.isActive).toBe(false)
+      expect(entry.state.isPredicted).toBe(true)
+
+      // Park (detach) then resume (reconnect).
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+
+      // It already fired and never reactivates, so it must stay inactive + predicted.
+      expect(entry.state.isActive).toBe(false)
+      expect(entry.state.isPredicted).toBe(true)
+    })
+
+    it("resumes the reactivation cooldown for a fired element on reconnect (finite reactivateAfter)", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: 5000 })
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(entry.state.isActive).toBe(false)
+      expect(entry.state.isPredicted).toBe(true)
+
+      // Park before the cooldown elapses; the timer is cleared while detached.
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+
+      // Still inactive right after reconnect (cooldown restarted, not reactivated).
+      expect(entry.state.isActive).toBe(false)
+
+      // After the cooldown it reactivates.
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isPredicted).toBe(false)
     })
   })
 })

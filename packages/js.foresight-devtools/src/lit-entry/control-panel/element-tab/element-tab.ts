@@ -79,10 +79,6 @@ export class ElementTab extends LitElement {
     .section-header.inactive {
       color: #999;
     }
-
-    .section-header.disabled {
-      color: #6b6b6b;
-    }
   `
 
   @state()
@@ -102,7 +98,6 @@ export class ElementTab extends LitElement {
   @state() private expandedElementIds: Set<string> = new Set()
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
-  @state() private disabledSectionCollapsed = false
   private _abortController: AbortController | null = null
   private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   private _pendingElementUpdates: Map<ForesightElement, ForesightElementState> = new Map()
@@ -110,7 +105,6 @@ export class ElementTab extends LitElement {
   // Cached sorted element lists to avoid repeated filtering in render
   private _cachedActiveElements: ElementListEntry[] = []
   private _cachedInactiveElements: ElementListEntry[] = []
-  private _cachedDisabledElements: ElementListEntry[] = []
   private _elementsCacheDirty = true
 
   constructor() {
@@ -404,11 +398,10 @@ export class ElementTab extends LitElement {
 
     const active: ElementListEntry[] = []
     const inactive: ElementListEntry[] = []
-    const disabled: ElementListEntry[] = []
     for (const entry of this.getSortedElements()) {
-      if (!entry.state.isEnabled) {
-        disabled.push(entry)
-      } else if (entry.state.isActive) {
+      // Disabled elements are inactive too; their reason is shown as a badge on the
+      // row rather than a separate section.
+      if (entry.state.isActive) {
         active.push(entry)
       } else {
         inactive.push(entry)
@@ -416,7 +409,6 @@ export class ElementTab extends LitElement {
     }
     this._cachedActiveElements = active
     this._cachedInactiveElements = inactive
-    this._cachedDisabledElements = disabled
     this._elementsCacheDirty = false
   }
 
@@ -430,12 +422,6 @@ export class ElementTab extends LitElement {
     this._recomputeElementsCache()
 
     return this._cachedInactiveElements
-  }
-
-  private get disabledElements(): ElementListEntry[] {
-    this._recomputeElementsCache()
-
-    return this._cachedDisabledElements
   }
 
   private sortByDocumentPosition = (a: ElementListEntry, b: ElementListEntry) => {
@@ -524,15 +510,6 @@ export class ElementTab extends LitElement {
           this.inactiveSectionCollapsed,
           () => {
             this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
-          }
-        )}
-        ${this.renderElementSection(
-          "Disabled Elements",
-          "disabled",
-          this.disabledElements,
-          this.disabledSectionCollapsed,
-          () => {
-            this.disabledSectionCollapsed = !this.disabledSectionCollapsed
           }
         )}
       </tab-content>

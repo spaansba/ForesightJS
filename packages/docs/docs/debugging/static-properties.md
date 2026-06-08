@@ -80,8 +80,12 @@ ForesightManager.instance.reactivate(navLinks)
 
 Removes an element (or all elements in a `NodeList`) from ForesightManager's tracking.
 
-:::tip You probably don't need this
-ForesightJS automatically tracks and unregisters elements when they are removed from the DOM. Manual unregistering is rarely needed and should only be used for edge cases where you want to stop tracking an element that remains in the DOM.
+:::tip Frameworks handle this for you
+The official React and Vue integrations call `unregister` automatically when a component unmounts, so you rarely call it yourself there.
+
+Detaching an element from the DOM does **not** unregister it. It is parked (kept registered but inactive) and resumes when it reattaches, so it survives detach/reattach and re-parenting. Unregistering only happens when you call this method explicitly.
+
+If you register elements yourself (vanilla JS) and permanently remove one from the DOM, call `unregister` to stop tracking it. Otherwise it stays parked and keeps a reference to the detached element, which prevents it from being garbage collected.
 :::
 
 **Parameters:**

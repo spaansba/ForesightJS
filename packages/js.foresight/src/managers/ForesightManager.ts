@@ -2,7 +2,6 @@ import { DerivedMapView } from "../helpers/DerivedMapView"
 import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
-  createUnregisteredSnapshot,
   createDefaultManagerSettings,
   createElementInternal,
   createInitialCallbackHits,
@@ -33,8 +32,6 @@ import type {
 } from "../types/types"
 import type { DesktopHandler } from "./DesktopHandler"
 import type { TouchDeviceHandler } from "./TouchDeviceHandler"
-
-const NOOP_UNSUBSCRIBE = () => {}
 
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
@@ -232,20 +229,13 @@ export class ForesightManager {
   }
 
   private registerElement(options: ForesightRegisterOptions): ForesightRegisterResult {
-    const { isLimitedConnection, shouldRegister } = evaluateRegistrationConditions(
+    // On a limited connection (data saver / slow network) the element is
+    // registered so it can be patched and tracked, but stays inactive (never
+    // predicted, never fires its callback) to avoid consuming data.
+    // See createElementInternal / setElementEnabled.
+    const { isLimitedConnection } = evaluateRegistrationConditions(
       this._globalSettings.minimumConnectionType
     )
-
-    if (!shouldRegister) {
-      const blocked = createUnregisteredSnapshot(isLimitedConnection)
-
-      return {
-        ...blocked,
-        unregister: () => {},
-        subscribe: () => NOOP_UNSUBSCRIBE,
-        getSnapshot: () => blocked,
-      }
-    }
 
     const previousEntry = this.elementEntries.get(options.element)
 
@@ -272,13 +262,16 @@ export class ForesightManager {
     const entry = createElementInternal(
       options,
       this.generateId(),
-      this._globalSettings.defaultHitSlop
+      this._globalSettings.defaultHitSlop,
+      isLimitedConnection
     )
 
     this.elementEntries.set(options.element, entry)
     this.updateCheckableStatus(entry)
 
-    if (entry.state.isEnabled) {
+    // Inactive elements (disabled or limited connection) are not observed or
+    // counted as active until they are (re)activated.
+    if (entry.state.isActive) {
       this.activeElementCount++
       this.currentlyActiveHandler?.observeElement(options.element)
     }
@@ -491,7 +484,12 @@ export class ForesightManager {
       return
     }
 
-    if (enabled) {
+    // A limited connection keeps the element inactive even when enabled (a data
+    // saver never starts firing just because enabled flipped); a parked element
+    // (detached from the DOM) stays inactive until it reconnects.
+    const isActive = enabled && !entry.state.isLimitedConnection && !entry.isParked
+
+    if (isActive) {
       // Global listeners may have been torn down when the active count last hit
       // zero; re-arm them so prediction actually resumes.
       if (!this.isSetup) {
@@ -510,16 +508,14 @@ export class ForesightManager {
 
     this.updateElementState(entry, {
       isEnabled: enabled,
-      isActive: enabled,
+      isActive,
       isPredicted: false,
       isCallbackRunning: false,
     })
     this.updateCheckableStatus(entry)
 
     // Disabling the last active element leaves nothing to predict on.
-    if (this.activeElementCount === 0) {
-      this.removeGlobalListeners()
-    }
+    this.removeGlobalListenersIfIdle()
   }
 
   private clearReactivateTimeout(entry: ForesightElementInternal): void {
@@ -620,10 +616,7 @@ export class ForesightManager {
     }
 
     const isLastActiveElement = this.activeElementCount === 0
-    if (isLastActiveElement) {
-      this.devLog("All elements unactivated, removing global listeners")
-      this.removeGlobalListeners()
-    }
+    this.removeGlobalListenersIfIdle()
 
     this.eventEmitter.emit({
       type: "callbackCompleted",
@@ -761,24 +754,107 @@ export class ForesightManager {
 
     this.desktopHandler?.invalidateTabCache()
 
-    let hasRemovedNodes = false
+    let hasChildListChange = false
     for (let i = 0; i < mutationsList.length; i++) {
       const mutation = mutationsList[i]
-      if (mutation && mutation.type === "childList" && mutation.removedNodes.length > 0) {
-        hasRemovedNodes = true
+      if (
+        mutation &&
+        mutation.type === "childList" &&
+        (mutation.removedNodes.length > 0 || mutation.addedNodes.length > 0)
+      ) {
+        hasChildListChange = true
         break
       }
     }
 
-    if (!hasRemovedNodes) {
+    if (!hasChildListChange) {
       return
     }
 
-    for (const element of this.elementEntries.keys()) {
-      if (!element.isConnected) {
-        this.unregister(element, "disconnected")
+    for (const entry of this.elementEntries.values()) {
+      if (entry.isParked) {
+        if (entry.element.isConnected) {
+          this.resumeReconnected(entry)
+        }
+      } else if (!entry.element.isConnected) {
+        this.parkDisconnected(entry)
       }
     }
+  }
+
+  /**
+   * Deactivate an element that was detached from the DOM. It is kept in
+   * {@link elementEntries} (still registered) and flagged `isParked` so it can be
+   * resumed when it reconnects.
+   */
+  private parkDisconnected(entry: ForesightElementInternal): void {
+    this.clearReactivateTimeout(entry)
+    this.currentlyActiveHandler?.unobserveElement(entry.element)
+    if (entry.state.isActive) {
+      this.activeElementCount--
+    }
+
+    entry.isParked = true
+    // Preserve `isPredicted`: an element that already fired its callback must stay
+    // "fired" so it is not treated as fresh (and reactivated) when it reconnects.
+    this.updateElementState(entry, {
+      isActive: false,
+      isCallbackRunning: false,
+    })
+    this.updateCheckableStatus(entry)
+  }
+
+  /**
+   * Re-activate a previously parked element once it is back in the DOM. Mirrors
+   * the activation rules used everywhere else: disabled / limited connections stay
+   * inactive, and an element that already fired its callback stays inactive too
+   * (it resumes the same state it had before it detached).
+   */
+  private resumeReconnected(entry: ForesightElementInternal): void {
+    entry.isParked = false
+
+    const eligible = entry.state.isEnabled && !entry.state.isLimitedConnection
+    // Only resume as active if it was active before detaching. A fired element
+    // (isPredicted) was already inactive, so it stays inactive on reconnect.
+    const isActive = eligible && !entry.state.isPredicted
+    if (isActive) {
+      if (!this.isSetup) {
+        this.initializeGlobalListeners()
+      }
+
+      this.activeElementCount++
+      this.currentlyActiveHandler?.observeElement(entry.element)
+    }
+
+    this.updateElementState(entry, { isActive })
+    this.updateCheckableStatus(entry)
+
+    // If it fired with a finite reactivateAfter, resume the reactivation timer that
+    // was cleared when it parked, so the cooldown continues from reconnect.
+    if (eligible && entry.state.isPredicted && entry.state.reactivateAfter !== Infinity) {
+      entry.reactivateTimeoutId = setTimeout(() => {
+        this.reactivate(entry.element)
+      }, entry.state.reactivateAfter)
+    }
+  }
+
+  /**
+   * Tear down global listeners only when nothing needs them: no active elements
+   * to predict on, and no parked elements waiting to reconnect (which need the
+   * MutationObserver to detect their return).
+   */
+  private removeGlobalListenersIfIdle(): void {
+    if (this.activeElementCount > 0) {
+      return
+    }
+
+    for (const entry of this.elementEntries.values()) {
+      if (entry.isParked) {
+        return
+      }
+    }
+
+    this.removeGlobalListeners()
   }
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
