@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ForesightJS · React/Vue wrapper audit</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --bg-soft: #161b22;
+        --bg-card: #161b22;
+        --border: #2d333b;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #16a34a;
+        --accent-2: #2f81f7;
+        --crit: #f85149;
+        --high: #fb8500;
+        --med: #d29922;
+        --low: #6e7681;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+        font-size: 0.86em;
+      }
+
+      header.hero {
+        padding: 56px 24px 40px;
+        background:
+          radial-gradient(1200px 400px at 70% -50%, rgba(22, 163, 74, 0.18), transparent),
+          linear-gradient(180deg, #11161d, var(--bg));
+        border-bottom: 1px solid var(--border);
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .eyebrow {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: 38px;
+        margin: 8px 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 760px;
+        font-size: 16px;
+      }
+      .pkgline {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .pkg-pill {
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 13px;
+      }
+      .pkg-pill b {
+        color: var(--text);
+      }
+
+      /* stat strip */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        margin: 28px 0 0;
+      }
+      .stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .stat .n {
+        font-size: 30px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .stat .l {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .stat.crit .n {
+        color: var(--crit);
+      }
+      .stat.high .n {
+        color: var(--high);
+      }
+      .stat.med .n {
+        color: var(--med);
+      }
+
+      main {
+        padding: 40px 0 80px;
+      }
+      section {
+        margin-top: 48px;
+      }
+      h2 {
+        font-size: 24px;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+      }
+      h2 .sub {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 15px;
+      }
+      .section-intro {
+        color: var(--muted);
+        margin: 0 0 18px;
+      }
+
+      /* controls */
+      .controls {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.85);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 0;
+        margin-bottom: 8px;
+      }
+      .controls .wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filters {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        cursor: pointer;
+        user-select: none;
+        border: 1px solid var(--border);
+        background: var(--bg-soft);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 12.5px;
+        transition: 0.12s;
+      }
+      .chip:hover {
+        border-color: var(--muted);
+        color: var(--text);
+      }
+      .chip.active {
+        background: var(--accent-2);
+        border-color: var(--accent-2);
+        color: #fff;
+      }
+      .chip.sev-critical.active {
+        background: var(--crit);
+        border-color: var(--crit);
+      }
+      .chip.sev-high.active {
+        background: var(--high);
+        border-color: var(--high);
+        color: #1a1300;
+      }
+      .chip.sev-medium.active {
+        background: var(--med);
+        border-color: var(--med);
+        color: #1a1300;
+      }
+      .chip.sev-low.active {
+        background: var(--low);
+        border-color: var(--low);
+      }
+      input[type="search"] {
+        flex: 1;
+        min-width: 180px;
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      input[type="search"]::placeholder {
+        color: var(--muted);
+      }
+      .count-note {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-left: auto;
+      }
+
+      /* cards */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--low);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+      }
+      .card.s-critical {
+        border-left-color: var(--crit);
+      }
+      .card.s-high {
+        border-left-color: var(--high);
+      }
+      .card.s-medium {
+        border-left-color: var(--med);
+      }
+      .card.s-low {
+        border-left-color: var(--low);
+      }
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .card-head .id {
+        font-family: var(--mono);
+        color: var(--muted);
+        font-size: 13px;
+        padding-top: 2px;
+      }
+      .card h3 {
+        font-size: 16.5px;
+        margin: 0;
+        flex: 1;
+      }
+      .badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 10px 0 0;
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 6px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+      .b-critical {
+        background: rgba(248, 81, 73, 0.16);
+        color: var(--crit);
+      }
+      .b-high {
+        background: rgba(251, 133, 0, 0.16);
+        color: var(--high);
+      }
+      .b-medium {
+        background: rgba(210, 153, 34, 0.16);
+        color: var(--med);
+      }
+      .b-low {
+        background: rgba(110, 118, 129, 0.2);
+        color: #adbac7;
+      }
+      .b-pkg {
+        background: rgba(47, 129, 247, 0.15);
+        color: var(--accent-2);
+      }
+      .b-cat {
+        background: rgba(139, 148, 158, 0.15);
+        color: var(--muted);
+      }
+      .b-proven {
+        background: rgba(22, 163, 74, 0.18);
+        color: #3fb950;
+      }
+      .card .row {
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      .card .row .k {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: 2px;
+      }
+      .card .file {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: #adbac7;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 2px 7px;
+        display: inline-block;
+        margin-top: 8px;
+        word-break: break-all;
+      }
+      .card .fix {
+        border-left: 2px solid var(--accent);
+        padding-left: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      td .tag {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 5px;
+        background: rgba(139, 148, 158, 0.15);
+        color: var(--muted);
+      }
+      td .tag.med {
+        background: rgba(210, 153, 34, 0.16);
+        color: var(--med);
+      }
+
+      ol.prio {
+        counter-reset: p;
+        list-style: none;
+        padding: 0;
+      }
+      ol.prio li {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px 14px 56px;
+        position: relative;
+        margin-bottom: 10px;
+      }
+      ol.prio li::before {
+        counter-increment: p;
+        content: counter(p);
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #04140a;
+        font-weight: 800;
+        display: grid;
+        place-items: center;
+      }
+
+      .callout {
+        background: rgba(47, 129, 247, 0.08);
+        border: 1px solid rgba(47, 129, 247, 0.3);
+        border-radius: 10px;
+        padding: 14px 18px;
+        color: #c9d6e5;
+        font-size: 14px;
+      }
+      .callout.warn {
+        background: rgba(210, 153, 34, 0.08);
+        border-color: rgba(210, 153, 34, 0.35);
+      }
+      .empty {
+        color: var(--muted);
+        padding: 24px;
+        text-align: center;
+        display: none;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 28px 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .toc {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+      .toc a {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <div class="eyebrow">Code audit · multi-agent verified</div>
+        <h1>ForesightJS — React &amp; Vue wrappers</h1>
+        <p class="lede">
+          Bugs and missing features in <code>@foresightjs/react</code> and
+          <code>@foresightjs/vue</code>, audited against the core
+          <code>js.foresight</code> contract. 9 parallel analysis agents → adversarial verification
+          → completeness critic. 4 of the headline bugs were reproduced with executable tests.
+        </p>
+        <div class="pkgline">
+          <span class="pkg-pill"><b>@foresightjs/react</b> · hooks</span>
+          <span class="pkg-pill"><b>@foresightjs/vue</b> · composables + directive</span>
+          <span class="pkg-pill">core <b>js.foresight</b> v3.5</span>
+        </div>
+        <div class="stats">
+          <div class="stat crit">
+            <div class="n">1</div>
+            <div class="l">Critical bug</div>
+          </div>
+          <div class="stat high">
+            <div class="n">1</div>
+            <div class="l">High bug</div>
+          </div>
+          <div class="stat med">
+            <div class="n">7</div>
+            <div class="l">Medium</div>
+          </div>
+          <div class="stat">
+            <div class="n">26</div>
+            <div class="l">Distinct issues</div>
+          </div>
+          <div class="stat">
+            <div class="n">2</div>
+            <div class="l">Test-proven</div>
+          </div>
+          <div class="stat">
+            <div class="n">10</div>
+            <div class="l">Missing features</div>
+          </div>
+        </div>
+        <div class="toc">
+          <a href="#priorities">Top priorities</a>
+          <a href="#findings">All findings</a>
+          <a href="#missing">Missing features</a>
+          <a href="#method">Method</a>
+        </div>
+      </div>
+    </header>
+
+    <section id="priorities" style="margin-top: 0">
+      <div class="wrap" style="padding-top: 40px">
+        <h2>Top priorities</h2>
+        <p class="section-intro">Ordered by impact × effort.</p>
+        <ol class="prio">
+          <li>
+            <b>Fix the limited-connection crash</b> (#1). Guard <code>updateElementOptions</code> on
+            <code>result.isRegistered</code> at all five call sites. Highest impact — a hard crash
+            for every data-saver / slow-connection user — and invisible to the current test suite.
+          </li>
+          <li>
+            <b>Add a limited-connection regression test</b> that mirrors real core (truthy no-op
+            result + throwing <code>updateElementOptions</code>). The current mock hides bug #1 and
+            the real <code>enabled</code> semantics.
+          </li>
+          <li>
+            <b>Fix <code>&lt;KeepAlive&gt;</code> teardown</b> (#2). Re-register on
+            <code>elementUnregistered</code> / <code>onActivated</code>. KeepAlive is ubiquitous in
+            Vue router views &amp; tabs.
+          </li>
+          <li>
+            <b>Fix the <code>meta</code> key and deep-watch gaps</b> (#3, #5). Small, contained
+            correctness fixes.
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="controls">
+      <div class="wrap">
+        <div class="filters" data-group="sev">
+          <span class="chip sev-critical" data-f="critical">Critical</span>
+          <span class="chip sev-high" data-f="high">High</span>
+          <span class="chip sev-medium" data-f="medium">Medium</span>
+          <span class="chip sev-low" data-f="low">Low</span>
+        </div>
+        <div class="filters" data-group="pkg">
+          <span class="chip" data-f="react">React</span>
+          <span class="chip" data-f="vue">Vue</span>
+          <span class="chip" data-f="both">Both</span>
+        </div>
+        <div class="filters" data-group="cat">
+          <span class="chip" data-f="bug">Bug</span>
+          <span class="chip" data-f="missing-feature">Missing</span>
+          <span class="chip" data-f="perf">Perf</span>
+          <span class="chip" data-f="inconsistency">Inconsistency</span>
+          <span class="chip" data-f="types">Types/DX</span>
+        </div>
+        <input type="search" id="q" placeholder="Search title, file, scenario…" />
+        <span class="count-note" id="countNote"></span>
+      </div>
+    </div>
+
+    <main>
+      <section id="findings" style="margin-top: 8px">
+        <div class="wrap">
+          <div id="cards"></div>
+          <div class="empty" id="empty">No findings match these filters.</div>
+        </div>
+      </section>
+
+      <section id="missing">
+        <div class="wrap">
+          <h2>
+            Missing features
+            <span class="sub">— core capabilities or cross-framework parity not surfaced</span>
+          </h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Capability</th>
+                <th>Status</th>
+                <th>Pri</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>alterGlobalSettings()</code> · <code>&lt;ForesightProvider&gt;</code> /
+                  <code>useForesightSettings</code>
+                </td>
+                <td>Absent in both — manager not configurable from the framework layer</td>
+                <td><span class="tag med">med</span></td>
+              </tr>
+              <tr>
+                <td>
+                  Reactive read of <code>getManagerData</code> / <code>registeredElements</code> /
+                  global hits
+                </td>
+                <td>Absent — devtools-style dashboards impossible in-app</td>
+                <td><span class="tag med">med</span></td>
+              </tr>
+              <tr>
+                <td>Post-mount <code>hitSlop</code> updates</td>
+                <td>Unsupported anywhere (also a bug — see #4)</td>
+                <td><span class="tag med">med</span></td>
+              </tr>
+              <tr>
+                <td><code>reactivate(element)</code></td>
+                <td>Not exposed by either wrapper</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td><code>register(NodeList)</code> overload</td>
+                <td>Not surfaced</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td><code>ForesightManager.initialize(settings)</code></td>
+                <td>Wrappers always lazy-init with defaults</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td>Vue directive returning element state</td>
+                <td>Composables expose it; directive can’t</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td>
+                  React component / <code>forwardRef</code> wrapper (<code>&lt;Foresight&gt;</code>)
+                </td>
+                <td>Vue has a directive; React has no equivalent</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td>
+                  Reactive <code>eventType</code>/<code>listener</code> in
+                  <code>useForesightEvent</code>
+                </td>
+                <td>React plain-only; Vue reactive — inconsistent</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+              <tr>
+                <td>
+                  Re-export <code>ForesightRegisterResult</code> / <code>ForesightElement</code> /
+                  <code>createUnregisteredSnapshot</code>
+                </td>
+                <td>Omitted from wrapper barrels</td>
+                <td><span class="tag">low</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="method">
+        <div class="wrap">
+          <h2>Method &amp; trust notes</h2>
+          <p class="section-intro">How these findings were produced and validated.</p>
+          <div class="callout">
+            <b>Multi-agent verification.</b> 9 finder agents swept distinct dimensions (each
+            React/Vue hook, the directive, types/DX, parity, leaks/async). Every candidate finding
+            was handed to an adversarial verifier instructed to refute it against source; a
+            completeness critic then swept for misses. 54 raw → 51 survived verification → +4 from
+            the critic.
+          </div>
+          <div class="callout" style="margin-top: 12px">
+            <b>Test-proven bugs.</b> Two bugs were reproduced with executable tests against the real
+            hook code: bug&nbsp;#1 (React <code>useForesight</code> crashes on mount on a limited
+            connection; <code>useForesights</code> crashes on the first option change,
+            <em>not</em> mount), and bug&nbsp;#3 (<code>meta</code>-only change → 0 patch calls vs 1
+            for a <code>name</code> change).
+          </div>
+          <div class="callout warn" style="margin-top: 12px">
+            <b>Correction applied.</b> A verifier over-rated the React
+            <code>useForesights</code> limited-connection bug as a mount crash. My own test
+            (<code>MULTI_THREW=no</code>) proves the multi hook does <em>not</em> crash on mount —
+            its patch effect deps are <code>[length, patchKey]</code>, which don’t change when refs
+            merely attach. The crash is deferred to the first option change. Severity adjusted
+            accordingly.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        Generated audit · <code>@foresightjs/react</code> + <code>@foresightjs/vue</code> vs
+        <code>js.foresight</code>. Findings reference <code>file:line</code> at the audited HEAD.
+        Not committed — review-only artifact.
+      </div>
+    </footer>
+
+    <script>
+      const FINDINGS = [
+        {
+          id: 1,
+          sev: "critical",
+          pkg: "both",
+          cat: "bug",
+          proven: true,
+          title: "Limited-connection / Data-Saver registration crashes the component",
+          file: "react: useForesight.ts:47-63, useForesights.ts:110-122 · vue: useForesight.ts:93-105, useForesights.ts:138-150, vForesight.ts:35-41 · core: ForesightManager.ts:239-248,314-317",
+          scenario:
+            "User on data-saver, or a network slower than minimumConnectionType (default 3g), mounts a component using any wrapper.",
+          desc: 'On a limited connection core register() returns a TRUTHY no-op result but never adds the element to elementEntries. The wrapper stores that result, then calls updateElementOptions(...), which throws "Cannot update options: element is not registered." Uncaught → component crashes. React useForesight crashes on mount (patch-effect deps include registerResults/element). React useForesights and all Vue wrappers crash on the first option change / updated() (watch isn\'t immediate; multi patch-effect deps are [length, patchKey]). The unit-test mock never throws, so the whole path is untested.',
+          fix: "Guard on result.isRegistered before calling updateElementOptions (skip when blocked), or make core updateElementOptions a no-op instead of throwing when the element is absent.",
+        },
+        {
+          id: 2,
+          sev: "high",
+          pkg: "vue",
+          cat: "bug",
+          proven: false,
+          title: "<KeepAlive> deactivate/reactivate permanently kills tracking, then crashes",
+          file: "vue: useForesight.ts:73-89,107-109; useForesights.ts:99-122,163-171 · core: ForesightManager.ts:777-781,408-449",
+          scenario:
+            "A component using useForesight(s) lives inside <KeepAlive>. User navigates away (deactivate) then back (reactivate).",
+          desc: "Deactivation detaches DOM → core MutationObserver auto-unregisters (disconnected) and clears subscribers. But onScopeDispose does NOT fire under KeepAlive, so currentElement/registerResults stay stale-truthy. On reactivation Vue moves the same cached vnode back without re-invoking the function ref, and setRef's `resolved === currentElement` guard blocks re-registration anyway → prediction silently dead forever. A later option change then calls updateElementOptions on the dead entry → throws. Same no-recovery gap hits any transient detach-across-a-tick (Teleport unmount, imperative re-parent) and React portals. No onActivated/onDeactivated/elementUnregistered handling exists.",
+          fix: "Subscribe to core elementUnregistered (or poll getSnapshot().isRegistered) and re-register when the node is still connected; add onActivated/onDeactivated.",
+        },
+        {
+          id: 3,
+          sev: "medium",
+          pkg: "react",
+          cat: "bug",
+          proven: true,
+          title: "meta content updates silently dropped in useForesights",
+          file: "react: useForesights.ts:106-122",
+          scenario:
+            "Re-render useForesights changing only an item's meta object (same name/reactivateAfter/enabled).",
+          desc: 'patchKey interpolates meta as a string, so every object becomes "[object Object]" — meta-content changes never alter patchKey and never re-patch. Proven: meta-only change → 0 updateElementOptions calls; a name change → 1. Single useForesight is fine (meta is a dep by reference).',
+          fix: "Serialize/hash meta into patchKey, add a meta version field, or compare meta by reference per slot.",
+        },
+        {
+          id: 4,
+          sev: "medium",
+          pkg: "both",
+          cat: "bug",
+          proven: false,
+          title: "hitSlop changes after mount are silently dropped — everywhere",
+          file: "core: ForesightManager.ts:310-349 (no hitSlop) · react: useForesight.ts:44,56-63; useForesights.ts:106-108 · vue: useForesight.ts:101; vForesight.ts:40",
+          scenario:
+            "Render with hitSlop={50}, later re-render with hitSlop={150} (responsive or user-adjustable prefetch margin).",
+          desc: "hitSlop is consumed only at create time (createInitialState.ts:79). Core updateElementOptions never patches hitSlop; no wrapper re-registers on a hitSlop change; even a forced re-register hits the already-registered branch which ignores hitSlop. The new value can never take effect.",
+          fix: "Document hitSlop as mount-only, OR re-register on hitSlop change, OR extend core updateElementOptions to patch hitSlop.",
+        },
+        {
+          id: 5,
+          sev: "medium",
+          pkg: "vue",
+          cat: "bug",
+          proven: false,
+          title: "In-place reactive() / ref options never patch (no deep watch)",
+          file: "vue: useForesight.ts:93-105; useForesights.ts:125-161",
+          scenario:
+            "const opts = reactive({ callback, name }); useForesight(opts); … opts.name = 'new'.",
+          desc: "watch(() => toValue(options)) tracks nothing when the getter returns the same reactive/ref proxy and you mutate a nested prop — the getter accesses no property. name/enabled/reactivateAfter changes are ignored. Only a getter returning a NEW object (the documented pattern) or a reassigned ref works.",
+          fix: "Use { deep: true } on the watch, or document that options must be a getter that returns a fresh object.",
+        },
+        {
+          id: 6,
+          sev: "medium",
+          pkg: "both",
+          cat: "bug",
+          proven: false,
+          title: "Index-keyed slots churn on reorder / mid-list insert",
+          file: "react: useForesights.ts:36-103 · vue: useForesights.ts:67-122,138-158",
+          scenario:
+            "Reorder or insert into the middle of the options/items list driving useForesights.",
+          desc: "Slots are keyed by integer index (React elementsRef/elementRefCallbacksRef; Vue managed[i]). Reordering or inserting tears down and re-registers moved items — losing per-element state (hitCount, isPredicted) and incurring churn — instead of preserving identity. No stable-key API.",
+          fix: "Support a stable key per item (key function) so slots track logical identity, not array position.",
+        },
+        {
+          id: 7,
+          sev: "medium",
+          pkg: "react",
+          cat: "types",
+          proven: false,
+          title: "SVG targets not typeable in React (Vue directive supports SVG)",
+          file: "react: types.ts:5; useForesight.ts:14; useForesights.ts:19",
+          scenario: "Attach a foresight ref to an <svg>/<path> element in React.",
+          desc: "useForesight<T extends HTMLElement> and UseForesightResult exclude SVGElement, though core accepts any Element and the Vue directive types HTMLElement | SVGElement. Inconsistent and blocks valid SVG targets at the type level.",
+          fix: "Relax the constraint to <T extends Element = HTMLElement>.",
+        },
+        {
+          id: 8,
+          sev: "low",
+          pkg: "both",
+          cat: "bug",
+          proven: false,
+          title: "Two consumers on one DOM node: first unmount kills the other + throw",
+          file: "core: ForesightManager.ts:250-266,408-449 · react: useForesight.ts:28-44 · vue: useForesight.ts:65-71",
+          scenario:
+            "Two useForesight instances (or a hook + v-foresight) bind the exact same DOM element.",
+          desc: "Core registerCount looks like a refcount but isn't: the second register bumps it to 2 yet keeps one entry; the first unregister() deletes the entry and clears all subscribers without decrementing. The surviving consumer goes silently dead and its next updateElementOptions throws. Root cause is in core; wrappers map register/unregister 1:1 to lifecycle and can't defend.",
+          fix: "Make core unregisterElement refcounted (only delete at 0), or document/warn that a node must bind to one consumer.",
+        },
+        {
+          id: 9,
+          sev: "low",
+          pkg: "react",
+          cat: "perf",
+          proven: false,
+          title: "Inline meta/options object re-patches on every render",
+          file: "react: useForesight.ts:56-63",
+          scenario:
+            "useForesight({ callback, meta: { route: '/x' } }) with an inline object, frequent parent re-renders.",
+          desc: "options.meta is in the patch-effect dep array by reference; an inline object is a new reference each render → the effect fires and calls updateElementOptions every render.",
+          fix: "Compare meta by value, or document memoizing the options/meta object.",
+        },
+        {
+          id: 10,
+          sev: "low",
+          pkg: "react",
+          cat: "perf",
+          proven: false,
+          title: "Patch effect runs redundantly on mount",
+          file: "react: useForesight.ts:33-37,47-63",
+          scenario: "Any mount of useForesight.",
+          desc: "register() already applied all options, but the patch effect fires once on mount (registerResults transitions null→truthy), re-applying them via updateElementOptions. Harmless on a normal connection, but it is exactly the call that throws on a limited connection (see #1).",
+          fix: "Skip the first patch run, or fold patching into the register effect when the registration is fresh.",
+        },
+        {
+          id: 11,
+          sev: "low",
+          pkg: "react",
+          cat: "perf",
+          proven: false,
+          title: "elementRefCallbacksRef never pruned (unbounded by peak length)",
+          file: "react: useForesights.ts:25-26,36-57",
+          scenario: "A useForesights list that grows large then shrinks repeatedly.",
+          desc: "Ref-callback factory caches one callback per index forever; shrinking the array never deletes higher-index entries. Map grows to the peak length seen and stays there for the hook's lifetime.",
+          fix: "Prune cached ref callbacks (and the elements map) when the array shrinks.",
+        },
+        {
+          id: 12,
+          sev: "low",
+          pkg: "react",
+          cat: "perf",
+          proven: false,
+          title: "All subscriptions torn down + recreated on every element/length change",
+          file: "react: useForesights.ts:95-139",
+          scenario: "Any element attach/detach or length change in useForesights.",
+          desc: "subscribe depends on resultsList identity, which is replaced whenever the slot set changes, so useSyncExternalStore re-subscribes every active element each time rather than diffing.",
+          fix: "Subscribe per-slot with stable identity, or diff added/removed results.",
+        },
+        {
+          id: 13,
+          sev: "low",
+          pkg: "vue",
+          cat: "perf",
+          proven: false,
+          title: "Directive patches on every re-render with an inline-object binding",
+          file: "vue: vForesight.ts:35-41",
+          scenario:
+            'v-foresight="{ callback, name }" with an inline object literal in a frequently-updating component.',
+          desc: "updated() only short-circuits on binding.value === binding.oldValue; an inline object is a new reference each render, so updateElementOptions runs every update.",
+          fix: "Shallow-compare option fields, or document binding a stable reference.",
+        },
+        {
+          id: 14,
+          sev: "low",
+          pkg: "vue",
+          cat: "inconsistency",
+          proven: false,
+          title: "useForesightEvent: getter listener silently never fires",
+          file: "vue: useForesightEvent.ts:4,14-31",
+          scenario: "Pass a getter (() => handler) as the listener instead of a plain fn or ref.",
+          desc: "listener is typed/handled as MaybeRef (isRef branch) but not a getter; resolveListener is bound once at setup. A getter is treated as the listener itself and the real handler never runs.",
+          fix: "Accept MaybeRefOrGetter and resolve via toValue, matching eventType handling.",
+        },
+        {
+          id: 15,
+          sev: "low",
+          pkg: "vue",
+          cat: "bug",
+          proven: false,
+          title: "Directive doesn't filter comment-node roots like resolveElement does",
+          file: "vue: vForesight.ts:30-32; resolveElement.ts:20-22",
+          scenario:
+            "v-foresight on a component whose root is v-if'd off (renders a #comment placeholder).",
+          desc: "The composable's resolveElement filters comment nodes, but the directive registers binding's element directly — a comment-node root would be registered with no size/position.",
+          fix: "Reuse resolveElement (or an equivalent guard) in the directive's mounted hook.",
+        },
+        {
+          id: 16,
+          sev: "low",
+          pkg: "vue",
+          cat: "types",
+          proven: false,
+          title: "Return spreads toRefs(readonly(state)) — deep-readonly ref friction",
+          file: "vue: types/index.ts:14-17; useForesight.ts:42,111",
+          scenario:
+            "Destructure elementBounds (or other nested state) from useForesight and use it in typed code.",
+          desc: "toRefs(readonly(state)) yields deep-readonly refs for nested objects like elementBounds, causing DX/typing friction and lost granularity vs the flat snapshot shape.",
+          fix: "Expose flat state refs, or document the deep-readonly contract.",
+        },
+        {
+          id: 17,
+          sev: "medium",
+          pkg: "both",
+          cat: "missing-feature",
+          proven: false,
+          title: "No way to configure the manager (alterGlobalSettings / Provider)",
+          file: "react: index.ts:1-28 · vue: index.ts:1-29 · core: ForesightManager.ts:732-773",
+          scenario:
+            "App wants to set trajectoryPredictionTime, tabOffset, minimumConnectionType, defaultHitSlop, etc.",
+          desc: "Neither wrapper surfaces alterGlobalSettings(), and there is no <ForesightProvider> / useForesightSettings. Configuration requires reaching into ForesightManager.instance directly, defeating the wrapper.",
+          fix: "Add a <ForesightProvider settings> (React) and a useForesightSettings / app plugin (Vue).",
+        },
+        {
+          id: 18,
+          sev: "medium",
+          pkg: "both",
+          cat: "missing-feature",
+          proven: false,
+          title: "No reactive read of manager data / registered elements / global hits",
+          file: "react: index.ts:25-27 · vue: index.ts:25-28 · core: ForesightManager.ts:191-201,62-63",
+          scenario:
+            "Build an in-app dashboard / debug overlay showing active elements and callback hit counts.",
+          desc: "getManagerData, registeredElements, globalCallbackHits, activeElementCount are exposed by core but not surfaced as a reactive hook/composable. Consumers must subscribe manually.",
+          fix: "Add useForesightManager()/useForesightData() returning a reactive snapshot of getManagerData.",
+        },
+        {
+          id: 19,
+          sev: "low",
+          pkg: "both",
+          cat: "missing-feature",
+          proven: false,
+          title: "reactivate(element) not exposed",
+          file: "react: useForesight.ts:71 · vue: useForesight.ts:111 · core: ForesightManager.ts:451-479",
+          scenario:
+            "Manually re-arm an element after its callback fired (without waiting for reactivateAfter).",
+          desc: "Core supports reactivate(element) but neither wrapper returns a way to call it for the bound element.",
+          fix: "Return a reactivate() function from useForesight(s).",
+        },
+        {
+          id: 20,
+          sev: "low",
+          pkg: "both",
+          cat: "missing-feature",
+          proven: false,
+          title: "NodeList register() overload not surfaced",
+          file: "react: useForesights.ts:81 · vue: useForesights.ts:73-79 · core: ForesightManager.ts:220-232",
+          scenario: "Register a queried NodeList of elements at once.",
+          desc: "Core register() accepts a NodeList and returns an array of results; the wrappers only register one element per slot.",
+          fix: "Optional — document the per-element model, or offer a NodeList-driven helper.",
+        },
+        {
+          id: 21,
+          sev: "low",
+          pkg: "both",
+          cat: "missing-feature",
+          proven: false,
+          title: "ForesightManager.initialize(settings) not surfaced",
+          file: "react: useForesight.ts:33 · vue: useForesight.ts:51 · core: ForesightManager.ts:124-138",
+          scenario: "Initialize the manager with non-default settings before first registration.",
+          desc: "Wrappers always trigger lazy auto-initialization with defaults via ForesightManager.instance; there is no hook to pass initial settings.",
+          fix: "Tie initialization to the Provider/plugin from #17.",
+        },
+        {
+          id: 22,
+          sev: "low",
+          pkg: "vue",
+          cat: "missing-feature",
+          proven: false,
+          title: "Directive cannot expose reactive element state",
+          file: "vue: vForesight.ts:20-46",
+          scenario: "Want isPredicted/hitCount on an element bound via v-foresight.",
+          desc: "The directive registers/patches/unregisters but returns nothing, so consumers can't read element state — only the composables can. Parity gap with composables and the React result.",
+          fix: "Document that state needs the composable, or write state to a binding arg / provide an accompanying composable.",
+        },
+        {
+          id: 23,
+          sev: "low",
+          pkg: "react",
+          cat: "inconsistency",
+          proven: false,
+          title: "useForesightEvent accepts only plain eventType/listener (Vue accepts reactive)",
+          file: "react: useForesightEvent.ts:4-20",
+          scenario: "Want a reactive event type or to swap listeners without re-subscribing.",
+          desc: "React's version takes a plain eventType + listener; Vue's accepts MaybeRefOrGetter/MaybeRef. Behavioral parity gap across frameworks.",
+          fix: "Document the difference (it is idiomatic per framework), or align capabilities.",
+        },
+        {
+          id: 24,
+          sev: "low",
+          pkg: "react",
+          cat: "missing-feature",
+          proven: false,
+          title: "No component / forwardRef wrapper (Vue has a directive)",
+          file: "react: index.ts:25-27 · vue: index.ts:28",
+          scenario: 'Prefer a declarative <Foresight as="a" …> over the ref hook.',
+          desc: "Vue ships a v-foresight directive for declarative usage; React offers only hooks, no <Foresight>/forwardRef component for the common button/link case.",
+          fix: "Add a small forwardRef <Foresight> component wrapping useForesight.",
+        },
+        {
+          id: 25,
+          sev: "low",
+          pkg: "both",
+          cat: "types",
+          proven: false,
+          title: "Wrapper barrels omit useful core type re-exports",
+          file: "react: index.ts:1-28 · vue: index.ts:1-28",
+          scenario:
+            "Power user needs ForesightRegisterResult / ForesightElement / createUnregisteredSnapshot.",
+          desc: "Several core types/helpers a consumer may need are not re-exported from the wrapper entry points, forcing a direct js.foresight import. UseForesightSlot (Vue) has no React analog.",
+          fix: "Re-export the commonly-needed types from each wrapper's index.",
+        },
+        {
+          id: 26,
+          sev: "low",
+          pkg: "both",
+          cat: "types",
+          proven: false,
+          title: "Deprecated unregisterOnCallback still in the public options type",
+          file: "react: types.ts:3 · vue: types/index.ts:12 · core: types.ts:336-339",
+          scenario: "User sets unregisterOnCallback expecting it to work.",
+          desc: "The option is exposed via the wrapper option types (inherited from core) but is deprecated and silently ignored by core. Misleading surface.",
+          fix: "Omit it from wrapper option types, or surface the deprecation in JSDoc.",
+        },
+      ]
+
+      const state = { sev: new Set(), pkg: new Set(), cat: new Set(), q: "" }
+      const cardsEl = document.getElementById("cards")
+      const emptyEl = document.getElementById("empty")
+      const countNote = document.getElementById("countNote")
+
+      function badge(cls, txt) {
+        return `<span class="badge ${cls}">${txt}</span>`
+      }
+
+      function render() {
+        const q = state.q.trim().toLowerCase()
+        const items = FINDINGS.filter(f => {
+          if (state.sev.size && !state.sev.has(f.sev)) return false
+          if (state.pkg.size && !state.pkg.has(f.pkg)) return false
+          if (state.cat.size && !state.cat.has(f.cat)) return false
+          if (q) {
+            const hay = (f.title + " " + f.file + " " + f.scenario + " " + f.desc).toLowerCase()
+            if (!hay.includes(q)) return false
+          }
+          return true
+        })
+        cardsEl.innerHTML = items
+          .map(
+            f => `
+    <div class="card s-${f.sev}">
+      <div class="card-head">
+        <span class="id">#${f.id}</span>
+        <h3>${f.title}</h3>
+      </div>
+      <div class="badges">
+        ${badge("b-" + f.sev, f.sev)}
+        ${badge("b-pkg", f.pkg)}
+        ${badge("b-cat", f.cat.replace("-", " "))}
+        ${f.proven ? badge("b-proven", "✓ test-proven") : ""}
+      </div>
+      <div class="row"><span class="k">Scenario</span>${escapeHtml(f.scenario)}</div>
+      <div class="row"><span class="k">What goes wrong</span>${escapeHtml(f.desc)}</div>
+      <div class="row fix"><span class="k">Fix</span>${escapeHtml(f.fix)}</div>
+      <div class="file">${escapeHtml(f.file)}</div>
+    </div>
+  `
+          )
+          .join("")
+        emptyEl.style.display = items.length ? "none" : "block"
+        countNote.textContent = `${items.length} of ${FINDINGS.length} shown`
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
+      }
+
+      document.querySelectorAll(".filters").forEach(group => {
+        const key = group.dataset.group
+        group.querySelectorAll(".chip").forEach(chip => {
+          chip.addEventListener("click", () => {
+            const v = chip.dataset.f
+            if (state[key].has(v)) {
+              state[key].delete(v)
+              chip.classList.remove("active")
+            } else {
+              state[key].add(v)
+              chip.classList.add("active")
+            }
+            render()
+          })
+        })
+      })
+      document.getElementById("q").addEventListener("input", e => {
+        state.q = e.target.value
+        render()
+      })
+
+      render()
+    </script>
+  </body>
+</html>

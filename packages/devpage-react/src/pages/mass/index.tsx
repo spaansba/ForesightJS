@@ -1,5 +1,5 @@
-import { ForesightManager } from "@foresightjs/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useForesights } from "@foresightjs/react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useDebug } from "../../contexts/DebugContext"
 
 const Mass = () => {
@@ -7,7 +7,6 @@ const Mass = () => {
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)
   const { isDebugActive, setDebugMode } = useDebug()
-  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setDebugMode(false)
@@ -18,26 +17,18 @@ const Mass = () => {
     setHitCount(0)
   }, [])
 
-  useEffect(() => {
-    if (!containerRef.current) {
-      return
-    }
+  const options = useMemo(
+    () =>
+      Array.from({ length: buttonCount }, () => ({
+        hitSlop: 0,
+        callback: () => setHitCount(prev => prev + 1),
+      })),
+    [buttonCount]
+  )
 
-    const buttons = containerRef.current.querySelectorAll("[data-foresight-btn]")
-
-    const HIT_CLASSES = ["bg-emerald-500", "text-white", "border-emerald-600"]
-    const UNHIT_CLASSES = ["bg-white", "text-gray-700", "border-gray-300"]
-
-    ForesightManager.instance.register({
-      element: buttons,
-      callback: ({ element }) => {
-        element.classList.remove(...UNHIT_CLASSES)
-        element.classList.add(...HIT_CLASSES)
-        setHitCount(prev => prev + 1)
-      },
-      hitSlop: 0,
-    })
-  }, [resetKey, buttonCount])
+  // One registration per button via the hook; it unregisters on unmount/remount
+  // automatically. The hit state is driven by each button's reactive `isPredicted`.
+  const foresights = useForesights<HTMLButtonElement>(options)
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
@@ -80,12 +71,16 @@ const Mass = () => {
         </div>
       )}
 
-      <div ref={containerRef} className="flex flex-wrap gap-1">
-        {Array.from({ length: buttonCount }, (_, i) => (
+      <div className="flex flex-wrap gap-1">
+        {foresights.map((foresight, i) => (
           <button
             key={`${resetKey}-${i}`}
-            data-foresight-btn
-            className="flex justify-center items-center size-10 text-xs font-medium bg-white text-gray-700 border border-gray-300"
+            ref={foresight.elementRef}
+            className={`flex justify-center items-center size-10 text-xs font-medium border ${
+              foresight.isPredicted
+                ? "bg-emerald-500 text-white border-emerald-600"
+                : "bg-white text-gray-700 border-gray-300"
+            }`}
           >
             {i}
           </button>

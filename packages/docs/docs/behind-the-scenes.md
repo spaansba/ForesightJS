@@ -28,7 +28,7 @@ ForesightJS uses a singleton pattern with `ForesightManager` as the central inst
 
 Since DOM elements can change position and we need to keep the DOM clean, we require `element.getBoundingClientRect()` for each element on each update. To avoid triggering reflows, ForesightJS uses observers:
 
-- **`MutationObserver`**: Detects when registered elements are removed from the DOM for automatic unregistration
+- **`MutationObserver`**: Detects when registered elements are detached from or reattached to the DOM, so they can be parked (kept registered but inactive) and resumed. This keeps prediction working across detach/reattach and re-parenting
 - **`PositionObserver`**: Shopify's library that asynchronously monitors element position changes without polling
 
 The `PositionObserver` uses layered observation:
@@ -100,7 +100,7 @@ Touch devices require different prediction strategies due to the lack of continu
 4. **Reactivation Wait**: Element remains deactivated for `reactivateAfter` duration (defaults to infinity)
 5. **Reactivation**: `isCallbackActive` reset to `true` after duration elapses
 
-**Cleanup**: Elements removed via `ForesightManager.instance.unregister(element)` or automatically when DOM removal is detected by `MutationObserver`.
+**Cleanup**: Elements are removed via `ForesightManager.instance.unregister(element)`. Detaching an element from the DOM does not unregister it. The `MutationObserver` parks it (keeps it registered but inactive) and resumes it when it reattaches.
 
 ## Bundle Optimization
 

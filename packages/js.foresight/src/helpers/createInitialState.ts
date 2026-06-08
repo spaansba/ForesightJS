@@ -80,8 +80,6 @@ export const createElementInternal = (
   const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
   const isEnabled = enabled !== false
 
-  const isInitiallyActive = isEnabled && !isLimitedConnection
-
   const state: ForesightElementState = {
     id,
     name: name || element.id || "unnamed",
@@ -94,7 +92,7 @@ export const createElementInternal = (
     isLimitedConnection,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
-    isActive: isInitiallyActive,
+    isActive: isEnabled && !isLimitedConnection,
     isEnabled,
     isPredicted: false,
     isCallbackRunning: false,
@@ -113,6 +111,7 @@ export const createElementInternal = (
     element,
     callback,
     reactivateTimeoutId: undefined,
+    isParked: false,
     subscribers: new Set(),
   }
 }

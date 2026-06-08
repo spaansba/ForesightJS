@@ -39,6 +39,13 @@ ForesightDevtools.initialize({})
           >
             Events
           </RouterLink>
+          <RouterLink
+            to="/detach"
+            class="text-gray-700 hover:text-gray-900"
+            active-class="text-gray-900 font-medium"
+          >
+            Detach &amp; Reattach
+          </RouterLink>
         </nav>
       </div>
     </header>

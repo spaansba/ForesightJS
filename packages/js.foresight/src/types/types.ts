@@ -72,12 +72,15 @@ export type ForesightElementState = {
   isLimitedConnection: boolean
   /** Whether the element is currently intersecting the viewport. */
   isIntersectingWithViewport: boolean
-  /** Whether the element is currently tracked by the manager. True from registration
-   * until unregister (DOM removal or a manual unregister call). On a limited connection
-   * the element is still registered but inactive - check `isLimitedConnection` / `isActive`. */
+  /** Whether the element is currently tracked by the manager. Stays `true` from
+   * registration until it is explicitly unregistered (via the returned `unregister`).
+   * Detaching the element from the DOM does NOT unregister it - it is parked inactive
+   * and resumes when it reconnects. On a limited connection it is also registered but
+   * inactive - check `isLimitedConnection` / `isActive`. */
   isRegistered: boolean
   /** Whether the element is currently eligible to fire its callback. False when the
-   * element is disabled (`isEnabled: false`) or on a limited connection. */
+   * element is disabled (`isEnabled: false`), on a limited connection, or temporarily
+   * detached from the DOM. */
   isActive: boolean
   /** Whether prediction is enabled for this element. When `false` the element
    * stays registered but inactive. Note: an enabled element is still inactive on a
@@ -132,6 +135,8 @@ export type ForesightElementInternal = {
   callback: ForesightCallback
   /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
+  /** Whether the element is detached from the DOM and parked (registered but inactive) until it reconnects. */
+  isParked: boolean
   /** Listeners notified whenever `state` is replaced. */
   subscribers: Set<() => void>
 }
@@ -429,7 +434,8 @@ export interface ElementUnregisteredEvent extends ForesightBaseEvent {
 /**
  * The reason an element was unregistered from ForesightManager's tracking.
  * - `callbackHit`: The element was automatically unregistered after its callback fired.
- * - `disconnected`: The element was automatically unregistered because it was removed from the DOM.
+ * - `disconnected`: No longer emitted. Elements detached from the DOM are now parked
+ *   (kept registered but inactive) and resumed on reconnect, rather than unregistered.
  * - `apiCall`: The developer manually called the `unregister()` function for the element.
  * - `devtools`: When clicking the trash icon in the devtools element tab
  * - any other string

@@ -218,7 +218,7 @@ As of v3.3, ForesightJS handles touch devices internally with dedicated touch st
 #### `isLimitedConnection`
 
 - **Type:** `boolean`
-- **Description:** Is `true` when the user's connection is slower than the configured `minimumConnectionType` setting (defaults to "3g") or data saver is enabled. The element is still **registered**, but stays **inactive** — it is excluded from prediction and never fires its callback — so no data is consumed. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
+- **Description:** Is `true` when the user's connection is slower than the configured `minimumConnectionType` setting (defaults to "3g") or data saver is enabled. The element is still **registered**, but stays **inactive** (it is excluded from prediction and never fires its callback), so no data is consumed. See [Global Settings](/docs/configuration/global-settings#minimumconnectiontype) for details.
 - **Note:** This feature relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS treats the connection as unlimited.
 
 ---
@@ -226,4 +226,4 @@ As of v3.3, ForesightJS handles touch devices internally with dedicated touch st
 #### `isRegistered`
 
 - **Type:** `boolean`
-- **Description:** Is `true` once the element is registered with the manager, independent of connection. It only becomes `false` after the element is unregistered (removed from the DOM or unregistered manually). On a limited connection the element is registered but inactive — use [`isLimitedConnection`](#islimitedconnection) / `isActive` to detect that, not `isRegistered`.
+- **Description:** Is `true` once the element is registered with the manager, independent of connection. It only becomes `false` after the element is unregistered manually. Detaching the element from the DOM does **not** unregister it. It is parked (kept registered but inactive) and resumes when it reattaches, so it survives detach/reattach and re-parenting. On a limited connection the element is likewise registered but inactive, so use [`isLimitedConnection`](#islimitedconnection) / `isActive` to detect inactivity, not `isRegistered`.

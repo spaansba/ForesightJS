@@ -38,6 +38,10 @@ ForesightManager.instance.register({
 
 Thats it!
 
+:::note Remember to unregister
+If you permanently remove a registered element from the DOM, call `ForesightManager.instance.unregister(element)` to stop tracking it. Detaching an element does not unregister it. It is parked (kept registered but inactive) and resumes if it reattaches, so an element you discard without unregistering stays parked and cannot be garbage collected. The official React and Vue integrations do this for you on unmount.
+:::
+
 ## Provide element settings
 
 However if you want to add a bit more power to your element you can give it the following props:
