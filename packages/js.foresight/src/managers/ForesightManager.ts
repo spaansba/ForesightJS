@@ -61,6 +61,7 @@ export class ForesightManager {
 
   private idCounter: number = 0
   private activeElementCount: number = 0
+  private parkedElementCount: number = 0
 
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
@@ -191,6 +192,7 @@ export class ForesightManager {
       eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
       activeElementCount: this.activeElementCount,
+      parkedElementCount: this.parkedElementCount,
       loadedModules: this.getLoadedModulesSnapshot(),
     }
   }
@@ -431,9 +433,14 @@ export class ForesightManager {
       this.activeElementCount--
     }
 
+    if (entry.state.isParked) {
+      this.parkedElementCount--
+    }
+
     const finalState = this.updateElementState(entry, {
       isRegistered: false,
       isActive: false,
+      isParked: false,
       isPredicted: false,
       isCallbackRunning: false,
     })
@@ -502,7 +509,7 @@ export class ForesightManager {
     // A limited connection keeps the element inactive even when enabled (a data
     // saver never starts firing just because enabled flipped); a parked element
     // (detached from the DOM) stays inactive until it reconnects.
-    const isActive = enabled && !entry.state.isLimitedConnection && !entry.isParked
+    const isActive = enabled && !entry.state.isLimitedConnection && !entry.state.isParked
 
     if (isActive) {
       // Global listeners may have been torn down when the active count last hit
@@ -773,7 +780,7 @@ export class ForesightManager {
     }
 
     for (const entry of this.elementEntries.values()) {
-      if (entry.isParked) {
+      if (entry.state.isParked) {
         if (entry.element.isConnected) {
           this.resumeReconnected(entry)
         }
@@ -795,12 +802,13 @@ export class ForesightManager {
       this.activeElementCount--
     }
 
-    entry.isParked = true
+    this.parkedElementCount++
     // Preserve `isPredicted`: an element that already fired its callback must stay
     // "fired" so it is not treated as fresh (and reactivated) when it reconnects.
     this.updateElementState(entry, {
       isActive: false,
       isCallbackRunning: false,
+      isParked: true,
     })
   }
 
@@ -811,7 +819,7 @@ export class ForesightManager {
    * (it resumes the same state it had before it detached).
    */
   private resumeReconnected(entry: ForesightElementInternal): void {
-    entry.isParked = false
+    this.parkedElementCount--
 
     const eligible = entry.state.isEnabled && !entry.state.isLimitedConnection
     // Only resume as active if it was active before detaching. A fired element
@@ -826,7 +834,7 @@ export class ForesightManager {
       this.currentlyActiveHandler?.observeElement(entry.element)
     }
 
-    this.updateElementState(entry, { isActive })
+    this.updateElementState(entry, { isActive, isParked: false })
 
     // If it fired with a finite reactivateAfter, resume the reactivation timer that
     // was cleared when it parked, so the cooldown continues from reconnect.
@@ -843,14 +851,8 @@ export class ForesightManager {
    * MutationObserver to detect their return).
    */
   private removeGlobalListenersIfIdle(): void {
-    if (this.activeElementCount > 0) {
+    if (this.activeElementCount > 0 || this.parkedElementCount > 0) {
       return
-    }
-
-    for (const entry of this.elementEntries.values()) {
-      if (entry.isParked) {
-        return
-      }
     }
 
     this.removeGlobalListeners()

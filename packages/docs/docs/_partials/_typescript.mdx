@@ -18,6 +18,7 @@ type ForesightElementState = {
   isIntersectingWithViewport: boolean
   isRegistered: boolean
   isActive: boolean
+  isParked: boolean // detached from the DOM, kept registered but inactive until it reconnects
   isEnabled: boolean
   isPredicted: boolean
   isCallbackRunning: boolean
@@ -77,6 +78,7 @@ type ForesightManagerData = {
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]> // All event listeners currently listening
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
+  parkedElementCount: number // elements detached from the DOM, waiting to reconnect
   loadedModules: ForesightModules // which handlers/predictors are lazily loaded
 }
 ```

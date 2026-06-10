@@ -71,7 +71,7 @@ The Elements tab displays a overview of all currently registered elements within
 Inactive elements also carry one or more **reason badges** explaining _why_ they are inactive (an element can have several at once, e.g. `disabled` while `detached`):
 
 - `disabled` - turned off via the `enabled` option
-- `detached` - removed from the DOM; the element is parked (registered but inactive) and resumes when it reconnects
+- `parked` - removed from the DOM (`isParked: true`); the element stays registered but inactive and resumes when it reconnects
 - `limited` - on a limited connection (data saver / slow network)
 - `fired` - already ran its callback and is waiting on `reactivateAfter` (with the default `Infinity` it stays fired)
 

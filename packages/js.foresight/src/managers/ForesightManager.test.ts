@@ -1950,6 +1950,7 @@ describe("ForesightManager", () => {
     it("parks the element (registered but inactive) when detached", () => {
       const { manager, element, entry } = setupBasicTest()
       expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isParked).toBe(false)
 
       element.remove()
       triggerDomCheck(manager, [], [element])
@@ -1957,6 +1958,7 @@ describe("ForesightManager", () => {
       expect(manager.registeredElements.has(element)).toBe(true)
       expect(entry.state.isRegistered).toBe(true)
       expect(entry.state.isActive).toBe(false)
+      expect(entry.state.isParked).toBe(true)
     })
 
     it("does not unregister or emit elementUnregistered on disconnect", () => {
@@ -1997,6 +1999,20 @@ describe("ForesightManager", () => {
 
       expect(entry.state.isRegistered).toBe(true)
       expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isParked).toBe(false)
+    })
+
+    it("tracks parked elements in getManagerData.parkedElementCount", () => {
+      const { manager, element } = setupBasicTest()
+      expect(manager.getManagerData.parkedElementCount).toBe(0)
+
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      expect(manager.getManagerData.parkedElementCount).toBe(1)
+
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+      expect(manager.getManagerData.parkedElementCount).toBe(0)
     })
 
     it("keeps global listeners alive while a parked element waits to reconnect", () => {
@@ -2017,10 +2033,12 @@ describe("ForesightManager", () => {
       const { manager, element, result } = setupBasicTest()
       element.remove()
       triggerDomCheck(manager, [], [element])
+      expect(manager.getManagerData.parkedElementCount).toBe(1)
 
       result.unregister()
 
       expect(manager.registeredElements.has(element)).toBe(false)
+      expect(manager.getManagerData.parkedElementCount).toBe(0)
     })
 
     it("stays inactive on reconnect when the element is disabled", () => {

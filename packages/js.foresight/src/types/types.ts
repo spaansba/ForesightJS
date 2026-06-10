@@ -80,8 +80,11 @@ export type ForesightElementState = {
   isRegistered: boolean
   /** Whether the element is currently eligible to fire its callback. False when the
    * element is disabled (`isEnabled: false`), on a limited connection, or temporarily
-   * detached from the DOM. */
+   * detached from the DOM (see `isParked`). */
   isActive: boolean
+  /** Whether the element is detached from the DOM and parked: kept registered but
+   * inactive until it reconnects, at which point it resumes automatically. */
+  isParked: boolean
   /** Whether prediction is enabled for this element. When `false` the element
    * stays registered but inactive. Note: an enabled element is still inactive on a
    * limited connection (see `isLimitedConnection`). */
@@ -135,8 +138,6 @@ export type ForesightElementInternal = {
   callback: ForesightCallback
   /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
-  /** Whether the element is detached from the DOM and parked (registered but inactive) until it reconnects. */
-  isParked: boolean
   /** Listeners notified whenever `state` is replaced. */
   subscribers: Set<() => void>
 }
@@ -182,6 +183,7 @@ export type ForesightManagerData = {
   eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
+  parkedElementCount: number
   loadedModules: ForesightModules
 }
 

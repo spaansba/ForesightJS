@@ -92,6 +92,7 @@ export const createElementInternal = (
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
     isActive: isEnabled && !isLimitedConnection,
+    isParked: false,
     isEnabled,
     isPredicted: false,
     isCallbackRunning: false,
@@ -110,7 +111,6 @@ export const createElementInternal = (
     element,
     callback,
     reactivateTimeoutId: undefined,
-    isParked: false,
     subscribers: new Set(),
   }
 }
@@ -155,6 +155,7 @@ export const createUnregisteredSnapshot = (isLimitedConnection: boolean): Foresi
     isIntersectingWithViewport: false,
     isRegistered: false,
     isActive: false,
+    isParked: false,
     isEnabled: false,
     isPredicted: false,
     isCallbackRunning: false,

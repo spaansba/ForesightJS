@@ -59,7 +59,8 @@ You can change these on every render. The hook patches the existing registration
 Everything other than `elementRef` on the return value is the element's current [state](./configuration/registration-options.md#registration-return-value), and it re-renders your component when it changes. The ones you'll reach for most:
 
 - `isPredicted` → the callback has fired for this element
-- `isActive` → eligible to fire (not disabled, not on a limited connection)
+- `isActive` → eligible to fire (not disabled, not on a limited connection, not parked)
+- `isParked` → detached from the DOM and parked; resumes when it reconnects
 - `isCallbackRunning` → your (awaited) callback is mid-flight
 - `hitCount`, `status`, `error` → how the last run went
 
