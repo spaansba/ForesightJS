@@ -82,7 +82,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
       const result = ForesightManager.instance.register({
         ...optionsRef.current[i],
         element: el,
-        callback: (state: ForesightElementState) => optionsRef.current[i].callback(state),
+        callback: (state: ForesightElementState) => optionsRef.current[i]?.callback(state),
       })
       nextSlots.set(i, { element: el, result })
     }
