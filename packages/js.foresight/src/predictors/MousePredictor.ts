@@ -58,7 +58,7 @@ export class MousePredictor extends BaseForesightModule {
         continue
       }
 
-      const expandedRect = state.elementBounds.expandedRect
+      const expandedRect = internal.bounds.expandedRect
 
       if (!enablePrediction) {
         if (isPointInRectangle(currentPoint, expandedRect)) {

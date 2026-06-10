@@ -76,18 +76,14 @@ export const createElementInternal = (
   const { element, callback, hitSlop, name, meta, reactivateAfter, enabled } = options
 
   const initialRect = element.getBoundingClientRect()
-  const normalizedHitSlop = hitSlop ? normalizeHitSlop(hitSlop) : defaultHitSlop
+  const normalizedHitSlop = hitSlop !== undefined ? normalizeHitSlop(hitSlop) : defaultHitSlop
   const isEnabled = enabled !== false
 
   const state: ForesightElementState = {
     id,
     name: name || element.id || "unnamed",
     meta: meta ?? {},
-    elementBounds: {
-      originalRect: initialRect,
-      expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
-      hitSlop: normalizedHitSlop,
-    },
+    hitSlop: normalizedHitSlop,
     isLimitedConnection,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
@@ -106,26 +102,18 @@ export const createElementInternal = (
 
   return {
     state,
+    bounds: {
+      originalRect: initialRect,
+      expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
+    },
     invokedAt: undefined,
     completedAt: undefined,
     element,
     callback,
     reactivateTimeoutId: undefined,
     subscribers: new Set(),
+    boundsSubscribers: new Set(),
   }
-}
-
-// new DOMRectReadOnly(0, 0, 0, 0) doesn't work in ssr, so we use this constant instead
-const EMPTY_DOM_RECT: DOMRectReadOnly = {
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-  top: 0,
-  right: 0,
-  bottom: 0,
-  left: 0,
-  toJSON: () => ({}),
 }
 
 /**
@@ -146,11 +134,8 @@ export const createUnregisteredSnapshot = (isLimitedConnection: boolean): Foresi
     id: "",
     name: "",
     meta: {},
-    elementBounds: {
-      originalRect: EMPTY_DOM_RECT,
-      expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
-      hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
-    },
+    // Fresh object per call - Vue wraps the snapshot reactively.
+    hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     isLimitedConnection,
     isIntersectingWithViewport: false,
     isRegistered: false,

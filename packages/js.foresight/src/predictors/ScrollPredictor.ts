@@ -47,9 +47,11 @@ export class ScrollPredictor extends BaseForesightModule {
       return
     }
 
-    // ONCE per handlePositionChange batch we decide what the scroll direction is
+    // ONCE per handlePositionChange batch we decide what the scroll direction is.
+    // entry.bounds still holds the PRE-scroll rect here - the DesktopHandler only
+    // updates bounds after this runs (see handlePositionChange ordering).
     this.scrollDirection =
-      this.scrollDirection ?? getScrollDirection(state.elementBounds.originalRect, newRect)
+      this.scrollDirection ?? getScrollDirection(entry.bounds.originalRect, newRect)
 
     if (this.scrollDirection === "none") {
       return
@@ -69,7 +71,7 @@ export class ScrollPredictor extends BaseForesightModule {
       lineSegmentIntersectsRect(
         this.trajectoryPositions.currentPoint,
         this.predictedScrollPoint,
-        state.elementBounds.expandedRect
+        entry.bounds.expandedRect
       )
     ) {
       this.callCallback(entry, {
@@ -77,12 +79,26 @@ export class ScrollPredictor extends BaseForesightModule {
         subType: this.scrollDirection,
       })
     }
+  }
 
-    if (this.hasListeners("scrollTrajectoryUpdate")) {
-      this.scrollTrajectoryEvent.predictedPoint = this.predictedScrollPoint
-      this.scrollTrajectoryEvent.scrollDirection = this.scrollDirection
-      this.emit(this.scrollTrajectoryEvent)
+  /**
+   * Emits a single trajectory update for the whole position-change batch;
+   * direction and predicted point are identical for every element in it.
+   * Called by the DesktopHandler after the batch, before resetScrollProps.
+   */
+  public emitTrajectoryUpdate(): void {
+    if (
+      !this.scrollDirection ||
+      this.scrollDirection === "none" ||
+      !this.predictedScrollPoint ||
+      !this.hasListeners("scrollTrajectoryUpdate")
+    ) {
+      return
     }
+
+    this.scrollTrajectoryEvent.predictedPoint = this.predictedScrollPoint
+    this.scrollTrajectoryEvent.scrollDirection = this.scrollDirection
+    this.emit(this.scrollTrajectoryEvent)
   }
 
   protected onConnect() {}

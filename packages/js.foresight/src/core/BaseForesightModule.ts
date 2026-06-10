@@ -1,5 +1,6 @@
 import type {
   CallbackHitType,
+  ElementBounds,
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
@@ -22,12 +23,18 @@ type UpdateElementStateFunction = (
   patch: Partial<ForesightElementState>
 ) => ForesightElementState
 
+type UpdateElementBoundsFunction = (
+  entry: ForesightElementInternal,
+  next: ElementBounds
+) => ElementBounds
+
 export type ForesightModuleDependencies = {
   elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
   callCallback: CallCallbackFunction
   emit: EmitFunction
   hasListeners: HasListenersFunction
   updateElementState: UpdateElementStateFunction
+  updateElementBounds: UpdateElementBoundsFunction
   settings: ForesightManagerSettings
 }
 
@@ -38,6 +45,7 @@ export abstract class BaseForesightModule {
   protected emit: EmitFunction
   protected hasListeners: HasListenersFunction
   protected updateElementState: UpdateElementStateFunction
+  protected updateElementBounds: UpdateElementBoundsFunction
   protected settings: ForesightManagerSettings
   private _isConnected = false
   private _cachedLogStyle: string | null = null
@@ -54,6 +62,7 @@ export abstract class BaseForesightModule {
     this.emit = dependencies.emit
     this.hasListeners = dependencies.hasListeners
     this.updateElementState = dependencies.updateElementState
+    this.updateElementBounds = dependencies.updateElementBounds
     this.settings = dependencies.settings
   }
 

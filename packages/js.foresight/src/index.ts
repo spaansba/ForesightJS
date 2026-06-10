@@ -5,6 +5,7 @@ export type {
   Rect as ForesightRect,
   ForesightElement,
   ForesightElementState,
+  ElementBounds,
   ForesightRegisterResult,
   UpdateForsightManagerSettings,
   ForesightManagerSettings,

@@ -41,7 +41,7 @@ The options are the same [registration options](./configuration/registration-opt
 
 ## The subscribe pattern
 
-If you only fire a callback, the snippet above is all you need. But `register()` returns more: the element's full [state snapshot](./configuration/registration-options.md#registration-return-value) plus `subscribe` and `getSnapshot`. The state is an immutable snapshot whose reference is replaced (never mutated) on every change, which makes it plug into any reactivity system:
+If you only fire a callback, the snippet above is all you need. But `register()` returns more: the element's full [state snapshot](./configuration/registration-options.md#registration-return-value) plus `subscribe` and `getSnapshot`. The state is an immutable snapshot whose reference is replaced (never mutated) on every logical change, which makes it plug into any reactivity system:
 
 ```js
 const reg = ForesightManager.instance.register({
@@ -59,7 +59,7 @@ unsubscribe()
 reg.unregister()
 ```
 
-`subscribe(listener)` calls your listener on every state change and returns an unsubscribe function. `getSnapshot()` returns the current snapshot, because the reference only changes when the state changes, equality checks are enough to know whether to re-render.
+`subscribe(listener)` calls your listener on every logical state change and returns an unsubscribe function. `getSnapshot()` returns the current snapshot; because the reference only changes when the state changes, equality checks are enough to know whether to re-render.
 
 This is exactly how the official packages are built:
 

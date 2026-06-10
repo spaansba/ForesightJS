@@ -7,9 +7,12 @@ import type {
 
 export const mockState = {
   listeners: [] as Array<() => void>,
+  boundsListeners: [] as Array<() => void>,
   currentSnapshot: null as ForesightElementState | null,
   lastCallbackWrapper: null as ForesightCallback | null,
 }
+
+const EMPTY_RECT = { top: 0, left: 0, right: 0, bottom: 0 }
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
 export const updateElementOptionsSpy = vi.fn()
@@ -46,6 +49,17 @@ vi.mock("js.foresight", async importOriginal => {
             },
             getSnapshot: () =>
               mockState.currentSnapshot ?? actual.createUnregisteredSnapshot(false),
+            subscribeToBounds: (fn: () => void) => {
+              mockState.boundsListeners.push(fn)
+
+              return () => {
+                mockState.boundsListeners = mockState.boundsListeners.filter(l => l !== fn)
+              }
+            },
+            getBounds: () => ({
+              originalRect: EMPTY_RECT as DOMRectReadOnly,
+              expandedRect: EMPTY_RECT,
+            }),
           }
         },
         updateElementOptions: (

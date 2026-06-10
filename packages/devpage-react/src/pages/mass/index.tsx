@@ -1,16 +1,10 @@
 import { useForesights } from "@foresightjs/react"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useDebug } from "../../contexts/DebugContext"
+import { useCallback, useMemo, useState } from "react"
 
 const Mass = () => {
   const [resetKey, setResetKey] = useState(0)
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)
-  const { isDebugActive, setDebugMode } = useDebug()
-
-  useEffect(() => {
-    setDebugMode(false)
-  }, [setDebugMode])
 
   const resetTest = useCallback(() => {
     setResetKey(prev => prev + 1)
@@ -63,13 +57,6 @@ const Mass = () => {
           </button>
         </div>
       </div>
-
-      {isDebugActive && (
-        <div className="mb-6 border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Debug mode is on with {buttonCount.toLocaleString()} elements - the overlay can tank frame
-          rates.
-        </div>
-      )}
 
       <div className="flex flex-wrap gap-1">
         {foresights.map((foresight, i) => (

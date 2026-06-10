@@ -316,7 +316,7 @@ describe("ForesightManager", () => {
       })
 
       const state = manager.registeredElements.get(element)
-      expect(state?.elementBounds.hitSlop).toEqual({
+      expect(state?.hitSlop).toEqual({
         top: 10,
         left: 20,
         right: 30,
@@ -331,7 +331,7 @@ describe("ForesightManager", () => {
       manager.register({ element, callback: vi.fn(), hitSlop: 15 })
 
       const state = manager.registeredElements.get(element)
-      expect(state?.elementBounds.hitSlop).toEqual({
+      expect(state?.hitSlop).toEqual({
         top: 15,
         left: 15,
         right: 15,
@@ -994,7 +994,7 @@ describe("ForesightManager", () => {
 
         nodeList.forEach(el => {
           const state = manager.registeredElements.get(el)
-          expect(state?.elementBounds.hitSlop).toEqual({
+          expect(state?.hitSlop).toEqual({
             top: 20,
             left: 20,
             right: 20,
@@ -1357,6 +1357,141 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("bounds channel (getBounds / subscribeToBounds)", () => {
+    /** Simulate the element moving and the manager picking up the new rect. */
+    const moveElement = (
+      manager: ForesightManager,
+      entry: ForesightElementInternal,
+      top: number,
+      left: number
+    ) => {
+      entry.element.getBoundingClientRect = vi.fn(
+        () =>
+          ({
+            top,
+            left,
+            right: left + 100,
+            bottom: top + 100,
+            width: 100,
+            height: 100,
+            x: left,
+            y: top,
+            toJSON: () => ({}),
+          }) as DOMRect
+      )
+      // @ts-expect-error - accessing private method for tests
+      manager.forceUpdateElementBounds(entry)
+    }
+
+    it("should notify bounds subscribers only on a rect-only update and keep getSnapshot stable", () => {
+      const { manager, entry, result } = setupBasicTest()
+      const stateListener = vi.fn()
+      const boundsListener = vi.fn()
+      result.subscribe(stateListener)
+      result.subscribeToBounds(boundsListener)
+
+      const snapshotBefore = result.getSnapshot()
+      const boundsBefore = result.getBounds()
+
+      moveElement(manager, entry, 300, 300)
+
+      expect(boundsListener).toHaveBeenCalledTimes(1)
+      expect(stateListener).not.toHaveBeenCalled()
+      expect(result.getSnapshot()).toBe(snapshotBefore)
+      expect(result.getBounds()).not.toBe(boundsBefore)
+      expect(result.getBounds().originalRect.top).toBe(300)
+    })
+
+    it("should notify state subscribers only on a logical change and keep getBounds stable", async () => {
+      const { manager, entry, result } = setupBasicTest()
+      const stateListener = vi.fn()
+      const boundsListener = vi.fn()
+      result.subscribe(stateListener)
+      result.subscribeToBounds(boundsListener)
+
+      const boundsBefore = result.getBounds()
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(stateListener).toHaveBeenCalled()
+      expect(boundsListener).not.toHaveBeenCalled()
+      expect(result.getBounds()).toBe(boundsBefore)
+    })
+
+    it("should not notify bounds subscribers when the rect is unchanged", () => {
+      const { manager, entry, result } = setupBasicTest()
+      const boundsListener = vi.fn()
+      result.subscribeToBounds(boundsListener)
+      const boundsBefore = result.getBounds()
+
+      // Same rect as createMockElement returns - content-equal, so a no-op
+      moveElement(manager, entry, 100, 100)
+
+      expect(boundsListener).not.toHaveBeenCalled()
+      expect(result.getBounds()).toBe(boundsBefore)
+    })
+
+    it("should update bounds before state on a hitSlop change so state listeners read fresh geometry", () => {
+      const { manager, element, result } = setupBasicTest({ hitSlop: 10 })
+      const order: string[] = []
+      let expandedRectInStateListener: number | undefined
+
+      result.subscribeToBounds(() => {
+        order.push("bounds")
+      })
+      result.subscribe(() => {
+        order.push("state")
+        expandedRectInStateListener = result.getBounds().expandedRect.top
+      })
+
+      manager.updateElementOptions(element, { hitSlop: 50 })
+
+      expect(order).toEqual(["bounds", "state"])
+      // top of element is 100, hitSlop 50 -> expandedRect.top is already 50
+      expect(expandedRectInStateListener).toBe(50)
+    })
+
+    it("should return undefined from subscribeToElementBounds/getElementBounds for unregistered elements", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      expect(manager.subscribeToElementBounds(element, vi.fn())).toBeUndefined()
+      expect(manager.getElementBounds(element)).toBeUndefined()
+    })
+
+    it("should notify manager-level bounds subscribers and clear them on unregister", () => {
+      const { manager, element, entry } = setupBasicTest()
+      const boundsListener = vi.fn()
+
+      manager.subscribeToElementBounds(element, boundsListener)
+      moveElement(manager, entry, 300, 300)
+      expect(boundsListener).toHaveBeenCalledTimes(1)
+
+      manager.unregister(element)
+      // Unregister only touches logical state - bounds listeners stay quiet
+      expect(boundsListener).toHaveBeenCalledTimes(1)
+      expect(manager.subscribeToElementBounds(element, vi.fn())).toBeUndefined()
+    })
+
+    it("should bind getBounds and subscribeToBounds to the surviving entry on re-registration", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const result1 = manager.register({ element, callback: vi.fn() })
+      const result2 = manager.register({ element, callback: vi.fn() })
+
+      expect(result2.getBounds()).toBe(result1.getBounds())
+
+      const boundsListener = vi.fn()
+      result1.subscribeToBounds(boundsListener)
+      moveElement(manager, getEntry(manager, element), 300, 300)
+
+      expect(boundsListener).toHaveBeenCalledTimes(1)
+      expect(result2.getBounds().originalRect.top).toBe(300)
+    })
+  })
+
   describe("updateElementOptions", () => {
     it("should update reactivateAfter", () => {
       const manager = ForesightManager.initialize()
@@ -1419,7 +1554,7 @@ describe("ForesightManager", () => {
       const element = createMockElement()
 
       manager.register({ element, callback: vi.fn(), hitSlop: 10 })
-      expect(manager.registeredElements.get(element)?.elementBounds.expandedRect).toEqual({
+      expect(manager.getElementBounds(element)?.expandedRect).toEqual({
         top: 90,
         left: 90,
         right: 210,
@@ -1428,9 +1563,18 @@ describe("ForesightManager", () => {
 
       manager.updateElementOptions(element, { hitSlop: 50 })
 
-      const bounds = manager.registeredElements.get(element)!.elementBounds
-      expect(bounds.hitSlop).toEqual({ top: 50, left: 50, right: 50, bottom: 50 })
-      expect(bounds.expandedRect).toEqual({ top: 50, left: 50, right: 250, bottom: 250 })
+      expect(manager.registeredElements.get(element)!.hitSlop).toEqual({
+        top: 50,
+        left: 50,
+        right: 50,
+        bottom: 50,
+      })
+      expect(manager.getElementBounds(element)!.expandedRect).toEqual({
+        top: 50,
+        left: 50,
+        right: 250,
+        bottom: 250,
+      })
     })
 
     it("should update hitSlop from a Rect object", () => {
@@ -1442,27 +1586,41 @@ describe("ForesightManager", () => {
         hitSlop: { top: 0, left: 20, right: 30, bottom: 40 },
       })
 
-      const bounds = manager.registeredElements.get(element)!.elementBounds
-      expect(bounds.hitSlop).toEqual({ top: 0, left: 20, right: 30, bottom: 40 })
-      expect(bounds.expandedRect).toEqual({ top: 100, left: 80, right: 230, bottom: 240 })
+      expect(manager.registeredElements.get(element)!.hitSlop).toEqual({
+        top: 0,
+        left: 20,
+        right: 30,
+        bottom: 40,
+      })
+      expect(manager.getElementBounds(element)!.expandedRect).toEqual({
+        top: 100,
+        left: 80,
+        right: 230,
+        bottom: 240,
+      })
     })
 
     it("should preserve hitSlop and not notify subscribers when hitSlop is unchanged", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
       const listener = vi.fn()
+      const boundsListener = vi.fn()
 
       const result = manager.register({ element, callback: vi.fn(), hitSlop: 10 })
       result.subscribe(listener)
-      const boundsBefore = manager.registeredElements.get(element)!.elementBounds
+      result.subscribeToBounds(boundsListener)
+      const hitSlopBefore = manager.registeredElements.get(element)!.hitSlop
+      const boundsBefore = manager.getElementBounds(element)
 
       // Equivalent hitSlop (number vs normalized Rect) should be a no-op
       manager.updateElementOptions(element, {
         hitSlop: { top: 10, left: 10, right: 10, bottom: 10 },
       })
 
-      expect(manager.registeredElements.get(element)!.elementBounds).toBe(boundsBefore)
+      expect(manager.registeredElements.get(element)!.hitSlop).toBe(hitSlopBefore)
+      expect(manager.getElementBounds(element)).toBe(boundsBefore)
       expect(listener).not.toHaveBeenCalled()
+      expect(boundsListener).not.toHaveBeenCalled()
     })
 
     it("should preserve previous values when options are omitted", () => {
