@@ -1,3 +1,4 @@
+import { scan } from "react-scan"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./index.css"
@@ -5,6 +6,8 @@ import App from "./App.tsx"
 import { ForesightManager } from "@foresightjs/react"
 import { ForesightDevtools } from "js.foresight-devtools"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+scan({ enabled: true })
 
 ForesightManager.initialize({
   enableMousePrediction: true,

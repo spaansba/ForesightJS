@@ -10,11 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@foresightjs/react": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-devtools": "^0.10.1",
     "@tanstack/react-query": "^5.96.2",
     "@tanstack/react-query-devtools": "^5.96.2",
-    "@foresightjs/react": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
@@ -31,6 +31,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "js.foresight-devtools": "workspace:*",
+    "react-scan": "^0.5.7",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.5"
