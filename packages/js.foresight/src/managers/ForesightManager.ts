@@ -59,8 +59,6 @@ export class ForesightManager {
   public readonly registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> =
     new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
 
-  private checkableElements: Set<ForesightElementInternal> = new Set()
-
   private idCounter: number = 0
   private activeElementCount: number = 0
 
@@ -267,7 +265,6 @@ export class ForesightManager {
     )
 
     this.elementEntries.set(options.element, entry)
-    this.updateCheckableStatus(entry)
 
     // Inactive elements (disabled or limited connection) are not observed or
     // counted as active until they are (re)activated.
@@ -442,7 +439,6 @@ export class ForesightManager {
     })
 
     this.elementEntries.delete(element)
-    this.checkableElements.delete(entry)
     entry.subscribers.clear()
 
     const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
@@ -487,7 +483,6 @@ export class ForesightManager {
 
     this.updateElementState(entry, { isActive: true, isPredicted: false })
     this.activeElementCount++
-    this.updateCheckableStatus(entry)
     this.currentlyActiveHandler?.observeElement(element)
   }
 
@@ -532,7 +527,6 @@ export class ForesightManager {
       isPredicted: false,
       isCallbackRunning: false,
     })
-    this.updateCheckableStatus(entry)
 
     // Disabling the last active element leaves nothing to predict on.
     this.removeGlobalListenersIfIdle()
@@ -541,18 +535,6 @@ export class ForesightManager {
   private clearReactivateTimeout(entry: ForesightElementInternal): void {
     clearTimeout(entry.reactivateTimeoutId)
     entry.reactivateTimeoutId = undefined
-  }
-
-  public updateCheckableStatus(entry: ForesightElementInternal): void {
-    const state = entry.state
-    const isCheckable =
-      state.isEnabled && state.isIntersectingWithViewport && state.isActive && !state.isPredicted
-
-    if (isCheckable) {
-      this.checkableElements.add(entry)
-    } else {
-      this.checkableElements.delete(entry)
-    }
   }
 
   private callCallback(entry: ForesightElementInternal, callbackHitType: CallbackHitType): void {
@@ -566,7 +548,6 @@ export class ForesightManager {
 
   private markElementAsRunning(entry: ForesightElementInternal): void {
     this.clearReactivateTimeout(entry)
-    this.checkableElements.delete(entry)
 
     entry.invokedAt = Date.now()
 
@@ -821,7 +802,6 @@ export class ForesightManager {
       isActive: false,
       isCallbackRunning: false,
     })
-    this.updateCheckableStatus(entry)
   }
 
   /**
@@ -847,7 +827,6 @@ export class ForesightManager {
     }
 
     this.updateElementState(entry, { isActive })
-    this.updateCheckableStatus(entry)
 
     // If it fired with a finite reactivateAfter, resume the reactivation timer that
     // was cleared when it parked, so the cooldown continues from reconnect.

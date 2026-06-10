@@ -407,7 +407,7 @@ describe("ForesightManager", () => {
       )
     })
 
-    it("should remove element from checkableElements on unregister", () => {
+    it("should remove element state on unregister", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
@@ -685,8 +685,8 @@ describe("ForesightManager", () => {
     })
   })
 
-  describe("checkableElements Optimization", () => {
-    it("should add element to checkable set on registration", () => {
+  describe("Element Activity State", () => {
+    it("should be active and not predicted on registration", () => {
       const { entry } = setupBasicTest()
 
       // Element should be checkable: visible (mocked), active, not predicted
@@ -694,7 +694,7 @@ describe("ForesightManager", () => {
       expect(entry.state.isPredicted).toBe(false)
     })
 
-    it("should remove from checkable set when callback starts running", async () => {
+    it("should be predicted and running while callback is running", async () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
@@ -720,14 +720,13 @@ describe("ForesightManager", () => {
       expect(entry.state.isCallbackRunning).toBe(false)
     })
 
-    it("should update checkable status via public method", () => {
+    it("should update viewport intersection state", () => {
       const { manager, entry } = setupBasicTest()
 
       expect(entry.state.isActive).toBe(true)
 
       // @ts-expect-error - accessing private method
       manager.updateElementState(entry, { isIntersectingWithViewport: false })
-      manager.updateCheckableStatus(entry)
 
       expect(entry.state.isIntersectingWithViewport).toBe(false)
     })
