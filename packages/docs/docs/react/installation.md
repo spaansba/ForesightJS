@@ -9,11 +9,14 @@ keywords:
   - Installation
 description: Install the official React bindings for ForesightJS
 last_updated:
-  date: 2026-06-08
+  date: 2026-06-10
   author: Bart Spaans
 ---
 
 # Installation
+
+[![npm version](https://img.shields.io/npm/v/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
+[![npm downloads](https://img.shields.io/npm/dt/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
 
 `@foresightjs/react` is the official React package for ForesightJS. It gives you [`useForesight`](./useForesight.md), [`useForesights`](./useForesights.md) and [`useForesightEvent`](./useForesightEvent.md) so you can register elements and read their prediction state straight from a component.
 
