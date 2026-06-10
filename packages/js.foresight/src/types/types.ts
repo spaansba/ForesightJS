@@ -216,14 +216,6 @@ type BaseForesightManagerSettings = {
 
   /**
    *
-   * @deprecated will be removed from v4.0
-   * ForesightJS now have its stand-alone devtools library with the debugger built-in
-   * @link https://github.com/spaansba/ForesightJS-DevTools
-   */
-  debug: boolean
-
-  /**
-   *
    * Logs basic information about the ForesightManager and its handlers that doesn't have a dedicated event.
    *
    * Mostly used by the maintainers of ForesightJS to debug the manager. But might be useful for implementers aswell.
@@ -342,10 +334,6 @@ export type ForesightRegisterNodeListOptions = ForesightRegisterOptionsWithoutEl
 export type ForesightRegisterOptionsWithoutElement = {
   callback: ForesightCallback
   hitSlop?: HitSlop
-  /**
-   * @deprecated will be removed in V4.0
-   */
-  unregisterOnCallback?: boolean
   name?: string
   /**
    * If set by user, stores additional information about the registered element

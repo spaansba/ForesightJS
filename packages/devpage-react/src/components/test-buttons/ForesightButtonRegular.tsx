@@ -17,7 +17,6 @@ const ForesightButtonRegular = ({ name }: ForesightButtonRegularProps) => {
           },
           hitSlop: 20,
           name: name,
-          unregisterOnCallback: false,
         }}
       />
     </article>
