@@ -1,8 +1,9 @@
-import { defineComponent, h, nextTick, ref } from "vue"
+import { defineComponent, h, nextTick, reactive, ref } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import type { UseForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
@@ -394,6 +395,66 @@ describe("useForesight", () => {
       expect(registerSpy).toHaveBeenCalledTimes(1)
 
       wrapper.vm.enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+
+    it("patches enabled when a ref options object is mutated in place", async () => {
+      const options = ref<UseForesightOptions>({
+        callback: vi.fn(),
+        name: "in-place-ref",
+        enabled: true,
+      })
+
+      const Component = defineComponent({
+        setup() {
+          return useForesight(options)
+        },
+        render() {
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      updateElementOptionsSpy.mockClear()
+
+      options.value.enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      expect(lastCall?.[1].enabled).toBe(false)
+    })
+
+    it("patches enabled when a reactive options object is mutated in place", async () => {
+      const options = reactive<UseForesightOptions>({
+        callback: vi.fn(),
+        name: "in-place-reactive",
+        enabled: true,
+      })
+
+      const Component = defineComponent({
+        setup() {
+          return useForesight(options)
+        },
+        render() {
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(1)
+      updateElementOptionsSpy.mockClear()
+
+      options.enabled = false
       await nextTick()
       await nextTick()
 
