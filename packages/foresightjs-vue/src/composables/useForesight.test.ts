@@ -244,6 +244,38 @@ describe("useForesight", () => {
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 
+  it("patches hitSlop on the same element without unregistering", async () => {
+    const Component = defineComponent({
+      setup() {
+        const hitSlop = ref(10)
+        const result = useForesight(() => ({
+          name: "slop",
+          hitSlop: hitSlop.value,
+          callback: vi.fn(),
+        }))
+
+        return { ...result, hitSlop }
+      },
+      render() {
+        return h("button", { ref: this.setRef, "data-testid": "el" })
+      },
+    })
+
+    const wrapper = mount(Component, { attachTo: document.body })
+    await nextTick()
+    registerSpy.mockClear()
+
+    wrapper.vm.hitSlop = 50
+    await nextTick()
+    await nextTick()
+
+    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    const lastCall =
+      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+    expect(lastCall?.[1].hitSlop).toBe(50)
+    expect(unregisterSpy).not.toHaveBeenCalled()
+  })
+
   describe("element swaps via setRef", () => {
     it("re-registers when setRef receives a different element", async () => {
       const Component = defineComponent({

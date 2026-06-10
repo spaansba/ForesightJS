@@ -1,5 +1,5 @@
 import { DerivedMapView } from "../helpers/DerivedMapView"
-import { areRectsEqual, getExpandedRect } from "../helpers/rectAndHitSlop"
+import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
 import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
   createDefaultManagerSettings,
@@ -317,12 +317,28 @@ export class ForesightManager {
       this.setElementEnabled(entry, element, options.enabled !== false)
     }
 
+    // Keep the current bounds reference when hitSlop is omitted or content-equal,
+    // so updateElementState sees no change; otherwise remeasure and re-expand.
+    let elementBounds = entry.state.elementBounds
+    if (options.hitSlop !== undefined) {
+      const hitSlop = normalizeHitSlop(options.hitSlop)
+      if (!areRectsEqual(hitSlop, elementBounds.hitSlop)) {
+        const originalRect = element.getBoundingClientRect()
+        elementBounds = {
+          originalRect,
+          expandedRect: getExpandedRect(originalRect, hitSlop),
+          hitSlop,
+        }
+      }
+    }
+
     const prevReactivateAfter = entry.state.reactivateAfter
     const reactivateAfter = options.reactivateAfter ?? prevReactivateAfter
     const next = this.updateElementState(entry, {
       name: options.name || entry.state.name,
       meta: options.meta ?? entry.state.meta,
       reactivateAfter,
+      elementBounds,
     })
 
     // Only clear and reschedule the reactivation timeout if reactivateAfter actually changed
