@@ -37,19 +37,19 @@ The usage in your templates is unchanged.
 
 ## Composable
 
-The composable lost the `templateRefKey` string. Instead it returns a `setRef` function you bind directly:
+The composable lost the `templateRefKey` string. Instead it returns an `elementRef` function you bind directly:
 
 ```diff
 - import { useForesight } from "./composables/useForesight"
 + import { useForesight } from "@foresightjs/vue"
 
 - const { templateRef } = useForesight({ templateRefKey: "myButton", callback })
-+ const { setRef } = useForesight({ callback })
++ const { elementRef } = useForesight({ callback })
 ```
 
 ```diff
 - <button ref="myButton">Hover</button>
-+ <button :ref="setRef">Hover</button>
++ <button :ref="elementRef">Hover</button>
 ```
 
 You also get the [reactive state](./useForesight.md#reactive-state) back as refs instead of a `registerResults` object.

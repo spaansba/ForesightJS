@@ -44,7 +44,7 @@ const toggle = useForesight({
     <div class="flex flex-wrap gap-6">
       <div class="flex flex-col items-center gap-2">
         <div
-          :ref="fast.setRef"
+          :ref="fast.elementRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-green-200',
@@ -69,7 +69,7 @@ const toggle = useForesight({
 
       <div class="flex flex-col items-center gap-2">
         <div
-          :ref="slow.setRef"
+          :ref="slow.elementRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-amber-200',
@@ -94,7 +94,7 @@ const toggle = useForesight({
 
       <div class="flex flex-col items-center gap-2">
         <div
-          :ref="error.setRef"
+          :ref="error.elementRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none',
             'bg-red-200',
@@ -120,7 +120,7 @@ const toggle = useForesight({
       <div class="flex flex-col items-center gap-2">
         <div
           v-if="toggleableMounted"
-          :ref="toggle.setRef"
+          :ref="toggle.elementRef"
           :class="[
             'w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none',
             toggle.isPredicted.value ? 'outline-1 outline-amber-500' : '',

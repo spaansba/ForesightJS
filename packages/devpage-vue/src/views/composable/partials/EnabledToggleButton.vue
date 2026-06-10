@@ -5,7 +5,7 @@ import ForesightStats from "../../../components/ForesightStats.vue"
 
 const enabled = ref(true)
 
-const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(() => ({
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(() => ({
   callback: () => console.log("Enabled-toggle prefetch"),
   name: "enabled-toggle",
   enabled: enabled.value,
@@ -18,7 +18,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesigh
     <p class="text-xs text-gray-500">Toggle <code>enabled</code> to control registration.</p>
     <button
       type="button"
-      :ref="setRef"
+      :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-sm font-medium',
         enabled

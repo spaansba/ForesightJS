@@ -15,7 +15,7 @@ beforeEach(() => {
 })
 
 describe("useForesights", () => {
-  it("registers all elements when setRef is called", async () => {
+  it("registers all elements when elementRef is called", async () => {
     const Component = defineComponent({
       setup() {
         const slots = useForesights([
@@ -27,8 +27,8 @@ describe("useForesights", () => {
       },
       render() {
         return h("div", [
-          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -55,8 +55,8 @@ describe("useForesights", () => {
       },
       render() {
         return h("div", [
-          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -68,7 +68,7 @@ describe("useForesights", () => {
     expect(unregisterSpy).toHaveBeenCalledTimes(2)
   })
 
-  it("returns unregistered initial state before setRef is called", () => {
+  it("returns unregistered initial state before elementRef is called", () => {
     const Component = defineComponent({
       setup() {
         const slots = useForesights([{ callback: vi.fn() }])
@@ -100,11 +100,11 @@ describe("useForesights", () => {
       render() {
         return h("div", [
           h("button", {
-            ref: this.slots[0].setRef,
+            ref: this.slots[0].elementRef,
             "data-testid": "el-0",
             "data-predicted": this.slots[0]?.isPredicted,
           }),
-          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+          h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
         ])
       },
     })
@@ -133,7 +133,7 @@ describe("useForesights", () => {
         return { slots, cb }
       },
       render() {
-        return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+        return h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" })
       },
     })
 
@@ -162,9 +162,9 @@ describe("useForesights", () => {
       render() {
         return h(
           "div",
-          this.slots.map((slot: { setRef: VNodeRef }, i: number) =>
+          this.slots.map((slot: { elementRef: VNodeRef }, i: number) =>
             h("button", {
-              ref: slot.setRef,
+              ref: slot.elementRef,
               "data-testid": `el-${i}`,
             })
           )
@@ -204,8 +204,8 @@ describe("useForesights", () => {
       render() {
         return h(
           "div",
-          this.slots.map((slot: { setRef: VNodeRef }, i: number) =>
-            h("button", { ref: slot.setRef, "data-testid": `el-${i}` })
+          this.slots.map((slot: { elementRef: VNodeRef }, i: number) =>
+            h("button", { ref: slot.elementRef, "data-testid": `el-${i}` })
           )
         )
       },
@@ -230,7 +230,7 @@ describe("useForesights", () => {
         return { slots, name }
       },
       render() {
-        return h("button", { ref: this.slots[0]?.setRef, "data-testid": "el-0" })
+        return h("button", { ref: this.slots[0]?.elementRef, "data-testid": "el-0" })
       },
     })
 
@@ -282,9 +282,9 @@ describe("useForesights", () => {
       },
       render() {
         return h("div", [
-          h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-          h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
-          h("button", { ref: this.slots[2].setRef, "data-testid": "el-2" }),
+          h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+          h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
+          h("button", { ref: this.slots[2].elementRef, "data-testid": "el-2" }),
         ])
       },
     })
@@ -312,9 +312,9 @@ describe("useForesights", () => {
         },
         render() {
           return h("div", [
-            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
-            h("button", { ref: this.slots[2].setRef, "data-testid": "el-2" }),
+            h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
+            h("button", { ref: this.slots[2].elementRef, "data-testid": "el-2" }),
           ])
         },
       })
@@ -338,7 +338,7 @@ describe("useForesights", () => {
           return { slots, enabled }
         },
         render() {
-          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+          return h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" })
         },
       })
 
@@ -366,7 +366,7 @@ describe("useForesights", () => {
           return { slots, enabled }
         },
         render() {
-          return h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" })
+          return h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" })
         },
       })
 
@@ -396,8 +396,8 @@ describe("useForesights", () => {
         },
         render() {
           return h("div", [
-            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+            h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
           ])
         },
       })
@@ -419,7 +419,7 @@ describe("useForesights", () => {
   })
 
   describe("comment node filtering", () => {
-    it("does not register when setRef receives a comment node component", async () => {
+    it("does not register when elementRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({
         props: { show: { type: Boolean, default: false } },
         render() {
@@ -435,7 +435,7 @@ describe("useForesights", () => {
           return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: this.slots[0].setRef, show: false })
+          return h(ChildComponent, { ref: this.slots[0].elementRef, show: false })
         },
       })
 
@@ -445,7 +445,7 @@ describe("useForesights", () => {
       expect(registerSpy).not.toHaveBeenCalled()
     })
 
-    it("registers when setRef receives a real component element", async () => {
+    it("registers when elementRef receives a real component element", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child" }, "visible")
@@ -460,7 +460,7 @@ describe("useForesights", () => {
           return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: this.slots[0].setRef })
+          return h(ChildComponent, { ref: this.slots[0].elementRef })
         },
       })
 
@@ -484,7 +484,7 @@ describe("useForesights", () => {
         },
         render() {
           return h("button", {
-            ref: this.slots[0].setRef,
+            ref: this.slots[0].elementRef,
             "data-testid": "el-0",
             "data-counter": this.counter,
           })
@@ -516,8 +516,8 @@ describe("useForesights", () => {
         },
         render() {
           return h("div", [
-            h("button", { ref: this.slots[0].setRef, "data-testid": "el-0" }),
-            h("button", { ref: this.slots[1].setRef, "data-testid": "el-1" }),
+            h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
           ])
         },
       })
@@ -540,8 +540,8 @@ describe("useForesights", () => {
     })
   })
 
-  describe("setRef reactivity", () => {
-    it("unregisters when setRef receives null", async () => {
+  describe("elementRef reactivity", () => {
+    it("unregisters when elementRef receives null", async () => {
       const Component = defineComponent({
         setup() {
           const show = ref(true)
@@ -551,7 +551,7 @@ describe("useForesights", () => {
         },
         render() {
           return this.show
-            ? h("button", { ref: this.slots[0].setRef, "data-testid": "btn" })
+            ? h("button", { ref: this.slots[0].elementRef, "data-testid": "btn" })
             : h("span", "gone")
         },
       })
@@ -560,13 +560,13 @@ describe("useForesights", () => {
       await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
 
-      // Toggling show will cause Vue to call setRef(null) then the element is removed
+      // Toggling show will cause Vue to call elementRef(null) then the element is removed
       wrapper.vm.show = false
       await nextTick()
       expect(unregisterSpy).toHaveBeenCalledTimes(1)
     })
 
-    it("handles element swap via setRef", async () => {
+    it("handles element swap via elementRef", async () => {
       const Component = defineComponent({
         setup() {
           const useSpan = ref(false)
@@ -577,8 +577,8 @@ describe("useForesights", () => {
         render() {
           return h("div", [
             this.useSpan
-              ? h("span", { ref: this.slots[0].setRef, "data-testid": "b" })
-              : h("button", { ref: this.slots[0].setRef, "data-testid": "a" }),
+              ? h("span", { ref: this.slots[0].elementRef, "data-testid": "b" })
+              : h("button", { ref: this.slots[0].elementRef, "data-testid": "a" }),
           ])
         },
       })
@@ -597,7 +597,7 @@ describe("useForesights", () => {
       expect(registerSpy.mock.calls[1][0].element).toBeInstanceOf(HTMLSpanElement)
     })
 
-    it("resolves ComponentPublicInstance targets via setRef", async () => {
+    it("resolves ComponentPublicInstance targets via elementRef", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child-root" }, "content")
@@ -612,7 +612,7 @@ describe("useForesights", () => {
           return { slots }
         },
         render() {
-          return h(ChildComponent, { ref: this.slots[0].setRef })
+          return h(ChildComponent, { ref: this.slots[0].elementRef })
         },
       })
 

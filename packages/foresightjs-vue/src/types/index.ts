@@ -12,6 +12,6 @@ export type ResolvedElement<T extends MaybeElement> = T extends ComponentPublicI
 export type UseForesightOptions = ForesightRegisterOptionsWithoutElement
 
 export type UseForesightReturn = ToRefs<Readonly<ForesightElementState>> & {
-  /** Template ref function - bind to an element with `:ref="setRef"`. */
-  setRef: (el: MaybeElement) => void
+  /** Template ref function - bind to an element with `:ref="elementRef"`. */
+  elementRef: (el: MaybeElement) => void
 }

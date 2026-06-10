@@ -15,7 +15,7 @@ beforeEach(() => {
 })
 
 describe("useForesight", () => {
-  it("registers the element when setRef is bound via :ref", async () => {
+  it("registers the element when elementRef is bound via :ref", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
@@ -25,7 +25,7 @@ describe("useForesight", () => {
         })
       },
       render() {
-        return h("button", { ref: this.setRef, "data-testid": "el" })
+        return h("button", { ref: this.elementRef, "data-testid": "el" })
       },
     })
 
@@ -48,7 +48,7 @@ describe("useForesight", () => {
         }))
       },
       render() {
-        return h("button", { ref: this.setRef, "data-testid": "el" })
+        return h("button", { ref: this.elementRef, "data-testid": "el" })
       },
     })
 
@@ -60,7 +60,7 @@ describe("useForesight", () => {
     expect(arg.name).toBe("getter-opts")
   })
 
-  it("does not register when setRef is never called", async () => {
+  it("does not register when elementRef is never called", async () => {
     const Component = defineComponent({
       setup() {
         return useForesight({ callback: vi.fn() })
@@ -82,7 +82,7 @@ describe("useForesight", () => {
         return useForesight({ callback: vi.fn() })
       },
       render() {
-        return h("button", { ref: this.setRef })
+        return h("button", { ref: this.elementRef })
       },
     })
 
@@ -93,7 +93,7 @@ describe("useForesight", () => {
     expect(unregisterSpy).toHaveBeenCalledTimes(1)
   })
 
-  it("unregisters when element is removed (setRef receives null)", async () => {
+  it("unregisters when element is removed (elementRef receives null)", async () => {
     const Component = defineComponent({
       setup() {
         const show = ref(true)
@@ -103,7 +103,7 @@ describe("useForesight", () => {
       },
       render() {
         return this.show
-          ? h("button", { ref: this.setRef, "data-testid": "btn" })
+          ? h("button", { ref: this.elementRef, "data-testid": "btn" })
           : h("span", "gone")
       },
     })
@@ -124,7 +124,7 @@ describe("useForesight", () => {
         return useForesight({ callback: cb })
       },
       render() {
-        return h("button", { ref: this.setRef })
+        return h("button", { ref: this.elementRef })
       },
     })
 
@@ -161,7 +161,7 @@ describe("useForesight", () => {
       },
       render() {
         return h("button", {
-          ref: this.setRef,
+          ref: this.elementRef,
           "data-testid": "el",
           "data-predicted": this.isPredicted,
         })
@@ -195,7 +195,7 @@ describe("useForesight", () => {
         return { ...result, cb }
       },
       render() {
-        return h("button", { ref: this.setRef, "data-testid": "el" })
+        return h("button", { ref: this.elementRef, "data-testid": "el" })
       },
     })
 
@@ -225,7 +225,7 @@ describe("useForesight", () => {
         return { ...result, name }
       },
       render() {
-        return h("button", { ref: this.setRef, "data-testid": "el" })
+        return h("button", { ref: this.elementRef, "data-testid": "el" })
       },
     })
 
@@ -257,7 +257,7 @@ describe("useForesight", () => {
         return { ...result, hitSlop }
       },
       render() {
-        return h("button", { ref: this.setRef, "data-testid": "el" })
+        return h("button", { ref: this.elementRef, "data-testid": "el" })
       },
     })
 
@@ -276,8 +276,8 @@ describe("useForesight", () => {
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
 
-  describe("element swaps via setRef", () => {
-    it("re-registers when setRef receives a different element", async () => {
+  describe("element swaps via elementRef", () => {
+    it("re-registers when elementRef receives a different element", async () => {
       const Component = defineComponent({
         setup() {
           const useSpan = ref(false)
@@ -288,8 +288,8 @@ describe("useForesight", () => {
         render() {
           return h("div", [
             this.useSpan
-              ? h("span", { ref: this.setRef, "data-testid": "b" })
-              : h("button", { ref: this.setRef, "data-testid": "a" }),
+              ? h("span", { ref: this.elementRef, "data-testid": "b" })
+              : h("button", { ref: this.elementRef, "data-testid": "a" }),
           ])
         },
       })
@@ -320,7 +320,7 @@ describe("useForesight", () => {
           })
         },
         render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
         },
       })
 
@@ -341,7 +341,7 @@ describe("useForesight", () => {
           })
         },
         render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
         },
       })
 
@@ -361,7 +361,7 @@ describe("useForesight", () => {
           })
         },
         render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
         },
       })
 
@@ -385,7 +385,7 @@ describe("useForesight", () => {
           return { ...result, enabled }
         },
         render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
         },
       })
 
@@ -415,7 +415,7 @@ describe("useForesight", () => {
           return { ...result, enabled }
         },
         render() {
-          return h("button", { ref: this.setRef, "data-testid": "el" })
+          return h("button", { ref: this.elementRef, "data-testid": "el" })
         },
       })
 
@@ -434,7 +434,7 @@ describe("useForesight", () => {
   })
 
   describe("comment node filtering", () => {
-    it("does not register when setRef receives a comment node component", async () => {
+    it("does not register when elementRef receives a comment node component", async () => {
       const ChildComponent = defineComponent({
         props: { show: { type: Boolean, default: false } },
         render() {
@@ -451,7 +451,7 @@ describe("useForesight", () => {
           })
         },
         render() {
-          return h(ChildComponent, { ref: this.setRef, show: false })
+          return h(ChildComponent, { ref: this.elementRef, show: false })
         },
       })
 
@@ -461,7 +461,7 @@ describe("useForesight", () => {
       expect(registerSpy).not.toHaveBeenCalled()
     })
 
-    it("registers when setRef receives a real component element", async () => {
+    it("registers when elementRef receives a real component element", async () => {
       const ChildComponent = defineComponent({
         render() {
           return h("div", { "data-testid": "child-el" }, "visible")
@@ -477,7 +477,7 @@ describe("useForesight", () => {
           })
         },
         render() {
-          return h(ChildComponent, { ref: this.setRef })
+          return h(ChildComponent, { ref: this.elementRef })
         },
       })
 
@@ -507,7 +507,7 @@ describe("useForesight", () => {
           return { ...result, show }
         },
         render() {
-          return this.show ? h(ChildComponent, { ref: this.setRef }) : h("span", "placeholder")
+          return this.show ? h(ChildComponent, { ref: this.elementRef }) : h("span", "placeholder")
         },
       })
 

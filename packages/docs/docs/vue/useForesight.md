@@ -17,13 +17,13 @@ last_updated:
 
 # useForesight
 
-`useForesight` registers a single element and gives you back the element's reactive prediction state as refs, plus a `setRef` function to bind to the element. Use it over the [`v-foresight`](./directive.md) directive when you want to read state like `isPredicted` in your template.
+`useForesight` registers a single element and gives you back the element's reactive prediction state as refs, plus an `elementRef` function to bind to the element. Use it over the [`v-foresight`](./directive.md) directive when you want to read state like `isPredicted` in your template.
 
 ```html
 <script setup lang="ts">
   import { useForesight } from "@foresightjs/vue"
 
-  const { setRef, isPredicted } = useForesight({
+  const { elementRef, isPredicted } = useForesight({
     callback: () => console.log("user is likely to click this"),
     name: "about-link",
     hitSlop: 10,
@@ -31,15 +31,15 @@ last_updated:
 </script>
 
 <template>
-  <a :ref="setRef" href="/about" :class="{ predicted: isPredicted }">About</a>
+  <a :ref="elementRef" href="/about" :class="{ predicted: isPredicted }">About</a>
 </template>
 ```
 
-Bind `setRef` with `:ref="setRef"` and the composable handles the rest: it registers the element when it mounts, unregisters it when the component is disposed, and re-registers if the element swaps. `setRef` works on plain elements and on component instances (it pulls out the underlying element for you).
+Bind `elementRef` with `:ref="elementRef"` and the composable handles the rest: it registers the element when it mounts, unregisters it when the component is disposed, and re-registers if the element swaps. `elementRef` works on plain elements and on component instances (it pulls out the underlying element for you).
 
 ## Options
 
-The options are the [registration options](./configuration/registration-options.md), minus the `element` (`setRef` handles that). `callback` is the only required field.
+The options are the [registration options](./configuration/registration-options.md), minus the `element` (`elementRef` handles that). `callback` is the only required field.
 
 To make options reactive, pass a getter instead of a plain object. The composable patches the registration in place when it changes:
 
@@ -50,7 +50,7 @@ To make options reactive, pass a getter instead of a plain object. The composabl
 
   const enabled = ref(true)
 
-  const { setRef } = useForesight(() => ({
+  const { elementRef } = useForesight(() => ({
     callback: () => prefetch("/about"),
     name: "about-link",
     enabled: enabled.value,
@@ -69,7 +69,7 @@ Every [state](./configuration/registration-options.md#registration-return-value)
 
 ```html
 <script setup lang="ts">
-  const { setRef, isPredicted, isCallbackRunning } = useForesight({
+  const { elementRef, isPredicted, isCallbackRunning } = useForesight({
     callback: async () => {
       await fetch("/api/about")
     },
@@ -78,7 +78,7 @@ Every [state](./configuration/registration-options.md#registration-return-value)
 </script>
 
 <template>
-  <a :ref="setRef" href="/about" :class="{ predicted: isPredicted }">
+  <a :ref="elementRef" href="/about" :class="{ predicted: isPredicted }">
     About <span v-if="isCallbackRunning">…</span>
   </a>
 </template>

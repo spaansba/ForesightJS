@@ -16,7 +16,7 @@ const optionsB: ForesightRegisterOptionsWithoutElement = {
 
 const currentOptions = shallowRef(optionsA)
 
-const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(currentOptions)
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(currentOptions)
 
 const swap = () => {
   currentOptions.value = currentOptions.value === optionsA ? optionsB : optionsA
@@ -29,7 +29,7 @@ const swap = () => {
     <p class="text-xs text-gray-500">Swap entire options object. name: {{ currentOptions.name }}</p>
     <button
       type="button"
-      :ref="setRef"
+      :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

@@ -19,13 +19,13 @@ import ElementSettings from "../../\_partials/\_registration-options.mdx"
 
 # Registration Options
 
-In Vue, the registration options are what you pass to the [`v-foresight`](../directive.md) directive or the [`useForesight`](../useForesight.md) composable. The directive or `setRef` takes care of the element, so there is no `element` option. `callback` is the only required field.
+In Vue, the registration options are what you pass to the [`v-foresight`](../directive.md) directive or the [`useForesight`](../useForesight.md) composable. The directive or `elementRef` takes care of the element, so there is no `element` option. `callback` is the only required field.
 
 ```html
 <script setup lang="ts">
   import { useForesight } from "@foresightjs/vue"
 
-  const { setRef } = useForesight({
+  const { elementRef } = useForesight({
     callback: () => {
       // Required: Function that executes when interaction is predicted
       console.log("prefetching")
@@ -41,7 +41,7 @@ In Vue, the registration options are what you pass to the [`v-foresight`](../dir
 </script>
 
 <template>
-  <a :ref="setRef" href="/about">About</a>
+  <a :ref="elementRef" href="/about">About</a>
 </template>
 ```
 
