@@ -20,5 +20,6 @@ export const fetchAllTimeNpmDownloads = async () => {
       fetch(`https://api.npmjs.org/downloads/point/${range}/js.foresight`).then(res => res.json())
     )
   )
+
   return results.reduce((total, data) => total + (data.downloads || 0), 0)
 }

@@ -75,7 +75,7 @@ const EQUIVALENTS: Array<Record<FrameworkId, string>> = [
   },
 ]
 
-function JsIcon() {
+const JsIcon = () => {
   return (
     <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden="true">
       <rect width="32" height="32" rx="5" fill="#f7df1e" />
@@ -94,7 +94,7 @@ function JsIcon() {
   )
 }
 
-function ReactIcon() {
+const ReactIcon = () => {
   return (
     <svg className={styles.icon} viewBox="-11.5 -10.23174 23 20.46348" aria-hidden="true">
       <circle r="2.05" fill="#61dafb" />
@@ -107,7 +107,7 @@ function ReactIcon() {
   )
 }
 
-function VueIcon() {
+const VueIcon = () => {
   return (
     <svg className={styles.icon} viewBox="0 0 256 221" aria-hidden="true">
       <path fill="#41b883" d="M204.8 0H256L128 220.8 0 0h97.92L128 51.2 157.44 0Z" />
@@ -122,9 +122,15 @@ const FRAMEWORKS: Array<{ id: FrameworkId; label: string; Icon: () => React.Reac
   { id: "vue", label: "Vue", Icon: VueIcon },
 ]
 
-function detectFramework(pathname: string): FrameworkId {
-  if (pathname.startsWith("/docs/react/")) return "react"
-  if (pathname.startsWith("/docs/vue/")) return "vue"
+const detectFramework = (pathname: string): FrameworkId => {
+  if (pathname.startsWith("/docs/react/")) {
+    return "react"
+  }
+
+  if (pathname.startsWith("/docs/vue/")) {
+    return "vue"
+  }
+
   return "js"
 }
 
@@ -135,17 +141,24 @@ export default function FrameworkSelector(): React.ReactNode {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
+
     const onPointerDown = (e: PointerEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setOpen(false)
       }
     }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false)
+      if (e.key === "Escape") {
+        setOpen(false)
+      }
     }
+
     document.addEventListener("pointerdown", onPointerDown)
     document.addEventListener("keydown", onKeyDown)
+
     return () => {
       document.removeEventListener("pointerdown", onPointerDown)
       document.removeEventListener("keydown", onKeyDown)
@@ -161,7 +174,11 @@ export default function FrameworkSelector(): React.ReactNode {
 
   const switchFramework = (next: FrameworkId) => {
     setOpen(false)
-    if (next === current.id) return
+
+    if (next === current.id) {
+      return
+    }
+
     const path = pathname.replace(/\/$/, "")
     const equivalent = EQUIVALENTS.find(row => row[current.id] === path)
     history.push(equivalent ? equivalent[next] : ROOTS[next])
