@@ -6,28 +6,11 @@ import {
   type ForesightRegisterResult,
 } from "js.foresight"
 import type { UseForesightOptions, UseForesightResult } from "../types"
+import { serializeMeta } from "./serializeMeta"
 
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const NOOP_SUBSCRIBE = () => () => {}
 const EMPTY_SNAPSHOTS: ForesightElementState[] = []
-
-/**
- * Serialize `meta` for the patch key so a change to its contents re-triggers the
- * patch effect. Interpolating the object directly would always stringify to
- * "[object Object]", hiding every content change. Falls back to String() when
- * the object can't be serialized (e.g. circular references).
- */
-const serializeMeta = (meta: Record<string, unknown> | undefined): string => {
-  if (!meta) {
-    return ""
-  }
-
-  try {
-    return JSON.stringify(meta)
-  } catch {
-    return String(meta)
-  }
-}
 
 type SlotEntry = {
   element: Element
