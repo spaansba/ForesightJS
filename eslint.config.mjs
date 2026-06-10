@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint"
 import wcPlugin from "eslint-plugin-wc"
 import litPlugin from "eslint-plugin-lit"
 import pluginVue from "eslint-plugin-vue"
+import reactHooksPlugin from "eslint-plugin-react-hooks"
 import stylistic from "@stylistic/eslint-plugin"
 
 export default [
@@ -45,6 +46,22 @@ export default [
         { blankLine: "always", prev: "*", next: "return" },
         { blankLine: "always", prev: "if", next: "*" },
       ],
+    },
+  },
+
+  // Specific config for React packages (hooks correctness)
+  {
+    files: [
+      "packages/foresightjs-react/**/*.{ts,tsx}",
+      "packages/devpage-react/**/*.{ts,tsx}",
+      "packages/devpage-nextjs/**/*.{ts,tsx}",
+    ],
+    plugins: {
+      "react-hooks": reactHooksPlugin,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
     },
   },
 
