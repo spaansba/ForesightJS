@@ -27,7 +27,8 @@
   "homepage": "https://foresightjs.com/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spaansba/ForesightJS"
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/js.foresight"
   },
   "files": [
     "dist",

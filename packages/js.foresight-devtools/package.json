@@ -26,7 +26,8 @@
   "homepage": "https://foresightjs.com/docs/getting_started/development_tools",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/spaansba/ForesightJS/tree/main/packages/devpage"
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/js.foresight-devtools"
   },
   "files": [
     "dist",

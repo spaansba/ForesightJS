@@ -53,13 +53,12 @@
   "llms": "https://foresightjs.com/llms.txt",
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "peerDependencies": {
+    "js.foresight": "^4.0.0",
     "vue": "^3.5.0"
-  },
-  "dependencies": {
-    "js.foresight": "workspace:^"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",
+    "js.foresight": "workspace:*",
     "jsdom": "^29.0.1",
     "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
