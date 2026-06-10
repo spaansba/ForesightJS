@@ -6,6 +6,7 @@ import {
   type ForesightRegisterResult,
 } from "js.foresight"
 import type { UseForesightOptions, UseForesightResult } from "../types"
+import { serializeMeta } from "./serializeMeta"
 
 const NOOP_SUBSCRIBE = () => () => {}
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
@@ -44,6 +45,10 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
   }, [element])
 
   // Patch options on the existing registration without tearing it down.
+  // meta is compared by content, not identity - an inline `meta={{...}}` object
+  // would otherwise re-fire this effect every render and loop with the
+  // useSyncExternalStore re-render it triggers.
+  const metaKey = serializeMeta(options.meta)
   useEffect(() => {
     if (!registerResults || !element) {
       return
@@ -53,14 +58,7 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
       ...optionsRef.current,
       callback: (state: ForesightElementState) => optionsRef.current.callback(state),
     })
-  }, [
-    options.reactivateAfter,
-    options.name,
-    options.meta,
-    options.enabled,
-    element,
-    registerResults,
-  ])
+  }, [options.reactivateAfter, options.name, metaKey, options.enabled, element, registerResults])
 
   const state = useSyncExternalStore<ForesightElementState>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,

@@ -173,4 +173,67 @@ describe("useForesight", () => {
       expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(false)
     })
   })
+
+  describe("meta option", () => {
+    it("patches when meta content changes", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { v: 2 } }} />)
+
+      const metaCalls = updateElementOptionsSpy.mock.calls.filter(
+        c => (c[1].meta as { v?: number } | undefined)?.v === 2
+      )
+      expect(metaCalls.length).toBeGreaterThan(0)
+    })
+
+    it("does not re-patch when meta content is unchanged across renders", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      // New object, identical content - must not trigger a patch.
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />)
+
+      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not loop when an inline meta object causes patches to replace the snapshot", () => {
+      // Mimic the real manager: meta is compared by identity, so every patch
+      // with a fresh meta object replaces the snapshot and notifies subscribers.
+      updateElementOptionsSpy.mockImplementation(() => {
+        mockState.currentSnapshot = {
+          ...(mockState.currentSnapshot ?? createUnregisteredSnapshot(false)),
+        }
+        mockState.listeners.forEach(l => l())
+      })
+
+      try {
+        const InlineMetaProbe = () => {
+          // meta created inside render - new identity every render
+          const { elementRef } = useForesight<HTMLButtonElement>({
+            name: "x",
+            callback: vi.fn(),
+            meta: { v: 1 },
+          })
+
+          return <button data-testid="el" ref={elementRef} />
+        }
+
+        // Without content-based meta comparison this loops:
+        // patch -> new snapshot -> re-render -> new meta identity -> patch ...
+        // and React throws "Maximum update depth exceeded".
+        render(<InlineMetaProbe />)
+
+        expect(updateElementOptionsSpy.mock.calls.length).toBeLessThanOrEqual(2)
+      } finally {
+        updateElementOptionsSpy.mockReset()
+      }
+    })
+  })
 })
