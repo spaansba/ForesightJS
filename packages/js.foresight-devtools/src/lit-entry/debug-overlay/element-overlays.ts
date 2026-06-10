@@ -13,58 +13,11 @@ import type {
   ElementUnregisteredEvent,
 } from "js.foresight"
 
-const STYLE_ID = "foresight-overlay-styles"
-
-const GLOBAL_OVERLAY_CSS = `
-[data-foresight-overlay] {
-  outline: 1px dashed rgba(100, 116, 139, 0.4) !important;
-  outline-offset: var(--fs-slop, 0px) !important;
-  box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(100, 116, 139, 0.05) !important;
-  transition: outline-color 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-[data-foresight-overlay="mouse"] {
-  outline-color: #3b82f6 !important;
-  box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(59, 130, 246, 0.1),
-              0 0 15px 4px rgba(59, 130, 246, 0.4) !important;
-  animation: foresight-glow-mouse 2s ease-in-out infinite !important;
-}
-
-[data-foresight-overlay="scroll"] {
-  outline-color: #eab308 !important;
-  box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(234, 179, 8, 0.1),
-              0 0 15px 4px rgba(234, 179, 8, 0.4) !important;
-  animation: foresight-glow-scroll 2s ease-in-out infinite !important;
-}
-
-[data-foresight-overlay="tab"] {
-  outline-color: #f97316 !important;
-  box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(249, 115, 22, 0.1),
-              0 0 15px 4px rgba(249, 115, 22, 0.4) !important;
-  animation: foresight-glow-tab 2s ease-in-out infinite !important;
-}
-
-@keyframes foresight-glow-mouse {
-  0% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(59, 130, 246, 0.1), 0 0 5px 2px rgba(59, 130, 246, 0.3); }
-  50% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(59, 130, 246, 0.1), 0 0 15px 4px rgba(59, 130, 246, 0.6); }
-  100% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(59, 130, 246, 0.1), 0 0 5px 2px rgba(59, 130, 246, 0.3); }
-}
-
-@keyframes foresight-glow-scroll {
-  0% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(234, 179, 8, 0.1), 0 0 5px 2px rgba(234, 179, 8, 0.3); }
-  50% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(234, 179, 8, 0.1), 0 0 15px 4px rgba(234, 179, 8, 0.6); }
-  100% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(234, 179, 8, 0.1), 0 0 5px 2px rgba(234, 179, 8, 0.3); }
-}
-
-@keyframes foresight-glow-tab {
-  0% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(249, 115, 22, 0.1), 0 0 5px 2px rgba(249, 115, 22, 0.3); }
-  50% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(249, 115, 22, 0.1), 0 0 15px 4px rgba(249, 115, 22, 0.6); }
-  100% { box-shadow: 0 0 0 var(--fs-slop, 0px) rgba(249, 115, 22, 0.1), 0 0 5px 2px rgba(249, 115, 22, 0.3); }
-}
-`
+type HitSlop = ForesightElementState["elementBounds"]["hitSlop"]
 
 interface ElementOverlay {
   nameLabel: HTMLElement
+  slopArea: HTMLElement
 }
 
 interface CallbackAnimation {
@@ -97,6 +50,75 @@ export class ElementOverlays extends LitElement {
         display: none;
       }
 
+      .slop-area {
+        position: absolute;
+        top: 0;
+        left: 0;
+        box-sizing: border-box;
+        will-change: transform;
+        border: 1px dashed rgba(100, 116, 139, 0.4);
+        background-color: rgba(100, 116, 139, 0.05);
+        transition:
+          border-color 0.2s ease,
+          background-color 0.2s ease,
+          box-shadow 0.2s ease;
+        pointer-events: none;
+      }
+
+      .slop-area[data-hit="mouse"] {
+        border-color: #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+        animation: glow-mouse 2s ease-in-out infinite;
+      }
+
+      .slop-area[data-hit="scroll"] {
+        border-color: #eab308;
+        background-color: rgba(234, 179, 8, 0.1);
+        animation: glow-scroll 2s ease-in-out infinite;
+      }
+
+      .slop-area[data-hit="tab"] {
+        border-color: #f97316;
+        background-color: rgba(249, 115, 22, 0.1);
+        animation: glow-tab 2s ease-in-out infinite;
+      }
+
+      @keyframes glow-mouse {
+        0% {
+          box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.6);
+        }
+        100% {
+          box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.3);
+        }
+      }
+
+      @keyframes glow-scroll {
+        0% {
+          box-shadow: 0 0 5px 2px rgba(234, 179, 8, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 15px 4px rgba(234, 179, 8, 0.6);
+        }
+        100% {
+          box-shadow: 0 0 5px 2px rgba(234, 179, 8, 0.3);
+        }
+      }
+
+      @keyframes glow-tab {
+        0% {
+          box-shadow: 0 0 5px 2px rgba(249, 115, 22, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 15px 4px rgba(249, 115, 22, 0.6);
+        }
+        100% {
+          box-shadow: 0 0 5px 2px rgba(249, 115, 22, 0.3);
+        }
+      }
+
       .name-label {
         position: absolute;
         top: 0;
@@ -118,28 +140,9 @@ export class ElementOverlays extends LitElement {
   ]
 
   private _abortController: AbortController | null = null
-  private _styleElement: HTMLStyleElement | null = null
-
-  private injectGlobalStylesheet(): void {
-    if (document.getElementById(STYLE_ID)) {
-      return
-    }
-
-    const style = document.createElement("style")
-    style.id = STYLE_ID
-    style.textContent = GLOBAL_OVERLAY_CSS
-    document.head.appendChild(style)
-    this._styleElement = style
-  }
-
-  private removeGlobalStylesheet(): void {
-    this._styleElement?.remove()
-    this._styleElement = null
-  }
 
   connectedCallback(): void {
     super.connectedCallback()
-    this.injectGlobalStylesheet()
     this._abortController = new AbortController()
     const { signal } = this._abortController
     ForesightManager.instance.addEventListener(
@@ -191,26 +194,6 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  attributeChangedCallback(name: string, oldVal: string | null, newVal: string | null): void {
-    super.attributeChangedCallback(name, oldVal, newVal)
-    if (name === "hidden") {
-      if (newVal !== null) {
-        // Hidden - remove overlay styles from all elements
-        for (const element of this.overlayMap.keys()) {
-          this.removeOverlayFromElement(element)
-        }
-      } else {
-        // Shown - reapply overlay styles to all tracked elements
-        for (const [element] of this.overlayMap) {
-          const state = ForesightManager.instance.registeredElements.get(element)
-          if (state) {
-            this.applyOverlayToElement(element, state)
-          }
-        }
-      }
-    }
-  }
-
   private _subscribeToElement(element: ForesightElement): void {
     if (this._elementSubscriptions.has(element)) {
       return
@@ -237,26 +220,61 @@ export class ElementOverlays extends LitElement {
     this._elementSubscriptions.delete(element)
   }
 
-  private applyOverlayToElement(element: ForesightElement, state: ForesightElementState): void {
-    const { hitSlop } = state.elementBounds
-    const maxSlop = Math.max(hitSlop.top, hitSlop.right, hitSlop.bottom, hitSlop.left)
-    element.setAttribute("data-foresight-overlay", "")
-    ;(element as HTMLElement).style.setProperty("--fs-slop", `${maxSlop}px`)
-  }
-
-  private removeOverlayFromElement(element: ForesightElement): void {
-    element.removeAttribute("data-foresight-overlay")
-    ;(element as HTMLElement).style.removeProperty("--fs-slop")
-  }
-
-  private createNameLabel(element: ForesightElement): ElementOverlay {
+  private createOverlay(element: ForesightElement): ElementOverlay {
+    const slopArea = document.createElement("div")
+    slopArea.className = "slop-area"
     const nameLabel = document.createElement("div")
     nameLabel.className = "name-label"
+    this.containerElement.appendChild(slopArea)
     this.containerElement.appendChild(nameLabel)
-    const overlay = { nameLabel }
+    const overlay = { nameLabel, slopArea }
     this.overlayMap.set(element, overlay)
 
     return overlay
+  }
+
+  /**
+   * The slop area is the element's own shape offset outward by the hit slop:
+   * every corner keeps the element's border radius, grown by the slop on each
+   * axis. Sharp corners stay sharp, since offsetting a rectangle outward does
+   * not round its corners.
+   */
+  private expandedBorderRadius(element: ForesightElement, hitSlop: HitSlop): string {
+    const style = getComputedStyle(element as HTMLElement)
+    const rect = (element as HTMLElement).getBoundingClientRect()
+
+    const corner = (value: string, slopX: number, slopY: number): [number, number] => {
+      const [xRaw, yRaw = xRaw] = value.split(" ")
+      const parse = (raw: string, base: number) => {
+        const parsed = parseFloat(raw) || 0
+
+        return raw.endsWith("%") ? (parsed / 100) * base : parsed
+      }
+      const x = parse(xRaw, rect.width)
+      const y = parse(yRaw, rect.height)
+
+      return [x === 0 ? 0 : x + slopX, y === 0 ? 0 : y + slopY]
+    }
+
+    const tl = corner(style.borderTopLeftRadius, hitSlop.left, hitSlop.top)
+    const tr = corner(style.borderTopRightRadius, hitSlop.right, hitSlop.top)
+    const br = corner(style.borderBottomRightRadius, hitSlop.right, hitSlop.bottom)
+    const bl = corner(style.borderBottomLeftRadius, hitSlop.left, hitSlop.bottom)
+
+    return `${tl[0]}px ${tr[0]}px ${br[0]}px ${bl[0]}px / ${tl[1]}px ${tr[1]}px ${br[1]}px ${bl[1]}px`
+  }
+
+  private updateSlopArea(
+    overlay: ElementOverlay,
+    element: ForesightElement,
+    state: ForesightElementState
+  ): void {
+    const { expandedRect, hitSlop } = state.elementBounds
+    const { style } = overlay.slopArea
+    style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
+    style.width = `${expandedRect.right - expandedRect.left}px`
+    style.height = `${expandedRect.bottom - expandedRect.top}px`
+    style.borderRadius = this.expandedBorderRadius(element, hitSlop)
   }
 
   private updateNameLabel(overlay: ElementOverlay, state: ForesightElementState): void {
@@ -275,22 +293,20 @@ export class ElementOverlays extends LitElement {
   }
 
   private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
-    this.applyOverlayToElement(element, state)
-
     let overlay = this.overlayMap.get(element)
     if (!overlay) {
-      overlay = this.createNameLabel(element)
+      overlay = this.createOverlay(element)
     }
 
+    this.updateSlopArea(overlay, element, state)
     this.updateNameLabel(overlay, state)
   }
 
   private removeElementOverlay(element: ForesightElement) {
-    this.removeOverlayFromElement(element)
-
     const overlay = this.overlayMap.get(element)
     if (overlay) {
       overlay.nameLabel.remove()
+      overlay.slopArea.remove()
       this.overlayMap.delete(element)
     }
 
@@ -308,15 +324,16 @@ export class ElementOverlays extends LitElement {
   private highlightElementCallback(element: ForesightElement, hitType: CallbackHitType) {
     this.clearCallbackAnimationTimeout(element)
 
+    const overlay = this.overlayMap.get(element)
+    if (!overlay) {
+      return
+    }
+
     switch (hitType.kind) {
       case "mouse":
-        element.setAttribute("data-foresight-overlay", "mouse")
-        break
       case "scroll":
-        element.setAttribute("data-foresight-overlay", "scroll")
-        break
       case "tab":
-        element.setAttribute("data-foresight-overlay", "tab")
+        overlay.slopArea.dataset.hit = hitType.kind
         break
       case "touch":
         break
@@ -329,7 +346,11 @@ export class ElementOverlays extends LitElement {
 
   private unhighlightElementCallback(element: ForesightElement) {
     const animationDelay = setTimeout(() => {
-      element.setAttribute("data-foresight-overlay", "")
+      const overlay = this.overlayMap.get(element)
+      if (overlay) {
+        delete overlay.slopArea.dataset.hit
+      }
+
       this.callbackAnimations.delete(element)
     }, 400)
 
@@ -358,19 +379,18 @@ export class ElementOverlays extends LitElement {
     }
     this._elementSubscriptions.clear()
 
-    // Clean up overlay attributes from all tracked elements
-    for (const element of this.overlayMap.keys()) {
-      this.removeOverlayFromElement(element)
-    }
-
     this.callbackAnimations.forEach(animation => {
       clearTimeout(animation.timeoutId)
     })
     this.callbackAnimations.clear()
+
+    for (const overlay of this.overlayMap.values()) {
+      overlay.nameLabel.remove()
+      overlay.slopArea.remove()
+    }
     this.overlayMap.clear()
     this._abortController?.abort()
     this._abortController = null
-    this.removeGlobalStylesheet()
   }
 
   render() {

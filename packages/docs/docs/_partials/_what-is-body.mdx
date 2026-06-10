@@ -1,0 +1,41 @@
+## Prediction Strategies
+
+ForesightJS uses different prediction strategies depending on the device type. For limited connections (slower than the minimum connection type - default: 3G - or [data-saver mode](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData)), we respect the user's preference to minimize data usage: the element is still registered but stays inactive, so it is never predicted and never prefetches. Foresight automatically detects mouse, pen, or touch input, and updates its strategy if the input method changes.
+
+### Keyboard/Mouse Users
+
+Pick and choose multiple prediction strategies. All are enabled by default, but you can disable any of them when initializing the `ForesightManager`.
+
+- **Mouse Trajectory** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Analyzes cursor movement patterns to predict which links users are heading towards and prefetches content before they arrive
+- **Keyboard Navigation** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Tracks tab key usage to prefetch when the user is N tab stops away from your registered element
+- **Scroll** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Prefetches content when users scroll towards registered elements, predicting which elements will be reached based on scroll direction
+
+### Touch Devices
+
+While desktop systems use multiple concurrent prediction strategies, touch devices operate with a single active strategy that can be configured while initializing the `ForesightManager`.
+
+- **onTouchStart** <span style={{backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 4px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '500'}}>default</span> - Captures the initial touch event to begin prefetching when users start interacting with registered elements
+- **Viewport Enter** - Detects when registered elements enter the viewport and prefetches their content based on scroll behavior and visibility
+- **None** - Disables ForesightJS on touch devices (previous behavior)
+
+## Why ForesightJS?
+
+ForesightJS is designed for developers who want to squeeze every drop of performance out of their web applications. It's a specialized tool, not something to drop into every project.
+
+### Which problems does ForesightJS solve?
+
+#### Problem 1: On-Hover Prefetching Still Has Latency
+
+Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires-time that could be used for prefetching.
+
+#### Problem 2: Viewport-Based Prefetching is Wasteful
+
+Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger **_1.59MB_** of unnecessary prefetch requests.
+
+#### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
+
+Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
+
+## Lightweight & Optimized
+
+ForesightJS is built to be tiny. The entire library with all features is only **~32 KB** minified. On top of that, we use code splitting so you only load what you use: touch devices load just **~19 KB**, and desktop users load **~32 KB** with predictors lazy-loaded when enabled. See [Behind the Scenes](../behind-the-scenes.md#bundle-optimization) for details.

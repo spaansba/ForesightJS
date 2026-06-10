@@ -1,0 +1,7 @@
+The `register()` call itself is unchanged, but element data is now an immutable state snapshot you can subscribe to - the foundation the wrapper packages are built on:
+
+- **`ForesightElementData` is now `ForesightElementState`.** Your callback receives the flat state snapshot: `callback: (state: ForesightElementState) => void`. See [TypeScript](../getting-started/typescript.md).
+- **`register()` returns the state plus `unregister`, `subscribe` and `getSnapshot`.** `isTouchDevice` is gone from the result; touch devices are handled internally by the configured `touchDeviceStrategy` global setting.
+- **The `elementDataUpdated`, `elementOptionsUpdated` and `elementReactivated` events are removed.** Per-element changes are now observed through the `subscribe`/`getSnapshot` pair returned by `register()`. The remaining events carry the state in a `state` field instead of `elementData`.
+- **Detached elements are parked, not unregistered.** Removing an element from the DOM no longer emits `elementUnregistered` with reason `disconnected`; the element stays registered but inactive and resumes when it reconnects.
+- **New `enabled` element option.** Set it to `false` to keep an element registered but excluded from prediction.

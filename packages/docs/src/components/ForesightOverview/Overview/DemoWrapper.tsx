@@ -10,7 +10,11 @@ const DemoWrapper = () => {
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>
             See predictions trigger in real-time with the official{" "}
-            <a style={{ color: "#7dd3fc" }} href="/docs/debugging/devtools" target="_blank">
+            <a
+              style={{ color: "var(--site-accent-bright)" }}
+              href="/docs/debugging/devtools"
+              target="_blank"
+            >
               Development Tools
             </a>
             . Move your mouse, scroll or use Tab navigation to experience intent detection.

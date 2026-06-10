@@ -59,7 +59,7 @@ const Playground = () => {
         </div>
         <div className={styles.keyboardTip}>
           <strong>TIP:</strong> Install{" "}
-          <a href="/docs/debugging/devtools" style={{ color: "#7dd3fc" }}>
+          <a href="/docs/debugging/devtools" style={{ color: "var(--site-accent-bright)" }}>
             Development Tools
           </a>{" "}
           for visual feedback and real-time tuning

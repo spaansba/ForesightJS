@@ -3,8 +3,9 @@ import { ForesightManager } from "js.foresight"
 import { Star, Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import styles from "./hero.module.css"
-import { PackageManagerTabs } from "./PackageManagerTabs"
+import { FrameworkInstallTabs } from "./FrameworkInstallTabs"
 import { ForesightDevtools } from "js.foresight-devtools"
+import { fetchAllTimeNpmDownloads } from "../../hooks/fetchAllTimeNpmDownloads"
 
 export const Hero = () => {
   const [stats, setStats] = useState({
@@ -15,17 +16,16 @@ export const Hero = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [githubResponse, npmResponse] = await Promise.all([
+        const [githubResponse, npmDownloads] = await Promise.all([
           fetch("https://api.github.com/repos/spaansba/foresightjs"),
-          fetch("https://api.npmjs.org/downloads/point/last-year/js.foresight"),
+          fetchAllTimeNpmDownloads(),
         ])
 
         const githubData = await githubResponse.json()
-        const npmData = await npmResponse.json()
 
         setStats({
           githubStars: githubData.stargazers_count || 0,
-          npmDownloads: npmData.downloads || 0,
+          npmDownloads,
         })
       } catch (error) {
         console.error("Error fetching stats:", error)
@@ -68,7 +68,7 @@ export const Hero = () => {
               <h1 className={styles.heroTitle}>
                 Your User's Next Move.
                 <br />
-                <span className={styles.heroTitleGradient}>Already Fetched.</span>
+                <span className={styles.heroTitleAccent}>Already Fetched.</span>
               </h1>
               <p className={styles.heroDescription}>
                 ForesightJS predicts user intent from mouse and keyboard cues to deliver instant
@@ -77,14 +77,14 @@ export const Hero = () => {
 
               <div className={styles.heroActions}>
                 <Link
-                  className={styles.primaryButton}
+                  className="site-btn site-btn--primary"
                   to="/docs/getting-started/what-is-foresightjs"
                   onClick={turnOffDebugMode}
                 >
                   Get Started
                 </Link>
                 <Link
-                  className={styles.primaryButton}
+                  className="site-btn site-btn--secondary"
                   to="https://foresightjs.com/llms-full.txt"
                   onClick={turnOffDebugMode}
                 >
@@ -119,7 +119,7 @@ export const Hero = () => {
             </div>
 
             <div className={styles.heroDemo}>
-              <PackageManagerTabs />
+              <FrameworkInstallTabs />
             </div>
           </div>
         </div>

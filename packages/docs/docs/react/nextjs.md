@@ -1,4 +1,5 @@
 ---
+sidebar_position: 5
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -10,7 +11,7 @@ keywords:
   - React
 description: Integration details to add ForesightJS to your Next.js projects
 last_updated:
-  date: 2025-11-30
+  date: 2026-06-08
   author: Bart Spaans
 ---
 
@@ -24,36 +25,42 @@ To avoid this, we can wrap the `Link` component and add ForesightJS. The officia
 
 ## ForesightLink Component
 
-Below is an example of creating an wrapper around the Next.js `Link` component that prefetches with ForesightJS. On mobile devices ForesightJS uses the configured [`touchDeviceStrategy`](/docs/configuration/global-settings#touch-device-settings-v330). This implementation uses the `useForesight` react hook which can be found [here](/docs/react/hook).
+Below is a wrapper around the Next.js `Link` component that prefetches with ForesightJS using the [`useForesight`](./useForesight.md) hook. We disable Next's own prefetching (`prefetch={false}`) and prefetch from the callback instead. On mobile devices ForesightJS falls back to the configured [`touchDeviceStrategy`](./configuration/global-settings.md#touch-device-settings).
 
 ```tsx
 "use client"
-import type { LinkProps } from "next/link"
-import Link from "next/link"
-import { type ForesightRegisterOptions } from "js.foresight"
-import useForesight from "../hooks/useForesight"
+import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
+import Link, { type LinkProps } from "next/link"
 import { useRouter } from "next/navigation"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptions, "element" | "callback"> {
+  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
   children: React.ReactNode
   className?: string
 }
 
-export function ForesightLink({ children, className, ...props }: ForesightLinkProps) {
+export function ForesightLink({
+  children,
+  className,
+  hitSlop,
+  name,
+  meta,
+  reactivateAfter,
+  enabled,
+  ...props
+}: ForesightLinkProps) {
   const router = useRouter() // import from "next/navigation" not "next/router"
   const { elementRef } = useForesight<HTMLAnchorElement>({
-    callback: () => {
-      router.prefetch(props.href.toString())
-    },
-    hitSlop: props.hitSlop,
-    name: props.name,
-    meta: props.meta,
-    reactivateAfter: props.reactivateAfter,
+    callback: () => router.prefetch(props.href.toString()),
+    hitSlop,
+    name,
+    meta,
+    reactivateAfter,
+    enabled,
   })
 
   return (
-    <Link {...props} ref={elementRef} className={className} prefetch={false}>
+    <Link {...props} ref={elementRef} prefetch={false} className={className}>
       {children}
     </Link>
   )
@@ -63,14 +70,11 @@ export function ForesightLink({ children, className, ...props }: ForesightLinkPr
 ## Basic Usage
 
 ```tsx
-import ForesightLink from "./ForesightLink"
+import { ForesightLink } from "./ForesightLink"
+
 export default function Navigation() {
   return (
-    <ForesightLink
-      href="/home"
-      className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-      name="nav-home"
-    >
+    <ForesightLink href="/home" name="nav-home">
       Home
     </ForesightLink>
   )
