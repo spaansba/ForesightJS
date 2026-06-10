@@ -16,7 +16,8 @@ const optionsB: ForesightRegisterOptionsWithoutElement = {
 
 const currentOptions = shallowRef(optionsA)
 
-const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(currentOptions)
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } =
+  useForesight(currentOptions)
 
 const swap = () => {
   currentOptions.value = currentOptions.value === optionsA ? optionsB : optionsA
