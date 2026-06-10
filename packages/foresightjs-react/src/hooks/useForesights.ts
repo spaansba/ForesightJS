@@ -120,7 +120,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
 
       ForesightManager.instance.updateElementOptions(slot.element, {
         ...optionsRef.current[i],
-        callback: (state: ForesightElementState) => optionsRef.current[i].callback(state),
+        callback: (state: ForesightElementState) => optionsRef.current[i]?.callback(state),
       })
     }
   }, [optionsArray.length, patchKey])
