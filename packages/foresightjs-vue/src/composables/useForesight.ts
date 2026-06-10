@@ -1,7 +1,6 @@
 import {
   reactive,
   readonly,
-  toRaw,
   toRefs,
   toValue,
   onScopeDispose,
@@ -88,20 +87,18 @@ export const useForesight = (
     }
   }
 
-  // Patch options (incl. enabled) on change. Skip when the raw reference hasn't
-  // changed (e.g. getter returning the same object).
+  // Patch options (incl. enabled) on change. Deep so in-place mutations of a
+  // ref/reactive options object fire too; no same-ref guard — on in-place
+  // mutation new and old are the same object, so the manager's internal
+  // diffing is the only correct dedupe.
   watch(
     () => toValue(options),
-    (newOptions, oldOptions) => {
-      if (oldOptions && toRaw(newOptions) === toRaw(oldOptions)) {
-        return
-      }
-
+    newOptions => {
       if (currentElement && registerResults) {
         ForesightManager.instance.updateElementOptions(currentElement, { ...newOptions, callback })
       }
     },
-    { flush: "post" }
+    { deep: true, flush: "post" }
   )
 
   onScopeDispose(() => {

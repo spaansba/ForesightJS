@@ -3,7 +3,6 @@ import {
   markRaw,
   reactive,
   readonly,
-  toRaw,
   toValue,
   watch,
   onScopeDispose,
@@ -121,10 +120,11 @@ export const useForesights = (
     return { element: null, result: null, unsubscribe: null, state }
   }
 
-  // Single watch handles both length changes and option updates
+  // Single watch handles both length changes and option updates. Deep so
+  // in-place mutations of a ref/reactive options array fire too.
   watch(
     resolvedOptions,
-    (newOptions, oldOptions) => {
+    newOptions => {
       // Shrink
       while (managed.length > newOptions.length) {
         const removed = managed.pop()!
@@ -134,12 +134,10 @@ export const useForesights = (
         }
       }
 
-      // Patch existing slots whose options changed
+      // Patch every surviving slot. On in-place mutation new and old options
+      // are the same objects, so there is nothing to diff here — the manager's
+      // updateElementOptions no-ops internally when values are unchanged.
       for (let i = 0; i < Math.min(managed.length, newOptions.length); i++) {
-        if (oldOptions && toRaw(newOptions[i]) === toRaw(oldOptions[i])) {
-          continue
-        }
-
         const slot = managed[i]
         if (slot.element && slot.result) {
           ForesightManager.instance.updateElementOptions(slot.element, {
@@ -157,7 +155,7 @@ export const useForesights = (
         slots.push(readonly(slot.state) as UseForesightSlot)
       }
     },
-    { immediate: true }
+    { deep: true, immediate: true }
   )
 
   onScopeDispose(() => {

@@ -503,7 +503,7 @@ describe("useForesights", () => {
       expect(updateElementOptionsSpy).not.toHaveBeenCalled()
     })
 
-    it("calls updateElementOptions only for slots whose options changed", async () => {
+    it("patches all slots when the array is replaced (manager diffs internally)", async () => {
       const optsA = { name: "a", callback: vi.fn() }
       const optsB = { name: "b-first", callback: vi.fn() }
 
@@ -527,16 +527,53 @@ describe("useForesights", () => {
       await nextTick()
       updateElementOptionsSpy.mockClear()
 
-      // Replace the array keeping optsA the same reference, changing only optsB
       const newOptsB = { name: "b-second", callback: vi.fn() }
       wrapper.vm.options = [optsA, newOptsB]
       await nextTick()
       await nextTick()
 
-      // Only slot 1 should be patched (slot 0 is the same optsA reference)
+      // Every surviving slot is patched; updateElementOptions no-ops on
+      // unchanged values inside the manager.
       const patchedNames = updateElementOptionsSpy.mock.calls.map(c => c[1].name)
       expect(patchedNames).toContain("b-second")
-      expect(patchedNames).not.toContain("a")
+      expect(patchedNames).toContain("a")
+      expect(unregisterSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("in-place option mutation", () => {
+    it("patches a slot when a ref options item is mutated in place", async () => {
+      const options = ref([
+        { name: "first", enabled: true, callback: vi.fn() },
+        { name: "other", enabled: true, callback: vi.fn() },
+      ])
+
+      const Component = defineComponent({
+        setup() {
+          const slots = useForesights(options)
+
+          return { slots }
+        },
+        render() {
+          return h("div", [
+            h("button", { ref: this.slots[0].elementRef, "data-testid": "el-0" }),
+            h("button", { ref: this.slots[1].elementRef, "data-testid": "el-1" }),
+          ])
+        },
+      })
+
+      mount(Component, { attachTo: document.body })
+      await nextTick()
+      expect(registerSpy).toHaveBeenCalledTimes(2)
+      updateElementOptionsSpy.mockClear()
+
+      options.value[0].enabled = false
+      await nextTick()
+      await nextTick()
+
+      expect(unregisterSpy).not.toHaveBeenCalled()
+      const patched = updateElementOptionsSpy.mock.calls.map(c => c[1])
+      expect(patched.find(o => o.name === "first")?.enabled).toBe(false)
     })
   })
 
