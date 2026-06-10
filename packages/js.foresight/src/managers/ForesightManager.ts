@@ -397,7 +397,11 @@ export class ForesightManager {
     const next = { ...current, ...patch }
     entry.state = next
     for (const listener of entry.subscribers) {
-      listener()
+      try {
+        listener()
+      } catch (error) {
+        console.error(`Error in element subscriber for ${next.name}:`, error)
+      }
     }
 
     return next
