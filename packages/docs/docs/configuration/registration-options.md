@@ -9,7 +9,7 @@ keywords:
   - element metadata
 description: The options you pass when registering an element with ForesightManager
 last_updated:
-  date: 2026-06-09
+  date: 2026-06-10
   author: Bart Spaans
 ---
 
@@ -39,5 +39,19 @@ const { unregister, isLimitedConnection, isRegistered } = ForesightManager.insta
   enabled: true, // when false the element stays registered but inactive
 })
 ```
+
+## Updating Options After Registration
+
+Use `updateElementOptions` to change the options of an already-registered element without unregistering it. Only the fields you pass are updated; omitted fields keep their current values. It returns the updated `ForesightElementState` and throws if the element is not registered.
+
+```javascript
+ForesightManager.instance.updateElementOptions(myElement, {
+  callback: () => console.log("new callback"),
+  hitSlop: 100,
+  enabled: false,
+})
+```
+
+The framework integrations use this under the hood: the React hooks and Vue composables/directive patch the registration in place whenever your options change.
 
 <ElementSettings />
