@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node ./scripts/dev-select.js",
-    "build": "pnpm --filter js.foresight* build",
-    "build:prod": "pnpm --filter js.foresight* build:prod",
+    "build": "pnpm --filter \"js.foresight*\" --filter \"@foresightjs/*\" build",
+    "build:prod": "pnpm --filter \"js.foresight*\" --filter \"@foresightjs/*\" build:prod",
     "docs:start": "pnpm --filter docs start",
     "docs:build": "pnpm --filter docs build",
     "fsinfo": "node ./scripts/list-packages.js",
@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "clean": "rm -r -force node_modules && rm pnpm-lock.yaml"
+    "clean": "rm -rf node_modules pnpm-lock.yaml"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
