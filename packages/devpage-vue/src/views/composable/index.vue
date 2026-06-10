@@ -11,7 +11,7 @@ import GetterOptionsButton from "./partials/GetterOptionsButton.vue"
     <h1 class="text-xl font-semibold mb-1">useForesight</h1>
     <p class="mb-8 text-sm text-gray-600">
       Three ways to pass options: plain object, swappable ref, or reactive getter. Bind elements via
-      <code>:ref="setRef"</code>.
+      <code>:ref="elementRef"</code>.
     </p>
 
     <section class="border-t border-gray-300 py-8 flex flex-wrap gap-x-6 gap-y-8">

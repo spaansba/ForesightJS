@@ -18,7 +18,7 @@ last_updated:
 
 # useForesights
 
-`useForesights` is the list version of [`useForesight`](./useForesight.md). Hand it an array of options (usually a getter over your `v-for` data) and you get back a reactive array of slots, one per item. Each slot has its own `setRef` and the same [reactive state](./useForesight.md#reactive-state) as the single composable.
+`useForesights` is the list version of [`useForesight`](./useForesight.md). Hand it an array of options (usually a getter over your `v-for` data) and you get back a reactive array of slots, one per item. Each slot has its own `elementRef` and the same [reactive state](./useForesight.md#reactive-state) as the single composable.
 
 ```html
 <script setup lang="ts">
@@ -42,7 +42,7 @@ last_updated:
   <a
     v-for="(link, i) in links"
     :key="link.href"
-    :ref="slots[i].setRef"
+    :ref="slots[i].elementRef"
     :href="link.href"
     :class="{ predicted: slots[i].isPredicted }"
   >

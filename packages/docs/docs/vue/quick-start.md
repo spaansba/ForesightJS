@@ -69,20 +69,20 @@ See [registration options](./configuration/registration-options.md) for the full
 
 ## Reading prediction state
 
-When you want to read the element's prediction state (for example to style a link once it's prefetched), use the [`useForesight`](./useForesight.md) composable instead. It returns the state as reactive refs plus a `setRef` function to bind to the element:
+When you want to read the element's prediction state (for example to style a link once it's prefetched), use the [`useForesight`](./useForesight.md) composable instead. It returns the state as reactive refs plus an `elementRef` function to bind to the element:
 
 ```html
 <script setup lang="ts">
   import { useForesight } from "@foresightjs/vue"
 
-  const { setRef, isPredicted } = useForesight({
+  const { elementRef, isPredicted } = useForesight({
     callback: () => console.log("User is likely to interact with this element!"),
     name: "about-link",
   })
 </script>
 
 <template>
-  <a :ref="setRef" href="/about" :class="{ predicted: isPredicted }">About</a>
+  <a :ref="elementRef" href="/about" :class="{ predicted: isPredicted }">About</a>
 </template>
 ```
 

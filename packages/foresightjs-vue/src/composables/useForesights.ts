@@ -19,15 +19,15 @@ import { resolveElement } from "../utils/resolveElement"
 import type { MaybeElement, UseForesightOptions } from "../types"
 
 export type UseForesightSlot = Readonly<ForesightElementState> & {
-  /** Template ref function - bind to an element with `:ref="slot.setRef"`. */
-  setRef: (el: MaybeElement) => void
+  /** Template ref function - bind to an element with `:ref="slot.elementRef"`. */
+  elementRef: (el: MaybeElement) => void
 }
 
 type Slot = {
   element: Element | null
   result: ForesightRegisterResult | null
   unsubscribe: (() => void) | null
-  state: ForesightElementState & { setRef: (el: MaybeElement) => void }
+  state: ForesightElementState & { elementRef: (el: MaybeElement) => void }
 }
 
 /**
@@ -37,7 +37,7 @@ type Slot = {
  *   The array length determines the number of slots.
  *
  * Returns a reactive array of `UseForesightSlot` objects. Each slot contains:
- * - `setRef` - a template ref function to bind an element (`:ref="slot.setRef"`)
+ * - `elementRef` - a template ref function to bind an element (`:ref="slot.elementRef"`)
  * - All `ForesightElementState` properties (`isPredicted`, `hitCount`, etc.)
  *
  * @example
@@ -52,7 +52,7 @@ type Slot = {
  * )
  * ```
  * ```vue
- * <button v-for="(item, i) in items" :ref="slots[i].setRef">
+ * <button v-for="(item, i) in items" :ref="slots[i].elementRef">
  *   {{ slots[i].isPredicted ? 'predicted!' : item.name }}
  * </button>
  * ```
@@ -99,8 +99,8 @@ export const useForesights = (
   const createSlot = (index: number): Slot => {
     const state = reactive({
       ...createUnregisteredSnapshot(false),
-      // `setRef` owns unregistering when the element detaches or swaps.
-      setRef: (el: MaybeElement) => {
+      // `elementRef` owns unregistering when the element detaches or swaps.
+      elementRef: (el: MaybeElement) => {
         const resolved = resolveElement(el) ?? null
         const slot = managed[index]
         if (!slot || slot.element === resolved) {

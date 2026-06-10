@@ -2,7 +2,7 @@
 import { useForesight } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
 
-const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight({
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight({
   callback: () => console.log("Teleport target prefetch"),
   name: "teleport-target",
 })
@@ -13,7 +13,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesigh
     <h4 class="text-sm font-medium">useForesight</h4>
     <button
       type="button"
-      :ref="setRef"
+      :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-teal-400 hover:bg-teal-500',

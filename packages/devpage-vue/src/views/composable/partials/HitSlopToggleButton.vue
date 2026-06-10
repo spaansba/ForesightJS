@@ -5,7 +5,7 @@ import ForesightStats from "../../../components/ForesightStats.vue"
 
 const hitSlop = ref(20)
 
-const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(() => ({
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(() => ({
   callback: () => console.log("HitSlop-toggle prefetch"),
   name: "hit-slop-toggle",
   hitSlop: hitSlop.value,
@@ -18,7 +18,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesigh
     <p class="text-xs text-gray-500">Toggle <code>hitSlop</code> to grow the hitbox in place.</p>
     <button
       type="button"
-      :ref="setRef"
+      :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-sm font-medium text-white',
         isPredicted ? 'bg-amber-500' : 'bg-indigo-400 hover:bg-indigo-500',

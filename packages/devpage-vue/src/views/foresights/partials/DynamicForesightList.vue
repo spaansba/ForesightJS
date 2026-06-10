@@ -97,7 +97,7 @@ const removeItem = () => {
         <h4 class="text-sm font-medium">{{ item.label }}</h4>
         <button
           type="button"
-          :ref="slots[i]?.setRef"
+          :ref="slots[i]?.elementRef"
           :class="[
             'flex items-center justify-center size-40 text-white text-sm font-medium',
             slots[i]?.isPredicted ? 'bg-amber-500' : item.color,

@@ -23,17 +23,17 @@ import { resolveElement } from "../utils/resolveElement"
  * @param options - Registration options as a plain object, ref, or getter.
  *
  * Returns reactive refs for all element state (`isPredicted`, `hitCount`, etc.)
- * plus a `setRef` function to bind the target element.
+ * plus an `elementRef` function to bind the target element.
  *
  * @example
  * ```ts
- * const { isPredicted, setRef } = useForesight({
+ * const { isPredicted, elementRef } = useForesight({
  *   callback: () => prefetch('/about'),
  *   name: 'about-link',
  * })
  * ```
  * ```vue
- * <a :ref="setRef" href="/about">About</a>
+ * <a :ref="elementRef" href="/about">About</a>
  * ```
  */
 export const useForesight = (
@@ -70,7 +70,7 @@ export const useForesight = (
     Object.assign(state, createUnregisteredSnapshot(false))
   }
 
-  const setRef = (el: MaybeElement) => {
+  const elementRef = (el: MaybeElement) => {
     const resolved = resolveElement(el) ?? null
 
     if (resolved === currentElement) {
@@ -108,5 +108,5 @@ export const useForesight = (
     unregisterElement()
   })
 
-  return { ...toRefs(readonly(state)), setRef }
+  return { ...toRefs(readonly(state)), elementRef }
 }

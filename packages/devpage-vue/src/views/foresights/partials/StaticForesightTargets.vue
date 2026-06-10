@@ -14,7 +14,7 @@ const slots = useForesights([
       <h4 class="text-sm font-medium">Target A</h4>
       <button
         type="button"
-        :ref="slots[0].setRef"
+        :ref="slots[0].elementRef"
         :class="[
           'flex items-center justify-center size-40 text-white text-sm font-medium',
           slots[0]?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
@@ -34,7 +34,7 @@ const slots = useForesights([
       <h4 class="text-sm font-medium">Target B</h4>
       <button
         type="button"
-        :ref="slots[1].setRef"
+        :ref="slots[1].elementRef"
         :class="[
           'flex items-center justify-center size-40 text-white text-sm font-medium',
           slots[1]?.isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

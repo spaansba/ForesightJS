@@ -5,7 +5,7 @@ import ForesightStats from "../../../components/ForesightStats.vue"
 
 const reactivateAfter = ref(Infinity)
 
-const { isPredicted, hitCount, isCallbackRunning, status, setRef } = useForesight(() => ({
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(() => ({
   callback: () => console.log("Getter prefetch"),
   name: "getter",
   reactivateAfter: reactivateAfter.value,
@@ -25,7 +25,7 @@ const toggle = () => {
     </p>
     <button
       type="button"
-      :ref="setRef"
+      :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-white text-sm font-medium',
         isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',

@@ -69,7 +69,7 @@ function PrefetchLink() {
     code: `<script setup lang="ts">
 import { useForesight } from '@foresightjs/vue'
 
-const { setRef } = useForesight({
+const { elementRef } = useForesight({
   callback: () => {
     console.log('User intent detected!')
   },
@@ -77,7 +77,7 @@ const { setRef } = useForesight({
 </script>
 
 <template>
-  <a :ref="setRef" href="/about">About</a>
+  <a :ref="elementRef" href="/about">About</a>
 </template>`,
   },
 ]
