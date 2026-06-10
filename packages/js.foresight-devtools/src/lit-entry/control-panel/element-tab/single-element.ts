@@ -162,7 +162,7 @@ export class SingleElement extends LitElement {
   ]
 
   @property({ attribute: false }) element!: ForesightElement
-  @property({ attribute: false, hasChanged: () => true }) state!: ForesightElementState
+  @property({ attribute: false }) state!: ForesightElementState
   @property() isExpanded: boolean = false
   @property() onToggle: ((elementId: string) => void) | undefined
 

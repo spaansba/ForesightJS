@@ -1,11 +1,9 @@
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { map } from "lit/directives/map.js"
+import { repeat } from "lit/directives/repeat.js"
 
 import type {
-  CallbackCompletedEvent,
   CallbackHits,
-  CallbackHitType,
   CallbackInvokedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
@@ -81,14 +79,8 @@ export class ElementTab extends LitElement {
     }
   `
 
-  @state()
-  private hitCount: CallbackHits = {
-    mouse: { hover: 0, trajectory: 0 },
-    scroll: { down: 0, left: 0, right: 0, up: 0 },
-    tab: { forwards: 0, reverse: 0 },
-    touch: 0,
-    viewport: 0,
-    total: 0,
+  private get hitCount(): CallbackHits {
+    return ForesightManager.instance.getManagerData.globalCallbackHits
   }
 
   @state() private sortDropdown: DropdownOption[]
@@ -102,9 +94,10 @@ export class ElementTab extends LitElement {
   private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   private _pendingElementUpdates: Map<ForesightElement, ForesightElementState> = new Map()
   private _updateDebounceId: ReturnType<typeof setTimeout> | null = null
-  // Cached sorted element lists to avoid repeated filtering in render
-  private _cachedActiveElements: ElementListEntry[] = []
-  private _cachedInactiveElements: ElementListEntry[] = []
+  // Cached sorted element order; states are looked up at render time so the
+  // cache never holds stale state objects.
+  private _cachedActiveElements: ForesightElement[] = []
+  private _cachedInactiveElements: ForesightElement[] = []
   private _elementsCacheDirty = true
 
   constructor() {
@@ -211,6 +204,28 @@ export class ElementTab extends LitElement {
     return lines.join("\n")
   }
 
+  /**
+   * The list doesn't render element rects (only hit slop), so rect-only state
+   * patches — fired for every element on every scroll/resize tick — are
+   * filtered out before they can schedule any work.
+   */
+  private _affectsElementList(
+    previous: ForesightElementState,
+    next: ForesightElementState
+  ): boolean {
+    if (previous === next) {
+      return false
+    }
+
+    for (const key of Object.keys(next) as (keyof ForesightElementState)[]) {
+      if (key !== "elementBounds" && next[key] !== previous[key]) {
+        return true
+      }
+    }
+
+    return next.elementBounds.hitSlop !== previous.elementBounds.hitSlop
+  }
+
   private _subscribeToElement(element: ForesightElement): void {
     if (this._elementSubscriptions.has(element)) {
       return
@@ -218,10 +233,17 @@ export class ElementTab extends LitElement {
 
     const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
       const state = ForesightManager.instance.registeredElements.get(element)
-      if (state && state.isRegistered) {
-        this._pendingElementUpdates.set(element, state)
-        this._scheduleDebouncedUpdate()
+      if (!state || !state.isRegistered) {
+        return
       }
+
+      const known = this._pendingElementUpdates.get(element) ?? this.elementListItems.get(element)
+      if (known && !this._affectsElementList(known, state)) {
+        return
+      }
+
+      this._pendingElementUpdates.set(element, state)
+      this._scheduleDebouncedUpdate()
     })
 
     if (unsubscribe) {
@@ -281,10 +303,11 @@ export class ElementTab extends LitElement {
       { signal }
     )
 
+    // The manager has already updated its global hit counters; just re-render.
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
-      (e: CallbackCompletedEvent) => {
-        this.handleCallbackCompleted(e.hitType)
+      () => {
+        this.requestUpdate()
       },
       { signal }
     )
@@ -326,43 +349,27 @@ export class ElementTab extends LitElement {
       return
     }
 
-    // Apply all pending updates in one batch
+    // Apply all pending updates in one batch; the sort order only depends on
+    // membership, isActive and isIntersectingWithViewport.
     for (const [element, state] of this._pendingElementUpdates) {
+      const previous = this.elementListItems.get(element)
+      if (
+        !previous ||
+        previous.isActive !== state.isActive ||
+        previous.isIntersectingWithViewport !== state.isIntersectingWithViewport
+      ) {
+        this._elementsCacheDirty = true
+      }
+
       this.elementListItems.set(element, state)
     }
     this._pendingElementUpdates.clear()
-    this._elementsCacheDirty = true
     this.requestUpdate()
   }
 
   private updateElementListFromManager() {
     this.elementListItems = new Map(ForesightManager.instance.registeredElements)
     this._elementsCacheDirty = true
-  }
-
-  private handleCallbackCompleted(hitType: CallbackHitType) {
-    switch (hitType.kind) {
-      case "mouse":
-        this.hitCount.mouse[hitType.subType]++
-        break
-      case "tab":
-        this.hitCount.tab[hitType.subType]++
-        break
-      case "scroll":
-        this.hitCount.scroll[hitType.subType]++
-        break
-      case "touch":
-        this.hitCount.touch++
-        break
-      case "viewport":
-        this.hitCount.viewport++
-        break
-      default:
-        hitType satisfies never
-    }
-
-    this.hitCount.total++
-    this.requestUpdate()
   }
 
   private getSortedElements(): ElementListEntry[] {
@@ -396,15 +403,15 @@ export class ElementTab extends LitElement {
       return
     }
 
-    const active: ElementListEntry[] = []
-    const inactive: ElementListEntry[] = []
+    const active: ForesightElement[] = []
+    const inactive: ForesightElement[] = []
     for (const entry of this.getSortedElements()) {
       // Disabled elements are inactive too; their reason is shown as a badge on the
       // row rather than a separate section.
       if (entry.state.isActive) {
-        active.push(entry)
+        active.push(entry.element)
       } else {
-        inactive.push(entry)
+        inactive.push(entry.element)
       }
     }
     this._cachedActiveElements = active
@@ -412,13 +419,13 @@ export class ElementTab extends LitElement {
     this._elementsCacheDirty = false
   }
 
-  private get activeElements(): ElementListEntry[] {
+  private get activeElements(): ForesightElement[] {
     this._recomputeElementsCache()
 
     return this._cachedActiveElements
   }
 
-  private get inactiveElements(): ElementListEntry[] {
+  private get inactiveElements(): ForesightElement[] {
     this._recomputeElementsCache()
 
     return this._cachedInactiveElements
@@ -440,7 +447,7 @@ export class ElementTab extends LitElement {
   private renderElementSection(
     label: string,
     modifierClass: string,
-    elements: ElementListEntry[],
+    elements: ForesightElement[],
     collapsed: boolean,
     toggleCollapsed: () => void
   ) {
@@ -457,17 +464,25 @@ export class ElementTab extends LitElement {
           ${label} (${elements.length})
         </h3>
         ${!collapsed
-          ? map(
+          ? repeat(
               elements,
-              entry => html`
-                <single-element
-                  .element=${entry.element}
-                  .state=${entry.state}
-                  .isExpanded=${this.expandedElementIds.has(entry.state.id)}
-                  .onToggle=${this.handleElementToggle}
-                >
-                </single-element>
-              `
+              element => this.elementListItems.get(element)?.id ?? "",
+              element => {
+                const state = this.elementListItems.get(element)
+                if (!state) {
+                  return ""
+                }
+
+                return html`
+                  <single-element
+                    .element=${element}
+                    .state=${state}
+                    .isExpanded=${this.expandedElementIds.has(state.id)}
+                    .onToggle=${this.handleElementToggle}
+                  >
+                  </single-element>
+                `
+              }
             )
           : ""}
       </div>

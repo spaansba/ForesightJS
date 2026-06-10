@@ -1,13 +1,7 @@
-import { ForesightManager } from "js.foresight"
-import type { ForesightEvent, ForesightEventMap } from "js.foresight"
+import type { ForesightEvent } from "js.foresight"
 import { LitElement, css, html } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
-import { map } from "lit/directives/map.js"
-import {
-  safeSerializeEventData,
-  safeSerializeManagerData,
-  type SerializedEventData,
-} from "../../../helpers/safeSerializeEventData"
+import { repeat } from "lit/directives/repeat.js"
 import {
   BOTH_SVG,
   CLEAR_SVG,
@@ -18,14 +12,14 @@ import {
   STATE_SVG,
   WARNING_SVG,
 } from "../../../svg/svg-icons"
-import type { LogEvents, LoggingLocations } from "../../../types/types"
-import { ForesightDevtools } from "../../foresight-devtools"
+import type { LoggingLocations } from "../../../types/types"
 import "../base-tab/chip"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
 import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
+import { getEventLogStore, MAX_LOGS } from "./log-store"
 import "./single-log"
 
 @customElement("log-tab")
@@ -127,27 +121,16 @@ export class LogTab extends LitElement {
     `,
   ]
 
+  private store = getEventLogStore()
   @state() private logDropdown: DropdownOption[]
   @state() private filterDropdown: DropdownOption[]
-  @state() private logLocation: LoggingLocations
-  @state() private eventsEnabled: LogEvents
-  @state() private logs: Array<SerializedEventData> = []
   @state() private expandedLogIds: Set<string> = new Set()
-  private MAX_LOGS: number = 100
-  private logIdCounter: number = 0
 
   @property() noContentMessage: string = "No logs available"
-  private _abortController: AbortController | null = null
-  private _eventListeners: Map<ForesightEvent, (event: ForesightEventMap[ForesightEvent]) => void> =
-    new Map()
+  private _unsubscribeStore: (() => void) | null = null
 
   constructor() {
     super()
-    const {
-      logging: { logLocation, ...eventFlags },
-    } = ForesightDevtools.instance.devtoolsSettings
-    this.eventsEnabled = eventFlags
-    this.logLocation = logLocation
     this.logDropdown = [
       {
         value: "controlPanel",
@@ -228,47 +211,40 @@ export class LogTab extends LitElement {
   }
 
   private handleLogLocationChange = (value: string): void => {
-    this.logLocation = value as LoggingLocations
+    this.store.setLogLocation(value as LoggingLocations)
   }
 
   private handleFilterChange = (changedEventType: string, isEnabled: boolean): void => {
-    this.eventsEnabled = {
-      ...this.eventsEnabled,
-      [changedEventType]: isEnabled,
-    }
-    if (isEnabled) {
-      this.addForesightEventListener(changedEventType as ForesightEvent)
-    } else {
-      this.removeForesightEventListener(changedEventType as ForesightEvent)
-    }
+    this.store.setEventEnabled(changedEventType as ForesightEvent, isEnabled)
   }
 
   private getSelectedEventFilters(): string[] {
-    return Object.entries(this.eventsEnabled)
+    return Object.entries(this.store.eventsEnabled)
       .filter(([, enabled]) => enabled)
       .map(([eventType]) => eventType)
   }
 
   //TODO check if devtools is open, but is harder than I thought. Look into later
   private shouldShowPerformanceWarning(): boolean {
-    const hasConsoleOutput = this.logLocation === "console" || this.logLocation === "both"
+    const { logLocation, eventsEnabled } = this.store
+    const hasConsoleOutput = logLocation === "console" || logLocation === "both"
     const hasFrequentEvents =
-      this.eventsEnabled.mouseTrajectoryUpdate || this.eventsEnabled.scrollTrajectoryUpdate
+      eventsEnabled.mouseTrajectoryUpdate || eventsEnabled.scrollTrajectoryUpdate
 
     return hasConsoleOutput && hasFrequentEvents
   }
 
   private getNoLogsMessage(): string {
-    const enabledCount = Object.values(this.eventsEnabled).filter(Boolean).length
+    const enabledCount = Object.values(this.store.eventsEnabled).filter(Boolean).length
     if (enabledCount === 0) {
       return "Logging for all events is turned off"
     }
 
-    if (this.logLocation === "console") {
+    if (this.store.logLocation === "console") {
       return "No logs to display. Logging location is set to console - check browser console for events."
     }
 
-    if (this.logLocation === "none") {
+    if (this.store.logLocation === "none") {
       return "No logs to display. Logging location is set to none"
     }
 
@@ -287,139 +263,34 @@ export class LogTab extends LitElement {
   }
 
   private clearLogs(): void {
-    this.logs = []
+    this.store.clear()
     this.expandedLogIds.clear()
     this.noContentMessage = "Logs cleared"
   }
 
+  private logManagerData = (): void => {
+    this.store.logManagerData()
+  }
+
   connectedCallback(): void {
     super.connectedCallback()
-    this._abortController = new AbortController()
-    this.setupDynamicEventListeners()
+    this._unsubscribeStore = this.store.subscribe(() => this.requestUpdate())
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
-    this._abortController?.abort()
-    this.removeAllEventListeners()
-  }
-
-  private setupDynamicEventListeners(): void {
-    Object.entries(this.eventsEnabled).forEach(([eventType, enabled]) => {
-      if (enabled) {
-        this.addForesightEventListener(eventType as ForesightEvent)
-      }
-    })
-  }
-
-  private addForesightEventListener(eventType: ForesightEvent): void {
-    if (this._eventListeners.has(eventType)) {
-      return
-    }
-
-    const handler = (event: ForesightEventMap[typeof eventType]) => {
-      this.handleEvent(eventType, event)
-    }
-    this._eventListeners.set(eventType, handler)
-    ForesightManager.instance.addEventListener(eventType, handler, {
-      signal: this._abortController?.signal,
-    })
-  }
-
-  private removeForesightEventListener(eventType: ForesightEvent): void {
-    const handler = this._eventListeners.get(eventType)
-    if (handler) {
-      ForesightManager.instance.removeEventListener(eventType, handler)
-      this._eventListeners.delete(eventType)
-    }
-  }
-
-  private removeAllEventListeners(): void {
-    this._eventListeners.forEach((handler, eventType) => {
-      ForesightManager.instance.removeEventListener(eventType, handler)
-    })
-    this._eventListeners.clear()
-  }
-
-  //TODO fix these events and in single-log
-  private getEventColor(eventType: ForesightEvent): string {
-    const colorMap: Record<ForesightEvent, string> = {
-      elementRegistered: "#2196f3",
-      callbackInvoked: "#00bcd4",
-      callbackCompleted: "#4caf50",
-      elementUnregistered: "#ff9800",
-      managerSettingsChanged: "#f44336",
-      mouseTrajectoryUpdate: "#78909c",
-      scrollTrajectoryUpdate: "#607d8b",
-      deviceStrategyChanged: "#9c27b0",
-    }
-
-    return colorMap[eventType] || "#ffffff"
-  }
-
-  private handleEvent<K extends ForesightEvent>(eventType: K, event: ForesightEventMap[K]): void {
-    if (this.logLocation === "none") {
-      return
-    }
-
-    if (this.logLocation === "console" || this.logLocation === "both") {
-      const color = this.getEventColor(eventType)
-      console.log(`%c[ForesightJS] ${eventType}`, `color: ${color}; font-weight: bold;`, event)
-    }
-
-    if (this.logLocation === "controlPanel" || this.logLocation === "both") {
-      this.addEventLog(event)
-    }
-  }
-
-  private addLog(log: SerializedEventData) {
-    this.logs.unshift(log)
-    if (this.logs.length > this.MAX_LOGS) {
-      this.logs.pop()
-    }
-
-    this.requestUpdate()
-  }
-
-  private logManagerData(): void {
-    if (this.logLocation === "none") {
-      return
-    }
-
-    if (this.logLocation === "console" || this.logLocation === "both") {
-      console.log(ForesightManager.instance.getManagerData)
-    }
-
-    if (this.logLocation === "controlPanel" || this.logLocation === "both") {
-      this.addManagerLog()
-    }
-  }
-
-  private addManagerLog(): void {
-    const log = safeSerializeManagerData(
-      ForesightManager.instance.getManagerData,
-      (++this.logIdCounter).toString()
-    )
-    this.addLog(log)
-  }
-
-  private addEventLog<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
-    const log = safeSerializeEventData(event, (++this.logIdCounter).toString())
-    if (log.type === "serializationError") {
-      console.error(log.error, log.errorMessage)
-
-      return
-    }
-
-    this.addLog(log)
+    this._unsubscribeStore?.()
+    this._unsubscribeStore = null
   }
 
   render() {
+    const logs = this.store.logs
+
     return html`
       <tab-header>
         <div slot="chips" class="chips-container">
-          <chip-element title="Number of logged events (Max ${this.MAX_LOGS})">
-            ${this.logs.length} events
+          <chip-element title="Number of logged events (Max ${MAX_LOGS})">
+            ${logs.length} events
           </chip-element>
         </div>
         <div slot="actions">
@@ -436,7 +307,7 @@ Consider using 'Control Panel' only for better performance."
             : ""}
           <single-select-dropdown
             .dropdownOptions="${this.logDropdown}"
-            .selectedOptionValue="${this.logLocation}"
+            .selectedOptionValue="${this.store.logLocation}"
             .onSelectionChange="${this.handleLogLocationChange}"
           ></single-select-dropdown>
 
@@ -455,25 +326,27 @@ Consider using 'Control Panel' only for better performance."
           <button
             class="single-button"
             title="Clear all logs"
-            ?disabled="${this.logs.length === 0}"
+            ?disabled="${logs.length === 0}"
             @click="${this.clearLogs}"
           >
             ${CLEAR_SVG}
           </button>
         </div>
       </tab-header>
-      <tab-content .noContentMessage=${this.noContentMessage} .hasContent=${!!this.logs.length}>
-        ${this.logs.length === 0
+      <tab-content .noContentMessage=${this.noContentMessage} .hasContent=${!!logs.length}>
+        ${logs.length === 0
           ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
-          : map(this.logs, log => {
-              return html`
+          : repeat(
+              logs,
+              log => log.logId,
+              log => html`
                 <single-log
                   .log=${log}
                   .isExpanded=${this.expandedLogIds.has(log.logId)}
                   .onToggle=${this.handleLogToggle}
                 ></single-log>
               `
-            })}
+            )}
       </tab-content>
     `
   }
