@@ -23,7 +23,6 @@ const ForesightButtonRemoveable = ({ name }: ForesightButtonRemoveableProps) => 
           },
           hitSlop: 0,
           name: name,
-          unregisterOnCallback: true,
         }}
       />
     </article>

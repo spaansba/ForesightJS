@@ -108,10 +108,6 @@ export const initializeSettings = (
   if (props.minimumConnectionType !== undefined) {
     settings.minimumConnectionType = props.minimumConnectionType
   }
-
-  if (props.debug !== undefined) {
-    settings.debug = props.debug
-  }
 }
 
 /**

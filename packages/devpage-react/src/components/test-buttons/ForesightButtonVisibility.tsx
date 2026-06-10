@@ -20,7 +20,6 @@ const ForesightButtonVisibility = ({ name }: ForesightButtonVisibilityProps) => 
           },
           hitSlop: 0,
           name: name,
-          unregisterOnCallback: true,
         }}
       />
       <p className="text-xs text-gray-600">

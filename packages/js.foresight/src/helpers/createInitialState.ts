@@ -44,7 +44,6 @@ export const createInitialCallbackHits = (): CallbackHits => {
 
 export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   return {
-    debug: false,
     enableManagerLogging: false,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,

@@ -12,7 +12,6 @@ const ForesightButtonNoName = () => {
             await new Promise(resolve => setTimeout(resolve, randomTimeout))
           },
           hitSlop: 20,
-          unregisterOnCallback: true,
         }}
       />
       <p className="text-xs text-gray-600">Element registered without a name.</p>
