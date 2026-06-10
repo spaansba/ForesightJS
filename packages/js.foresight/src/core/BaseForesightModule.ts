@@ -69,6 +69,10 @@ export abstract class BaseForesightModule {
   }
 
   public connect(): void {
+    if (this.isConnected) {
+      return
+    }
+
     this.devLog(`Connecting ${this.moduleName}...`)
     this.onConnect()
     this._isConnected = true
