@@ -1,6 +1,6 @@
 // import React from "react"
 // import { useQuery } from "@tanstack/react-query"
-// import useForesight from "@site/src/hooks/useForesight"
+// import { useForesight } from "@foresightjs/react"
 
 // type PictureButtonProps = {
 //   image: ForesightImage

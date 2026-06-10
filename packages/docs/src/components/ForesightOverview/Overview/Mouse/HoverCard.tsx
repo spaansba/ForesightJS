@@ -17,7 +17,7 @@ export const HoverCard = () => {
 
   return (
     <button
-      onMouseEnter={!isLoading && !isLoaded ? handleHover : null}
+      onMouseEnter={!isLoading && !isLoaded ? handleHover : undefined}
       className={styles.cardContent}
     >
       <BaseCard

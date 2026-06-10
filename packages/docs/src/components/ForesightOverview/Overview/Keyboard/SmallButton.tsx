@@ -1,14 +1,21 @@
-import { ForesightManager } from "js.foresight"
-import React, { useEffect, useRef, useState } from "react"
+import { useForesight } from "@foresightjs/react"
+import React from "react"
 import styles from "./styles.module.css"
-const SmallButton = ({ index }: { index: number }) => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadTime, setLoadTime] = useState<number>(0)
-  const cardRef = useRef<HTMLButtonElement | null>(null)
-  const stateRef = useRef({ isLoading: false, isLoaded: false })
 
-  stateRef.current = { isLoading, isLoaded }
+const SmallButton = ({ index }: { index: number }) => {
+  const { elementRef, isCallbackRunning, isPredicted, durationMs } =
+    useForesight<HTMLButtonElement>({
+      callback: async () => {
+        const randomTime = Math.floor(Math.random() * 250) + 50
+        await new Promise(resolve => setTimeout(resolve, randomTime))
+      },
+      hitSlop: 0,
+      reactivateAfter: 8000,
+      meta: { buttonNr: index },
+    })
+
+  const isLoading = isCallbackRunning
+  const isLoaded = isPredicted && !isCallbackRunning
 
   const state = () => {
     if (isLoading) {
@@ -22,47 +29,9 @@ const SmallButton = ({ index }: { index: number }) => {
     return "Element"
   }
 
-  useEffect(() => {
-    if (cardRef.current) {
-      const { unregister, subscribe, getSnapshot } = ForesightManager.instance.register({
-        element: cardRef.current,
-        callback: async () => {
-          if (!stateRef.current.isLoading && !stateRef.current.isLoaded) {
-            setIsLoading(true)
-            const randomTime = Math.floor(Math.random() * 250) + 50
-            setLoadTime(randomTime)
-            await new Promise(resolve => setTimeout(resolve, randomTime))
-            setIsLoading(false)
-            setIsLoaded(true)
-          }
-        },
-        hitSlop: 0,
-        reactivateAfter: 8000,
-        meta: { buttonNr: index },
-      })
-
-      let wasPredicted = getSnapshot().isPredicted
-      const unsubscribe = subscribe(() => {
-        const snap = getSnapshot()
-        // Detect reactivation: was predicted, now active and not predicted
-        if (wasPredicted && snap.isActive && !snap.isPredicted) {
-          setIsLoaded(false)
-          setIsLoading(false)
-        }
-
-        wasPredicted = snap.isPredicted
-      })
-
-      return () => {
-        unsubscribe()
-        unregister()
-      }
-    }
-  }, [cardRef])
-
   return (
     <button
-      ref={cardRef}
+      ref={elementRef}
       className={`${styles.smallButton} ${
         isLoading ? styles.loading : isLoaded ? styles.loaded : styles.default
       }`}
@@ -73,7 +42,7 @@ const SmallButton = ({ index }: { index: number }) => {
 
         {isLoaded && (
           <>
-            <div className={styles.timeSmall}>{loadTime}ms</div>
+            <div className={styles.timeSmall}>{Math.round(durationMs ?? 0)}ms</div>
             <div className={styles.checkmark}>✓</div>
           </>
         )}
