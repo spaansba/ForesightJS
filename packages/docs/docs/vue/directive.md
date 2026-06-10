@@ -76,4 +76,4 @@ For more control, pass any [registration options](./configuration/registration-o
 </template>
 ```
 
-If the bound value changes, the directive patches the existing registration in place rather than tearing it down, so things like flipping `enabled` keep the same element tracked. The exception is `hitSlop`, which is fixed at registration.
+If the bound value changes, the directive patches the existing registration in place rather than tearing it down, so things like flipping `enabled` or growing the `hitSlop` keep the same element tracked.

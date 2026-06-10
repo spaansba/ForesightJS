@@ -41,7 +41,7 @@ Bind `setRef` with `:ref="setRef"` and the composable handles the rest: it regis
 
 The options are the [registration options](./configuration/registration-options.md), minus the `element` (`setRef` handles that). `callback` is the only required field.
 
-To make options reactive, pass a getter instead of a plain object. The composable patches the registration in place when it changes (except `hitSlop`, which is fixed at registration):
+To make options reactive, pass a getter instead of a plain object. The composable patches the registration in place when it changes:
 
 ```html
 <script setup lang="ts">

@@ -55,6 +55,6 @@ The directive takes the same options object:
 </template>
 ```
 
-When the options change, both the directive and the composable patch the existing registration in place. The exception is `hitSlop`, which is fixed at registration.
+When the options change, both the directive and the composable patch the existing registration in place.
 
 <ElementSettings />

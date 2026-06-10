@@ -1415,6 +1415,57 @@ describe("ForesightManager", () => {
       expect(manager.registeredElements.get(element)?.meta).toEqual({ route: "/b", priority: 1 })
     })
 
+    it("should update hitSlop and recompute expanded bounds", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), hitSlop: 10 })
+      expect(manager.registeredElements.get(element)?.elementBounds.expandedRect).toEqual({
+        top: 90,
+        left: 90,
+        right: 210,
+        bottom: 210,
+      })
+
+      manager.updateElementOptions(element, { hitSlop: 50 })
+
+      const bounds = manager.registeredElements.get(element)!.elementBounds
+      expect(bounds.hitSlop).toEqual({ top: 50, left: 50, right: 50, bottom: 50 })
+      expect(bounds.expandedRect).toEqual({ top: 50, left: 50, right: 250, bottom: 250 })
+    })
+
+    it("should update hitSlop from a Rect object", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn(), hitSlop: 10 })
+      manager.updateElementOptions(element, {
+        hitSlop: { top: 0, left: 20, right: 30, bottom: 40 },
+      })
+
+      const bounds = manager.registeredElements.get(element)!.elementBounds
+      expect(bounds.hitSlop).toEqual({ top: 0, left: 20, right: 30, bottom: 40 })
+      expect(bounds.expandedRect).toEqual({ top: 100, left: 80, right: 230, bottom: 240 })
+    })
+
+    it("should preserve hitSlop and not notify subscribers when hitSlop is unchanged", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const listener = vi.fn()
+
+      const result = manager.register({ element, callback: vi.fn(), hitSlop: 10 })
+      result.subscribe(listener)
+      const boundsBefore = manager.registeredElements.get(element)!.elementBounds
+
+      // Equivalent hitSlop (number vs normalized Rect) should be a no-op
+      manager.updateElementOptions(element, {
+        hitSlop: { top: 10, left: 10, right: 10, bottom: 10 },
+      })
+
+      expect(manager.registeredElements.get(element)!.elementBounds).toBe(boundsBefore)
+      expect(listener).not.toHaveBeenCalled()
+    })
+
     it("should preserve previous values when options are omitted", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()

@@ -236,4 +236,38 @@ describe("useForesight", () => {
       }
     })
   })
+
+  describe("hitSlop option", () => {
+    it("patches when hitSlop changes", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, hitSlop: 10 }} />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, hitSlop: 50 }} />)
+
+      const hitSlopCalls = updateElementOptionsSpy.mock.calls.filter(c => c[1].hitSlop === 50)
+      expect(hitSlopCalls.length).toBeGreaterThan(0)
+    })
+
+    it("does not re-patch when hitSlop content is unchanged across renders", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe
+          options={{ name: "x", callback: cb, hitSlop: { top: 1, left: 2, right: 3, bottom: 4 } }}
+        />
+      )
+      updateElementOptionsSpy.mockClear()
+
+      // New object, identical content - must not trigger a patch.
+      rerender(
+        <ButtonProbe
+          options={{ name: "x", callback: cb, hitSlop: { top: 1, left: 2, right: 3, bottom: 4 } }}
+        />
+      )
+
+      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    })
+  })
 })

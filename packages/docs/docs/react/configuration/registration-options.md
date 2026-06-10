@@ -46,6 +46,6 @@ function AboutLink() {
 }
 ```
 
-You can change these options on every render - the hook patches the existing registration in place. The exception is `hitSlop`, which is fixed at registration.
+You can change these options on every render, the hook patches the existing registration in place.
 
 <ElementSettings />

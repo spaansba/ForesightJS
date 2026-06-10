@@ -6,7 +6,7 @@ import {
   type ForesightRegisterResult,
 } from "js.foresight"
 import type { UseForesightOptions, UseForesightResult } from "../types"
-import { serializeMeta } from "./serializeMeta"
+import { serializeOption } from "./serializeOption"
 
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const NOOP_SUBSCRIBE = () => () => {}
@@ -106,7 +106,8 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
   // Patch options on existing registrations without tearing them down
   const patchKey = optionsArray
     .map(
-      o => `${o.reactivateAfter ?? ""},${o.name ?? ""},${serializeMeta(o.meta)},${o.enabled ?? ""}`
+      o =>
+        `${o.reactivateAfter ?? ""},${o.name ?? ""},${serializeOption(o.meta)},${o.enabled ?? ""},${serializeOption(o.hitSlop)}`
     )
     .join("|")
 

@@ -11,6 +11,7 @@ import {
 } from "../../stores/ButtonStateStore"
 import ForesightButtonEnabled from "../../components/test-buttons/ForesightButtonEnabled"
 import ForesightButtonError from "../../components/test-buttons/ForesightButtonError"
+import ForesightButtonHitSlop from "../../components/test-buttons/ForesightButtonHitSlop"
 
 type SectionProps = {
   title: string
@@ -77,6 +78,10 @@ export default function Elements() {
 
       <Section title="Enabled toggle">
         <ForesightButtonEnabled name="enabled" />
+      </Section>
+
+      <Section title="Dynamic hitSlop">
+        <ForesightButtonHitSlop name="hit-slop" />
       </Section>
 
       <Section title="Edge cases">
