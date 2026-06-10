@@ -100,6 +100,7 @@ Snapshot of the current `ForesightManager` state, including all global settings,
 - `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
 - `currentDeviceStrategy` - Which strategy is being used. Can be either `touch` or `mouse`, this changes dynamically
 - `activeElementCount` - Amount of elements currently active (not the same as registered)
+- `parkedElementCount` - Amount of elements currently parked: detached from the DOM (`isParked: true`) and waiting to reconnect
 - `loadedModules` - Shows which handlers and predictors have been [lazy loaded](../behind-the-scenes.md#bundle-optimization)
 
 **Returns:** `Readonly<ForesightManagerData>`
@@ -113,6 +114,7 @@ The return will look something like this:
     "entries": "<all your currently registered elements>"
   },
   "activeElementCount": 5,
+  "parkedElementCount": 0,
   "currentDeviceStrategy": "mouse",
   "eventListeners": {
     "0": {

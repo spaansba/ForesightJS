@@ -203,11 +203,12 @@ export class SingleElement extends LitElement {
       })
     }
 
-    if (!this.element.isConnected) {
+    if (this.state.isParked) {
       reasons.push({
-        label: "detached",
+        label: "parked",
         color: "#7986cb",
-        description: "Element is no longer in the DOM. Foresight can't track or predict it.",
+        description:
+          "Element is detached from the DOM and parked: kept registered but inactive until it reconnects.",
       })
     }
 
@@ -224,7 +225,7 @@ export class SingleElement extends LitElement {
     // default (`reactivateAfter: Infinity`) never happens.
     if (
       this.state.isEnabled &&
-      this.element.isConnected &&
+      !this.state.isParked &&
       !this.state.isLimitedConnection &&
       !this.state.isActive &&
       this.state.isPredicted
