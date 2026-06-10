@@ -18,8 +18,8 @@ const createInternalEntry = (id: string, expandedRect: Rect): ForesightElementIn
       isActive: true,
       isPredicted: false,
       isIntersectingWithViewport: true,
-      elementBounds: { expandedRect },
     },
+    bounds: { expandedRect },
   }) as unknown as ForesightElementInternal
 
 const setupPredictor = (entries: ForesightElementInternal[], enableMousePrediction: boolean) => {
@@ -34,6 +34,7 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
     emit,
     hasListeners: vi.fn(() => true),
     updateElementState: vi.fn(),
+    updateElementBounds: vi.fn(),
     settings: {
       enableMousePrediction,
       trajectoryPredictionTime: 120,

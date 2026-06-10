@@ -3,6 +3,7 @@ import { customElement, state, query, property } from "lit/decorators.js"
 import {
   type ForesightElement,
   type ForesightElementState,
+  type ElementBounds,
   type CallbackHitType,
   ForesightManager,
 } from "js.foresight"
@@ -13,7 +14,7 @@ import type {
   ElementUnregisteredEvent,
 } from "js.foresight"
 
-type HitSlop = ForesightElementState["elementBounds"]["hitSlop"]
+type HitSlop = ForesightElementState["hitSlop"]
 
 interface ElementOverlay {
   nameLabel: HTMLElement
@@ -207,7 +208,7 @@ export class ElementOverlays extends LitElement {
       return
     }
 
-    const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
+    const update = () => {
       const state = ForesightManager.instance.registeredElements.get(element)
       if (!state || !state.isIntersectingWithViewport || !state.isActive) {
         this.removeElementOverlay(element)
@@ -216,10 +217,19 @@ export class ElementOverlays extends LitElement {
       }
 
       this.createOrUpdateElementOverlay(element, state)
-    })
+    }
 
-    if (unsubscribe) {
-      this._elementSubscriptions.set(element, unsubscribe)
+    // State and geometry are published on separate channels: logical changes
+    // (active/intersecting/name) come through subscribeToElement, rect changes
+    // during scroll/resize through subscribeToElementBounds.
+    const unsubscribeState = ForesightManager.instance.subscribeToElement(element, update)
+    const unsubscribeBounds = ForesightManager.instance.subscribeToElementBounds(element, update)
+
+    if (unsubscribeState || unsubscribeBounds) {
+      this._elementSubscriptions.set(element, () => {
+        unsubscribeState?.()
+        unsubscribeBounds?.()
+      })
     }
   }
 
@@ -275,9 +285,10 @@ export class ElementOverlays extends LitElement {
   private updateSlopArea(
     overlay: ElementOverlay,
     element: ForesightElement,
-    state: ForesightElementState
+    hitSlop: HitSlop,
+    bounds: ElementBounds
   ): void {
-    const { expandedRect, hitSlop } = state.elementBounds
+    const { expandedRect } = bounds
     // The manager reports viewport-relative rects; convert to document
     // coordinates, which stay constant during scroll.
     const left = expandedRect.left + window.scrollX
@@ -310,9 +321,13 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private updateNameLabel(overlay: ElementOverlay, state: ForesightElementState): void {
+  private updateNameLabel(
+    overlay: ElementOverlay,
+    state: ForesightElementState,
+    bounds: ElementBounds
+  ): void {
     const { nameLabel } = overlay
-    const { expandedRect } = state.elementBounds
+    const { expandedRect } = bounds
 
     if (!this.showNameTags || state.name === "unnamed") {
       nameLabel.style.display = "none"
@@ -326,13 +341,18 @@ export class ElementOverlays extends LitElement {
   }
 
   private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
+    const bounds = ForesightManager.instance.getElementBounds(element)
+    if (!bounds) {
+      return
+    }
+
     let overlay = this.overlayMap.get(element)
     if (!overlay) {
       overlay = this.createOverlay(element)
     }
 
-    this.updateSlopArea(overlay, element, state)
-    this.updateNameLabel(overlay, state)
+    this.updateSlopArea(overlay, element, state.hitSlop, bounds)
+    this.updateNameLabel(overlay, state, bounds)
   }
 
   private removeElementOverlay(element: ForesightElement) {

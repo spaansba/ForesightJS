@@ -71,7 +71,7 @@ export const useForesight = <T extends HTMLElement = HTMLElement>(
 
   const state = useSyncExternalStore<ForesightElementState>(
     registerResults?.subscribe ?? NOOP_SUBSCRIBE,
-    registerResults?.getSnapshot ?? GET_INITIAL_SNAPSHOT,
+    () => registerResults?.getSnapshot() ?? INITIAL_SNAPSHOT,
     GET_INITIAL_SNAPSHOT
   )
 

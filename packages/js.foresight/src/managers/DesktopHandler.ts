@@ -7,7 +7,6 @@ import { PositionObserver, PositionObserverEntry } from "position-observer"
 import type {
   ForesightElement,
   ForesightElementInternal,
-  ForesightElementState,
   TrajectoryPositions,
 } from "../types/types"
 import { CircularBuffer } from "../helpers/CircularBuffer"
@@ -86,23 +85,20 @@ export class DesktopHandler extends ElementObservingModule {
         this.checkForMouseHover(entry)
       }
 
-      // Must run AFTER handleScrollPrefetch - scroll direction is derived from
-      // the difference between the old and new originalRect.
+      // Must run AFTER handleScrollPrefetch/checkForMouseHover - scroll
+      // direction is derived from the difference between the old and new
+      // originalRect, so entry.bounds must not be updated before they read it.
       this.handlePositionChangeDataUpdates(entry, positionEntry)
     }
 
     if (enableScrollPosition) {
+      this.scrollPredictor?.emitTrajectoryUpdate()
       this.scrollPredictor?.resetScrollProps()
     }
   }
 
   private checkForMouseHover = (entry: ForesightElementInternal) => {
-    if (
-      isPointInRectangle(
-        this.trajectoryPositions.currentPoint,
-        entry.state.elementBounds.expandedRect
-      )
-    ) {
+    if (isPointInRectangle(this.trajectoryPositions.currentPoint, entry.bounds.expandedRect)) {
       this.callCallback(entry, {
         kind: "mouse",
         subType: "hover",
@@ -115,32 +111,22 @@ export class DesktopHandler extends ElementObservingModule {
     positionEntry: PositionObserverEntry
   ) => {
     const isNowIntersecting = positionEntry.isIntersecting
-    const state = entry.state
-    const patch: Partial<ForesightElementState> = {}
 
-    if (state.isIntersectingWithViewport !== isNowIntersecting) {
-      patch.isIntersectingWithViewport = isNowIntersecting
-    }
-
+    // Bounds are updated BEFORE the state patch so state subscribers always
+    // read fresh geometry.
     if (
       isNowIntersecting &&
-      !areRectsEqual(positionEntry.boundingClientRect, state.elementBounds.originalRect)
+      !areRectsEqual(positionEntry.boundingClientRect, entry.bounds.originalRect)
     ) {
-      patch.elementBounds = {
-        hitSlop: state.elementBounds.hitSlop,
+      this.updateElementBounds(entry, {
         originalRect: positionEntry.boundingClientRect,
-        expandedRect: getExpandedRect(
-          positionEntry.boundingClientRect,
-          state.elementBounds.hitSlop
-        ),
-      }
+        expandedRect: getExpandedRect(positionEntry.boundingClientRect, entry.state.hitSlop),
+      })
     }
 
-    if (Object.keys(patch).length === 0) {
-      return
+    if (entry.state.isIntersectingWithViewport !== isNowIntersecting) {
+      this.updateElementState(entry, { isIntersectingWithViewport: isNowIntersecting })
     }
-
-    this.updateElementState(entry, patch)
   }
 
   protected onDisconnect(): void {

@@ -76,7 +76,7 @@ describe("useForesights", () => {
     expect(getByTestId("state").getAttribute("data-registered")).toBe("false")
   })
 
-  it("reflects state updates pushed through subscribe", () => {
+  it("reflects state updates pushed through subscribe", async () => {
     const { getByTestId } = render(
       <MultiProbe
         optionsArray={[
@@ -88,7 +88,7 @@ describe("useForesights", () => {
 
     expect(getByTestId("el-0").getAttribute("data-predicted")).toBe("false")
 
-    act(() => {
+    await act(async () => {
       mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
       mockState.listeners.forEach(l => l())
     })

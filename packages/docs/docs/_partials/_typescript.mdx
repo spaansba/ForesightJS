@@ -2,18 +2,14 @@
 
 ### ForesightElementState
 
-This is the main type used in ForesightJS: the flat, immutable state snapshot of a registered element. Your [callback](#foresightcallback) receives it, most [events](../events.md) carry it as `state`, and `register()` returns it (plus a few functions, see [ForesightRegisterResult](#foresightregisterresult)). The reference is replaced on every change, never mutated.
+This is the main type used in ForesightJS: the flat, immutable state snapshot of a registered element. Your [callback](#foresightcallback) receives it, most [events](../events.md) carry it as `state`, and `register()` returns it (plus a few functions, see [ForesightRegisterResult](#foresightregisterresult)). The reference is replaced on every logical change, never mutated - and never on scroll: the element's rects live in [ElementBounds](#elementbounds), on their own subscription channel.
 
 ```TS
 type ForesightElementState = {
   id: string // unique id assigned during registration
   name: string // name visible in the devtools
   meta: Record<string, unknown> // your custom meta data
-  elementBounds: {
-    originalRect: DOMRectReadOnly
-    hitSlop: Exclude<HitSlop, number>
-    expandedRect: Readonly<Rect> // originalRect + hitSlop
-  }
+  hitSlop: Exclude<HitSlop, number> // normalized hit slop applied to this element
   isLimitedConnection: boolean
   isIntersectingWithViewport: boolean
   isRegistered: boolean
@@ -33,6 +29,17 @@ type ForesightElementState = {
 
 See the [registration return value](../configuration/registration-options.md#registration-return-value) for what each field means.
 
+### ElementBounds
+
+The element's geometry: its measured rect and the [hitSlop](../configuration/global-settings.md)-expanded rect used for interaction detection. Geometry changes on every scroll/resize tick for visible elements, so it is published on a separate channel (`getBounds`/`subscribeToBounds`) and deliberately kept out of `ForesightElementState` - state subscribers never fire on scroll.
+
+```TS
+type ElementBounds = {
+  originalRect: DOMRectReadOnly // as returned by getBoundingClientRect()
+  expandedRect: Readonly<Rect> // originalRect + hitSlop
+}
+```
+
 ### ForesightRegisterResult
 
 What `ForesightManager.instance.register()` returns: the element's state at registration time plus control functions.
@@ -40,8 +47,10 @@ What `ForesightManager.instance.register()` returns: the element's state at regi
 ```TS
 type ForesightRegisterResult = ForesightElementState & {
   unregister: () => void
-  subscribe: (listener: () => void) => () => void // returns an unsubscribe function
-  getSnapshot: () => ForesightElementState // current state snapshot
+  subscribe: (listener: () => void) => () => void // logical state changes; returns an unsubscribe function
+  getSnapshot: () => ForesightElementState // current state snapshot, stable reference across scrolls
+  subscribeToBounds: (listener: () => void) => () => void // geometry changes (every scroll/resize tick)
+  getBounds: () => ElementBounds // current geometry snapshot
 }
 ```
 

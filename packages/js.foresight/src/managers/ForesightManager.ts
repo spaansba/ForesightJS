@@ -15,6 +15,7 @@ import type {
   CallbackHitType,
   callbackStatus,
   CurrentDeviceStrategy,
+  ElementBounds,
   ElementUnregisteredReason,
   ForesightElement,
   ForesightElementInternal,
@@ -89,6 +90,7 @@ export class ForesightManager {
       emit: this.eventEmitter.emit.bind(this.eventEmitter),
       hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
       updateElementState: this.updateElementState.bind(this),
+      updateElementBounds: this.updateElementBounds.bind(this),
       settings: this._globalSettings,
     }
 
@@ -161,10 +163,11 @@ export class ForesightManager {
   }
 
   /**
-   * Subscribe to state changes for a specific element.
+   * Subscribe to logical state changes for a specific element.
    * The listener is called (with no arguments) whenever the element's
-   * immutable state snapshot is replaced. Use {@link registeredElements}
-   * to read the latest state inside the listener.
+   * immutable state snapshot is replaced. Never fires for geometry-only
+   * changes (scroll/resize) - see {@link subscribeToElementBounds}.
+   * Use {@link registeredElements} to read the latest state inside the listener.
    *
    * @returns An unsubscribe function, or `undefined` if the element is not registered.
    */
@@ -177,11 +180,34 @@ export class ForesightManager {
       return undefined
     }
 
-    entry.subscribers.add(listener)
+    return this.makeSubscribe(entry.subscribers)(listener)
+  }
 
-    return () => {
-      entry.subscribers.delete(listener)
+  /**
+   * Subscribe to geometry changes for a specific element (position/size, fired
+   * on every scroll/resize tick while visible). Use {@link getElementBounds}
+   * to read the latest geometry inside the listener.
+   *
+   * @returns An unsubscribe function, or `undefined` if the element is not registered.
+   */
+  public subscribeToElementBounds(
+    element: ForesightElement,
+    listener: () => void
+  ): (() => void) | undefined {
+    const entry = this.elementEntries.get(element)
+    if (!entry) {
+      return undefined
     }
+
+    return this.makeSubscribe(entry.boundsSubscribers)(listener)
+  }
+
+  /**
+   * Returns the current immutable geometry snapshot for a registered element,
+   * or `undefined` if the element is not registered.
+   */
+  public getElementBounds(element: ForesightElement): ElementBounds | undefined {
+    return this.elementEntries.get(element)?.bounds
   }
 
   public get getManagerData(): Readonly<ForesightManagerData> {
@@ -250,8 +276,10 @@ export class ForesightManager {
         unregister: () => {
           this.unregister(options.element)
         },
-        subscribe: this.makeSubscribe(previousEntry),
+        subscribe: this.makeSubscribe(previousEntry.subscribers),
         getSnapshot: () => previousEntry.state,
+        subscribeToBounds: this.makeSubscribe(previousEntry.boundsSubscribers),
+        getBounds: () => previousEntry.bounds,
       }
     }
 
@@ -287,8 +315,10 @@ export class ForesightManager {
       unregister: () => {
         this.unregister(options.element)
       },
-      subscribe: this.makeSubscribe(entry),
+      subscribe: this.makeSubscribe(entry.subscribers),
       getSnapshot: () => entry.state,
+      subscribeToBounds: this.makeSubscribe(entry.boundsSubscribers),
+      getBounds: () => entry.bounds,
     }
   }
 
@@ -316,18 +346,19 @@ export class ForesightManager {
       this.setElementEnabled(entry, element, options.enabled !== false)
     }
 
-    // Keep the current bounds reference when hitSlop is omitted or content-equal,
+    // Keep the current hitSlop reference when it is omitted or content-equal,
     // so updateElementState sees no change; otherwise remeasure and re-expand.
-    let elementBounds = entry.state.elementBounds
+    // Bounds are updated BEFORE state so state subscribers read fresh geometry.
+    let hitSlop = entry.state.hitSlop
     if (options.hitSlop !== undefined) {
-      const hitSlop = normalizeHitSlop(options.hitSlop)
-      if (!areRectsEqual(hitSlop, elementBounds.hitSlop)) {
+      const normalized = normalizeHitSlop(options.hitSlop)
+      if (!areRectsEqual(normalized, hitSlop)) {
+        hitSlop = normalized
         const originalRect = element.getBoundingClientRect()
-        elementBounds = {
+        this.updateElementBounds(entry, {
           originalRect,
           expandedRect: getExpandedRect(originalRect, hitSlop),
-          hitSlop,
-        }
+        })
       }
     }
 
@@ -337,7 +368,7 @@ export class ForesightManager {
       name: options.name || entry.state.name,
       meta: options.meta ?? entry.state.meta,
       reactivateAfter,
-      elementBounds,
+      hitSlop,
     })
 
     // Only clear and reschedule the reactivation timeout if reactivateAfter actually changed
@@ -357,15 +388,15 @@ export class ForesightManager {
   }
 
   /**
-   * Create a subscribe function for an element.
+   * Create a subscribe function for a listener set (state or bounds subscribers).
    * Returns an unsubscribe callback when called.
    */
-  private makeSubscribe(entry: ForesightElementInternal) {
+  private makeSubscribe(subscribers: Set<() => void>) {
     return (listener: () => void): (() => void) => {
-      entry.subscribers.add(listener)
+      subscribers.add(listener)
 
       return () => {
-        entry.subscribers.delete(listener)
+        subscribers.delete(listener)
       }
     }
   }
@@ -400,6 +431,36 @@ export class ForesightManager {
         listener()
       } catch (error) {
         console.error(`Error in element subscriber for ${next.name}:`, error)
+      }
+    }
+
+    return next
+  }
+
+  /**
+   * Replace the immutable geometry ref for an element and notify bounds
+   * subscribers. No-op when both rects are content-equal. Preserves the
+   * stable-reference contract, mirroring {@link updateElementState}.
+   *
+   * When a single trigger changes both geometry and logical state (position
+   * change, hitSlop update), bounds must be updated BEFORE the state patch so
+   * state subscribers always read fresh geometry.
+   */
+  private updateElementBounds(entry: ForesightElementInternal, next: ElementBounds): ElementBounds {
+    const current = entry.bounds
+    if (
+      areRectsEqual(next.originalRect, current.originalRect) &&
+      areRectsEqual(next.expandedRect, current.expandedRect)
+    ) {
+      return current
+    }
+
+    entry.bounds = next
+    for (const listener of entry.boundsSubscribers) {
+      try {
+        listener()
+      } catch (error) {
+        console.error(`Error in element bounds subscriber for ${entry.state.name}:`, error)
       }
     }
 
@@ -447,6 +508,7 @@ export class ForesightManager {
 
     this.elementEntries.delete(element)
     entry.subscribers.clear()
+    entry.boundsSubscribers.clear()
 
     const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
     if (wasLastRegisteredElement) {
@@ -915,18 +977,10 @@ export class ForesightManager {
    */
   private forceUpdateElementBounds(entry: ForesightElementInternal): void {
     const newOriginalRect = entry.element.getBoundingClientRect()
-    const expandedRect = getExpandedRect(newOriginalRect, entry.state.elementBounds.hitSlop)
 
-    if (areRectsEqual(expandedRect, entry.state.elementBounds.expandedRect)) {
-      return
-    }
-
-    this.updateElementState(entry, {
-      elementBounds: {
-        hitSlop: entry.state.elementBounds.hitSlop,
-        originalRect: newOriginalRect,
-        expandedRect,
-      },
+    this.updateElementBounds(entry, {
+      originalRect: newOriginalRect,
+      expandedRect: getExpandedRect(newOriginalRect, entry.state.hitSlop),
     })
   }
 

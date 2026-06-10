@@ -160,7 +160,7 @@ ForesightManager.instance.register({
 
 ## Registration Return Value
 
-The `register()` method returns the full `ForesightElementState` snapshot of the element at registration time, plus three functions: `unregister()`, `subscribe(listener)`, and `getSnapshot()`. When a single element is passed, it returns a `ForesightRegisterResult`. When a `NodeList` is passed, it returns `ForesightRegisterResult[]`.
+The `register()` method returns the full `ForesightElementState` snapshot of the element at registration time, plus five functions: `unregister()`, `subscribe(listener)`, `getSnapshot()`, `subscribeToBounds(listener)`, and `getBounds()`. When a single element is passed, it returns a `ForesightRegisterResult`. When a `NodeList` is passed, it returns `ForesightRegisterResult[]`.
 
 **TypeScript Type:** `ForesightRegisterResult` or `ForesightRegisterResult[]`
 
@@ -189,11 +189,19 @@ Removes the element from `ForesightManager`'s tracking. Call this when you perma
 
 #### `subscribe(listener)`
 
-Subscribes to state changes for this element. The listener is called every time the state snapshot is replaced. Returns an unsubscribe function. Together with `getSnapshot` this makes the state usable as an external store (e.g. React's `useSyncExternalStore`).
+Subscribes to logical state changes for this element. The listener is called every time the state snapshot is replaced - never for geometry-only changes during scroll/resize, which live on the separate bounds channel (`subscribeToBounds`). Returns an unsubscribe function. Together with `getSnapshot` this makes the state usable as an external store (e.g. React's `useSyncExternalStore`) without any scroll-induced re-renders.
 
 #### `getSnapshot()`
 
-Returns the current immutable `ForesightElementState` snapshot for this element. The snapshot reference is replaced (never mutated) on every change, so the properties spread on the return value itself are only current as of registration; use `getSnapshot()` (optionally with `subscribe`) for the up-to-date state.
+Returns the current immutable `ForesightElementState` snapshot for this element. The snapshot reference is replaced (never mutated) on every logical change, so the properties spread on the return value itself are only current as of registration; use `getSnapshot()` (optionally with `subscribe`) for the up-to-date state.
+
+#### `subscribeToBounds(listener)`
+
+Subscribes to geometry changes for this element. The listener is called every time the element's position or size changes, which is every scroll/resize tick while the element is visible. Returns an unsubscribe function.
+
+#### `getBounds()`
+
+Returns the current immutable `ElementBounds` snapshot for this element: its measured `originalRect` and the hitSlop-expanded `expandedRect` used for interaction detection.
 
 ---
 
@@ -206,6 +214,7 @@ The `ForesightElementState` fields, also passed to your [`callback`](#callback):
 | `id`                         | `string`                            | Unique identifier assigned during registration.                                                                                                                                                                                                                         |
 | `name`                       | `string`                            | Human-readable name for debugging, set via the [`name`](#name) option.                                                                                                                                                                                                  |
 | `meta`                       | `Record<string, unknown>`           | Arbitrary user-supplied metadata, set via the [`meta`](#meta) option.                                                                                                                                                                                                   |
+| `hitSlop`                    | `Exclude<HitSlop, number>`          | The normalized hit slop applied to this element, set via the [`hitSlop`](#hitslop) option. The element's rects are not part of the state, read them via `getBounds()`.                                                                                                  |
 | `isRegistered`               | `boolean`                           | Whether the element is currently tracked by the manager. Stays `true` from registration until it is explicitly unregistered. Detaching the element from the DOM does **not** unregister it: it is parked (kept registered but inactive) and resumes when it reconnects. |
 | `isActive`                   | `boolean`                           | Whether the element is currently eligible to fire its callback. `false` when the element is disabled (`isEnabled: false`), on a limited connection, or parked (`isParked: true`).                                                                                       |
 | `isParked`                   | `boolean`                           | `true` while the element is detached from the DOM and parked: kept registered but inactive. Becomes `false` again when the element reconnects and resumes.                                                                                                              |

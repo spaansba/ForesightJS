@@ -298,13 +298,7 @@ export class SingleElement extends LitElement {
       return ""
     }
 
-    const { elementBounds, ...rest } = this.state
-
-    return JSON.stringify(
-      { ...rest, status: this.getStatusText(), hitSlop: elementBounds.hitSlop },
-      null,
-      2
-    )
+    return JSON.stringify({ ...this.state, status: this.getStatusText() }, null, 2)
   }
 
   private handleUnregister = (e: MouseEvent) => {

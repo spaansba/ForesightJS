@@ -173,7 +173,7 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
           name: event.state.name,
           id: event.element.id || "",
           state: event.state,
-          hitslop: event.state.elementBounds.hitSlop,
+          hitslop: event.state.hitSlop,
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           meta: event.state.meta,
           logId: logId,

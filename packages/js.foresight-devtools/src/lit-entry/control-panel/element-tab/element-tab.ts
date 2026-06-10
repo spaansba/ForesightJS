@@ -204,28 +204,6 @@ export class ElementTab extends LitElement {
     return lines.join("\n")
   }
 
-  /**
-   * The list doesn't render element rects (only hit slop), so rect-only state
-   * patches — fired for every element on every scroll/resize tick — are
-   * filtered out before they can schedule any work.
-   */
-  private _affectsElementList(
-    previous: ForesightElementState,
-    next: ForesightElementState
-  ): boolean {
-    if (previous === next) {
-      return false
-    }
-
-    for (const key of Object.keys(next) as (keyof ForesightElementState)[]) {
-      if (key !== "elementBounds" && next[key] !== previous[key]) {
-        return true
-      }
-    }
-
-    return next.elementBounds.hitSlop !== previous.elementBounds.hitSlop
-  }
-
   private _subscribeToElement(element: ForesightElement): void {
     if (this._elementSubscriptions.has(element)) {
       return
@@ -234,11 +212,6 @@ export class ElementTab extends LitElement {
     const unsubscribe = ForesightManager.instance.subscribeToElement(element, () => {
       const state = ForesightManager.instance.registeredElements.get(element)
       if (!state || !state.isRegistered) {
-        return
-      }
-
-      const known = this._pendingElementUpdates.get(element) ?? this.elementListItems.get(element)
-      if (known && !this._affectsElementList(known, state)) {
         return
       }
 

@@ -42,16 +42,15 @@ export type TrajectoryPositions = {
 }
 
 /**
- * Internal type representing the calculated boundaries of a foresight element,
- * including its original dimensions and the expanded hit area.
+ * Immutable geometry snapshot for a registered element. Replaced (never mutated)
+ * whenever the element's position or size changes, which happens on every
+ * scroll/resize tick for visible elements.
  */
-type ElementBounds = {
+export type ElementBounds = {
   /** The expanded rectangle, including hitSlop, used for interaction detection. */
   expandedRect: Readonly<Rect>
   /** The original bounding rectangle of the element, as returned by `getBoundingClientRect()`. */
   originalRect: DOMRectReadOnly
-  /** The hit slop values applied to this element. */
-  hitSlop: Exclude<HitSlop, number>
 }
 
 /**
@@ -66,8 +65,9 @@ export type ForesightElementState = {
   name: string
   /** Arbitrary user-supplied metadata. */
   meta: Record<string, unknown>
-  /** The boundary information for the element. */
-  elementBounds: ElementBounds
+  /** The normalized hit slop applied to this element. The element's rects live in
+   * {@link ElementBounds} (see `getBounds`/`subscribeToBounds`), not in this snapshot. */
+  hitSlop: Exclude<HitSlop, number>
   /** Whether the user has connection limitations (network slower than minimum connection type (default: 3g) or data saver enabled) that prevent prefetching. */
   isLimitedConnection: boolean
   /** Whether the element is currently intersecting the viewport. */
@@ -112,13 +112,25 @@ export type ForesightRegisterResult = ForesightElementState & {
    */
   unregister: () => void
   /**
-   * Subscribe to state changes for this element. Returns an unsubscribe function.
+   * Subscribe to logical state changes for this element. Never fires for
+   * geometry-only changes (scroll/resize), use `subscribeToBounds` for those.
+   * Returns an unsubscribe function.
    */
   subscribe: (listener: () => void) => () => void
   /**
    * Returns the current immutable state snapshot for this element.
+   * The reference only changes when logical state changes - never on scroll.
    */
   getSnapshot: () => ForesightElementState
+  /**
+   * Subscribe to geometry changes for this element (position/size, fired on
+   * every scroll/resize tick while visible). Returns an unsubscribe function.
+   */
+  subscribeToBounds: (listener: () => void) => () => void
+  /**
+   * Returns the current immutable geometry snapshot for this element.
+   */
+  getBounds: () => ElementBounds
 }
 
 /**
@@ -126,8 +138,10 @@ export type ForesightRegisterResult = ForesightElementState & {
  * Not exposed to consumers.
  */
 export type ForesightElementInternal = {
-  /** Current immutable public state ref. Replaced on every change. */
+  /** Current immutable public state ref. Replaced on every logical change. */
   state: ForesightElementState
+  /** Current immutable geometry ref. Replaced on every position/size change. */
+  bounds: ElementBounds
   /** Timestamp the callback was last invoked. */
   invokedAt: number | undefined
   /** Timestamp the callback last completed. */
@@ -140,6 +154,8 @@ export type ForesightElementInternal = {
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
   /** Listeners notified whenever `state` is replaced. */
   subscribers: Set<() => void>
+  /** Listeners notified whenever `bounds` is replaced. */
+  boundsSubscribers: Set<() => void>
 }
 
 export type callbackStatus = "error" | "success" | undefined

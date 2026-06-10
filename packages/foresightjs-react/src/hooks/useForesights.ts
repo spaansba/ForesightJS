@@ -132,17 +132,40 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
         return NOOP_SUBSCRIBE()
       }
 
-      const unsubs: (() => void)[] = []
-      for (const [, result] of resultsList) {
-        unsubs.push(result.subscribe(onStoreChange))
+      // A single scroll tick notifies every registered element; coalesce them
+      // into one snapshot check per microtask instead of one per element.
+      let scheduled = false
+      let disposed = false
+      const coalescedStoreChange = () => {
+        if (scheduled) {
+          return
+        }
+
+        scheduled = true
+        queueMicrotask(() => {
+          scheduled = false
+          if (!disposed) {
+            onStoreChange()
+          }
+        })
       }
 
-      return () => unsubs.forEach(u => u())
+      const unsubs: (() => void)[] = []
+      for (const [, result] of resultsList) {
+        unsubs.push(result.subscribe(coalescedStoreChange))
+      }
+
+      return () => {
+        disposed = true
+        unsubs.forEach(u => u())
+      }
     },
     [resultsList]
   )
 
-  // getSnapshot must return a referentially stable value when nothing changed.
+  // getSnapshot must return a referentially stable array when nothing changed.
+  // Manager snapshot identities only change on logical state changes (geometry
+  // lives on a separate bounds channel), so a plain reference compare suffices.
   const getSnapshot = useCallback((): ForesightElementState[] => {
     const length = optionsRef.current.length
     const cached = cachedSnapshotsRef.current
@@ -152,7 +175,7 @@ export const useForesights = <T extends HTMLElement = HTMLElement>(
       for (let i = 0; i < length; i++) {
         const result = resultsList.get(i)
         const current = result?.getSnapshot() ?? INITIAL_SNAPSHOT
-        if (current !== cached[i]) {
+        if (cached[i] !== current) {
           changed = true
           break
         }
