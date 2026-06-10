@@ -10,11 +10,14 @@ keywords:
   - Installation
 description: Install the official Vue bindings for ForesightJS
 last_updated:
-  date: 2026-06-08
+  date: 2026-06-10
   author: Bart Spaans
 ---
 
 # Installation
+
+[![npm version](https://img.shields.io/npm/v/@foresightjs/vue.svg)](https://www.npmjs.com/package/@foresightjs/vue)
+[![npm downloads](https://img.shields.io/npm/dt/@foresightjs/vue.svg)](https://www.npmjs.com/package/@foresightjs/vue)
 
 `@foresightjs/vue` is the official Vue 3 package for ForesightJS. It ships the [`v-foresight`](./directive.md) directive for the common case, plus the [`useForesight`](./useForesight.md), [`useForesights`](./useForesights.md) and [`useForesightEvent`](./useForesightEvent.md) composables when you want the element's prediction state.
 
