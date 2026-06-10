@@ -45,7 +45,7 @@ ForesightManager.instance.register({
     docsLink: "/docs/react/installation",
     docsLabel: "React docs",
     disclaimer:
-      "@foresightjs/react is published as 0.1.0 - it works and is tested, but the API may still change.",
+      "@foresightjs/react is in beta, it works and is tested, but the API may still change.",
     code: `import { useForesight } from '@foresightjs/react'
 
 function PrefetchLink() {
@@ -65,7 +65,7 @@ function PrefetchLink() {
     docsLink: "/docs/vue/installation",
     docsLabel: "Vue docs",
     disclaimer:
-      "@foresightjs/vue is published as 0.1.0 - it works and is tested, but the API may still change.",
+      "@foresightjs/vue is in beta, it works and is tested, but the API may still change.",
     code: `<script setup lang="ts">
 import { useForesight } from '@foresightjs/vue'
 
