@@ -39,7 +39,7 @@ export class ReactivateCountdown extends LitElement {
   ]
 
   @property({ attribute: false }) element!: ForesightElement
-  @property({ attribute: false, hasChanged: () => true }) state!: ForesightElementState
+  @property({ attribute: false }) state!: ForesightElementState
   @state()
   private remainingTime: number = 0
 

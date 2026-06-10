@@ -1,6 +1,7 @@
 import { LitElement, html, css, PropertyValues } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import type { SerializedEventData } from "../../../helpers/safeSerializeEventData"
+import { EVENT_COLORS } from "./log-store"
 import "../base-tab/expandable-item"
 
 @customElement("single-log")
@@ -112,18 +113,7 @@ export class SingleLog extends LitElement {
   }
 
   private getLogTypeColor(logType: string): string {
-    const colorMap: Record<string, string> = {
-      elementRegistered: "#2196f3",
-      callbackInvoked: "#00bcd4",
-      callbackCompleted: "#4caf50",
-      elementUnregistered: "#ff9800",
-      managerSettingsChanged: "#f44336",
-      mouseTrajectoryUpdate: "#78909c",
-      scrollTrajectoryUpdate: "#607d8b",
-      deviceStrategyChanged: "#9c27b0",
-    }
-
-    return colorMap[logType] || "#555"
+    return (EVENT_COLORS as Record<string, string>)[logType] || "#555"
   }
 
   private getEventDisplayName(eventType: string): string {

@@ -18,6 +18,10 @@ type HitSlop = ForesightElementState["elementBounds"]["hitSlop"]
 interface ElementOverlay {
   nameLabel: HTMLElement
   slopArea: HTMLElement
+  /** Last applied document-coordinate rect; unchanged means no style writes needed. */
+  lastSlopRect: { left: number; top: number; width: number; height: number } | null
+  /** Size + hit slop the cached border radius was computed for. */
+  lastRadiusKey: string | null
 }
 
 interface CallbackAnimation {
@@ -36,12 +40,16 @@ export class ElementOverlays extends LitElement {
 
   static styles = [
     css`
+      /* Anchored to the document origin (initial containing block), not the
+         viewport: overlays are placed in document coordinates so the compositor
+         moves them together with the page content during scroll, instead of
+         JS chasing the scroll position a frame behind. */
       :host {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 0;
+        height: 0;
         pointer-events: none;
         z-index: 9999;
       }
@@ -227,7 +235,7 @@ export class ElementOverlays extends LitElement {
     nameLabel.className = "name-label"
     this.containerElement.appendChild(slopArea)
     this.containerElement.appendChild(nameLabel)
-    const overlay = { nameLabel, slopArea }
+    const overlay = { nameLabel, slopArea, lastSlopRect: null, lastRadiusKey: null }
     this.overlayMap.set(element, overlay)
 
     return overlay
@@ -270,11 +278,36 @@ export class ElementOverlays extends LitElement {
     state: ForesightElementState
   ): void {
     const { expandedRect, hitSlop } = state.elementBounds
+    // The manager reports viewport-relative rects; convert to document
+    // coordinates, which stay constant during scroll.
+    const left = expandedRect.left + window.scrollX
+    const top = expandedRect.top + window.scrollY
+    const width = expandedRect.right - expandedRect.left
+    const height = expandedRect.bottom - expandedRect.top
+
+    const last = overlay.lastSlopRect
+    if (
+      last &&
+      last.left === left &&
+      last.top === top &&
+      last.width === width &&
+      last.height === height
+    ) {
+      return
+    }
+
+    overlay.lastSlopRect = { left, top, width, height }
+
     const { style } = overlay.slopArea
-    style.transform = `translate3d(${expandedRect.left}px, ${expandedRect.top}px, 0)`
-    style.width = `${expandedRect.right - expandedRect.left}px`
-    style.height = `${expandedRect.bottom - expandedRect.top}px`
-    style.borderRadius = this.expandedBorderRadius(element, hitSlop)
+    style.transform = `translate3d(${left}px, ${top}px, 0)`
+    style.width = `${width}px`
+    style.height = `${height}px`
+
+    const radiusKey = `${width}|${height}|${hitSlop.top}|${hitSlop.right}|${hitSlop.bottom}|${hitSlop.left}`
+    if (overlay.lastRadiusKey !== radiusKey) {
+      overlay.lastRadiusKey = radiusKey
+      style.borderRadius = this.expandedBorderRadius(element, hitSlop)
+    }
   }
 
   private updateNameLabel(overlay: ElementOverlay, state: ForesightElementState): void {
@@ -286,8 +319,8 @@ export class ElementOverlays extends LitElement {
     } else {
       nameLabel.textContent = state.name
       nameLabel.style.display = "block"
-      nameLabel.style.transform = `translate3d(${expandedRect.left}px, ${
-        expandedRect.top - 25
+      nameLabel.style.transform = `translate3d(${expandedRect.left + window.scrollX}px, ${
+        expandedRect.top - 25 + window.scrollY
       }px, 0)`
     }
   }

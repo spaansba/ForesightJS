@@ -1,12 +1,12 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { classMap } from "lit/directives/class-map.js"
 import { ForesightManager } from "js.foresight"
 
 import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
+import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
 
@@ -87,20 +87,12 @@ export class ControlPanel extends LitElement {
       overflow: hidden;
     }
 
-    .tab-container.hidden {
-      display: none;
-    }
-
     .tab-content {
       flex: 1;
       position: relative;
     }
 
     .tab-content > * {
-      display: none;
-    }
-
-    .tab-content > .active {
       display: flex;
       position: absolute;
       top: 0;
@@ -177,6 +169,8 @@ export class ControlPanel extends LitElement {
     this._abortController = new AbortController()
     const { signal } = this._abortController
 
+    getEventLogStore().attach()
+
     ForesightManager.instance.addEventListener(
       "deviceStrategyChanged",
       e => {
@@ -202,6 +196,7 @@ export class ControlPanel extends LitElement {
     super.disconnectedCallback()
     this._abortController?.abort()
     this._abortController = null
+    getEventLogStore().detach()
   }
 
   private getStoredTab(): ControllerTabs {
@@ -269,6 +264,22 @@ export class ControlPanel extends LitElement {
     return this.isMinimized ? "+" : "−"
   }
 
+  /**
+   * Only the active tab is mounted; hidden tabs would otherwise keep their
+   * manager listeners and element subscriptions running invisibly.
+   */
+  private renderActiveTab() {
+    switch (this.activeTab) {
+      case "elements":
+        return html`<element-tab></element-tab>`
+      case "settings":
+        return html`<settings-tab></settings-tab>`
+      case "logs":
+      default:
+        return html`<log-tab></log-tab>`
+    }
+  }
+
   protected render() {
     return html`
       <div class="control-wrapper ${this.corner} ${this.isMinimized ? "minimized" : ""}">
@@ -296,20 +307,18 @@ export class ControlPanel extends LitElement {
           </button>
         </div>
 
-        <div class="tab-container ${this.isMinimized ? "hidden" : ""}">
-          <tab-selector
-            .activeTab="${this.activeTab}"
-            @tab-change="${this._handleTabChange}"
-          ></tab-selector>
+        ${this.isMinimized
+          ? ""
+          : html`
+              <div class="tab-container">
+                <tab-selector
+                  .activeTab="${this.activeTab}"
+                  @tab-change="${this._handleTabChange}"
+                ></tab-selector>
 
-          <div class="tab-content">
-            <log-tab class=${classMap({ active: this.activeTab === "logs" })}></log-tab>
-            <element-tab class=${classMap({ active: this.activeTab === "elements" })}></element-tab>
-            <settings-tab
-              class=${classMap({ active: this.activeTab === "settings" })}
-            ></settings-tab>
-          </div>
-        </div>
+                <div class="tab-content">${this.renderActiveTab()}</div>
+              </div>
+            `}
       </div>
     `
   }

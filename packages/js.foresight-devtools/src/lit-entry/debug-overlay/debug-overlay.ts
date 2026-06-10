@@ -60,13 +60,20 @@ export class DebugOverlay extends LitElement {
           ? html`
               <mouse-trajectory ?hidden=${!this.showMouseTrajectory}></mouse-trajectory>
               <scroll-trajectory ?hidden=${!this.showScrollTrajectory}></scroll-trajectory>
-              <element-overlays
-                ?hidden=${!this.showElementOverlays}
-                .showNameTags=${this.showNameTags}
-              ></element-overlays>
             `
           : ""}
       </div>
+      <!-- element-overlays positions itself in document coordinates and must stay
+           outside #overlay-container: the fixed container would become its
+           containing block and pin it back to the viewport. -->
+      ${this._strategy === "mouse"
+        ? html`
+            <element-overlays
+              ?hidden=${!this.showElementOverlays}
+              .showNameTags=${this.showNameTags}
+            ></element-overlays>
+          `
+        : ""}
     `
   }
 }
