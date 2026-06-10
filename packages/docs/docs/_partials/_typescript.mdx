@@ -1,0 +1,112 @@
+## Most Used Internal types
+
+### ForesightElementState
+
+This is the main type used in ForesightJS: the flat, immutable state snapshot of a registered element. Your [callback](#foresightcallback) receives it, most [events](../events.md) carry it as `state`, and `register()` returns it (plus a few functions, see [ForesightRegisterResult](#foresightregisterresult)). The reference is replaced on every change, never mutated.
+
+```TS
+type ForesightElementState = {
+  id: string // unique id assigned during registration
+  name: string // name visible in the devtools
+  meta: Record<string, unknown> // your custom meta data
+  elementBounds: {
+    originalRect: DOMRectReadOnly
+    hitSlop: Exclude<HitSlop, number>
+    expandedRect: Readonly<Rect> // originalRect + hitSlop
+  }
+  isLimitedConnection: boolean
+  isIntersectingWithViewport: boolean
+  isRegistered: boolean
+  isActive: boolean
+  isEnabled: boolean
+  isPredicted: boolean
+  isCallbackRunning: boolean
+  hitCount: number
+  registerCount: number // amount of times this element has been (re)registered
+  durationMs: number | undefined // duration of the most recent callback run
+  status: "error" | "success" | undefined // status of the most recent callback
+  error: string | null
+  reactivateAfter: number
+}
+```
+
+See the [registration return value](../configuration/registration-options.md#registration-return-value) for what each field means.
+
+### ForesightRegisterResult
+
+What `ForesightManager.instance.register()` returns: the element's state at registration time plus control functions.
+
+```TS
+type ForesightRegisterResult = ForesightElementState & {
+  unregister: () => void
+  subscribe: (listener: () => void) => () => void // returns an unsubscribe function
+  getSnapshot: () => ForesightElementState // current state snapshot
+}
+```
+
+### CallbackHitType
+
+```typescript
+type CallbackHitType =
+  | { kind: "mouse"; subType: "hover" | "trajectory" }
+  | { kind: "tab"; subType: "forwards" | "reverse" }
+  | { kind: "scroll"; subType: "up" | "down" | "left" | "right" }
+  | { kind: "touch"; subType?: string }
+  | { kind: "viewport"; subType?: string }
+```
+
+### CurrentDeviceStrategy
+
+Represents the current input method being used. ForesightJS automatically detects and switches between strategies.
+
+```typescript
+type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
+```
+
+### ForesightManagerData
+
+Snapshot of the current ForesightManager state, including all [global settings](../configuration/global-settings.md), registered elements, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+
+This data is returned in the [`managerSettingsChanged`](../events.md) event or by calling [`ForesightManager.instance.getManagerData`](../debugging/static-properties.md#foresightmanagerinstancegetmanagerdata) manually.
+
+```TS
+type ForesightManagerData = {
+  registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> // See above for ForesightElementState
+  globalSettings: Readonly<ForesightManagerSettings> // See configuration for global settings
+  globalCallbackHits: Readonly<CallbackHits> // See above for CallbackHitType, this is that but all of them combined
+  eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]> // All event listeners currently listening
+  currentDeviceStrategy: CurrentDeviceStrategy
+  activeElementCount: number
+  loadedModules: ForesightModules // which handlers/predictors are lazily loaded
+}
+```
+
+## Helper Types
+
+### ForesightCallback
+
+The callback function type used when registering elements. Receives the [`ForesightElementState`](#foresightelementstate) of the element that triggered the callback.
+
+```typescript
+type ForesightCallback = (state: ForesightElementState) => void
+```
+
+This is useful when registering multiple elements with a shared callback, as you can identify which element triggered it:
+
+```typescript
+const myCallback: ForesightCallback = state => {
+  console.log(`Triggered by: ${state.name}`)
+}
+```
+
+### ForesightRegisterOptionsWithoutElement
+
+Useful for if you want to create a custom button component in a modern framework (for example React). And you want to have the `ForesightRegisterOptions` used in `ForesightManager.instance.register({})` without the element as the element will be the ref of the component.
+
+This type is the options object you pass to the [`useForesight`](../react/useForesight.md) hook in React and the [`useForesight`](../vue/useForesight.md) composable in Vue.
+
+```typescript
+type ForesightButtonProps = {
+  registerOptions: ForesightRegisterOptionsWithoutElement
+}
+```

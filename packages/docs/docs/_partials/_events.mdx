@@ -1,0 +1,164 @@
+## Available Events
+
+### Interaction Events
+
+Events fired when user interactions trigger callbacks.
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#22c55e', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>callbackInvoked</code>
+
+Fired **before** an element's callback is executed
+
+```typescript
+type CallbackInvokedEvent = {
+  type: "callbackInvoked"
+  timestamp: number
+  element: ForesightElement
+  state: ForesightElementState
+  hitType: CallbackHitType
+}
+```
+
+**Related Types:** [`CallbackHitType`](../getting-started/typescript.md#callbackhittype) • [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#22c55e', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>callbackCompleted</code>
+
+Fired **after** an element's callback is executed
+
+```typescript
+type CallbackCompletedEvent = {
+  type: "callbackCompleted"
+  timestamp: number
+  element: ForesightElement
+  state: ForesightElementState
+  hitType: CallbackHitType
+  elapsed: number // Time between callbackInvoked and callbackCompleted
+  status: "success" | "error" | undefined
+  errorMessage: string | null
+  wasLastActiveElement: boolean
+}
+```
+
+**Related Types:** [`CallbackHitType`](../getting-started/typescript.md#callbackhittype) • [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
+
+### Element Lifecycle Events
+
+Events fired during element registration, updates, and cleanup.
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementRegistered</code>
+
+Fired when an element is successfully registered with `ForesightManager` using `ForesightManager.instance.register(element)`.
+
+```typescript
+type ElementRegisteredEvent = {
+  type: "elementRegistered"
+  timestamp: number
+  element: ForesightElement
+  state: ForesightElementState
+}
+```
+
+**Related Types:** [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementUnregistered</code>
+
+Fired when an element is removed from `ForesightManager`'s tracking via `ForesightManager.instance.unregister(element)`. Detaching an element from the DOM no longer unregisters it. It is parked (kept registered but inactive) and resumed on reattach, so no `elementUnregistered` event fires for that. The `"disconnected"` reason is therefore no longer emitted.
+
+```typescript
+type ElementUnregisteredEvent = {
+  type: "elementUnregistered"
+  timestamp: number
+  element: ForesightElement
+  state: ForesightElementState
+  unregisterReason: "disconnected" | "apiCall" | "devtools" | (string & {})
+  wasLastRegisteredElement: boolean
+}
+```
+
+**Related Types:** [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
+
+---
+
+### Prediction Events
+
+Events fired during movement prediction calculations.
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#8b5cf6', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>mouseTrajectoryUpdate</code>
+
+Fired during mouse movement for trajectory calculations
+
+```typescript
+type MouseTrajectoryUpdateEvent = {
+  type: "mouseTrajectoryUpdate"
+  trajectoryPositions: {
+    positions: CircularBuffer<MousePosition> // mouse position history
+    currentPoint: { x: number; y: number }
+    predictedPoint: { x: number; y: number }
+  }
+  predictionEnabled: boolean
+}
+```
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#8b5cf6', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>scrollTrajectoryUpdate</code>
+
+Fired during scroll events when scroll prediction is active
+
+```typescript
+type ScrollTrajectoryUpdateEvent = {
+  type: "scrollTrajectoryUpdate"
+  currentPoint: Point // { x: number; y: number }
+  predictedPoint: Point // { x: number; y: number }
+  scrollDirection: ScrollDirection // "down" | "up" | "left" | "right"
+}
+```
+
+---
+
+### Configuration Events
+
+Events fired when ForesightManager configuration changes.
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#f59e0b', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>managerSettingsChanged</code>
+
+Fired when global `ForesightManager` settings are updated via the devtools or via `ForesightManager.instance.alterGlobalSettings()`.
+
+```typescript
+type ManagerSettingsChangedEvent = {
+  type: "managerSettingsChanged"
+  timestamp: number
+  managerData: Readonly<ForesightManagerData>
+  updatedSettings: UpdatedManagerSetting[]
+}
+```
+
+**Related Types:** [`ForesightManagerData`](../getting-started/typescript.md#foresightmanagerdata)
+
+---
+
+#### <code style={{backgroundColor: '#1e293b', color: '#f59e0b', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>deviceStrategyChanged</code>
+
+Fired when user switches between input methods (mouse, touch, or pen).
+
+```typescript
+type DeviceStrategyChangedEvent = {
+  type: "deviceStrategyChanged"
+  timestamp: number
+  newStrategy: CurrentDeviceStrategy // "mouse" | "touch" | "pen"
+  oldStrategy: CurrentDeviceStrategy // "mouse" | "touch" | "pen"
+}
+```
+
+---

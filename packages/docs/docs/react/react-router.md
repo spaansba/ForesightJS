@@ -1,4 +1,5 @@
 ---
+sidebar_position: 6
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -9,7 +10,7 @@ keywords:
   - PrefetchPageLinks
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
-  date: 2025-11-30
+  date: 2026-06-08
   author: Bart Spaans
 ---
 
@@ -17,45 +18,47 @@ last_updated:
 
 ## React Router's Prefetching
 
-React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesnt have the same flexibility as ForesightJS. To add ForesightJS to React Router you can create a `ForesightLink` component wrapping the `Link` component.
+React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesnt have the same flexibility as ForesightJS. To add ForesightJS to React Router you can wrap the `Link` component.
 
 ## ForesightLink Component
 
-Below is an example of creating an wrapper around the React Router `Link` component that prefetches with ForesightJS. On mobile devices ForesightJS uses the configured [`touchDeviceStrategy`](/docs/configuration/global-settings#touch-device-settings-v330). This implementation uses the `useForesight` react hook which can be found [here](/docs/react/hook).
+Below is a wrapper around the React Router `Link` that prefetches with ForesightJS using the [`useForesight`](./useForesight.md) hook. The callback flips a flag that renders `PrefetchPageLinks` for the target route. On mobile devices ForesightJS falls back to the configured [`touchDeviceStrategy`](./configuration/global-settings.md#touch-device-settings).
 
 ```tsx
-import type { ForesightRegisterOptions } from "js.foresight"
+import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
 import { useState } from "react"
 import { Link, PrefetchPageLinks, type LinkProps } from "react-router"
-import useForesight from "./useForesight"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptions, "element" | "callback"> {
+  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
   children: React.ReactNode
   className?: string
 }
 
-export function ForesightLink({ children, className, ...props }: ForesightLinkProps) {
+export function ForesightLink({
+  children,
+  className,
+  hitSlop,
+  name,
+  meta,
+  reactivateAfter,
+  enabled,
+  ...props
+}: ForesightLinkProps) {
   const [shouldPrefetch, setShouldPrefetch] = useState(false)
-  const { elementRef, registerResults } = useForesight<HTMLAnchorElement>({
-    callback: () => {
-      setShouldPrefetch(true)
-    },
-    hitSlop: props.hitSlop,
-    name: props.name,
-    meta: props.meta,
-    reactivateAfter: props.reactivateAfter,
+  const { elementRef } = useForesight<HTMLAnchorElement>({
+    callback: () => setShouldPrefetch(true),
+    hitSlop,
+    name,
+    meta,
+    reactivateAfter,
+    enabled,
   })
 
   return (
     <>
       {shouldPrefetch && <PrefetchPageLinks page={props.to.toString()} />}
-      <Link
-        {...props}
-        prefetch={registerResults?.isTouchDevice ? "render" : "none"}
-        ref={elementRef}
-        className={className}
-      >
+      <Link {...props} ref={elementRef} className={className}>
         {children}
       </Link>
     </>

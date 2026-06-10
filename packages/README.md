@@ -16,11 +16,27 @@ Visual development tools for ForesightJS. Provides an overlay system with trajec
 
 **Published as:** `js.foresight-devtools` on npm
 
+## Framework Packages
+
+> These packages are at `0.1.0` and not yet stable. They work and are fully tested, but their APIs may still change.
+
+### [foresightjs-react](./foresightjs-react/)
+
+Official React bindings: the `useForesight`, `useForesights` and `useForesightEvent` hooks. Registers elements with the `ForesightManager` from React components and exposes their reactive prediction state.
+
+**Published as:** `@foresightjs/react` on npm
+
+### [foresightjs-vue](./foresightjs-vue/)
+
+Official Vue 3 bindings: the `v-foresight` directive plus the `useForesight`, `useForesights` and `useForesightEvent` composables.
+
+**Published as:** `@foresightjs/vue` on npm
+
 ## Development Packages
 
-### [devpage](./devpage/)
+### [devpage-react](./devpage-react/) · [devpage-vue](./devpage-vue/) · [devpage-nextjs](./devpage-nextjs/)
 
-React/Vite development environment for testing and debugging ForesightJS during development. Used by maintainers for live testing with immediate feedback.
+Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback.
 
 ### [docs](./docs/)
 

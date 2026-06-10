@@ -30,6 +30,12 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           editUrl: "https://github.com/spaansba/ForesightJS/tree/main/packages/docs",
+          lastVersion: "current",
+          versions: {
+            current: {
+              label: "4.0",
+            },
+          },
         },
         // blog: {
         //   showReadingTime: true,

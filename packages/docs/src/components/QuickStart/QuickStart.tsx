@@ -1,8 +1,91 @@
+import { useState } from "react"
 import Link from "@docusaurus/Link"
 import { Highlight, themes } from "prism-react-renderer"
 import styles from "./quickstart.module.css"
 
+type Tab = {
+  id: string
+  label: string
+  language: string
+  code: string
+  docsLink: string
+  docsLabel: string
+  disclaimer?: string
+}
+
+const TABS: Tab[] = [
+  {
+    id: "js",
+    label: "JavaScript",
+    language: "javascript",
+    docsLink: "/docs/getting-started/quick-start",
+    docsLabel: "JavaScript docs",
+    code: `import { ForesightManager } from 'js.foresight'
+
+// Initialize the manager if you want custom settings (optional)
+ForesightManager.initialize({
+  touchDeviceStrategy: "viewport",
+  tabOffset: 5,
+})
+
+// Register an element for prediction
+const myLink = document.querySelector('#my-link')
+
+ForesightManager.instance.register({
+  element: myLink,
+  callback: () => {
+    console.log('User intent detected!')
+  },
+})`,
+  },
+  {
+    id: "react",
+    label: "React",
+    language: "tsx",
+    docsLink: "/docs/react/installation",
+    docsLabel: "React docs",
+    disclaimer:
+      "@foresightjs/react is published as 0.1.0 - it works and is tested, but the API may still change.",
+    code: `import { useForesight } from '@foresightjs/react'
+
+function PrefetchLink() {
+  const { elementRef } = useForesight<HTMLAnchorElement>({
+    callback: () => {
+      console.log('User intent detected!')
+    },
+  })
+
+  return <a ref={elementRef} href="/about">About</a>
+}`,
+  },
+  {
+    id: "vue",
+    label: "Vue",
+    language: "markup",
+    docsLink: "/docs/vue/installation",
+    docsLabel: "Vue docs",
+    disclaimer:
+      "@foresightjs/vue is published as 0.1.0 - it works and is tested, but the API may still change.",
+    code: `<script setup lang="ts">
+import { useForesight } from '@foresightjs/vue'
+
+const { setRef } = useForesight({
+  callback: () => {
+    console.log('User intent detected!')
+  },
+})
+</script>
+
+<template>
+  <a :ref="setRef" href="/about">About</a>
+</template>`,
+  },
+]
+
 export const QuickStart = () => {
+  const [activeTab, setActiveTab] = useState(TABS[0].id)
+  const tab = TABS.find(t => t.id === activeTab) ?? TABS[0]
+
   return (
     <section className={styles.quickStartSection}>
       <div className="container">
@@ -16,32 +99,18 @@ export const QuickStart = () => {
         <div className={styles.contentGrid}>
           <div className={styles.codeExample}>
             <div className={styles.codeHeader}>
-              <span>Basic Usage</span>
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`${styles.tab} ${t.id === activeTab ? styles.tabActive : ""}`}
+                  onClick={() => setActiveTab(t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
-            <Highlight
-              theme={themes.vsDark}
-              code={`import { ForesightManager } from 'js.foresight'
-
-// Initialize the manager if you want custom settings
-// Otherwise you can skip this step of initialization
-ForesightManager.initialize({
-  touchDeviceStrategy: "viewport",
-  tabOffset: 5
-})
-
-// Register an element for prediction
-const myLink = document.querySelector('#my-link')
-
-// Register a callback to be called when the user shows intent
-ForesightManager.instance.register({
-  element: myLink,
-  callback: () => {
-    console.log('User intent detected!')
-  }
-  // Optional: extra settings
-})`}
-              language="javascript"
-            >
+            <Highlight theme={themes.vsDark} code={tab.code} language={tab.language}>
               {({ className, style, tokens, getLineProps, getTokenProps }) => (
                 <pre className={`${styles.codeBlock} ${className}`} style={style}>
                   {tokens.map((line, i) => (
@@ -54,6 +123,12 @@ ForesightManager.instance.register({
                 </pre>
               )}
             </Highlight>
+            <div className={styles.codeFooter}>
+              {tab.disclaimer && <span className={styles.disclaimer}>{tab.disclaimer}</span>}
+              <Link to={tab.docsLink} className={styles.docsLink}>
+                {tab.docsLabel} →
+              </Link>
+            </div>
           </div>
 
           <div className={styles.features}>
@@ -82,31 +157,16 @@ ForesightManager.instance.register({
             <div className={styles.actions}>
               <Link
                 to="/docs/getting-started/what-is-foresightjs"
-                className="button button--primary"
+                className="site-btn site-btn--primary"
               >
                 Full Documentation
               </Link>
-              <Link to="/docs/configuration/global-settings" className="button button--secondary">
+              <Link
+                to="/docs/configuration/global-settings"
+                className="site-btn site-btn--secondary"
+              >
                 Configuration
               </Link>
-            </div>
-
-            <div className={styles.integrations}>
-              <h4>Premade Framework Integrations:</h4>
-              <div className={styles.integrationLinks}>
-                <Link to="/docs/react/nextjs" className={styles.integrationLink}>
-                  Next.js
-                </Link>
-                <Link to="/docs/react/react-router" className={styles.integrationLink}>
-                  React Router
-                </Link>
-                <Link to="/docs/vue/directive" className={styles.integrationLink}>
-                  Vue.js
-                </Link>
-                {/* <Link to="/docs/integrations/tanstack" className={styles.integrationLink}>
-                  TanStack Router
-                </Link>  */}
-              </div>
             </div>
           </div>
         </div>

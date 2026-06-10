@@ -1,0 +1,225 @@
+## Registration Parameters
+
+**TypeScript Type:** `ForesightRegisterOptions` or `ForesightRegisterOptionsWithoutElement` if you want to omit the `element`
+
+### Required Parameters
+
+#### `element`
+
+- **Type:** `element | NodeListOf<element>`
+- **Required:** Yes
+- **Description:** The DOM element (or a `NodeList` of elements) to monitor for user interactions. When a `NodeList` is passed, all elements are registered with the same callback and settings.
+
+```javascript
+// Single element
+const button = document.querySelector("#my-button")
+
+ForesightManager.instance.register({
+  element: button,
+  callback: () => {
+    /* prefetch logic */
+  },
+})
+
+// Multiple elements via NodeList
+const navLinks = document.querySelectorAll("nav a")
+
+ForesightManager.instance.register({
+  element: navLinks,
+  callback: state => {
+    /* state identifies which element triggered */
+  },
+})
+```
+
+---
+
+#### `callback`
+
+- **Type:** `(state: ForesightElementState) => void`
+- **Required:** Yes
+- **Description:** Function that executes when interaction is predicted or occurs. This is where your prefetching logic goes. The callback receives the [`ForesightElementState`](#registration-return-value) of the element that triggered it, which is especially useful when registering multiple elements with a shared callback.
+- **Note:** If you await your prefetch logic the `callbackCompleted` event will show you how long your prefetch took to run.
+
+```javascript
+ForesightManager.instance.register({
+  element: myElement,
+  callback: state => {
+    console.log(`Triggered ${state.name}`)
+    // prefetch logic
+  },
+})
+```
+
+---
+
+### Optional Parameters
+
+#### `hitSlop`
+
+- **Type:** `number | Rect`
+- **Required:** No
+- **Default:** Uses `defaultHitSlop` from global settings (which is 0 if not set)
+- **Description:** Fully invisible "slop" around the element that increases the hover hitbox.
+
+```javascript
+// Uniform hit slop (20px on all sides)
+ForesightManager.instance.register({
+  element: myElement,
+  callback: () => {},
+  hitSlop: 20,
+})
+
+// Custom hit slop for each side
+ForesightManager.instance.register({
+  element: myElement,
+  callback: () => {},
+  hitSlop: {
+    top: 10,
+    left: 50,
+    right: 50,
+    bottom: 100,
+  },
+})
+```
+
+---
+
+#### `name`
+
+- **Type:** `string`
+- **Required:** No
+- **Default:** `element.id` or `"unnamed"` if no id
+- **Description:** A descriptive name for the element, useful for development tools and debugging.
+
+```javascript
+ForesightManager.instance.register({
+  element: myElement,
+  callback: () => {
+    /* logic */
+  },
+  name: "Product Navigation Button", // Helpful for debugging
+})
+```
+
+---
+
+#### `reactivateAfter`
+
+- **Type:** `number`
+- **Required:** No
+- **Default:** `Infinity`
+- **Description:** Time in milliseconds after which the callback can be fired again. Set to `Infinity` to prevent callback from firing again after first execution.
+- **Note:** Even though `ForesightJS` doesn't store any data, you can set this to the same time as your data would become `stale` normally. In most cases you can just leave this on the default value, as it will get reset on page refresh/rerouting anyways.
+
+```javascript
+ForesightManager.instance.register({
+  element: myElement,
+  callback: () => {},
+  reactivateAfter: 5 * 60 * 1000, // 5 minutes
+})
+```
+
+---
+
+#### `meta`
+
+- **Type:** `Record<string, unknown>`
+- **Required:** No
+- **Default:** `{}`
+- **Description:** Stores additional information about the registered element. Visible in all element-related events and in the devtools.
+
+```javascript
+ForesightManager.instance.register({
+  element: productLink,
+  callback: () => {},
+  meta: {
+    route: "/about",
+    section: "main",
+    category: "content",
+  },
+})
+```
+
+---
+
+#### `enabled`
+
+- **Type:** `boolean`
+- **Required:** No
+- **Default:** `true`
+- **Description:** When `false` the element stays registered but inactive: it is excluded from prediction and never fires its callback.
+
+```javascript
+ForesightManager.instance.register({
+  element: myElement,
+  callback: () => {},
+  enabled: userWantsPrefetching, // toggle prediction without unregistering
+})
+```
+
+## Registration Return Value
+
+The `register()` method returns the full `ForesightElementState` snapshot of the element at registration time, plus three functions: `unregister()`, `subscribe(listener)`, and `getSnapshot()`. When a single element is passed, it returns a `ForesightRegisterResult`. When a `NodeList` is passed, it returns `ForesightRegisterResult[]`.
+
+**TypeScript Type:** `ForesightRegisterResult` or `ForesightRegisterResult[]`
+
+```javascript
+// Single element returns ForesightRegisterResult
+const { unregister, subscribe, getSnapshot, isLimitedConnection } =
+  ForesightManager.instance.register({
+    element: myElement,
+    callback: () => {},
+  })
+
+// NodeList returns ForesightRegisterResult[]
+const results = ForesightManager.instance.register({
+  element: document.querySelectorAll(".my-elements"),
+  callback: () => {},
+})
+```
+
+---
+
+### Returned Functions
+
+#### `unregister()`
+
+Removes the element from `ForesightManager`'s tracking. Call this when you permanently remove the element from the DOM, see [unregister](../debugging/static-properties.md#foresightmanagerinstanceunregisterelement-reason).
+
+#### `subscribe(listener)`
+
+Subscribes to state changes for this element. The listener is called every time the state snapshot is replaced. Returns an unsubscribe function. Together with `getSnapshot` this makes the state usable as an external store (e.g. React's `useSyncExternalStore`).
+
+#### `getSnapshot()`
+
+Returns the current immutable `ForesightElementState` snapshot for this element. The snapshot reference is replaced (never mutated) on every change, so the properties spread on the return value itself are only current as of registration; use `getSnapshot()` (optionally with `subscribe`) for the up-to-date state.
+
+---
+
+### State Fields
+
+The `ForesightElementState` fields, also passed to your [`callback`](#callback):
+
+| Field                        | Type                                | Description                                                                                                                                                                                                                                                             |
+| ---------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                         | `string`                            | Unique identifier assigned during registration.                                                                                                                                                                                                                         |
+| `name`                       | `string`                            | Human-readable name for debugging, set via the [`name`](#name) option.                                                                                                                                                                                                  |
+| `meta`                       | `Record<string, unknown>`           | Arbitrary user-supplied metadata, set via the [`meta`](#meta) option.                                                                                                                                                                                                   |
+| `isRegistered`               | `boolean`                           | Whether the element is currently tracked by the manager. Stays `true` from registration until it is explicitly unregistered. Detaching the element from the DOM does **not** unregister it: it is parked (kept registered but inactive) and resumes when it reconnects. |
+| `isActive`                   | `boolean`                           | Whether the element is currently eligible to fire its callback. `false` when the element is disabled (`isEnabled: false`), on a limited connection, or temporarily detached from the DOM.                                                                               |
+| `isEnabled`                  | `boolean`                           | Whether prediction is enabled for this element, set via the [`enabled`](#enabled) option. When `false` the element stays registered but inactive.                                                                                                                       |
+| `isPredicted`                | `boolean`                           | `true` once the element's callback has been triggered by a prediction hit. Stays `true` until the element is reactivated or unregistered.                                                                                                                               |
+| `isCallbackRunning`          | `boolean`                           | `true` while the callback is executing (between invocation and completion). The callback is awaited, so this stays `true` for async callbacks until they resolve or reject.                                                                                             |
+| `isLimitedConnection`        | `boolean`                           | `true` when the user's connection is slower than the configured `minimumConnectionType` global setting (defaults to `"3g"`) or data saver is enabled. The element is still registered, but stays inactive so no data is consumed.                                       |
+| `isIntersectingWithViewport` | `boolean`                           | Whether the element is currently intersecting the viewport.                                                                                                                                                                                                             |
+| `hitCount`                   | `number`                            | Number of times the callback has fired for this element.                                                                                                                                                                                                                |
+| `registerCount`              | `number`                            | Number of times this element has been (re)registered.                                                                                                                                                                                                                   |
+| `durationMs`                 | `number \| undefined`               | Duration in ms of the most recent callback run.                                                                                                                                                                                                                         |
+| `status`                     | `"success" \| "error" \| undefined` | Status of the most recently completed callback.                                                                                                                                                                                                                         |
+| `error`                      | `string \| null`                    | Error message from the most recently completed callback.                                                                                                                                                                                                                |
+| `reactivateAfter`            | `number`                            | Time in ms after which the callback can be fired again (`Infinity` = never), set via the [`reactivateAfter`](#reactivateafter) option.                                                                                                                                  |
+
+:::note
+The `isLimitedConnection` detection relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS treats the connection as unlimited.
+:::

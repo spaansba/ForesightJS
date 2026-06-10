@@ -1,4 +1,5 @@
 ---
+sidebar_position: 2
 keywords:
   - ForesightJS
   - JS.Foresight
@@ -7,58 +8,42 @@ keywords:
   - Vue.js
   - Directive
   - v-foresight
-description: Vue directive for ForesightJS integration
+  - "@foresightjs/vue"
+description: The v-foresight Vue directive from @foresightjs/vue
 last_updated:
-  date: 2025-11-30
+  date: 2026-06-08
   author: Bart Spaans
 ---
 
-# Directive
+# v-foresight
 
-The `v-foresight` directive provides a simple, declarative way to add ForesightJS prefetching to your Vue applications. Unlike the [`useForesight` composable](/docs/vue/composable), the directive offers a cleaner API with less setup code, but doesn't provide access to [`registerResults`](/docs/configuration/element-settings#registration-return-value) or the element's `templateRef`. It's ideal for most use cases where you don't need these advanced features.
+`v-foresight` is the simplest way to add prefetching to a Vue app. Put it on an element, give it a callback (or an options object), and it registers and unregisters the element for you. Reach for the [`useForesight`](./useForesight.md) composable instead when you need the element's prediction state.
 
-## Basic v-foresight
+## Register the directive
 
-Copy belows code in a `/directives/vForesight.ts` file
-
-```ts
-import type { Directive } from "vue"
-import { ForesightManager, type ForesightRegisterOptionsWithoutElement } from "js.foresight"
-
-type ForesightDirectiveValue = ForesightRegisterOptionsWithoutElement | (() => void)
-
-export const vForesight: Directive<HTMLElement, ForesightDirectiveValue> = {
-  mounted(element, binding) {
-    const value = binding.value
-
-    const options: ForesightRegisterOptionsWithoutElement =
-      typeof value === "function" ? { callback: value } : value
-
-    ForesightManager.instance.register({
-      element,
-      ...options,
-    })
-  },
-}
-```
-
-### Register the directive globally
-
-Register the directive in your `main.ts` like so:
+Register it globally once in your `main.ts`:
 
 ```ts
-import { vForesight } from "@/directives/vForesight"
+import { createApp } from "vue"
+import { vForesight } from "@foresightjs/vue"
+import App from "./App.vue"
 
-app.directive("foresight", vForesight)
+createApp(App).directive("foresight", vForesight).mount("#app")
 ```
 
-## Basic Usage
+Or import it into a single component and use it locally:
 
-The directive can be used in two ways: with a callback function or with a full options object.
+```html
+<script setup lang="ts">
+  import { vForesight } from "@foresightjs/vue"
+</script>
+```
 
-### Simple Callback
+## Usage
 
-For basic use cases, pass a callback function directly:
+The directive takes either a callback function or a full options object.
+
+### Callback shorthand
 
 ```html
 <script setup lang="ts">
@@ -72,17 +57,11 @@ For basic use cases, pass a callback function directly:
 </template>
 ```
 
-### With Options
+### With options
 
-For more control, you can pass an options object with any [Element Settings](/docs/configuration/element-settings).
+For more control, pass any [registration options](./configuration/registration-options.md):
 
 ```html
-<script setup lang="ts">
-  function handlePrefetch() {
-    console.log("Prefetching...")
-  }
-</script>
-
 <template>
   <button
     v-foresight="{
@@ -91,6 +70,10 @@ For more control, you can pass an options object with any [Element Settings](/do
       name: 'button-with-options',
       reactivateAfter: 3000,
     }"
-  ></button>
+  >
+    Hover to prefetch
+  </button>
 </template>
 ```
+
+If the bound value changes, the directive patches the existing registration in place rather than tearing it down, so things like flipping `enabled` keep the same element tracked. The exception is `hitSlop`, which is fixed at registration.

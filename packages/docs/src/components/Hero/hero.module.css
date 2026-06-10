@@ -1,36 +1,18 @@
 .heroSection {
-  background: linear-gradient(to bottom, #000000, #111111);
-  color: white;
-  padding: 60px 0 60px 0;
-  display: flex;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.heroSection::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.15) 0%, transparent 50%);
-  pointer-events: none;
+  color: var(--site-text);
+  padding: 96px 0 80px;
 }
 
 .heroContainer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px;
-  position: relative;
-  z-index: 2;
 }
 
 .heroContent {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  gap: 64px;
   align-items: center;
 }
 
@@ -39,95 +21,35 @@
 }
 
 .heroTitle {
-  font-size: 3.5rem;
-  font-weight: 800;
+  font-size: 3.25rem;
+  font-weight: 700;
   line-height: 1.1;
-  margin-bottom: 24px;
   letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 24px;
 }
 
-.heroTitleGradient {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #059669 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% 200%;
-  animation: gradient 3s ease infinite;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.heroTitleAccent {
+  color: var(--site-accent);
 }
 
 .heroDescription {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--site-text-dim);
   margin-bottom: 40px;
-  font-weight: 400;
 }
 
 .heroActions {
   display: flex;
-  gap: 16px;
-  margin-bottom: 36px;
+  gap: 12px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
-}
-
-.primaryButton {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: white;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.39);
-}
-
-.primaryButton:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(34, 197, 94, 0.5);
-  color: white;
-  text-decoration: none;
-}
-
-.secondaryButton {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-}
-
-.secondaryButton:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  text-decoration: none;
 }
 
 .heroStats {
   display: flex;
-  gap: 32px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 
@@ -135,13 +57,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--site-text-dim);
   font-size: 0.875rem;
   font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.stat:hover {
+  color: var(--site-text);
+  text-decoration: none;
 }
 
 .statIcon {
-  color: #22c55e;
+  color: var(--site-accent);
 }
 
 .heroDemo {
@@ -150,35 +78,25 @@
   align-items: center;
 }
 
-/* Responsive Design */
 @media screen and (max-width: 1024px) {
   .heroContent {
     grid-template-columns: 1fr;
-    gap: 60px;
+    gap: 48px;
     text-align: center;
   }
 
   .heroDemo {
     justify-content: center;
   }
-
-  .heroTitle {
-    font-size: 3.5rem;
-  }
 }
 
 @media screen and (max-width: 768px) {
   .heroSection {
-    padding: 80px 0 20px 0;
-    min-height: auto;
+    padding: 64px 0 48px;
   }
 
   .heroContainer {
     padding: 0 20px;
-  }
-
-  .heroContent {
-    gap: 40px;
   }
 
   .heroTitle {
@@ -187,39 +105,26 @@
   }
 
   .heroDescription {
-    font-size: 1.125rem;
+    font-size: 1rem;
     margin-bottom: 32px;
   }
 
   .heroActions {
     flex-direction: column;
-    margin-bottom: 32px;
   }
 
-  .primaryButton,
-  .secondaryButton {
+  .heroActions a {
     width: 100%;
     text-align: center;
   }
 
   .heroStats {
     justify-content: center;
-    gap: 24px;
   }
 }
 
 @media screen and (max-width: 480px) {
   .heroTitle {
     font-size: 2rem;
-  }
-
-  .heroDescription {
-    font-size: 1rem;
-  }
-
-  .primaryButton,
-  .secondaryButton {
-    padding: 14px 24px;
-    font-size: 0.9rem;
   }
 }

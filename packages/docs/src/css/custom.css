@@ -1,12 +1,25 @@
+:root {
+  --site-bg: #0a0a0a;
+  --site-surface: #141414;
+  --site-code-bg: #0d0d0d;
+  --site-border: #262626;
+  --site-border-strong: #3f3f3f;
+  --site-text: #ededed;
+  --site-text-dim: #a1a1a1;
+  --site-accent: #22c55e;
+  --site-accent-bright: #4ade80;
+  --site-radius: 6px;
+}
+
 [data-theme="dark"] .navbar {
-  background-color: black !important;
+  background-color: var(--site-bg) !important;
 }
 
 [data-theme="dark"] {
-  --ifm-background-color: #000000;
+  --ifm-background-color: var(--site-bg);
   --ifm-background-surface-color: #111111;
   --ifm-color-primary: #58a6ff;
-  --ifm-navbar-background-color: black;
+  --ifm-navbar-background-color: var(--site-bg);
 }
 
 [data-theme="light"] .navbar {
@@ -17,9 +30,8 @@
   --ifm-navbar-background-color: #1a1a1a;
 }
 
-/* Match ALL sections to hero section colors */
 [data-theme="dark"] .main-wrapper {
-  background: linear-gradient(to bottom, #000000, #111111);
+  background: var(--site-bg);
 }
 
 [data-theme="dark"] article,
@@ -30,21 +42,14 @@
 }
 
 [data-theme="dark"] .footer {
-  background: #111111;
+  background: var(--site-bg);
+  border-top: 1px solid var(--site-border);
 }
 
 /* Override all component backgrounds */
 [data-theme="dark"] * {
   --ifm-background-color: transparent;
   --ifm-background-surface-color: transparent;
-}
-
-/* Ensure all sections use consistent gradient */
-[data-theme="dark"] .features-section,
-[data-theme="dark"] .playground-section,
-[data-theme="dark"] .quickstart-section,
-[data-theme="dark"] .stats-section {
-  background: linear-gradient(to bottom, #111111, #222222) !important;
 }
 
 /* Fix h2 color in docs */
@@ -58,4 +63,45 @@
 [data-theme="dark"] .menu__link--active,
 [data-theme="light"] .menu__link--active {
   color: inherit !important;
+}
+
+/* Homepage buttons */
+.site-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: var(--site-radius);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.site-btn:hover {
+  text-decoration: none;
+}
+
+.site-btn--primary {
+  background: var(--site-accent);
+  color: var(--site-bg);
+}
+
+.site-btn--primary:hover {
+  background: var(--site-accent-bright);
+  color: var(--site-bg);
+}
+
+.site-btn--secondary {
+  background: transparent;
+  color: var(--site-text);
+  border-color: var(--site-border-strong);
+}
+
+.site-btn--secondary:hover {
+  background: var(--site-surface);
+  border-color: #525252;
+  color: var(--site-text);
 }
