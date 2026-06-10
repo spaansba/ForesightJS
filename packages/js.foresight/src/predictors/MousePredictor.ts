@@ -64,7 +64,7 @@ export class MousePredictor extends BaseForesightModule {
         if (isPointInRectangle(currentPoint, expandedRect)) {
           this.callCallback(internal, { kind: "mouse", subType: "hover" })
 
-          return
+          continue
         }
 
         // when enable mouse prediction is off, we only check if the mouse is physically hovering over the element
