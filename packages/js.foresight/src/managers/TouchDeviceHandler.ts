@@ -64,8 +64,10 @@ export class TouchDeviceHandler extends ElementObservingModule {
 
     this.predictor?.connect()
 
-    for (const element of this.elements.keys()) {
-      this.predictor?.observeElement(element)
+    for (const [element, entry] of this.elements) {
+      if (entry.state.isActive) {
+        this.predictor?.observeElement(element)
+      }
     }
   }
 
