@@ -1,6 +1,7 @@
 import { DerivedMapView } from "../helpers/DerivedMapView"
+import { devLogMessage } from "../helpers/devLog"
 import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
-import { evaluateRegistrationConditions, userUsesTouchDevice } from "../helpers/shouldRegister"
+import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
   createDefaultManagerSettings,
   createElementInternal,
@@ -9,7 +10,7 @@ import {
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { ElementObservingModule } from "../core/ElementObservingModule"
-import { applySettingsChanges, initializeSettings } from "./SettingsManager"
+import { applySettingsChanges } from "./SettingsManager"
 import type {
   CallbackHits,
   CallbackHitType,
@@ -80,9 +81,9 @@ export class ForesightManager {
   private _globalSettings: ForesightManagerSettings = createDefaultManagerSettings()
 
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
-    if (initialSettings !== undefined) {
-      initializeSettings(this._globalSettings, initialSettings)
-    }
+    // Side-effect flags in the result are no-ops here: handlers are still null
+    // and the settings-changed event only fires from alterGlobalSettings.
+    applySettingsChanges(this._globalSettings, initialSettings)
 
     this.handlerDependencies = {
       elements: this.elementEntries,
@@ -259,9 +260,7 @@ export class ForesightManager {
     // registered so it can be patched and tracked, but stays inactive (never
     // predicted, never fires its callback) to avoid consuming data.
     // See createElementInternal / setElementEnabled.
-    const { isLimitedConnection } = evaluateRegistrationConditions(
-      this._globalSettings.minimumConnectionType
-    )
+    const isLimitedConnection = hasConnectionLimitations(this._globalSettings.minimumConnectionType)
 
     const previousEntry = this.elementEntries.get(options.element)
 
@@ -271,16 +270,7 @@ export class ForesightManager {
         registerCount: previousEntry.state.registerCount + 1,
       })
 
-      return {
-        ...previousEntry.state,
-        unregister: () => {
-          this.unregister(options.element)
-        },
-        subscribe: this.makeSubscribe(previousEntry.subscribers),
-        getSnapshot: () => previousEntry.state,
-        subscribeToBounds: this.makeSubscribe(previousEntry.boundsSubscribers),
-        getBounds: () => previousEntry.bounds,
-      }
+      return this.buildRegisterResult(previousEntry, options.element)
     }
 
     if (!this.isSetup) {
@@ -310,10 +300,17 @@ export class ForesightManager {
       state: entry.state,
     })
 
+    return this.buildRegisterResult(entry, options.element)
+  }
+
+  private buildRegisterResult(
+    entry: ForesightElementInternal,
+    element: ForesightElement
+  ): ForesightRegisterResult {
     return {
       ...entry.state,
       unregister: () => {
-        this.unregister(options.element)
+        this.unregister(element)
       },
       subscribe: this.makeSubscribe(entry.subscribers),
       getSnapshot: () => entry.state,
@@ -986,7 +983,7 @@ export class ForesightManager {
 
   private devLog(message: string): void {
     if (this._globalSettings.enableManagerLogging) {
-      console.log(`%c🛠️ ForesightManager: ${message}`, "color: #16a34a; font-weight: bold;")
+      devLogMessage("🛠️ ForesightManager", message, "#16a34a")
     }
   }
 }

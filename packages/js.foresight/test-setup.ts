@@ -45,11 +45,7 @@ vi.mock("tabbable", () => ({
 
 // Mock shouldRegister
 vi.mock("./src/helpers/shouldRegister", () => ({
-  evaluateRegistrationConditions: vi.fn(() => ({
-    shouldRegister: true,
-    isTouchDevice: false,
-    isLimitedConnection: false,
-  })),
+  hasConnectionLimitations: vi.fn(() => false),
   userUsesTouchDevice: vi.fn(() => false),
 }))
 

@@ -10,7 +10,6 @@ import {
 } from "../constants"
 import { clampNumber } from "../helpers/clampNumber"
 import { areRectsEqual, normalizeHitSlop } from "../helpers/rectAndHitSlop"
-import { shouldUpdateSetting } from "../helpers/shouldUpdateSetting"
 import type {
   ForesightManagerSettings,
   ManagerBooleanSettingKeys,
@@ -37,6 +36,21 @@ const NUMERIC_SETTING_CONFIGS: Record<NumericSettingKeys, { min: number; max: nu
     min: MIN_TAB_OFFSET,
     max: MAX_TAB_OFFSET,
   },
+}
+
+/**
+ * Checks if a setting should be updated.
+ * Returns true if the newValue is defined and different from the currentValue.
+ * Uses a type predicate to narrow the type of newValue in the calling scope.
+ */
+const shouldUpdateSetting = <T>(
+  newValue: T | undefined,
+  currentValue: T
+): newValue is NonNullable<T> => {
+  // NonNullable<T> ensures that if T itself could be undefined (e.g. T = number | undefined),
+  // the predicate narrows to the non-undefined part (e.g. number).
+  // If T is already non-nullable (e.g. T = number), it remains T (e.g. number).
+  return newValue !== undefined && currentValue !== newValue
 }
 
 /**
@@ -74,40 +88,6 @@ const updateBooleanSetting = (
   settings[key] = newValue as boolean
 
   return true
-}
-
-/**
- * Apply initial settings during construction (no event emission, no side effects).
- * Mutates the settings object directly.
- */
-export const initializeSettings = (
-  settings: ForesightManagerSettings,
-  props: Partial<UpdateForsightManagerSettings>
-): void => {
-  // Numeric settings
-  updateNumericSetting(settings, "trajectoryPredictionTime", props.trajectoryPredictionTime)
-  updateNumericSetting(settings, "positionHistorySize", props.positionHistorySize)
-  updateNumericSetting(settings, "scrollMargin", props.scrollMargin)
-  updateNumericSetting(settings, "tabOffset", props.tabOffset)
-
-  // Boolean settings
-  updateBooleanSetting(settings, "enableMousePrediction", props.enableMousePrediction)
-  updateBooleanSetting(settings, "enableScrollPrediction", props.enableScrollPrediction)
-  updateBooleanSetting(settings, "enableTabPrediction", props.enableTabPrediction)
-  updateBooleanSetting(settings, "enableManagerLogging", props.enableManagerLogging)
-
-  // Object/special settings
-  if (props.defaultHitSlop !== undefined) {
-    settings.defaultHitSlop = normalizeHitSlop(props.defaultHitSlop)
-  }
-
-  if (props.touchDeviceStrategy !== undefined) {
-    settings.touchDeviceStrategy = props.touchDeviceStrategy
-  }
-
-  if (props.minimumConnectionType !== undefined) {
-    settings.minimumConnectionType = props.minimumConnectionType
-  }
 }
 
 /**
@@ -177,6 +157,7 @@ export const applySettingsChanges = (
     "enableMousePrediction",
     "enableScrollPrediction",
     "enableTabPrediction",
+    "enableManagerLogging",
   ]
 
   for (const key of booleanKeys) {

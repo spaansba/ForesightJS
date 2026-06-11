@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
-import { evaluateRegistrationConditions } from "../helpers/shouldRegister"
+import { hasConnectionLimitations } from "../helpers/shouldRegister"
 import type {
   ForesightElement,
   ForesightElementInternal,
@@ -2007,11 +2007,7 @@ describe("ForesightManager", () => {
     // shouldRegister is globally mocked in test-setup.ts; drive its return value
     // so registration sees a limited connection (data saver / slow network).
     const setLimited = (isLimitedConnection: boolean) =>
-      vi.mocked(evaluateRegistrationConditions).mockReturnValue({
-        shouldRegister: !isLimitedConnection,
-        isTouchDevice: false,
-        isLimitedConnection,
-      })
+      vi.mocked(hasConnectionLimitations).mockReturnValue(isLimitedConnection)
 
     beforeEach(() => setLimited(true))
     afterEach(() => setLimited(false))
