@@ -1,21 +1,5 @@
 import { MinimumConnectionType } from "../types/types"
 
-type ShouldRegister = {
-  shouldRegister: boolean
-  isTouchDevice: boolean
-  isLimitedConnection: boolean
-}
-
-export const evaluateRegistrationConditions = (
-  minimumConnectionType: MinimumConnectionType
-): ShouldRegister => {
-  const isTouchDevice = userUsesTouchDevice()
-  const isLimitedConnection = hasConnectionLimitations(minimumConnectionType)
-  const shouldRegister = !isLimitedConnection
-
-  return { isTouchDevice, isLimitedConnection, shouldRegister }
-}
-
 /**
  * Detects if the current device is likely a touch-enabled device.
  * It checks for coarse pointer media query and the presence of touch points.
@@ -39,7 +23,7 @@ export const userUsesTouchDevice = (): boolean => {
  *   prefetchResource('/api/data');
  * }
  */
-const hasConnectionLimitations = (minimumConnectionType: MinimumConnectionType): boolean => {
+export const hasConnectionLimitations = (minimumConnectionType: MinimumConnectionType): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection
   if (!connection) {

@@ -4,8 +4,8 @@ import {
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
   DEFAULT_POSITION_HISTORY_SIZE,
+  DEFAULT_REACTIVATE_AFTER,
   DEFAULT_SCROLL_MARGIN,
-  DEFAULT_STALE_TIME,
   DEFAULT_TAB_OFFSET,
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
@@ -97,7 +97,7 @@ export const createElementInternal = (
     durationMs: undefined,
     status: undefined,
     error: null,
-    reactivateAfter: reactivateAfter ?? DEFAULT_STALE_TIME,
+    reactivateAfter: reactivateAfter ?? DEFAULT_REACTIVATE_AFTER,
   }
 
   return {
@@ -149,6 +149,6 @@ export const createUnregisteredSnapshot = (isLimitedConnection: boolean): Foresi
     durationMs: undefined,
     status: undefined,
     error: null,
-    reactivateAfter: DEFAULT_STALE_TIME,
+    reactivateAfter: DEFAULT_REACTIVATE_AFTER,
   }
 }

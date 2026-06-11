@@ -23,4 +23,4 @@ export const DEFAULT_ENABLE_TAB_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_MOUSE_PREDICTION: boolean = true
 export const DEFAULT_ENABLE_SCROLL_PREDICTION: boolean = true
 
-export const DEFAULT_STALE_TIME: number = Infinity
+export const DEFAULT_REACTIVATE_AFTER: number = Infinity

@@ -1,3 +1,4 @@
+import { devLogMessage } from "../helpers/devLog"
 import type {
   CallbackHitType,
   ElementBounds,
@@ -48,7 +49,6 @@ export abstract class BaseForesightModule {
   protected updateElementBounds: UpdateElementBoundsFunction
   protected settings: ForesightManagerSettings
   private _isConnected = false
-  private _cachedLogStyle: string | null = null
 
   public get isConnected(): boolean {
     return this._isConnected
@@ -92,13 +92,8 @@ export abstract class BaseForesightModule {
       return
     }
 
-    // Cache the log style on first use to avoid repeated string operations
-    if (this._cachedLogStyle === null) {
-      const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
-      this._cachedLogStyle = `color: ${color}; font-weight: bold;`
-    }
-
-    console.log(`%c${this.moduleName}: ${message}`, this._cachedLogStyle)
+    const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
+    devLogMessage(this.moduleName, message, color)
   }
 
   protected abstract onConnect(): void
