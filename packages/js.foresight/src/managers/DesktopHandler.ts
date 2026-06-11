@@ -10,7 +10,6 @@ import type {
   TrajectoryPositions,
 } from "../types/types"
 import { CircularBuffer } from "../helpers/CircularBuffer"
-import { DEFAULT_POSITION_HISTORY_SIZE } from "../constants"
 import { areRectsEqual, getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
 export class DesktopHandler extends ElementObservingModule {
@@ -23,7 +22,7 @@ export class DesktopHandler extends ElementObservingModule {
   private storedDependencies: ForesightModuleDependencies
 
   public trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer(DEFAULT_POSITION_HISTORY_SIZE),
+    positions: new CircularBuffer(this.settings.positionHistorySize),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
