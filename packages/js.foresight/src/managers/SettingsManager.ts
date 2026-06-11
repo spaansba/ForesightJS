@@ -215,7 +215,7 @@ export const applySettingsChanges = (
   }
 
   // Touch strategy
-  if (props.touchDeviceStrategy !== undefined) {
+  if (shouldUpdateSetting(props.touchDeviceStrategy, settings.touchDeviceStrategy)) {
     const oldValue = settings.touchDeviceStrategy
     settings.touchDeviceStrategy = props.touchDeviceStrategy
     changedSettings.push({
@@ -227,7 +227,7 @@ export const applySettingsChanges = (
   }
 
   // Minimum connection type
-  if (props.minimumConnectionType !== undefined) {
+  if (shouldUpdateSetting(props.minimumConnectionType, settings.minimumConnectionType)) {
     const oldValue = settings.minimumConnectionType
     settings.minimumConnectionType = props.minimumConnectionType
     changedSettings.push({
