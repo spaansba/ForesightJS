@@ -63,8 +63,10 @@ export class DesktopHandler extends ElementObservingModule {
 
     this.devLog(`Connected predictors: [${enabledPredictors.join(", ")}] and PositionObserver`)
 
-    for (const element of this.elements.keys()) {
-      this.positionObserver.observe(element)
+    for (const [element, entry] of this.elements) {
+      if (entry.state.isActive) {
+        this.positionObserver.observe(element)
+      }
     }
   }
 
