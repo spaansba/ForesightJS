@@ -1,10 +1,43 @@
 import { Foresight } from "@foresightjs/react"
-import { useCallback, useState } from "react"
+import { memo, useCallback, useState } from "react"
+
+type ButtonGridProps = {
+  buttonCount: number
+  resetKey: number
+  onHit: () => void
+}
+
+// Memoized so the hit counter in the header doesn't re-render the grid: a
+// callback hit must only re-render the one button whose state changed.
+const ButtonGrid = memo(function ButtonGrid({ buttonCount, resetKey, onHit }: ButtonGridProps) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Array.from({ length: buttonCount }, (_, i) => (
+        <Foresight<HTMLButtonElement> key={`${resetKey}-${i}`} hitSlop={0} callback={onHit}>
+          {({ elementRef, isPredicted }) => (
+            <button
+              ref={elementRef}
+              className={`flex justify-center items-center size-10 text-xs font-medium border ${
+                isPredicted
+                  ? "bg-emerald-500 text-white border-emerald-600"
+                  : "bg-white text-gray-700 border-gray-300"
+              }`}
+            >
+              {i}
+            </button>
+          )}
+        </Foresight>
+      ))}
+    </div>
+  )
+})
 
 const Mass = () => {
   const [resetKey, setResetKey] = useState(0)
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)
+
+  const onHit = useCallback(() => setHitCount(prev => prev + 1), [])
 
   const resetTest = useCallback(() => {
     setResetKey(prev => prev + 1)
@@ -45,30 +78,7 @@ const Mass = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1">
-        {/* One Foresight instance per button; changing resetKey remounts them all,
-            so every registration starts fresh. */}
-        {Array.from({ length: buttonCount }, (_, i) => (
-          <Foresight<HTMLButtonElement>
-            key={`${resetKey}-${i}`}
-            hitSlop={0}
-            callback={() => setHitCount(prev => prev + 1)}
-          >
-            {({ elementRef, isPredicted }) => (
-              <button
-                ref={elementRef}
-                className={`flex justify-center items-center size-10 text-xs font-medium border ${
-                  isPredicted
-                    ? "bg-emerald-500 text-white border-emerald-600"
-                    : "bg-white text-gray-700 border-gray-300"
-                }`}
-              >
-                {i}
-              </button>
-            )}
-          </Foresight>
-        ))}
-      </div>
+      <ButtonGrid buttonCount={buttonCount} resetKey={resetKey} onHit={onHit} />
     </main>
   )
 }
