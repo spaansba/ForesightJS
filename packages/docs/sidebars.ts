@@ -51,7 +51,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "API",
-      items: ["react/useForesight", "react/useForesights", "react/useForesightEvent"],
+      items: ["react/useForesight", "react/foresight-component", "react/useForesightEvent"],
     },
     {
       type: "category",

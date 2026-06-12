@@ -1,0 +1,133 @@
+---
+sidebar_position: 3
+keywords:
+  - ForesightJS
+  - JS.Foresight
+  - Prefetching
+  - React
+  - Component
+  - Foresight
+  - "@foresightjs/react"
+  - Multiple elements
+description: Register elements with the Foresight component, including dynamic lists
+last_updated:
+  date: 2026-06-12
+  author: Bart Spaans
+---
+
+# Foresight component
+
+`Foresight` is the component form of [`useForesight`](./useForesight.md): one instance, one registration. It takes the same options as props and renders in one of two ways. The only renamed option is `name` — on the component it is `foresightName`, so the HTML `name` attribute (on `input`, `button`, `select`, ...) forwards to the element like any other DOM prop.
+
+## Rendering an element with `as`
+
+With `as`, `Foresight` renders that element itself and registers it. All other props are forwarded to the element:
+
+```tsx
+import { Foresight } from "@foresightjs/react"
+
+function CheckoutButton() {
+  return (
+    <Foresight as="button" callback={() => prefetch("/checkout")} onClick={checkout}>
+      Checkout
+    </Foresight>
+  )
+}
+```
+
+`as` accepts any element tag (`"button"`, `"a"`, `"div"`, ...) or a component that forwards its ref to a DOM element.
+
+:::note
+In the `as` form there is no way to pass your own `ref` to the rendered element — `Foresight` uses the ref slot for its registration. If you need the DOM node, use the render-prop form below and attach both refs yourself.
+:::
+
+### Styling with data attributes
+
+In the `as` form, `Foresight` mirrors the element state onto data attributes — by mutating the DOM directly, without re-rendering the component:
+
+- `data-predicted` — present while [`isPredicted`](./useForesight.md#reactive-state) is true
+- `data-callback-running` — present while the callback is executing
+- `data-status` — `"success"` or `"error"` after the last callback run
+
+This makes prediction styling pure CSS:
+
+```css
+button[data-predicted] {
+  outline: 1px solid orange;
+}
+```
+
+Or with Tailwind:
+
+```tsx
+<Foresight as="button" callback={() => prefetch("/checkout")} className="data-predicted:outline-1">
+  Checkout
+</Foresight>
+```
+
+### Reading state in `as` form
+
+To use the [reactive state](./useForesight.md#reactive-state) in this form, pass a function as `children`, `className` or `style` — it receives the state. `Foresight` only subscribes to state-driven re-renders when one of them is a function:
+
+```tsx
+<Foresight
+  as="button"
+  callback={() => prefetch("/checkout")}
+  className={({ isPredicted }) => (isPredicted ? "predicted" : "")}
+  style={({ isCallbackRunning }) => ({ opacity: isCallbackRunning ? 0.5 : 1 })}
+>
+  {({ hitCount }) => <>Checkout ({hitCount})</>}
+</Foresight>
+```
+
+For full control over the rendered markup, use the render-prop form below or [`useForesight`](./useForesight.md).
+
+## Render-prop children
+
+With a function as children, `Foresight` renders nothing itself. The function receives the [reactive state](./useForesight.md#reactive-state) plus the `elementRef` to attach, which gives full control over the markup:
+
+```tsx
+import { Foresight } from "@foresightjs/react"
+
+function CheckoutButton() {
+  return (
+    <Foresight foresightName="checkout" callback={() => prefetch("/checkout")}>
+      {({ elementRef, isPredicted }) => (
+        <button ref={elementRef} className={isPredicted ? "predicted" : ""}>
+          Checkout
+        </button>
+      )}
+    </Foresight>
+  )
+}
+```
+
+In this form the data attributes are not set — you own the element, so render them from the state if you want them.
+
+## Dynamic lists
+
+`Foresight` can be rendered in a loop, registering one element per item.
+
+```tsx
+import { Foresight } from "@foresightjs/react"
+
+function Nav({ links }: { links: { href: string; label: string }[] }) {
+  return (
+    <nav>
+      {links.map(link => (
+        <Foresight
+          as="a"
+          key={link.href}
+          href={link.href}
+          foresightName={link.label}
+          callback={() => prefetch(link.href)}
+        >
+          {link.label}
+        </Foresight>
+      ))}
+    </nav>
+  )
+}
+```
+
+Added items register when their refs attach, removed items unregister on unmount, and reordering keyed items moves the registrations with them.

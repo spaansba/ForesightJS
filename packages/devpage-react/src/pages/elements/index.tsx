@@ -12,6 +12,10 @@ import {
 import ForesightButtonEnabled from "../../components/test-buttons/ForesightButtonEnabled"
 import ForesightButtonError from "../../components/test-buttons/ForesightButtonError"
 import ForesightButtonHitSlop from "../../components/test-buttons/ForesightButtonHitSlop"
+import {
+  ForesightButtonAs,
+  ForesightButtonRenderProp,
+} from "../../components/test-buttons/ForesightComponentButtons"
 
 type SectionProps = {
   title: string
@@ -82,6 +86,13 @@ export default function Elements() {
 
       <Section title="Dynamic hitSlop">
         <ForesightButtonHitSlop name="hit-slop" />
+      </Section>
+
+      <Section title="Foresight component">
+        <div className="flex flex-wrap gap-x-6 gap-y-8">
+          <ForesightButtonAs />
+          <ForesightButtonRenderProp />
+        </div>
       </Section>
 
       <Section title="Edge cases">

@@ -1,21 +1,12 @@
 import { act, render } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
-import type { UseForesightOptions } from "../types"
+import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
-beforeEach(() => {
-  registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
-  unregisterSpy.mockClear()
-  mockState.listeners = []
-  mockState.lastCallbackWrapper = null
-  mockState.currentSnapshot = createUnregisteredSnapshot(false)
-})
-
 type ProbeProps = {
-  options: UseForesightOptions
+  options: ForesightOptions
   attach?: boolean
 }
 

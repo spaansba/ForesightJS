@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+import { beforeEach, vi } from "vitest"
 import type {
   ForesightCallback,
   ForesightElementState,
@@ -26,8 +26,21 @@ export const removeEventListenerSpy =
   vi.fn<(type: string, listener: (...args: any[]) => void) => void>()
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+// One shared reset for every test file - new spies or mockState fields only
+// need to be added here.
+beforeEach(() => {
+  vi.clearAllMocks()
+  mockState.listeners = []
+  mockState.boundsListeners = []
+  mockState.currentSnapshot = null
+  mockState.lastCallbackWrapper = null
+})
+
 vi.mock("js.foresight", async importOriginal => {
   const actual = await importOriginal<typeof import("js.foresight")>()
+  // Stable fallback snapshot: useSyncExternalStore requires getSnapshot to
+  // return a cached value between store updates.
+  const initialSnapshot = actual.createUnregisteredSnapshot(false)
 
   return {
     ...actual,
@@ -38,7 +51,7 @@ vi.mock("js.foresight", async importOriginal => {
           mockState.lastCallbackWrapper = opts.callback
 
           return {
-            ...(mockState.currentSnapshot ?? actual.createUnregisteredSnapshot(false)),
+            ...(mockState.currentSnapshot ?? initialSnapshot),
             unregister: unregisterSpy,
             subscribe: (fn: () => void) => {
               mockState.listeners.push(fn)
@@ -47,8 +60,7 @@ vi.mock("js.foresight", async importOriginal => {
                 mockState.listeners = mockState.listeners.filter(l => l !== fn)
               }
             },
-            getSnapshot: () =>
-              mockState.currentSnapshot ?? actual.createUnregisteredSnapshot(false),
+            getSnapshot: () => mockState.currentSnapshot ?? initialSnapshot,
             subscribeToBounds: (fn: () => void) => {
               mockState.boundsListeners.push(fn)
 

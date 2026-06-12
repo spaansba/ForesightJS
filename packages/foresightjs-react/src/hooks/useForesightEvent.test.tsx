@@ -1,12 +1,8 @@
 import { render } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { ForesightEvent, ForesightEventMap } from "js.foresight"
 import { addEventListenerSpy } from "../tests/setup"
 import { useForesightEvent } from "./useForesightEvent"
-
-beforeEach(() => {
-  addEventListenerSpy.mockClear()
-})
 
 type ProbeProps<K extends ForesightEvent> = {
   eventType: K

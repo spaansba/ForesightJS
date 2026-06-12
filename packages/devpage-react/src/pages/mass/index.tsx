@@ -1,5 +1,5 @@
-import { useForesights } from "@foresightjs/react"
-import { useCallback, useMemo, useState } from "react"
+import { Foresight } from "@foresightjs/react"
+import { useCallback, useState } from "react"
 
 const Mass = () => {
   const [resetKey, setResetKey] = useState(0)
@@ -10,19 +10,6 @@ const Mass = () => {
     setResetKey(prev => prev + 1)
     setHitCount(0)
   }, [])
-
-  const options = useMemo(
-    () =>
-      Array.from({ length: buttonCount }, () => ({
-        hitSlop: 0,
-        callback: () => setHitCount(prev => prev + 1),
-      })),
-    [buttonCount]
-  )
-
-  // One registration per button via the hook; it unregisters on unmount/remount
-  // automatically. The hit state is driven by each button's reactive `isPredicted`.
-  const foresights = useForesights<HTMLButtonElement>(options)
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
@@ -59,18 +46,27 @@ const Mass = () => {
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {foresights.map((foresight, i) => (
-          <button
+        {/* One Foresight instance per button; changing resetKey remounts them all,
+            so every registration starts fresh. */}
+        {Array.from({ length: buttonCount }, (_, i) => (
+          <Foresight<HTMLButtonElement>
             key={`${resetKey}-${i}`}
-            ref={foresight.elementRef}
-            className={`flex justify-center items-center size-10 text-xs font-medium border ${
-              foresight.isPredicted
-                ? "bg-emerald-500 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-300"
-            }`}
+            hitSlop={0}
+            callback={() => setHitCount(prev => prev + 1)}
           >
-            {i}
-          </button>
+            {({ elementRef, isPredicted }) => (
+              <button
+                ref={elementRef}
+                className={`flex justify-center items-center size-10 text-xs font-medium border ${
+                  isPredicted
+                    ? "bg-emerald-500 text-white border-emerald-600"
+                    : "bg-white text-gray-700 border-gray-300"
+                }`}
+              >
+                {i}
+              </button>
+            )}
+          </Foresight>
         ))}
       </div>
     </main>
