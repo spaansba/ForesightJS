@@ -2,6 +2,7 @@ import { act, render } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { emitSnapshot } from "../tests/helpers"
 import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
@@ -101,14 +102,11 @@ describe("useForesight", () => {
     expect(lastCall?.[0].element).toBeInstanceOf(HTMLAnchorElement)
   })
 
-  it("reflects manager state updates pushed through subscribe", () => {
+  it("reflects manager state updates pushed through subscribe", async () => {
     const { getByTestId } = render(<ButtonProbe options={{ callback: vi.fn() }} />)
     expect(getByTestId("el").getAttribute("data-predicted")).toBe("false")
 
-    act(() => {
-      mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-      mockState.listeners.forEach(l => l())
-    })
+    await emitSnapshot({ isPredicted: true })
 
     expect(getByTestId("el").getAttribute("data-predicted")).toBe("true")
   })

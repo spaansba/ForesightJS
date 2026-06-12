@@ -1,7 +1,7 @@
-import { act, render } from "@testing-library/react"
+import { render } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { createUnregisteredSnapshot } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { emitSnapshot } from "../tests/helpers"
 import { Foresight } from "./Foresight"
 
 type Item = { id: string; label: string }
@@ -59,10 +59,7 @@ describe("Foresight", () => {
     const { getByTestId } = render(<List items={[{ id: "1", label: "a" }]} />)
     expect(getByTestId("el-1").getAttribute("data-predicted")).toBe("false")
 
-    await act(async () => {
-      mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-      mockState.listeners.forEach(l => l())
-    })
+    await emitSnapshot({ isPredicted: true })
 
     expect(getByTestId("el-1").getAttribute("data-predicted")).toBe("true")
   })
@@ -131,10 +128,7 @@ describe("Foresight", () => {
       )
       expect(getByTestId("btn").textContent).toBe("cold")
 
-      await act(async () => {
-        mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-        mockState.listeners.forEach(l => l())
-      })
+      await emitSnapshot({ isPredicted: true })
 
       expect(getByTestId("btn").textContent).toBe("hot")
     })
@@ -152,10 +146,7 @@ describe("Foresight", () => {
       )
       expect(getByTestId("btn").className).toBe("cold")
 
-      await act(async () => {
-        mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-        mockState.listeners.forEach(l => l())
-      })
+      await emitSnapshot({ isPredicted: true })
 
       expect(getByTestId("btn").className).toBe("hot")
     })
@@ -173,10 +164,7 @@ describe("Foresight", () => {
       )
       expect(getByTestId("btn").style.opacity).toBe("0.5")
 
-      await act(async () => {
-        mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-        mockState.listeners.forEach(l => l())
-      })
+      await emitSnapshot({ isPredicted: true })
 
       expect(getByTestId("btn").style.opacity).toBe("1")
     })
@@ -205,15 +193,7 @@ describe("Foresight", () => {
       expect(button.hasAttribute("data-callback-running")).toBe(false)
       expect(button.hasAttribute("data-status")).toBe(false)
 
-      await act(async () => {
-        mockState.currentSnapshot = {
-          ...createUnregisteredSnapshot(false),
-          isPredicted: true,
-          isCallbackRunning: true,
-          status: "success",
-        }
-        mockState.listeners.forEach(l => l())
-      })
+      await emitSnapshot({ isPredicted: true, isCallbackRunning: true, status: "success" })
 
       expect(button.hasAttribute("data-predicted")).toBe(true)
       expect(button.hasAttribute("data-callback-running")).toBe(true)
@@ -227,10 +207,7 @@ describe("Foresight", () => {
         </Foresight>
       )
 
-      await act(async () => {
-        mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-        mockState.listeners.forEach(l => l())
-      })
+      await emitSnapshot({ isPredicted: true })
 
       expect(getByTestId("btn").hasAttribute("data-predicted")).toBe(false)
     })

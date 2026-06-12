@@ -1,15 +1,25 @@
 import { useEffect } from "react"
 import type { ForesightElementState, ForesightRegisterResult } from "js.foresight"
 
-const DATA_ATTRIBUTES = ["data-predicted", "data-callback-running", "data-status"] as const
+// Single source of truth for the mirrored attributes: a boolean toggles the
+// bare attribute, a string becomes its value, undefined removes it.
+const DATA_ATTRIBUTES: Record<
+  string,
+  (state: ForesightElementState) => boolean | string | undefined
+> = {
+  "data-predicted": state => state.isPredicted,
+  "data-callback-running": state => state.isCallbackRunning,
+  "data-status": state => state.status,
+}
 
 const apply = (element: HTMLElement, state: ForesightElementState) => {
-  element.toggleAttribute("data-predicted", state.isPredicted)
-  element.toggleAttribute("data-callback-running", state.isCallbackRunning)
-  if (state.status) {
-    element.setAttribute("data-status", state.status)
-  } else {
-    element.removeAttribute("data-status")
+  for (const [attribute, read] of Object.entries(DATA_ATTRIBUTES)) {
+    const value = read(state)
+    if (typeof value === "string") {
+      element.setAttribute(attribute, value)
+    } else {
+      element.toggleAttribute(attribute, value === true)
+    }
   }
 }
 
@@ -32,7 +42,7 @@ export const useForesightDataAttributes = (
 
     return () => {
       unsubscribe()
-      for (const attribute of DATA_ATTRIBUTES) {
+      for (const attribute of Object.keys(DATA_ATTRIBUTES)) {
         element.removeAttribute(attribute)
       }
     }

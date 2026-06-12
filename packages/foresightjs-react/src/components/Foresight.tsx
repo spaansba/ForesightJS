@@ -72,21 +72,6 @@ export function Foresight(props: ForesightProps | ForesightAsProps<ElementType>)
   return props.as ? <ForesightElement {...props} /> : <ForesightRenderProp {...props} />
 }
 
-/**
- * Runtime list of every foresight option prop, used to split options from DOM
- * props. The `satisfies` clause keeps it exhaustive: when the core options
- * type gains a key this stops compiling until the key is added here, so a new
- * option can never silently fall through to the DOM element.
- */
-const FORESIGHT_OPTION_KEYS = {
-  callback: true,
-  hitSlop: true,
-  foresightName: true,
-  meta: true,
-  reactivateAfter: true,
-  enabled: true,
-} as const satisfies Record<keyof ForesightComponentOptions, true>
-
 // Change name to foresightName for the component form, so the HTML name attribute can be forwarded to the element in the `as` form.
 const toRegistrationOptions = ({
   foresightName,
@@ -96,24 +81,6 @@ const toRegistrationOptions = ({
   name: foresightName,
 })
 
-/** Splits the flat props of the `as` form into options and DOM props. */
-const splitForesightProps = <P extends object>(props: P) => {
-  const optionProps: Record<string, unknown> = {}
-  const domProps: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(props)) {
-    if (key in FORESIGHT_OPTION_KEYS) {
-      optionProps[key] = value
-    } else {
-      domProps[key] = value
-    }
-  }
-
-  return {
-    options: toRegistrationOptions(optionProps as ForesightComponentOptions),
-    domProps,
-  }
-}
-
 const ForesightRenderProp = <T extends HTMLElement>({
   children,
   ...options
@@ -121,14 +88,38 @@ const ForesightRenderProp = <T extends HTMLElement>({
   const { elementRef, registerResults } = useForesightRegistration<T>(
     toRegistrationOptions(options)
   )
-  const state = useForesightState(registerResults, true)
+  const state = useForesightState(registerResults)
 
   return children({ elementRef, ...state })
 }
 
 const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
-  const { as: Tag, children, className, style, ...flatProps } = props
-  const { options, domProps } = splitForesightProps(flatProps)
+  const {
+    as: Tag,
+    children,
+    className,
+    style,
+    callback,
+    hitSlop,
+    foresightName,
+    meta,
+    reactivateAfter,
+    enabled,
+    ...domProps
+  } = props
+
+  // The `satisfies` clause keeps the destructuring above exhaustive: when the
+  // core options type gains a key this stops compiling until the key is
+  // pulled out of the props, so a new option can never silently fall through
+  // to the DOM element.
+  const options = {
+    callback,
+    hitSlop,
+    name: foresightName,
+    meta,
+    reactivateAfter,
+    enabled,
+  } satisfies Record<keyof ForesightOptions, unknown>
 
   const { element, elementRef, registerResults } = useForesightRegistration(options)
 
@@ -138,7 +129,7 @@ const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
   const readsState =
     typeof children === "function" || typeof className === "function" || typeof style === "function"
 
-  const state = useForesightState(registerResults, readsState)
+  const state = useForesightState(readsState ? registerResults : null)
   useForesightDataAttributes(element, registerResults)
 
   return (

@@ -9,12 +9,12 @@ const NOOP_SUBSCRIBE = () => () => {}
 const INITIAL_SNAPSHOT = createUnregisteredSnapshot(false)
 const GET_INITIAL_SNAPSHOT = () => INITIAL_SNAPSHOT
 
+// Pass null to opt out of state-driven re-renders without breaking hook order.
 export const useForesightState = (
-  registerResults: ForesightRegisterResult | null,
-  subscribed: boolean
+  registerResults: ForesightRegisterResult | null
 ): ForesightElementState =>
   useSyncExternalStore<ForesightElementState>(
-    subscribed ? (registerResults?.subscribe ?? NOOP_SUBSCRIBE) : NOOP_SUBSCRIBE,
-    () => (subscribed ? (registerResults?.getSnapshot() ?? INITIAL_SNAPSHOT) : INITIAL_SNAPSHOT),
+    registerResults?.subscribe ?? NOOP_SUBSCRIBE,
+    () => registerResults?.getSnapshot() ?? INITIAL_SNAPSHOT,
     GET_INITIAL_SNAPSHOT
   )
