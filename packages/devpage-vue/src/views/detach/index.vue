@@ -29,7 +29,7 @@ const tabClass = (value: typeof tab.value) => [
     <section class="mb-12">
       <h2 class="text-lg font-semibold mb-1">KeepAlive</h2>
       <p class="mb-4 text-sm text-gray-600">
-        The foresight targets (1 <code>useForesight</code>, 2 <code>useForesights</code>, 1
+        The foresight targets (1 <code>useForesight</code>, 2 <code>&lt;Foresight&gt;</code>, 1
         <code>v-foresight</code> directive) live inside <code>&lt;KeepAlive&gt;</code>. Switching to
         the other tab <strong>deactivates</strong> the component and detaches its DOM; the manager
         parks the elements. Switching back <strong>reactivates</strong> the cached instance and

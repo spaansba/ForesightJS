@@ -1,11 +1,11 @@
 import type { ObjectDirective } from "vue"
 import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
-import type { UseForesightOptions } from "../types"
+import type { ForesightOptions } from "../types"
 
 /** Shorthand: pass just the callback instead of a full options object. */
 type CallbackShorthand = () => void
 
-type ForesightDirectiveValue = UseForesightOptions | CallbackShorthand
+type ForesightDirectiveValue = ForesightOptions | CallbackShorthand
 
 type ForesightDirectiveElement = HTMLElement | SVGElement
 
@@ -14,10 +14,10 @@ const resultMap = new WeakMap<ForesightDirectiveElement, ForesightRegisterResult
 const isCallbackShorthand = (value: ForesightDirectiveValue): value is CallbackShorthand =>
   typeof value === "function"
 
-const resolveOptions = (value: ForesightDirectiveValue): UseForesightOptions =>
+const resolveOptions = (value: ForesightDirectiveValue): ForesightOptions =>
   isCallbackShorthand(value) ? { callback: value } : value
 
-const register = (element: ForesightDirectiveElement, options: UseForesightOptions) => {
+const register = (element: ForesightDirectiveElement, options: ForesightOptions) => {
   resultMap.set(element, ForesightManager.instance.register({ element, ...options }))
 }
 

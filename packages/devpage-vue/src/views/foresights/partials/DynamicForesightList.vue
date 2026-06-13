@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import { useForesights } from "@foresightjs/vue"
+import { Foresight } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -34,14 +34,6 @@ const items = ref([
     },
   },
 ])
-
-const slots = useForesights(() =>
-  items.value.map(item => ({
-    callback: item.callback,
-    name: item.name,
-    reactivateAfter: 3000,
-  }))
-)
 
 let nextId = 4
 const addItem = () => {
@@ -89,29 +81,26 @@ const removeItem = () => {
     </div>
 
     <section class="flex flex-wrap gap-x-6 gap-y-8">
-      <article
-        v-for="(item, i) in items"
-        :key="item.name"
-        class="flex flex-col items-start gap-3 w-56"
-      >
+      <article v-for="item in items" :key="item.name" class="flex flex-col items-start gap-3 w-56">
         <h4 class="text-sm font-medium">{{ item.label }}</h4>
-        <button
-          type="button"
-          :ref="slots[i]?.elementRef"
-          :class="[
-            'flex items-center justify-center size-40 text-white text-sm font-medium',
-            slots[i]?.isPredicted ? 'bg-amber-500' : item.color,
-          ]"
+        <Foresight
+          :foresight-name="item.name"
+          :callback="item.callback"
+          :reactivate-after="3000"
+          #default="{ elementRef, isPredicted, hitCount, isCallbackRunning, status }"
         >
-          Hover to predict
-        </button>
-        <ForesightStats
-          v-if="slots[i]"
-          :is-predicted="slots[i].isPredicted"
-          :hit-count="slots[i].hitCount"
-          :is-callback-running="slots[i].isCallbackRunning"
-          :status="slots[i].status"
-        />
+          <button
+            type="button"
+            :ref="elementRef"
+            :class="[
+              'flex items-center justify-center size-40 text-white text-sm font-medium',
+              isPredicted ? 'bg-amber-500' : item.color,
+            ]"
+          >
+            Hover to predict
+          </button>
+          <ForesightStats :is-predicted :hit-count :is-callback-running :status />
+        </Foresight>
       </article>
     </section>
   </div>

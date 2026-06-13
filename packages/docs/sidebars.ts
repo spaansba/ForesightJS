@@ -88,7 +88,12 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "API",
-      items: ["vue/directive", "vue/useForesight", "vue/useForesights", "vue/useForesightEvent"],
+      items: [
+        "vue/directive",
+        "vue/useForesight",
+        "vue/foresight-component",
+        "vue/useForesightEvent",
+      ],
     },
     {
       type: "category",

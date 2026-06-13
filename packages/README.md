@@ -28,7 +28,7 @@ Official React bindings: the `useForesight` and `useForesightEvent` hooks plus t
 
 ### [foresightjs-vue](./foresightjs-vue/)
 
-Official Vue 3 bindings: the `v-foresight` directive plus the `useForesight`, `useForesights` and `useForesightEvent` composables.
+Official Vue 3 bindings: the `v-foresight` directive, the `useForesight` and `useForesightEvent` composables plus the `Foresight` component.
 
 **Published as:** `@foresightjs/vue` on npm
 
