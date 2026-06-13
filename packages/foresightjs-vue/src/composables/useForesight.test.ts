@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
-import type { UseForesightOptions } from "../types"
+import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
@@ -404,7 +404,7 @@ describe("useForesight", () => {
     })
 
     it("patches enabled when a ref options object is mutated in place", async () => {
-      const options = ref<UseForesightOptions>({
+      const options = ref<ForesightOptions>({
         callback: vi.fn(),
         name: "in-place-ref",
         enabled: true,
@@ -434,7 +434,7 @@ describe("useForesight", () => {
     })
 
     it("patches enabled when a reactive options object is mutated in place", async () => {
-      const options = reactive<UseForesightOptions>({
+      const options = reactive<ForesightOptions>({
         callback: vi.fn(),
         name: "in-place-reactive",
         enabled: true,

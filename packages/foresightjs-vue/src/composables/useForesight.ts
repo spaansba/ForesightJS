@@ -13,7 +13,7 @@ import {
   type ForesightElementState,
   type ForesightRegisterResult,
 } from "js.foresight"
-import type { MaybeElement, UseForesightOptions, UseForesightReturn } from "../types"
+import type { MaybeElement, ForesightOptions, ForesightResult } from "../types"
 import { resolveElement } from "../utils/resolveElement"
 
 /**
@@ -35,9 +35,7 @@ import { resolveElement } from "../utils/resolveElement"
  * <a :ref="elementRef" href="/about">About</a>
  * ```
  */
-export const useForesight = (
-  options: MaybeRefOrGetter<UseForesightOptions>
-): UseForesightReturn => {
+export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): ForesightResult => {
   const state = reactive(createUnregisteredSnapshot(false))
 
   let currentElement: Element | null = null
@@ -46,7 +44,7 @@ export const useForesight = (
 
   const callback = (s: ForesightElementState) => toValue(options).callback(s)
 
-  const registerElement = (element: Element, registerOptions: UseForesightOptions) => {
+  const registerElement = (element: Element, registerOptions: ForesightOptions) => {
     registerResults = ForesightManager.instance.register({
       ...registerOptions,
       element,

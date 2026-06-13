@@ -25,7 +25,7 @@ Requires Vue 3.5+
 
 - `v-foresight` -> directive to register an element with a callback or full options object
 - `useForesight` -> register a single element and get reactive refs for its state
-- `useForesights` -> register a dynamic list of elements from a single composable
+- `Foresight` -> component form of useForesight with a scoped slot
 - `useForesightEvent` -> subscribe to a ForesightManager event for the lifetime of the calling scope
 
 For usage and examples, see the [Vue documentation](https://foresightjs.com/docs/vue/installation).

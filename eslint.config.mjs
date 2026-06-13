@@ -78,13 +78,13 @@ export default [
     },
   },
 
-  // Specific config for devpage-vue package (Vue.js)
+  // Specific config for Vue packages (Vue.js)
   ...pluginVue.configs["flat/essential"].map(config => ({
     ...config,
-    files: ["packages/devpage-vue/**/*.vue"],
+    files: ["packages/devpage-vue/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
   })),
   {
-    files: ["packages/devpage-vue/**/*.vue"],
+    files: ["packages/devpage-vue/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
     languageOptions: {
       globals: {
         ...globals.browser,
