@@ -1,21 +1,13 @@
 import { act, render } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
-import type { UseForesightOptions } from "../types"
+import { emitSnapshot } from "../tests/helpers"
+import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
-beforeEach(() => {
-  registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
-  unregisterSpy.mockClear()
-  mockState.listeners = []
-  mockState.lastCallbackWrapper = null
-  mockState.currentSnapshot = createUnregisteredSnapshot(false)
-})
-
 type ProbeProps = {
-  options: UseForesightOptions
+  options: ForesightOptions
   attach?: boolean
 }
 
@@ -110,14 +102,11 @@ describe("useForesight", () => {
     expect(lastCall?.[0].element).toBeInstanceOf(HTMLAnchorElement)
   })
 
-  it("reflects manager state updates pushed through subscribe", () => {
+  it("reflects manager state updates pushed through subscribe", async () => {
     const { getByTestId } = render(<ButtonProbe options={{ callback: vi.fn() }} />)
     expect(getByTestId("el").getAttribute("data-predicted")).toBe("false")
 
-    act(() => {
-      mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
-      mockState.listeners.forEach(l => l())
-    })
+    await emitSnapshot({ isPredicted: true })
 
     expect(getByTestId("el").getAttribute("data-predicted")).toBe("true")
   })

@@ -24,7 +24,7 @@ Requires React 18+
 ## What's included
 
 - `useForesight` -> register a single element and get its live state plus a callback ref to bind it
-- `useForesights` -> register a dynamic list of elements from one hook call
+- `Foresight` -> component form of useForesight with a render prop, for dynamic lists or wherever the hook is awkward
 - `useForesightEvent` -> subscribe to a ForesightManager event for the lifetime of the component
 
 For usage and examples, see the [React documentation](https://foresightjs.com/docs/react/installation), including guides for [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router).

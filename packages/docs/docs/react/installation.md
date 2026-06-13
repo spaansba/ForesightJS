@@ -18,7 +18,7 @@ last_updated:
 [![npm version](https://img.shields.io/npm/v/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
 [![npm downloads](https://img.shields.io/npm/dt/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
 
-`@foresightjs/react` is the official React package for ForesightJS. It gives you [`useForesight`](./useForesight.md), [`useForesights`](./useForesights.md) and [`useForesightEvent`](./useForesightEvent.md) so you can register elements and read their prediction state straight from a component.
+`@foresightjs/react` is the official React package for ForesightJS. It gives you [`useForesight`](./useForesight.md), the [`Foresight` component](./foresight-component.md) and [`useForesightEvent`](./useForesightEvent.md) so you can register elements and read their prediction state straight from a component.
 
 ```bash
 npm install @foresightjs/react

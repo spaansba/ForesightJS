@@ -1,28 +1,48 @@
-import { useForesights } from "@foresightjs/react"
-import { useCallback, useMemo, useState } from "react"
+import { Foresight } from "@foresightjs/react"
+import { memo, useCallback, useState } from "react"
+
+type ButtonGridProps = {
+  buttonCount: number
+  resetKey: number
+  onHit: () => void
+}
+
+// Memoized so the hit counter in the header doesn't re-render the grid: a
+// callback hit must only re-render the one button whose state changed.
+const ButtonGrid = memo(function ButtonGrid({ buttonCount, resetKey, onHit }: ButtonGridProps) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Array.from({ length: buttonCount }, (_, i) => (
+        <Foresight<HTMLButtonElement> key={`${resetKey}-${i}`} hitSlop={0} callback={onHit}>
+          {({ elementRef, isPredicted }) => (
+            <button
+              ref={elementRef}
+              className={`flex justify-center items-center size-10 text-xs font-medium border ${
+                isPredicted
+                  ? "bg-emerald-500 text-white border-emerald-600"
+                  : "bg-white text-gray-700 border-gray-300"
+              }`}
+            >
+              {i}
+            </button>
+          )}
+        </Foresight>
+      ))}
+    </div>
+  )
+})
 
 const Mass = () => {
   const [resetKey, setResetKey] = useState(0)
   const [hitCount, setHitCount] = useState(0)
   const [buttonCount, setButtonCount] = useState(1000)
 
+  const onHit = useCallback(() => setHitCount(prev => prev + 1), [])
+
   const resetTest = useCallback(() => {
     setResetKey(prev => prev + 1)
     setHitCount(0)
   }, [])
-
-  const options = useMemo(
-    () =>
-      Array.from({ length: buttonCount }, () => ({
-        hitSlop: 0,
-        callback: () => setHitCount(prev => prev + 1),
-      })),
-    [buttonCount]
-  )
-
-  // One registration per button via the hook; it unregisters on unmount/remount
-  // automatically. The hit state is driven by each button's reactive `isPredicted`.
-  const foresights = useForesights<HTMLButtonElement>(options)
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
@@ -58,21 +78,7 @@ const Mass = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1">
-        {foresights.map((foresight, i) => (
-          <button
-            key={`${resetKey}-${i}`}
-            ref={foresight.elementRef}
-            className={`flex justify-center items-center size-10 text-xs font-medium border ${
-              foresight.isPredicted
-                ? "bg-emerald-500 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-300"
-            }`}
-          >
-            {i}
-          </button>
-        ))}
-      </div>
+      <ButtonGrid buttonCount={buttonCount} resetKey={resetKey} onHit={onHit} />
     </main>
   )
 }

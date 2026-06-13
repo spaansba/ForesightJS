@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react"
-import { useForesights } from "@foresightjs/react"
+import { useState } from "react"
+import { Foresight } from "@foresightjs/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { pageQueryOptions, prefetchPage } from "./api"
 import { ForesightImageButton } from "./ForesightImageButton"
@@ -100,40 +100,31 @@ const PageButtons = ({
   const queryClient = useQueryClient()
   const reactivateAfter = useReactivateAfter()
 
-  const options = useMemo(
-    () =>
-      PAGES.map(({ slug }) => ({
-        callback: () => prefetchPage(queryClient, slug),
-        name: slug,
-        hitSlop: 20 as const,
-        reactivateAfter,
-      })),
-    [queryClient, reactivateAfter]
-  )
-
-  const results = useForesights<HTMLButtonElement>(options)
-
   return (
     <nav className="flex gap-3">
-      {PAGES.map(({ slug, label }, i) => {
-        const { elementRef, isPredicted } = results[i]
-        const isActive = activePage === slug
-
-        return (
-          <button
-            key={slug}
-            ref={elementRef}
-            onClick={() => onSelect(slug)}
-            className={`px-5 py-3 border text-sm font-medium transition-colors cursor-pointer ${
-              isActive
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-400 text-gray-800 hover:bg-gray-100"
-            } ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
-          >
-            {label}
-          </button>
-        )
-      })}
+      {PAGES.map(({ slug, label }) => (
+        <Foresight<HTMLButtonElement>
+          key={slug}
+          foresightName={slug}
+          hitSlop={20}
+          reactivateAfter={reactivateAfter}
+          callback={() => prefetchPage(queryClient, slug)}
+        >
+          {({ elementRef, isPredicted }) => (
+            <button
+              ref={elementRef}
+              onClick={() => onSelect(slug)}
+              className={`px-5 py-3 border text-sm font-medium transition-colors cursor-pointer ${
+                activePage === slug
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-400 text-gray-800 hover:bg-gray-100"
+              } ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
+            >
+              {label}
+            </button>
+          )}
+        </Foresight>
+      ))}
     </nav>
   )
 }
