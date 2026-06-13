@@ -18,7 +18,7 @@ Visual development tools for ForesightJS. Provides an overlay system with trajec
 
 ## Framework Packages
 
-> These packages are at `0.1.0` and not yet stable. They work and are fully tested, but their APIs may still change.
+> These packages are in beta and not yet stable. They work and are fully tested, but their APIs may still change.
 
 ### [foresightjs-react](./foresightjs-react/)
 

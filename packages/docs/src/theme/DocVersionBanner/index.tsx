@@ -8,7 +8,7 @@ import Admonition from "@theme/Admonition"
 type Props = WrapperProps<typeof DocVersionBannerType>
 
 /**
- * Renders the 0.1.0 early-release notice on every page of the React and Vue
+ * Renders the early-release notice on every page of the React and Vue
  * framework trees, above the doc content (same slot as version banners).
  */
 export default function DocVersionBannerWrapper(props: Props): React.ReactNode {
@@ -26,8 +26,8 @@ export default function DocVersionBannerWrapper(props: Props): React.ReactNode {
       {pkg && (
         <div className="margin-bottom--md">
           <Admonition type="info" title="Not yet stable">
-            <code>{pkg}</code> is at <code>0.1.0</code> and not yet stable. It works and is fully
-            tested, but the API may still change.
+            <code>{pkg}</code> is in beta and not yet stable. It works and is fully tested, but the
+            API may still change.
           </Admonition>
         </div>
       )}
