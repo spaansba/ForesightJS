@@ -311,6 +311,21 @@ type BaseForesightManagerSettings = {
    * @default 3g
    */
   minimumConnectionType: MinimumConnectionType
+
+  /**
+   * When `true` the manager mirrors every registered element's prediction state
+   * onto `data-*` attributes via direct DOM mutation, so plain CSS can style
+   * predictions without any framework re-render. Toggling this applies or
+   * removes the attributes on all currently-registered elements.
+   *  - `data-predicted` — present while `isPredicted` is `true`
+   *  - `data-active` — present while `isActive` is `true`
+   *  - `data-callback-running` — present while `isCallbackRunning` is `true`
+   *  - `data-status` — set to `"success"` or `"error"` once a callback completes
+   *
+   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
+   * @default true
+   */
+  setDataAttributes: boolean
 }
 
 export type CurrentDeviceStrategy = "mouse" | "touch" | "pen"

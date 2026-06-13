@@ -119,18 +119,6 @@ describe("Foresight", () => {
     expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("renamed")
   })
 
-  it("does not set data-* attributes in the render-prop form", async () => {
-    const wrapper = mount(List, {
-      props: { items: [{ id: "1", label: "a" }] },
-      attachTo: document.body,
-    })
-    await nextTick()
-
-    await emitSnapshot({ isPredicted: true })
-
-    expect(wrapper.get('[data-testid="el-1"]').element.hasAttribute("data-predicted")).toBe(false)
-  })
-
   describe("as form", () => {
     it("renders the tag itself and registers it", async () => {
       const wrapper = mount(Foresight, {
@@ -197,33 +185,13 @@ describe("Foresight", () => {
       })
       await nextTick()
 
-      // The data-attribute mirror and the scoped slot share the single
-      // reactive snapshot - there must be no second manager subscription.
+      // The scoped slot reads the single reactive snapshot, and the manager
+      // mirrors the data attributes itself - there must be no second
+      // manager subscription.
       expect(mockState.listeners).toHaveLength(1)
     })
 
-    it("mirrors state onto data-* attributes", async () => {
-      const wrapper = mount(Foresight, {
-        props: { as: "button", callback: vi.fn() },
-        attrs: { "data-testid": "btn" },
-        slots: { default: () => "Checkout" },
-        attachTo: document.body,
-      })
-      await nextTick()
-
-      const button = wrapper.get('[data-testid="btn"]').element
-      expect(button.hasAttribute("data-predicted")).toBe(false)
-      expect(button.hasAttribute("data-callback-running")).toBe(false)
-      expect(button.hasAttribute("data-status")).toBe(false)
-
-      await emitSnapshot({ isPredicted: true, isCallbackRunning: true, status: "success" })
-
-      expect(button.hasAttribute("data-predicted")).toBe(true)
-      expect(button.hasAttribute("data-callback-running")).toBe(true)
-      expect(button.getAttribute("data-status")).toBe("success")
-    })
-
-    it("re-applies data-* attributes when the rendered element swaps", async () => {
+    it("re-registers the swapped element", async () => {
       const wrapper = mount(Foresight, {
         props: { as: "button", callback: vi.fn() },
         attrs: { "data-testid": "el" },
@@ -231,15 +199,18 @@ describe("Foresight", () => {
         attachTo: document.body,
       })
       await nextTick()
-      await emitSnapshot({ isPredicted: true })
-      expect(wrapper.get('[data-testid="el"]').element.hasAttribute("data-predicted")).toBe(true)
+      registerSpy.mockClear()
+      unregisterSpy.mockClear()
 
       await wrapper.setProps({ as: "a" })
       await nextTick()
 
       const link = wrapper.get('[data-testid="el"]').element
       expect(link.tagName).toBe("A")
-      expect(link.hasAttribute("data-predicted")).toBe(true)
+      // The element swap tears down the old registration and registers the new
+      // element.
+      expect(unregisterSpy).toHaveBeenCalledTimes(1)
+      expect(registerSpy.mock.calls.at(-1)?.[0].element).toBe(link)
     })
 
     it("unregisters on unmount", async () => {

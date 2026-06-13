@@ -2,7 +2,6 @@ import type { ComponentPropsWithoutRef, CSSProperties, ElementType, ReactNode } 
 import type { ForesightElementState } from "js.foresight"
 import { useForesightRegistration } from "../hooks/useForesightRegistration"
 import { useForesightState } from "../hooks/useForesightState"
-import { useForesightDataAttributes } from "../hooks/useForesightDataAttributes"
 import type { ForesightOptions, ForesightResult } from "../types"
 
 /**
@@ -37,8 +36,8 @@ export type ForesightAsProps<E extends ElementType> = ForesightComponentOptions 
  * With `as`, it renders that element itself and forwards the remaining props
  * to it, including the HTML `name` attribute (the foresight name is
  * `foresightName`). It mirrors the element state onto `data-predicted`,
- * `data-callback-running` and `data-status` attributes via direct DOM
- * mutation, so plain CSS can style predictions. `children`,
+ * `data-active`, `data-callback-running` and `data-status` attributes via
+ * direct DOM mutation, so plain CSS can style predictions. `children`,
  * `className` and `style` may also be functions of the reactive state:
  *
  * ```tsx
@@ -121,16 +120,14 @@ const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
     enabled,
   } satisfies Record<keyof ForesightOptions, unknown>
 
-  const { element, elementRef, registerResults } = useForesightRegistration(options)
+  const { elementRef, registerResults } = useForesightRegistration(options)
 
   // Subscribe only when something actually reads the state, so a fully static
-  // element does not re-render on state changes (the data attributes are
-  // mirrored onto the DOM directly by useForesightDataAttributes).
+  // element does not re-render on state changes
   const readsState =
     typeof children === "function" || typeof className === "function" || typeof style === "function"
 
   const state = useForesightState(readsState ? registerResults : null)
-  useForesightDataAttributes(element, registerResults)
 
   return (
     <Tag
