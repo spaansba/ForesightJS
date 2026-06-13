@@ -63,8 +63,6 @@ export class ForesightManager {
     new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
 
   private idCounter: number = 0
-  private activeElementCount: number = 0
-  private parkedElementCount: number = 0
 
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
@@ -143,6 +141,28 @@ export class ForesightManager {
 
   private get isUsingDesktopHandler(): boolean {
     return this.currentDeviceStrategy === "mouse" || this.currentDeviceStrategy === "pen"
+  }
+
+  private get activeElementCount(): number {
+    let count = 0
+    for (const entry of this.elementEntries.values()) {
+      if (entry.state.isActive) {
+        count++
+      }
+    }
+
+    return count
+  }
+
+  private get parkedElementCount(): number {
+    let count = 0
+    for (const entry of this.elementEntries.values()) {
+      if (entry.state.isParked) {
+        count++
+      }
+    }
+
+    return count
   }
 
   public addEventListener<K extends ForesightEvent>(
@@ -294,7 +314,6 @@ export class ForesightManager {
     // Inactive elements (disabled or limited connection) are not observed or
     // counted as active until they are (re)activated.
     if (entry.state.isActive) {
-      this.activeElementCount++
       this.currentlyActiveHandler?.observeElement(options.element)
     }
 
@@ -497,14 +516,6 @@ export class ForesightManager {
     this.clearReactivateTimeout(entry)
     this.currentlyActiveHandler?.unobserveElement(element)
 
-    if (entry.state.isActive) {
-      this.activeElementCount--
-    }
-
-    if (entry.state.isParked) {
-      this.parkedElementCount--
-    }
-
     const finalState = this.updateElementState(entry, {
       isRegistered: false,
       isActive: false,
@@ -562,7 +573,6 @@ export class ForesightManager {
     }
 
     this.updateElementState(entry, { isActive: true, isPredicted: false })
-    this.activeElementCount++
     this.currentlyActiveHandler?.observeElement(element)
   }
 
@@ -591,14 +601,10 @@ export class ForesightManager {
         this.initializeGlobalListeners()
       }
 
-      this.activeElementCount++
       this.currentlyActiveHandler?.observeElement(element)
     } else {
       this.clearReactivateTimeout(entry)
       this.currentlyActiveHandler?.unobserveElement(element)
-      if (entry.state.isActive) {
-        this.activeElementCount--
-      }
     }
 
     this.updateElementState(entry, {
@@ -674,10 +680,6 @@ export class ForesightManager {
     errorMessage: string | null
   ): void {
     const elapsed = performance.now() - startTime
-
-    if (entry.state.isActive) {
-      this.activeElementCount--
-    }
 
     this.currentlyActiveHandler?.unobserveElement(entry.element)
 
@@ -871,11 +873,7 @@ export class ForesightManager {
   private parkDisconnected(entry: ForesightElementInternal): void {
     this.clearReactivateTimeout(entry)
     this.currentlyActiveHandler?.unobserveElement(entry.element)
-    if (entry.state.isActive) {
-      this.activeElementCount--
-    }
 
-    this.parkedElementCount++
     // Preserve `isPredicted`: an element that already fired its callback must stay
     // "fired" so it is not treated as fresh (and reactivated) when it reconnects.
     this.updateElementState(entry, {
@@ -892,8 +890,6 @@ export class ForesightManager {
    * (it resumes the same state it had before it detached).
    */
   private resumeReconnected(entry: ForesightElementInternal): void {
-    this.parkedElementCount--
-
     const eligible = entry.state.isEnabled && !entry.state.isLimitedConnection
     // Only resume as active if it was active before detaching. A fired element
     // (isPredicted) was already inactive, so it stays inactive on reconnect.
@@ -903,7 +899,6 @@ export class ForesightManager {
         this.initializeGlobalListeners()
       }
 
-      this.activeElementCount++
       this.currentlyActiveHandler?.observeElement(entry.element)
     }
 
