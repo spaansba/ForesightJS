@@ -53,7 +53,7 @@ export default [
   {
     files: [
       "packages/foresightjs-react/**/*.{ts,tsx}",
-      "packages/devpage-react/**/*.{ts,tsx}",
+      "packages/devpage-framework/**/*.{ts,tsx}",
       "packages/devpage-nextjs/**/*.{ts,tsx}",
     ],
     plugins: {
@@ -81,10 +81,10 @@ export default [
   // Specific config for Vue packages (Vue.js)
   ...pluginVue.configs["flat/essential"].map(config => ({
     ...config,
-    files: ["packages/devpage-vue/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
+    files: ["packages/devpage-framework/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
   })),
   {
-    files: ["packages/devpage-vue/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
+    files: ["packages/devpage-framework/**/*.vue", "packages/foresightjs-vue/**/*.vue"],
     languageOptions: {
       globals: {
         ...globals.browser,
