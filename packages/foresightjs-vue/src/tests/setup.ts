@@ -1,4 +1,4 @@
-import { vi } from "vitest"
+import { beforeEach, vi } from "vitest"
 import type {
   ForesightCallback,
   ForesightElementState,
@@ -10,7 +10,13 @@ export const mockState = {
   listeners: [] as Array<() => void>,
   currentSnapshot: null as ForesightElementState | null,
   lastCallbackWrapper: null as ForesightCallback | null,
+  registeredElements: new Set<Element>(),
 }
+
+beforeEach(() => {
+  // clear() rather than reassign: the mocked instance holds this Set by reference
+  mockState.registeredElements.clear()
+})
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
 export const updateElementOptionsSpy =
@@ -35,10 +41,14 @@ vi.mock("js.foresight", async importOriginal => {
         register: (opts: ForesightRegisterOptions) => {
           registerSpy(opts)
           mockState.lastCallbackWrapper = opts.callback
+          mockState.registeredElements.add(opts.element)
 
           return {
             ...(mockState.currentSnapshot ?? actual.createUnregisteredSnapshot(false)),
-            unregister: unregisterSpy,
+            unregister: () => {
+              mockState.registeredElements.delete(opts.element)
+              unregisterSpy()
+            },
             subscribe: (fn: () => void) => {
               mockState.listeners.push(fn)
 
@@ -61,6 +71,7 @@ vi.mock("js.foresight", async importOriginal => {
         },
         addEventListener: addEventListenerSpy,
         removeEventListener: removeEventListenerSpy,
+        registeredElements: mockState.registeredElements,
       },
     },
   }

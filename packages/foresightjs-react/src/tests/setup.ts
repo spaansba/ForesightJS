@@ -10,12 +10,14 @@ export const mockState = {
   boundsListeners: [] as Array<() => void>,
   currentSnapshot: null as ForesightElementState | null,
   lastCallbackWrapper: null as ForesightCallback | null,
+  registeredElements: new Set<Element>(),
 }
 
 const EMPTY_RECT = { top: 0, left: 0, right: 0, bottom: 0 }
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
-export const updateElementOptionsSpy = vi.fn()
+export const updateElementOptionsSpy =
+  vi.fn<(element: unknown, opts: Partial<{ callback: ForesightCallback }>) => void>()
 export const unregisterSpy = vi.fn<() => void>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const addEventListenerSpy =
@@ -34,6 +36,8 @@ beforeEach(() => {
   mockState.boundsListeners = []
   mockState.currentSnapshot = null
   mockState.lastCallbackWrapper = null
+  // clear() rather than reassign: the mocked instance holds this Set by reference
+  mockState.registeredElements.clear()
 })
 
 vi.mock("js.foresight", async importOriginal => {
@@ -49,10 +53,14 @@ vi.mock("js.foresight", async importOriginal => {
         register: (opts: ForesightRegisterOptions) => {
           registerSpy(opts)
           mockState.lastCallbackWrapper = opts.callback
+          mockState.registeredElements.add(opts.element)
 
           return {
             ...(mockState.currentSnapshot ?? initialSnapshot),
-            unregister: unregisterSpy,
+            unregister: () => {
+              mockState.registeredElements.delete(opts.element)
+              unregisterSpy()
+            },
             subscribe: (fn: () => void) => {
               mockState.listeners.push(fn)
 
@@ -85,6 +93,7 @@ vi.mock("js.foresight", async importOriginal => {
         },
         addEventListener: addEventListenerSpy,
         removeEventListener: removeEventListenerSpy,
+        registeredElements: mockState.registeredElements,
       },
     },
   }
