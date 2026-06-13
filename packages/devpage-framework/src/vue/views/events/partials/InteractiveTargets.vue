@@ -1,35 +1,37 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { useForesight } from "@foresightjs/vue"
+import { useReactivateAfter } from "../../../composables/useReactivateAfter"
 
 const toggleableMounted = ref(true)
+const reactivateAfter = useReactivateAfter()
 
-const fast = useForesight({
+const fast = useForesight(() => ({
   callback: async () => {
     await new Promise(resolve => setTimeout(resolve, 50))
   },
   name: "fast-callback",
   hitSlop: 20,
-  reactivateAfter: 2000,
-})
+  reactivateAfter: reactivateAfter.value,
+}))
 
-const slow = useForesight({
+const slow = useForesight(() => ({
   callback: async () => {
     await new Promise(resolve => setTimeout(resolve, 1500))
   },
   name: "slow-callback",
   hitSlop: 20,
-  reactivateAfter: 2000,
-})
+  reactivateAfter: reactivateAfter.value,
+}))
 
-const error = useForesight({
+const error = useForesight(() => ({
   callback: async () => {
     throw new Error("Intentional error")
   },
   name: "error-callback",
   hitSlop: 20,
-  reactivateAfter: 2000,
-})
+  reactivateAfter: reactivateAfter.value,
+}))
 
 const toggle = useForesight({
   callback: () => {},

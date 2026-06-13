@@ -4,6 +4,7 @@ import { scan, setOptions } from "react-scan"
 import "./index.css"
 import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
+import { getReactivateAfter, setReactivateAfter, triggerReset } from "./shared/controls"
 
 // Initialise react-scan disabled and hidden; its toolbar is only shown while
 // the React demo is mounted (see activate()), never on the Vue page.
@@ -106,6 +107,29 @@ const activate = async (fw: Framework) => {
 for (const b of buttons) {
   b.addEventListener("click", () => activate(b.dataset.fw as Framework))
 }
+
+// --- Shared controls (work on whichever framework is mounted) ---
+
+const reactivateInput = document.getElementById("reactivate-input") as HTMLInputElement
+reactivateInput.value = String(getReactivateAfter())
+reactivateInput.addEventListener("input", () => {
+  setReactivateAfter(Number(reactivateInput.value))
+})
+
+const resetButton = document.getElementById("btn-reset") as HTMLButtonElement
+resetButton.addEventListener("click", () => triggerReset())
+
+const debugButton = document.getElementById("btn-debug") as HTMLButtonElement
+const syncDebugButton = (on: boolean) => {
+  debugButton.textContent = `Debug: ${on ? "on" : "off"}`
+  debugButton.classList.toggle("active", on)
+}
+syncDebugButton(ForesightDevtools.instance.devtoolsSettings.show.controlPanel)
+debugButton.addEventListener("click", () => {
+  const on = !ForesightDevtools.instance.devtoolsSettings.show.controlPanel
+  ForesightDevtools.instance.alterDevtoolsSettings({ show: { controlPanel: on } })
+  syncDebugButton(on)
+})
 
 const initial = (localStorage.getItem("combined-fw") as Framework | null) ?? "react"
 activate(initial)

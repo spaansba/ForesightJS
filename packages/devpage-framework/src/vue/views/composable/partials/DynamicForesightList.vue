@@ -2,6 +2,9 @@
 import { ref } from "vue"
 import { Foresight } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
+import { useReactivateAfter } from "../../../composables/useReactivateAfter"
+
+const reactivateAfter = useReactivateAfter()
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -86,7 +89,7 @@ const removeItem = () => {
         <Foresight
           :foresight-name="item.name"
           :callback="item.callback"
-          :reactivate-after="3000"
+          :reactivate-after
           #default="{ elementRef, isPredicted, hitCount, isCallbackRunning, status }"
         >
           <button

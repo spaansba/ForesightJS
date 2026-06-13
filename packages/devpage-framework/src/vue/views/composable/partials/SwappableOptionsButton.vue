@@ -2,22 +2,25 @@
 import { shallowRef } from "vue"
 import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/vue"
 import ForesightStats from "../../../components/ForesightStats.vue"
+import { useReactivateAfter } from "../../../composables/useReactivateAfter"
+
+const reactivateAfter = useReactivateAfter()
 
 const optionsA: ForesightRegisterOptionsWithoutElement = {
   callback: () => console.log("Ref A prefetch"),
   name: "ref-a",
-  reactivateAfter: Infinity,
 }
 const optionsB: ForesightRegisterOptionsWithoutElement = {
   callback: () => console.log("Ref B prefetch"),
   name: "ref-b",
-  reactivateAfter: 1000,
 }
 
 const currentOptions = shallowRef(optionsA)
 
-const { isPredicted, hitCount, isCallbackRunning, status, elementRef } =
-  useForesight(currentOptions)
+const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useForesight(() => ({
+  ...currentOptions.value,
+  reactivateAfter: reactivateAfter.value,
+}))
 
 const swap = () => {
   currentOptions.value = currentOptions.value === optionsA ? optionsB : optionsA

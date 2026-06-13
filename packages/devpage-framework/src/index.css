@@ -23,6 +23,51 @@
     sans-serif;
 }
 
+#toolbar .controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#toolbar .ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #d6d3d1;
+}
+
+#toolbar .ctl input {
+  width: 5rem;
+  padding: 0.25rem 0.4rem;
+  background: #292524;
+  color: #fafaf9;
+  border: 1px solid #57534e;
+  border-radius: 0.3rem;
+  font: inherit;
+}
+
+#toolbar #btn-debug,
+#toolbar #btn-reset {
+  padding: 0.35rem 0.7rem;
+  background: #292524;
+  color: #d6d3d1;
+  border: 1px solid #57534e;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+#toolbar #btn-debug:hover,
+#toolbar #btn-reset:hover {
+  background: #44403c;
+}
+
+#toolbar #btn-debug.active {
+  background: #fafaf9;
+  color: #1c1917;
+  border-color: #fafaf9;
+}
+
 #toolbar .switch {
   display: inline-flex;
   border: 1px solid #57534e;

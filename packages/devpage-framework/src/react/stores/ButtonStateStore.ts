@@ -1,12 +1,10 @@
 import { create } from "zustand"
-import { ForesightManager } from "@foresightjs/react"
+import { getReactivateAfter, onReset, subscribeReactivateAfter } from "../../shared/controls"
 
 type ButtonStateActions = {
   toggleVisibility: () => void
   toggleResized: () => void
   toggleRemoved: () => void
-  setReactivateAfter: (ms: number) => void
-  resetAll: () => void
 }
 
 type ButtonStateStore = {
@@ -23,29 +21,31 @@ const useButtonStateStore = create<ButtonStateStore>(set => ({
   isVisible: true,
   isRemoved: false,
   isResized: true,
-  reactivateAfter: 5000,
+  // `reactivateAfter` is owned by the shared top bar; mirror it here.
+  reactivateAfter: getReactivateAfter(),
   resetKey: 0,
   actions: {
     toggleVisibility: () => set(state => ({ isVisible: !state.isVisible })),
     toggleResized: () => set(state => ({ isResized: !state.isResized })),
     toggleRemoved: () => set(state => ({ isRemoved: !state.isRemoved })),
-    setReactivateAfter: ms => set({ reactivateAfter: ms }),
-    resetAll: () => {
-      // Reactivate all registered ForesightManager elements
-      const manager = ForesightManager.instance
-      for (const element of manager.registeredElements.keys()) {
-        manager.reactivate(element)
-      }
-
-      set(state => ({
-        isVisible: true,
-        isRemoved: false,
-        isResized: true,
-        resetKey: state.resetKey + 1,
-      }))
-    },
   },
 }))
+
+// Bridge the shared top-bar controls into this store.
+subscribeReactivateAfter(() => {
+  useButtonStateStore.setState({ reactivateAfter: getReactivateAfter() })
+})
+
+// The element reactivation happens globally in triggerReset(); here we only
+// restore this demo's local UI toggles.
+onReset(() => {
+  useButtonStateStore.setState(state => ({
+    isVisible: true,
+    isRemoved: false,
+    isResized: true,
+    resetKey: state.resetKey + 1,
+  }))
+})
 
 export const useIsVisible = () => useButtonStateStore(state => state.isVisible)
 export const useIsResized = () => useButtonStateStore(state => state.isResized)

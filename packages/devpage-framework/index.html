@@ -7,10 +7,19 @@
   </head>
   <body>
     <div id="toolbar">
-      <span class="brand">ForesightJS · one page, two frameworks</span>
-      <div class="switch">
-        <button id="btn-react" data-fw="react" type="button">React</button>
-        <button id="btn-vue" data-fw="vue" type="button">Vue</button>
+      <span class="brand">ForesightJS</span>
+      <div class="controls">
+        <label class="ctl">
+          Reactivate
+          <input id="reactivate-input" type="number" min="0" step="500" />
+          ms
+        </label>
+        <button id="btn-debug" type="button">Debug: off</button>
+        <button id="btn-reset" type="button">Reset</button>
+        <div class="switch">
+          <button id="btn-react" data-fw="react" type="button">React</button>
+          <button id="btn-vue" data-fw="vue" type="button">Vue</button>
+        </div>
       </div>
     </div>
     <div id="react-root"></div>
