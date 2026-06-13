@@ -1,69 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import {
-  useForesightEvent,
-  type ForesightEvent,
-  type ForesightEventMap,
-  type ForesightElementState,
-  type CallbackHitType,
-} from "@foresightjs/vue"
+import { useForesightEvent, type ForesightEvent } from "@foresightjs/vue"
 import InteractiveTargets from "./partials/InteractiveTargets.vue"
 import EventCounters from "./partials/EventCounters.vue"
 import EventLog from "./partials/EventLog.vue"
-
-type EventLogEntry = {
-  id: number
-  type: ForesightEvent
-  timestamp: number
-  summary: string
-}
-
-const MAX_LOG_ENTRIES = 200
-
-const ALL_EVENTS: ForesightEvent[] = [
-  "elementRegistered",
-  "elementUnregistered",
-  "callbackInvoked",
-  "callbackCompleted",
-  "managerSettingsChanged",
-  "deviceStrategyChanged",
-]
-
-const EVENT_COLORS: Partial<Record<ForesightEvent, string>> = {
-  elementRegistered: "text-green-700",
-  elementUnregistered: "text-red-700",
-  callbackInvoked: "text-amber-700",
-  callbackCompleted: "text-purple-700",
-  managerSettingsChanged: "text-cyan-700",
-  deviceStrategyChanged: "text-teal-700",
-}
-
-const formatHitType = (hitType: CallbackHitType): string => {
-  return hitType.subType ? `${hitType.kind}:${hitType.subType}` : hitType.kind
-}
-
-const formatElementName = (state: ForesightElementState): string => {
-  return state.name || state.id.slice(0, 8)
-}
-
-const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {
-  switch (event.type) {
-    case "elementRegistered":
-      return `"${formatElementName(event.state)}" registered`
-    case "elementUnregistered":
-      return `"${formatElementName(event.state)}" unregistered (${event.unregisterReason})`
-    case "callbackInvoked":
-      return `"${formatElementName(event.state)}" callback invoked [${formatHitType(event.hitType)}]`
-    case "callbackCompleted":
-      return `"${formatElementName(event.state)}" callback ${event.status ?? "done"} (${event.elapsed.toFixed(1)}ms) [${formatHitType(event.hitType)}]`
-    case "managerSettingsChanged":
-      return `settings changed: ${event.updatedSettings.map(s => s.setting).join(", ")}`
-    case "deviceStrategyChanged":
-      return `device strategy: ${event.oldStrategy} -> ${event.newStrategy}`
-    default:
-      return event.type
-  }
-}
+import {
+  ALL_EVENTS,
+  EVENT_COLORS,
+  MAX_LOG_ENTRIES,
+  summarizeEvent,
+  type EventLogEntry,
+} from "../../../shared/foresightEvents"
 
 const entries = ref<EventLogEntry[]>([])
 const isPaused = ref(false)

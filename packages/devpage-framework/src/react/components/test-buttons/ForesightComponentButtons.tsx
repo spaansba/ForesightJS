@@ -1,5 +1,5 @@
 import { Foresight } from "@foresightjs/react"
-import ButtonStats from "../ui/ButtonStats"
+import ForesightStats from "../ui/ForesightStats"
 import { useReactivateAfter } from "../../stores/ButtonStateStore"
 
 const callback = async () => {
@@ -49,7 +49,7 @@ export const ForesightButtonRenderProp = () => {
             <button ref={elementRef} className={buttonClassName}>
               <span className="text-center leading-tight">render-prop</span>
             </button>
-            <ButtonStats
+            <ForesightStats
               hitCount={hitCount}
               isPredicted={isPredicted}
               isCallbackRunning={isCallbackRunning}

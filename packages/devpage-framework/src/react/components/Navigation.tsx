@@ -11,7 +11,7 @@ export const Navigation = () => {
           className="text-base font-semibold text-gray-900"
           onPrefetch={() => routeImports["/"]()}
         >
-          ForesightJS Dev
+          ForesightJS React
         </ForesightLink>
         <nav className="flex items-center gap-4 text-sm">
           <ForesightLink

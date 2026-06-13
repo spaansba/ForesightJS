@@ -1,44 +1,60 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from "vue-router"
-import { ForesightDevtools } from "js.foresight-devtools"
-
-ForesightDevtools.initialize({})
+import { RouterView } from "vue-router"
+import ForesightRouterLink from "./components/ForesightRouterLink.vue"
+import { routeImports } from "./router"
 </script>
 
 <template>
   <div class="min-h-screen bg-stone-50 text-gray-900">
     <header class="bg-white border-b border-gray-300 sticky top-0 z-10">
       <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-        <h1 class="text-base font-semibold">ForesightJS Vue Devpage</h1>
+        <h1 class="text-base font-semibold">ForesightJS Vue</h1>
         <nav class="flex items-center gap-4 text-sm">
-          <RouterLink
+          <ForesightRouterLink
             to="/"
+            name="nav-directive"
+            :on-prefetch="routeImports['/']"
             class="text-gray-700 hover:text-gray-900"
             active-class="text-gray-900 font-medium"
           >
             Directive
-          </RouterLink>
-          <RouterLink
+          </ForesightRouterLink>
+          <ForesightRouterLink
             to="/composable"
+            name="nav-composable"
+            :on-prefetch="routeImports['/composable']"
             class="text-gray-700 hover:text-gray-900"
             active-class="text-gray-900 font-medium"
           >
             Composable
-          </RouterLink>
-          <RouterLink
+          </ForesightRouterLink>
+          <ForesightRouterLink
             to="/events"
+            name="nav-events"
+            :on-prefetch="routeImports['/events']"
             class="text-gray-700 hover:text-gray-900"
             active-class="text-gray-900 font-medium"
           >
             Events
-          </RouterLink>
-          <RouterLink
+          </ForesightRouterLink>
+          <ForesightRouterLink
             to="/detach"
+            name="nav-detach"
+            :on-prefetch="routeImports['/detach']"
             class="text-gray-700 hover:text-gray-900"
             active-class="text-gray-900 font-medium"
           >
             Detach &amp; Reattach
-          </RouterLink>
+          </ForesightRouterLink>
+          <ForesightRouterLink
+            to="/mass"
+            name="nav-mass"
+            :on-prefetch="routeImports['/mass']"
+            class="text-gray-700 hover:text-gray-900"
+            active-class="text-gray-900 font-medium"
+          >
+            Mass test
+          </ForesightRouterLink>
         </nav>
       </div>
     </header>

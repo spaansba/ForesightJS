@@ -1,71 +1,13 @@
 import { useCallback, useRef, useState } from "react"
 import { useForesight, useForesightEvent } from "@foresightjs/react"
-import type {
-  ForesightEvent,
-  ForesightEventMap,
-  CallbackHitType,
-  ForesightElementState,
-} from "@foresightjs/react"
-
-type EventLogEntry = {
-  id: number
-  type: ForesightEvent
-  timestamp: number
-  summary: string
-}
-
-const MAX_LOG_ENTRIES = 200
-
-const ALL_EVENTS: ForesightEvent[] = [
-  "elementRegistered",
-  "elementUnregistered",
-  "callbackInvoked",
-  "callbackCompleted",
-  "managerSettingsChanged",
-  "deviceStrategyChanged",
-]
-
-const formatHitType = (hitType: CallbackHitType): string => {
-  return hitType.subType ? `${hitType.kind}:${hitType.subType}` : hitType.kind
-}
-
-const formatElementName = (state: ForesightElementState): string => {
-  return state.name || state.id.slice(0, 8)
-}
-
-const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {
-  switch (event.type) {
-    case "elementRegistered":
-      return `"${formatElementName(event.state)}" registered`
-
-    case "elementUnregistered":
-      return `"${formatElementName(event.state)}" unregistered (${event.unregisterReason})`
-
-    case "callbackInvoked":
-      return `"${formatElementName(event.state)}" callback invoked [${formatHitType(event.hitType)}]`
-
-    case "callbackCompleted":
-      return `"${formatElementName(event.state)}" callback ${event.status ?? "done"} (${event.elapsed.toFixed(1)}ms) [${formatHitType(event.hitType)}]`
-
-    case "managerSettingsChanged":
-      return `settings changed: ${event.updatedSettings.map(s => s.setting).join(", ")}`
-
-    case "deviceStrategyChanged":
-      return `device strategy: ${event.oldStrategy} -> ${event.newStrategy}`
-
-    default:
-      return event.type
-  }
-}
-
-const EVENT_COLORS: Partial<Record<ForesightEvent, string>> = {
-  elementRegistered: "text-green-700",
-  elementUnregistered: "text-red-700",
-  callbackInvoked: "text-amber-700",
-  callbackCompleted: "text-purple-700",
-  managerSettingsChanged: "text-cyan-700",
-  deviceStrategyChanged: "text-teal-700",
-}
+import type { ForesightEvent } from "@foresightjs/react"
+import {
+  ALL_EVENTS,
+  EVENT_COLORS,
+  MAX_LOG_ENTRIES,
+  summarizeEvent,
+  type EventLogEntry,
+} from "../../../shared/foresightEvents"
 
 const DEMO_ELEMENTS = [
   { name: "fast-callback", label: "Fast callback", color: "bg-green-200", delayMs: 50 },
