@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onActivated, ref } from "vue"
 import FixedOptionsButton from "../../composable/partials/FixedOptionsButton.vue"
-import StaticForesightTargets from "../../foresights/partials/StaticForesightTargets.vue"
+import StaticForesightTargets from "../../composable/partials/StaticForesightTargets.vue"
 import DirectiveSimple from "../../directive/partials/DirectiveSimple.vue"
 
 // How many times this cached instance has been reactivated (without re-creating).
