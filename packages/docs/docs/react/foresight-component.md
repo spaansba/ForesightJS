@@ -17,7 +17,7 @@ last_updated:
 
 # Foresight component
 
-`Foresight` is the component form of [`useForesight`](./useForesight.md): one instance, one registration. It takes the same options as props and renders in one of two ways. The only renamed option is `name` — on the component it is `foresightName`, so the HTML `name` attribute (on `input`, `button`, `select`, ...) forwards to the element like any other DOM prop.
+`Foresight` is the component form of [`useForesight`](./useForesight.md): one instance, one registration. It renders in one of two ways.
 
 ## Rendering an element with `as`
 
@@ -38,7 +38,7 @@ function CheckoutButton() {
 `as` accepts any element tag (`"button"`, `"a"`, `"div"`, ...) or a component that forwards its ref to a DOM element.
 
 :::note
-In the `as` form there is no way to pass your own `ref` to the rendered element — `Foresight` uses the ref slot for its registration. If you need the DOM node, use the render-prop form below and attach both refs yourself.
+In the `as` form there is no way to pass your own `ref` to the rendered element, `Foresight` uses the ref slot for its registration. If you need the DOM node, use the render-prop form below and attach both refs yourself.
 :::
 
 ### Styling with data attributes
@@ -82,7 +82,7 @@ To use the [reactive state](./useForesight.md#reactive-state) in this form, pass
 
 For full control over the rendered markup, use the render-prop form below or [`useForesight`](./useForesight.md).
 
-## Render-prop children
+## Render-prop form
 
 With a function as children, `Foresight` renders nothing itself. The function receives the [reactive state](./useForesight.md#reactive-state) plus the `elementRef` to attach, which gives full control over the markup:
 
@@ -103,6 +103,10 @@ function CheckoutButton() {
 ```
 
 In this form the data attributes are not set — you own the element, so render them from the state if you want them.
+
+## Options
+
+`Foresight` takes the same options as [`useForesight`](./useForesight.md), passed as props. The only renamed option is `name`, on the component it is `foresightName`, so the HTML `name` attribute (on `input`, `button`, `select`, ...) falls through to the element like any other prop.
 
 ## Dynamic lists
 
@@ -129,5 +133,3 @@ function Nav({ links }: { links: { href: string; label: string }[] }) {
   )
 }
 ```
-
-Added items register when their refs attach, removed items unregister on unmount, and reordering keyed items moves the registrations with them.
