@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, shallowRef, watchEffect } from "vue"
+import { computed, reactive } from "vue"
 import { useForesight } from "../composables/useForesight"
-import { resolveElement } from "../utils/resolveElement"
-import { applyDataAttributes, removeDataAttributes } from "../utils/dataAttributes"
-import type { ForesightOptions, ForesightProps, ForesightSlotProps, MaybeElement } from "../types"
+import type { ForesightOptions, ForesightProps, ForesightSlotProps } from "../types"
 
 defineSlots<{
   default?: (props: ForesightSlotProps) => unknown
@@ -38,40 +36,14 @@ const options = computed(
 
 const { elementRef, ...stateRefs } = useForesight(options)
 
-// Track the resolved element for the data-attribute mirror.
-const element = shallowRef<Element | null>(null)
-const setRef = (el: MaybeElement) => {
-  const resolved = resolveElement(el) ?? null
-  if (resolved === element.value) {
-    return
-  }
-
-  if (element.value) {
-    removeDataAttributes(element.value)
-  }
-
-  element.value = resolved
-  elementRef(el)
-}
-
-// reactive() unwraps the state refs; reads inside the slot body or the
-// watchEffect are tracked fine-grained, so a slot that never reads state never
-// re-renders on state changes.
-const slotProps: ForesightSlotProps = reactive({ ...stateRefs, elementRef: setRef })
-
-// `as` form only: mirror state onto data-* attributes via direct DOM mutation,
-// so [data-predicted] CSS works without any re-render.
-watchEffect(() => {
-  if (!as || !element.value) {
-    return
-  }
-
-  applyDataAttributes(element.value, slotProps)
-})
+// reactive() unwraps the state refs; reads inside the slot body are tracked
+// fine-grained, so a slot that never reads state never re-renders on state
+// changes.
+const slotProps: ForesightSlotProps = reactive({ ...stateRefs, elementRef })
 </script>
 
 <template>
-  <component :is="as" v-if="as" :ref="setRef">
+  <component :is="as" v-if="as" :ref="elementRef">
     <slot v-bind="slotProps" />
   </component>
   <slot v-else v-bind="slotProps" />

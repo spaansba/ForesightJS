@@ -22,7 +22,7 @@ export const ForesightButtonAs = () => {
         hitSlop={20}
         reactivateAfter={reactivateAfter}
         callback={callback}
-        className={`${buttonClassName} data-predicted:outline-1 data-predicted:outline-amber-500`}
+        className={buttonClassName}
       >
         {({ hitCount }) => (
           <span className="text-center leading-tight">as-button (hits: {hitCount})</span>
@@ -46,11 +46,7 @@ export const ForesightButtonRenderProp = () => {
       >
         {({ elementRef, isPredicted, hitCount, isCallbackRunning, status }) => (
           <>
-            <button
-              ref={elementRef}
-              data-predicted={isPredicted}
-              className={`${buttonClassName} ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
-            >
+            <button ref={elementRef} className={buttonClassName}>
               <span className="text-center leading-tight">render-prop</span>
             </button>
             <ButtonStats

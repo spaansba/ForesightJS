@@ -176,40 +176,10 @@ describe("Foresight", () => {
         </Foresight>
       )
 
-      // Only the data-attribute mirror subscribes (it mutates the DOM
-      // directly) - useForesightState must not add a second subscription.
-      expect(mockState.listeners).toHaveLength(1)
-    })
-
-    it("mirrors state onto data-* attributes", async () => {
-      const { getByTestId } = render(
-        <Foresight as="button" data-testid="btn" callback={vi.fn()}>
-          Checkout
-        </Foresight>
-      )
-
-      const button = getByTestId("btn")
-      expect(button.hasAttribute("data-predicted")).toBe(false)
-      expect(button.hasAttribute("data-callback-running")).toBe(false)
-      expect(button.hasAttribute("data-status")).toBe(false)
-
-      await emitSnapshot({ isPredicted: true, isCallbackRunning: true, status: "success" })
-
-      expect(button.hasAttribute("data-predicted")).toBe(true)
-      expect(button.hasAttribute("data-callback-running")).toBe(true)
-      expect(button.getAttribute("data-status")).toBe("success")
-    })
-
-    it("does not set data-* attributes in the render-prop form", async () => {
-      const { getByTestId } = render(
-        <Foresight<HTMLButtonElement> callback={vi.fn()}>
-          {({ elementRef }) => <button data-testid="btn" ref={elementRef} />}
-        </Foresight>
-      )
-
-      await emitSnapshot({ isPredicted: true })
-
-      expect(getByTestId("btn").hasAttribute("data-predicted")).toBe(false)
+      // Fully static: nothing reads state, and the manager mirrors the data
+      // attributes onto the DOM itself (controlled by the global
+      // setDataAttributes setting), so the component adds no subscription.
+      expect(mockState.listeners).toHaveLength(0)
     })
 
     it("unregisters on unmount", () => {

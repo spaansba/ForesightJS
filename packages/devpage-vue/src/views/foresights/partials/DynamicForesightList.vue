@@ -94,7 +94,7 @@ const removeItem = () => {
             :ref="elementRef"
             :class="[
               'flex items-center justify-center size-40 text-white text-sm font-medium',
-              isPredicted ? 'bg-amber-500' : item.color,
+              item.color,
             ]"
           >
             Hover to predict

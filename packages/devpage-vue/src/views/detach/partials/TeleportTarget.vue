@@ -14,10 +14,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useFore
     <button
       type="button"
       :ref="elementRef"
-      :class="[
-        'flex items-center justify-center size-40 text-white text-sm font-medium',
-        isPredicted ? 'bg-amber-500' : 'bg-teal-400 hover:bg-teal-500',
-      ]"
+      class="flex items-center justify-center size-40 text-white text-sm font-medium bg-teal-400 hover:bg-teal-500"
     >
       {{ isPredicted ? "predicted!" : "Hover to predict" }}
     </button>

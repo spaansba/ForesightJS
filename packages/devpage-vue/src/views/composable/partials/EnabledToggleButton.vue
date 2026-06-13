@@ -21,11 +21,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useFore
       :ref="elementRef"
       :class="[
         'flex items-center justify-center size-40 text-sm font-medium',
-        enabled
-          ? isPredicted
-            ? 'bg-amber-500 text-white'
-            : 'bg-teal-400 hover:bg-teal-500 text-white'
-          : 'bg-gray-300 text-gray-500',
+        enabled ? 'bg-teal-400 hover:bg-teal-500 text-white' : 'bg-gray-300 text-gray-500',
       ]"
     >
       {{ enabled ? "Hover to predict" : "Disabled" }}

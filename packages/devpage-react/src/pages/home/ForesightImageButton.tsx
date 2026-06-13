@@ -65,9 +65,7 @@ export const ForesightImageButton = ({ image, setSelectedImage }: ForesightImage
     <button
       ref={elementRef}
       onClick={handleOnClick}
-      className={`p-4 border bg-white text-left cursor-pointer ${
-        isPredicted ? "border-amber-500 outline  outline-amber-500" : "border-gray-300"
-      }`}
+      className="p-4 border border-gray-300 bg-white text-left cursor-pointer"
     >
       <div className="space-y-2">
         <h3 className="font-semibold text-gray-900">{image.name}</h3>

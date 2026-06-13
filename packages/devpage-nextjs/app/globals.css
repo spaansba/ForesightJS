@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+[data-predicted] {
+  outline: 2px solid var(--color-amber-500);
+  outline-offset: 2px;
+}
+
+[data-predicted][data-callback-running] {
+  animation: foresight-pulse 0.8s ease-in-out infinite;
+}
+
+[data-predicted][data-status="success"] {
+  outline-color: var(--color-green-500);
+}
+[data-predicted][data-status="error"] {
+  outline-color: var(--color-red-500);
+}
+
+@keyframes foresight-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

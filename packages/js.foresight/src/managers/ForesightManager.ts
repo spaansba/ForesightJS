@@ -7,6 +7,7 @@ import {
   createElementInternal,
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
+import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { ElementObservingModule } from "../core/ElementObservingModule"
@@ -286,6 +287,10 @@ export class ForesightManager {
 
     this.elementEntries.set(options.element, entry)
 
+    if (this._globalSettings.setDataAttributes) {
+      applyDataAttributes(entry.element, entry.state)
+    }
+
     // Inactive elements (disabled or limited connection) are not observed or
     // counted as active until they are (re)activated.
     if (entry.state.isActive) {
@@ -423,6 +428,11 @@ export class ForesightManager {
 
     const next = { ...current, ...patch }
     entry.state = next
+
+    if (this._globalSettings.setDataAttributes) {
+      applyDataAttributes(entry.element, next)
+    }
+
     for (const listener of entry.subscribers) {
       try {
         listener()
@@ -506,6 +516,10 @@ export class ForesightManager {
     this.elementEntries.delete(element)
     entry.subscribers.clear()
     entry.boundsSubscribers.clear()
+
+    if (this._globalSettings.setDataAttributes) {
+      removeDataAttributes(element)
+    }
 
     const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
     if (wasLastRegisteredElement) {
@@ -944,6 +958,17 @@ export class ForesightManager {
 
     if (result.hitSlopChanged) {
       this.forceUpdateAllElementBounds()
+    }
+
+    if (result.setDataAttributesChanged) {
+      const mirror = this._globalSettings.setDataAttributes
+      for (const entry of this.elementEntries.values()) {
+        if (mirror) {
+          applyDataAttributes(entry.element, entry.state)
+        } else {
+          removeDataAttributes(entry.element)
+        }
+      }
     }
 
     if (result.touchStrategyChanged && !this.isUsingDesktopHandler && this.touchDeviceHandler) {

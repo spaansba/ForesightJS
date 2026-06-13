@@ -424,6 +424,68 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("Data attribute mirroring (setDataAttributes global setting)", () => {
+    it("does not touch the DOM when disabled globally", async () => {
+      ForesightManager.initialize({ setDataAttributes: false })
+      const { manager, element, entry } = setupBasicTest()
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(element.hasAttribute("data-predicted")).toBe(false)
+      expect(element.hasAttribute("data-callback-running")).toBe(false)
+      expect(element.hasAttribute("data-status")).toBe(false)
+      expect(element.hasAttribute("data-active")).toBe(false)
+    })
+
+    it("mirrors state onto data-* attributes by default", async () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      // Fresh registration: active and eligible to fire, not yet predicted.
+      expect(element.hasAttribute("data-active")).toBe(true)
+      expect(element.hasAttribute("data-predicted")).toBe(false)
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+
+      // After firing it has predicted + completed, and (reactivateAfter is
+      // Infinity by default) is no longer active.
+      expect(element.hasAttribute("data-predicted")).toBe(true)
+      expect(element.getAttribute("data-status")).toBe("success")
+      expect(element.hasAttribute("data-active")).toBe(false)
+    })
+
+    it("removes all data-* attributes on unregister", async () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(element.hasAttribute("data-predicted")).toBe(true)
+
+      manager.unregister(element)
+
+      expect(element.hasAttribute("data-active")).toBe(false)
+      expect(element.hasAttribute("data-predicted")).toBe(false)
+      expect(element.hasAttribute("data-status")).toBe(false)
+    })
+
+    it("applies and removes attributes on all elements when toggled at runtime", async () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      fire(manager, entry)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(element.hasAttribute("data-predicted")).toBe(true)
+
+      // Turning it off clears every mirrored attribute on registered elements.
+      manager.alterGlobalSettings({ setDataAttributes: false })
+      expect(element.hasAttribute("data-predicted")).toBe(false)
+
+      // Turning it back on re-applies the current state.
+      manager.alterGlobalSettings({ setDataAttributes: true })
+      expect(element.hasAttribute("data-predicted")).toBe(true)
+    })
+  })
+
   describe("Event System", () => {
     it("should add and invoke event listeners", () => {
       const manager = ForesightManager.initialize()

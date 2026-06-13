@@ -19,6 +19,7 @@ ForesightManager.initialize({
   touchDeviceStrategy: "viewport",
   enableManagerLogging: false,
   minimumConnectionType: "3g",
+  setDataAttributes: true,
 })
 ```
 
@@ -216,6 +217,32 @@ ForesightManager.initialize({
 ForesightManager.initialize({
   enableManagerLogging: true,
 })
+```
+
+---
+
+### Data Attribute Settings
+
+#### `setDataAttributes`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Description:** When `true`, the manager mirrors every registered element's prediction state onto `data-*` attributes via direct DOM mutation, so plain CSS can style predictions without any framework re-render. The attributes are kept in sync on every state change and removed when an element unregisters. Toggling this at runtime applies or removes the attributes on all currently-registered elements.
+  - `data-predicted` — present while `isPredicted` is `true`
+  - `data-active` — present while `isActive` is `true` (eligible to fire)
+  - `data-callback-running` — present while `isCallbackRunning` is `true`
+  - `data-status` — set to `"success"` or `"error"` once a callback completes
+
+```javascript
+ForesightManager.initialize({
+  setDataAttributes: false, // Opt out of data-* mirroring
+})
+```
+
+```css
+[data-predicted] {
+  outline: 2px solid orange;
+}
 ```
 
 ## Runtime Configuration Changes

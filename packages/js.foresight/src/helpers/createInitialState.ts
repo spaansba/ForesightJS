@@ -60,6 +60,7 @@ export const createDefaultManagerSettings = (): ForesightManagerSettings => {
     tabOffset: DEFAULT_TAB_OFFSET,
     touchDeviceStrategy: "onTouchStart",
     minimumConnectionType: "3g",
+    setDataAttributes: true,
   }
 }
 

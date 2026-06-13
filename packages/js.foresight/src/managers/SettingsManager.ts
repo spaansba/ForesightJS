@@ -101,6 +101,7 @@ interface SettingsChangeResult {
   tabPredictionChanged: boolean
   hitSlopChanged: boolean
   touchStrategyChanged: boolean
+  setDataAttributesChanged: boolean
 }
 
 /**
@@ -117,6 +118,7 @@ export const applySettingsChanges = (
   let tabPredictionChanged = false
   let hitSlopChanged = false
   let touchStrategyChanged = false
+  let setDataAttributesChanged = false
 
   if (!props) {
     return {
@@ -126,6 +128,7 @@ export const applySettingsChanges = (
       tabPredictionChanged,
       hitSlopChanged,
       touchStrategyChanged,
+      setDataAttributesChanged,
     }
   }
 
@@ -158,6 +161,7 @@ export const applySettingsChanges = (
     "enableScrollPrediction",
     "enableTabPrediction",
     "enableManagerLogging",
+    "setDataAttributes",
   ]
 
   for (const key of booleanKeys) {
@@ -175,6 +179,10 @@ export const applySettingsChanges = (
 
       if (key === "enableTabPrediction") {
         tabPredictionChanged = true
+      }
+
+      if (key === "setDataAttributes") {
+        setDataAttributesChanged = true
       }
     }
   }
@@ -225,5 +233,6 @@ export const applySettingsChanges = (
     tabPredictionChanged,
     hitSlopChanged,
     touchStrategyChanged,
+    setDataAttributesChanged,
   }
 }
