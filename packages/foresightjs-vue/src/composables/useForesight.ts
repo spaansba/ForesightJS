@@ -92,7 +92,11 @@ export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): Fores
   watch(
     () => toValue(options),
     newOptions => {
-      if (currentElement && registerResults) {
+      if (
+        currentElement &&
+        registerResults &&
+        ForesightManager.instance.registeredElements.has(currentElement)
+      ) {
         ForesightManager.instance.updateElementOptions(currentElement, { ...newOptions, callback })
       }
     },
