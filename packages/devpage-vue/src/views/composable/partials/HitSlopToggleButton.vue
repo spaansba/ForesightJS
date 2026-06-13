@@ -19,10 +19,7 @@ const { isPredicted, hitCount, isCallbackRunning, status, elementRef } = useFore
     <button
       type="button"
       :ref="elementRef"
-      :class="[
-        'flex items-center justify-center size-40 text-sm font-medium text-white',
-        isPredicted ? 'bg-amber-500' : 'bg-indigo-400 hover:bg-indigo-500',
-      ]"
+      class="flex items-center justify-center size-40 text-sm font-medium text-white bg-indigo-400 hover:bg-indigo-500"
     >
       hitSlop: {{ hitSlop }}px
     </button>

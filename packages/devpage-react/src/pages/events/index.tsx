@@ -104,9 +104,7 @@ const DemoElement = ({
     <div className="flex flex-col items-center gap-2">
       <div
         ref={elementRef}
-        className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none ${color} ${
-          isPredicted ? "outline-1 outline-amber-500" : ""
-        }`}
+        className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none ${color}`}
       >
         {label}
       </div>
@@ -122,7 +120,7 @@ const DemoElement = ({
 
 const ToggleElement = () => {
   const [mounted, setMounted] = useState(true)
-  const { elementRef, isPredicted } = useForesight<HTMLDivElement>({
+  const { elementRef } = useForesight<HTMLDivElement>({
     callback: () => {},
     name: "toggleable",
     hitSlop: 20,
@@ -133,9 +131,7 @@ const ToggleElement = () => {
       {mounted && (
         <div
           ref={elementRef}
-          className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none ${
-            isPredicted ? "outline-1 outline-amber-500" : ""
-          }`}
+          className="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none"
         >
           Toggleable
         </div>

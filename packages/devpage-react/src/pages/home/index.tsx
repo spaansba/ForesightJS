@@ -110,7 +110,7 @@ const PageButtons = ({
           reactivateAfter={reactivateAfter}
           callback={() => prefetchPage(queryClient, slug)}
         >
-          {({ elementRef, isPredicted }) => (
+          {({ elementRef }) => (
             <button
               ref={elementRef}
               onClick={() => onSelect(slug)}
@@ -118,7 +118,7 @@ const PageButtons = ({
                 activePage === slug
                   ? "border-gray-900 bg-gray-900 text-white"
                   : "border-gray-400 text-gray-800 hover:bg-gray-100"
-              } ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
+              }`}
             >
               {label}
             </button>

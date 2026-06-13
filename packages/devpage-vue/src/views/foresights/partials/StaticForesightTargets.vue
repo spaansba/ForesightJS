@@ -21,7 +21,7 @@ const ChildButton = defineComponent({
         type="button"
         foresight-name="target-a"
         :callback="() => console.log('Target A prefetch')"
-        class="flex items-center justify-center size-40 text-white text-sm font-medium bg-blue-500 hover:bg-blue-600 data-predicted:bg-amber-500"
+        class="flex items-center justify-center size-40 text-white text-sm font-medium bg-blue-500 hover:bg-blue-600"
         #default="{ hitCount }"
       >
         Hover to predict (hits: {{ hitCount }})
@@ -37,10 +37,7 @@ const ChildButton = defineComponent({
         <button
           type="button"
           :ref="elementRef"
-          :class="[
-            'flex items-center justify-center size-40 text-white text-sm font-medium',
-            isPredicted ? 'bg-amber-500' : 'bg-blue-500 hover:bg-blue-600',
-          ]"
+          class="flex items-center justify-center size-40 text-white text-sm font-medium bg-blue-500 hover:bg-blue-600"
         >
           Hover to predict
         </button>
@@ -54,7 +51,7 @@ const ChildButton = defineComponent({
         foresight-name="target-c"
         :callback="() => console.log('Target C prefetch')"
         data-testid="target-c"
-        class="flex items-center justify-center size-40 text-white text-sm font-medium bg-blue-500 hover:bg-blue-600 data-predicted:bg-amber-500"
+        class="flex items-center justify-center size-40 text-white text-sm font-medium bg-blue-500 hover:bg-blue-600"
         #default="{ hitCount }"
       >
         Hover to predict (hits: {{ hitCount }})

@@ -18,7 +18,7 @@ export const ForesightLink = ({
   reactivateAfter,
   ...linkProps
 }: ForesightLinkProps) => {
-  const { elementRef, isPredicted } = useForesight<HTMLAnchorElement>({
+  const { elementRef } = useForesight<HTMLAnchorElement>({
     callback: () => onPrefetch?.(linkProps.to.toString()),
     hitSlop,
     name,
@@ -27,11 +27,7 @@ export const ForesightLink = ({
   })
 
   return (
-    <Link
-      {...linkProps}
-      ref={elementRef}
-      className={`${className ?? ""} ${isPredicted ? "outline-1 outline-amber-500" : ""}`}
-    >
+    <Link {...linkProps} ref={elementRef} className={className ?? ""}>
       {children}
     </Link>
   )
