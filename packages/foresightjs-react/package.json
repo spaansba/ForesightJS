@@ -1,6 +1,6 @@
 {
   "name": "@foresightjs/react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React bindings for ForesightJS - hooks and helpers to register elements with the ForesightManager from React components.",
   "type": "module",
   "sideEffects": false,

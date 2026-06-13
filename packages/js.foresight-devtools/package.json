@@ -1,6 +1,6 @@
 {
   "name": "js.foresight-devtools",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Visual debugging tools for ForesightJS - mouse trajectory prediction and element interaction visualization",
   "type": "module",
   "scripts": {
@@ -49,7 +49,7 @@
   "llms": "https://foresightjs.com/llms.txt",
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "peerDependencies": {
-    "js.foresight": "^4.1.0"
+    "js.foresight": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
