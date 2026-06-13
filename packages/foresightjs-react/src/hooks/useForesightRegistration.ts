@@ -51,7 +51,11 @@ export const useForesightRegistration = <T extends HTMLElement = HTMLElement>(
   const metaKey = serializeOption(options.meta)
   const hitSlopKey = serializeOption(options.hitSlop)
   useEffect(() => {
-    if (!registerResults || !element) {
+    if (
+      !registerResults ||
+      !element ||
+      !ForesightManager.instance.registeredElements.has(element)
+    ) {
       return
     }
 
