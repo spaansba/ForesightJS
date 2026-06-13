@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Both the React and Vue demos live under src/ — Tailwind v4 auto-scans them. */
+
+:root {
+  background-color: rgb(71, 65, 65);
+}
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1c1917;
+  color: #fafaf9;
+  font:
+    600 0.85rem/1.2 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+#toolbar .controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#toolbar .ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #d6d3d1;
+}
+
+#toolbar .ctl input {
+  width: 5rem;
+  padding: 0.25rem 0.4rem;
+  background: #292524;
+  color: #fafaf9;
+  border: 1px solid #57534e;
+  border-radius: 0.3rem;
+  font: inherit;
+}
+
+#toolbar #btn-debug,
+#toolbar #btn-reset {
+  padding: 0.35rem 0.7rem;
+  background: #292524;
+  color: #d6d3d1;
+  border: 1px solid #57534e;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+#toolbar #btn-debug:hover,
+#toolbar #btn-reset:hover {
+  background: #44403c;
+}
+
+#toolbar #btn-debug.active {
+  background: #fafaf9;
+  color: #1c1917;
+  border-color: #fafaf9;
+}
+
+#toolbar .switch {
+  display: inline-flex;
+  border: 1px solid #57534e;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+#toolbar .switch button {
+  padding: 0.35rem 0.9rem;
+  background: transparent;
+  color: #d6d3d1;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+#toolbar .switch button:hover {
+  background: #292524;
+}
+
+#toolbar .switch button.active {
+  background: #fafaf9;
+  color: #1c1917;
+}
+
+/* Shared foresight prediction styling (identical in both standalone devpages). */
+[data-predicted] {
+  outline: 2px solid var(--color-amber-500);
+  outline-offset: 2px;
+}
+
+[data-predicted][data-callback-running] {
+  animation: foresight-pulse 0.8s ease-in-out infinite;
+}
+
+[data-predicted][data-status="success"] {
+  outline-color: var(--color-green-500);
+}
+[data-predicted][data-status="error"] {
+  outline-color: var(--color-red-500);
+}
+
+@keyframes foresight-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

@@ -34,9 +34,9 @@ Official Vue 3 bindings: the `v-foresight` directive, the `useForesight` and `us
 
 ## Development Packages
 
-### [devpage-react](./devpage-react/) · [devpage-vue](./devpage-vue/) · [devpage-nextjs](./devpage-nextjs/)
+### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/)
 
-Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback.
+Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React and Vue demos on a single page, sharing one `ForesightManager` singleton — toggle between them with one click.
 
 ### [docs](./docs/)
 
