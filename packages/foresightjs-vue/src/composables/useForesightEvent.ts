@@ -20,8 +20,6 @@ export const useForesightEvent = <K extends ForesightEvent>(
   const resolveListener = isRef(listener) ? () => listener.value : () => listener
 
   const subscribe = (type: K) => {
-    // No-op during SSR: `watch(immediate)` runs in setup on the server, but the
-    // ForesightManager singleton (and its listeners) belong on the client only.
     if (typeof document === "undefined") {
       return
     }
