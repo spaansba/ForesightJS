@@ -69,7 +69,7 @@ See [registration options](./configuration/registration-options.md) for the full
 
 ## Reading prediction state
 
-When you want to read the element's prediction state (for example to style a link once it's prefetched), use the [`useForesight`](./useForesight.md) composable instead. It returns the state as reactive refs plus an `elementRef` function to bind to the element:
+When you want to read the element's prediction state, you have two options: the [`useForesight`](./useForesight.md) composable or the [`Foresight`](./foresight-component.md) component. The composable returns the state as reactive refs plus an `elementRef` function to bind to the element:
 
 ```html
 <script setup lang="ts">
@@ -82,7 +82,7 @@ When you want to read the element's prediction state (for example to style a lin
 </script>
 
 <template>
-  <a :ref="elementRef" href="/about" :class="{ predicted: isPredicted }">About</a>
+  <a :ref="elementRef" href="/about">{{ isPredicted ? "Predicted!" : "About" }}</a>
 </template>
 ```
 

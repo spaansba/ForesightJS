@@ -56,7 +56,7 @@ You can change these on every render. The hook patches the existing registration
 
 ## Reactive state
 
-Everything other than `elementRef` on the return value is the element's current [state](./configuration/registration-options.md#registration-return-value), and it re-renders your component when it changes. The ones you'll reach for most:
+Everything other than `elementRef` on the return value is the element's current [state](./configuration/registration-options.md#state-fields), and it re-renders your component when it changes. The ones you'll reach for most:
 
 - `isPredicted` → the callback has fired for this element
 - `isActive` → eligible to fire (not disabled, not on a limited connection, not parked)
