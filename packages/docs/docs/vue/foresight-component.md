@@ -42,30 +42,6 @@ With `as`, `Foresight` renders that element itself and registers it.
 In the `as` form there is no way to pass your own `ref` to the rendered element, `Foresight` uses the ref slot for its registration. If you need the DOM node, use the render-prop form below and attach both refs yourself.
 :::
 
-### Styling with data attributes
-
-In the `as` form, `Foresight` mirrors the element state onto data attributes — by mutating the DOM directly, without re-rendering the component:
-
-- `data-predicted` — present while [`isPredicted`](./useForesight.md#reactive-state) is true
-- `data-callback-running` — present while the callback is executing
-- `data-status` — `"success"` or `"error"` after the last callback run
-
-This makes prediction styling pure CSS:
-
-```css
-button[data-predicted] {
-  outline: 1px solid orange;
-}
-```
-
-Or with Tailwind:
-
-```html
-<Foresight as="button" :callback="() => prefetch('/checkout')" class="data-predicted:outline-1">
-  Checkout
-</Foresight>
-```
-
 ### Reading state in `as` form
 
 To use the [reactive state](./useForesight.md#reactive-state) in this form, read it from the scoped default slot:
