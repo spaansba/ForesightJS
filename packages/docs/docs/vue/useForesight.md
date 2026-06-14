@@ -60,7 +60,7 @@ To make options reactive, pass a getter instead of a plain object. The composabl
 
 ## Reactive state
 
-Every [state](./configuration/registration-options.md#registration-return-value) field comes back as a reactive ref, so reading it in your template re-renders when it changes. The ones you'll reach for most:
+Every [state](./configuration/registration-options.md#state-fields) field comes back as a reactive ref, so reading it in your template re-renders when it changes. The ones you'll reach for most:
 
 - `isPredicted` → the callback has fired for this element
 - `isActive` → eligible to fire (not disabled, not on a limited connection, not parked)
