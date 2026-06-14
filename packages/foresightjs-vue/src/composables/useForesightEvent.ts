@@ -20,6 +20,10 @@ export const useForesightEvent = <K extends ForesightEvent>(
   const resolveListener = isRef(listener) ? () => listener.value : () => listener
 
   const subscribe = (type: K) => {
+    if (typeof document === "undefined") {
+      return
+    }
+
     controller?.abort()
     controller = new AbortController()
 

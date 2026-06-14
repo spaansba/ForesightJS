@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useRef } from "react"
 import { ForesightManager, type ForesightEvent, type ForesightEventMap } from "js.foresight"
 
