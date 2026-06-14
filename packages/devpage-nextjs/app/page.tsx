@@ -1,6 +1,12 @@
-import { ForesightLinkDemo } from "./components/ForesightLinkDemo"
+"use client"
 
+import { ForesightLinkDemo } from "./components/ForesightLinkDemo"
+import { useForesightEvent } from "@foresightjs/react"
 const HomePage = () => {
+  useForesightEvent("elementRegistered", event => {
+    console.log("Element registered:", event)
+  })
+
   return (
     <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
       <header className="space-y-2">
