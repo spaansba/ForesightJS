@@ -18,6 +18,7 @@
     color 0.15s ease;
   font-family: inherit;
   background: var(--site-surface);
+  color: var(--site-text);
 }
 
 .smallButton:focus-visible {
@@ -25,20 +26,15 @@
   outline-offset: 2px;
 }
 
-.smallButton.default {
-  color: var(--site-text);
-}
-
-.smallButton.default:hover {
+.smallButton:not([data-predicted]):not([data-callback-running]):hover {
   border-color: var(--site-border-strong);
 }
 
-.smallButton.loading {
-  color: var(--site-text);
+.smallButton[data-callback-running] {
   border-color: var(--site-border-strong);
 }
 
-.smallButton.loaded {
+.smallButton[data-predicted]:not([data-callback-running]) {
   border-color: rgba(34, 197, 94, 0.4);
   color: var(--site-accent-bright);
 }
