@@ -1,3 +1,4 @@
+"use client"
 import { forwardRef, useCallback } from "react"
 import type {
   ComponentPropsWithoutRef,
