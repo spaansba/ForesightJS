@@ -57,6 +57,8 @@ The directive takes either a callback function or a full options object.
 </template>
 ```
 
+The callback receives the element's [`ForesightElementState`](./configuration/registration-options.md#state-fields).
+
 ### With options
 
 For more control, pass any [registration options](./configuration/registration-options.md):
