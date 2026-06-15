@@ -191,5 +191,31 @@ describe("Foresight", () => {
       unmount()
       expect(unregisterSpy).toHaveBeenCalledTimes(1)
     })
+
+    it("merges a consumer ref object with the registration ref", () => {
+      const ref = { current: null as HTMLButtonElement | null }
+      const { getByTestId } = render(
+        <Foresight as="button" data-testid="btn" ref={ref} callback={vi.fn()}>
+          Checkout
+        </Foresight>
+      )
+
+      const button = getByTestId("btn")
+      expect(ref.current).toBe(button)
+      expect(registerSpy.mock.calls[0][0].element).toBe(button)
+    })
+
+    it("merges a consumer callback ref with the registration ref", () => {
+      const callbackRef = vi.fn()
+      const { getByTestId } = render(
+        <Foresight as="button" data-testid="btn" ref={callbackRef} callback={vi.fn()}>
+          Checkout
+        </Foresight>
+      )
+
+      const button = getByTestId("btn")
+      expect(callbackRef).toHaveBeenCalledWith(button)
+      expect(registerSpy.mock.calls[0][0].element).toBe(button)
+    })
   })
 })

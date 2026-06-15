@@ -37,9 +37,7 @@ function CheckoutButton() {
 
 `as` accepts any element tag (`"button"`, `"a"`, `"div"`, ...) or a component that forwards its ref to a DOM element.
 
-:::note
-In the `as` form there is no way to pass your own `ref` to the rendered element, `Foresight` uses the ref slot for its registration. If you need the DOM node, use the render-prop form below and attach both refs yourself.
-:::
+You can pass your own `ref` (object or callback) to the rendered element. It is merged with the internal registration ref, so you keep direct access to the DOM node while `Foresight` still registers it.
 
 ### Reading state in `as` form
 
