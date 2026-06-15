@@ -29,8 +29,6 @@ pnpm add @foresightjs/vue
 yarn add @foresightjs/vue
 ```
 
-That's it. Everything you need, including `ForesightManager` and all types, comes from `@foresightjs/vue` — there's nothing else to install:
-
 ```ts
 import { useForesight, vForesight, ForesightManager } from "@foresightjs/vue"
 ```
