@@ -31,7 +31,7 @@
     "react-scan": "^0.5.7",
     "tailwindcss": "^4.2.2",
     "typescript": "~6.0.2",
-    "vite": "^8.0.5",
+    "vite": "^8.0.16",
     "vue-tsc": "^3.2.6"
   }
 }
