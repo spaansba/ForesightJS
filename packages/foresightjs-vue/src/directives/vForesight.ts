@@ -1,9 +1,13 @@
 import type { ObjectDirective } from "vue"
-import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
+import {
+  ForesightManager,
+  type ForesightCallback,
+  type ForesightRegisterResult,
+} from "js.foresight"
 import type { ForesightOptions } from "../types"
 
 /** Shorthand: pass just the callback instead of a full options object. */
-type CallbackShorthand = () => void
+type CallbackShorthand = ForesightCallback
 
 type ForesightDirectiveValue = ForesightOptions | CallbackShorthand
 
@@ -34,6 +38,10 @@ export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDir
   // Patch options (incl. enabled) on change without tearing down.
   updated(element, binding) {
     if (binding.value === binding.oldValue) {
+      return
+    }
+
+    if (!ForesightManager.instance.registeredElements.has(element)) {
       return
     }
 
