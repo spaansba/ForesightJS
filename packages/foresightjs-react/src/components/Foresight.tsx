@@ -1,4 +1,14 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ElementType, ReactNode } from "react"
+import { forwardRef, useCallback } from "react"
+import type {
+  ComponentPropsWithoutRef,
+  ComponentPropsWithRef,
+  CSSProperties,
+  ElementType,
+  ForwardedRef,
+  ForwardRefRenderFunction,
+  ReactNode,
+  Ref,
+} from "react"
 import type { ForesightElementState } from "js.foresight"
 import { useForesightRegistration } from "../hooks/useForesightRegistration"
 import { useForesightState } from "../hooks/useForesightState"
@@ -30,46 +40,22 @@ export type ForesightAsProps<E extends ElementType> = ForesightComponentOptions 
     keyof ForesightComponentOptions | "as" | "children" | "className" | "style"
   >
 
-/**
- * Component form of useForesight: one instance, one registration.
- *
- * With `as`, it renders that element itself and forwards the remaining props
- * to it, including the HTML `name` attribute (the foresight name is
- * `foresightName`). It mirrors the element state onto `data-predicted`,
- * `data-active`, `data-callback-running` and `data-status` attributes via
- * direct DOM mutation, so plain CSS can style predictions. `children`,
- * `className` and `style` may also be functions of the reactive state:
- *
- * ```tsx
- * <Foresight
- *   as="button"
- *   callback={() => prefetch("/checkout")}
- *   onClick={checkout}
- *   className="checkout data-predicted:outline-amber-500"
- * >
- *   Checkout
- * </Foresight>
- * ```
- *
- * With a function as children and no `as`, it renders nothing itself and
- * passes the reactive state plus the elementRef to attach, giving full
- * control over the markup:
- *
- * ```tsx
- * <Foresight callback={() => prefetch(item.url)}>
- *   {({ elementRef, isPredicted }) => (
- *     <a ref={elementRef} href={item.url} className={isPredicted ? "predicted" : ""}>
- *       {item.name}
- *     </a>
- *   )}
- * </Foresight>
- * ```
- */
-export function Foresight<T extends HTMLElement = HTMLElement>(props: ForesightProps<T>): ReactNode
-export function Foresight<E extends ElementType>(props: ForesightAsProps<E>): ReactNode
-export function Foresight(props: ForesightProps | ForesightAsProps<ElementType>): ReactNode {
-  return props.as ? <ForesightElement {...props} /> : <ForesightRenderProp {...props} />
+type ForesightComponent = {
+  <T extends HTMLElement = HTMLElement>(props: ForesightProps<T>): ReactNode
+  <E extends ElementType>(
+    props: ForesightAsProps<E> & { ref?: ComponentPropsWithRef<E>["ref"] }
+  ): ReactNode
 }
+
+const renderForesight = (
+  props: ForesightProps | ForesightAsProps<ElementType>,
+  ref: ForwardedRef<HTMLElement>
+): ReactNode =>
+  props.as ? <ForesightElement {...props} forwardedRef={ref} /> : <ForesightRenderProp {...props} />
+
+export const Foresight = forwardRef(
+  renderForesight as ForwardRefRenderFunction<HTMLElement, never>
+) as unknown as ForesightComponent
 
 // Change name to foresightName for the component form, so the HTML name attribute can be forwarded to the element in the `as` form.
 const toRegistrationOptions = ({
@@ -92,7 +78,10 @@ const ForesightRenderProp = <T extends HTMLElement>({
   return children({ elementRef, ...state })
 }
 
-const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
+const ForesightElement = ({
+  forwardedRef,
+  ...props
+}: ForesightAsProps<ElementType> & { forwardedRef: ForwardedRef<HTMLElement> }): ReactNode => {
   const {
     as: Tag,
     children,
@@ -122,6 +111,8 @@ const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
 
   const { elementRef, registerResults } = useForesightRegistration(options)
 
+  const mergedRef = useMergedRef(elementRef, forwardedRef)
+
   // Subscribe only when something actually reads the state, so a fully static
   // element does not re-render on state changes
   const readsState =
@@ -134,9 +125,25 @@ const ForesightElement = (props: ForesightAsProps<ElementType>): ReactNode => {
       {...domProps}
       className={typeof className === "function" ? className(state) : className}
       style={typeof style === "function" ? style(state) : style}
-      ref={elementRef}
+      ref={mergedRef}
     >
       {typeof children === "function" ? children(state) : children}
     </Tag>
   )
 }
+
+const useMergedRef = <T extends HTMLElement>(
+  registrationRef: (node: T | null) => void,
+  userRef: Ref<T> | undefined
+): ((node: T | null) => void) =>
+  useCallback(
+    (node: T | null) => {
+      registrationRef(node)
+      if (typeof userRef === "function") {
+        userRef(node)
+      } else if (userRef) {
+        userRef.current = node
+      }
+    },
+    [registrationRef, userRef]
+  )

@@ -1,6 +1,7 @@
 import { Foresight } from "@foresightjs/react"
 import ForesightStats from "../ui/ForesightStats"
 import { useReactivateAfter } from "../../stores/ButtonStateStore"
+import { useEffect, useRef } from "react"
 
 const callback = async () => {
   const randomTimeout = Math.floor(Math.random() * 1000)
@@ -12,12 +13,34 @@ const buttonClassName =
 
 export const ForesightButtonAs = () => {
   const reactivateAfter = useReactivateAfter()
+  const ref = useRef<HTMLButtonElement>(null)
+
+  // Proof the consumer ref reaches the real DOM node: write a marker onto it.
+  useEffect(() => {
+    if (!ref.current) {
+      return
+    }
+
+    ref.current.dataset.refProof = "ref-attached"
+    ref.current.title = `tagName: ${ref.current.tagName}`
+
+    ref.current.style.flexWrap = "wrap"
+
+    const proof = document.createElement("span")
+    proof.textContent = "ref works ✓"
+    proof.style.width = "100%"
+    proof.style.textAlign = "center"
+    ref.current.appendChild(proof)
+
+    return () => proof.remove()
+  }, [])
 
   return (
     <article className="flex flex-col items-center gap-3 w-40">
       <h4 className="text-sm font-medium text-gray-900 self-start">as=&quot;button&quot;</h4>
       <Foresight
         as="button"
+        ref={ref}
         foresightName="as-button"
         hitSlop={20}
         reactivateAfter={reactivateAfter}
