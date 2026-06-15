@@ -127,7 +127,14 @@ const syncDebugButton = (on: boolean) => {
 syncDebugButton(ForesightDevtools.instance.devtoolsSettings.show.controlPanel)
 debugButton.addEventListener("click", () => {
   const on = !ForesightDevtools.instance.devtoolsSettings.show.controlPanel
-  ForesightDevtools.instance.alterDevtoolsSettings({ show: { controlPanel: on } })
+  ForesightDevtools.instance.alterDevtoolsSettings({
+    show: {
+      controlPanel: on,
+      mouseTrajectory: on,
+      elementOverlays: on,
+      scrollTrajectory: on,
+    },
+  })
   syncDebugButton(on)
 })
 
