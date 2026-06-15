@@ -28,8 +28,6 @@ pnpm add @foresightjs/react
 yarn add @foresightjs/react
 ```
 
-That's it. Everything you need, including `ForesightManager` and all types, comes from `@foresightjs/react` — there's nothing else to install:
-
 ```tsx
 import { useForesight, ForesightManager } from "@foresightjs/react"
 ```
