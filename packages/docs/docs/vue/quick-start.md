@@ -25,15 +25,10 @@ The simplest way to register an element is the [`v-foresight`](./directive.md) d
 ```html
 <script setup lang="ts">
   import { vForesight } from "@foresightjs/vue"
-
-  function handlePrefetch() {
-    // This is where your prefetching logic goes
-    console.log("User is likely to interact with this element!")
-  }
 </script>
 
 <template>
-  <button v-foresight="handlePrefetch">Hover to prefetch</button>
+  <button v-foresight="() => console.log('prefetch logic here')">Prefetch</button>
 </template>
 ```
 
@@ -51,7 +46,7 @@ However if you want to add a bit more power to your element you can pass a full 
 <template>
   <button
     v-foresight="{
-      callback: handlePrefetch,
+      callback: () => console.log('prefetch logic here'),
       hitSlop: 50, // slop around the element, making its hitbox bigger
       name: 'My Foresight button!', // name visible in the debug tools
       meta: {
@@ -60,7 +55,7 @@ However if you want to add a bit more power to your element you can pass a full 
       reactivateAfter: 5 * 60 * 1000, // time for the element to reactivate after the callback has been hit
     }"
   >
-    Hover to prefetch
+    Prefetch
   </button>
 </template>
 ```
@@ -76,13 +71,13 @@ When you want to read the element's prediction state, you have two options: the 
   import { useForesight } from "@foresightjs/vue"
 
   const { elementRef, isPredicted } = useForesight({
-    callback: () => console.log("User is likely to interact with this element!"),
-    name: "about-link",
+    callback: () => console.log("prefetch logic here"),
+    name: "my-button",
   })
 </script>
 
 <template>
-  <a :ref="elementRef" href="/about">{{ isPredicted ? "Predicted!" : "About" }}</a>
+  <button :ref="elementRef">{{ isPredicted ? "Predicted!" : "Prefetch" }}</button>
 </template>
 ```
 

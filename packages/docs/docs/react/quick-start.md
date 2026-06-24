@@ -26,13 +26,10 @@ import { useForesight } from "@foresightjs/react"
 
 function PrefetchButton() {
   const { elementRef } = useForesight<HTMLButtonElement>({
-    callback: () => {
-      // This is where your prefetching logic goes
-      console.log("User is likely to interact with this element!")
-    },
+    callback: () => console.log("prefetch logic here"),
   })
 
-  return <button ref={elementRef}>Hover to prefetch</button>
+  return <button ref={elementRef}>Prefetch</button>
 }
 ```
 
@@ -49,11 +46,9 @@ However if you want to add a bit more power to your element you can give it the 
 ```tsx
 import { useForesight } from "@foresightjs/react"
 
-function AboutLink() {
-  const { elementRef } = useForesight<HTMLAnchorElement>({
-    callback: () => {
-      console.log("User is likely to interact with this element!")
-    },
+function PrefetchButton() {
+  const { elementRef } = useForesight<HTMLButtonElement>({
+    callback: () => console.log("prefetch logic here"),
     hitSlop: 50, // slop around the element, making its hitbox bigger
     name: "My Foresight button!", // name visible in the debug tools
     meta: {
@@ -62,11 +57,7 @@ function AboutLink() {
     reactivateAfter: 5 * 60 * 1000, // time for the element to reactivate after the callback has been hit
   })
 
-  return (
-    <a ref={elementRef} href="/about">
-      About
-    </a>
-  )
+  return <button ref={elementRef}>Prefetch</button>
 }
 ```
 
