@@ -23,16 +23,11 @@ This basic example is in vanilla JS, ofcourse most people will use ForesightJS w
 ```javascript
 import { ForesightManager } from "js.foresight"
 
-// Register an element to be tracked
-const myLink = document.getElementById("my-link")
+const myButton = document.querySelector("#my-button")
 
 ForesightManager.instance.register({
-  element: myLink,
-  callback: () => {
-    // This is where your prefetching logic goes
-    console.log("User is likely to interact with this element!")
-  },
-  // Optional registration options
+  element: myButton,
+  callback: () => console.log("prefetch logic here"),
 })
 ```
 
@@ -49,13 +44,11 @@ However if you want to add a bit more power to your element you can give it the 
 ```javascript
 import { ForesightManager } from "js.foresight"
 
-const myLink = document.getElementById("my-link")
+const myButton = document.querySelector("#my-button")
 
 ForesightManager.instance.register({
-  element: myLink,
-  callback: () => {
-    console.log("User is likely to interact with this element!")
-  },
+  element: myButton,
+  callback: () => console.log("prefetch logic here"),
   hitSlop: 50, // slop around the element, making its hitbox bigger
   name: "My Foresight button!", // name visible in the debug tools
   meta: {

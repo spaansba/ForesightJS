@@ -3,88 +3,146 @@ import Link from "@docusaurus/Link"
 import { Highlight, themes } from "prism-react-renderer"
 import styles from "./quickstart.module.css"
 
-type Tab = {
+type Variant = {
   id: string
   label: string
   language: string
   code: string
+}
+
+type Tab = {
+  id: string
+  label: string
   docsLink: string
   docsLabel: string
   disclaimer?: string
+  variants: Variant[]
 }
 
 const TABS: Tab[] = [
   {
     id: "js",
     label: "JavaScript",
-    language: "javascript",
     docsLink: "/docs/getting-started/quick-start",
     docsLabel: "JavaScript docs",
-    code: `import { ForesightManager } from 'js.foresight'
+    variants: [
+      {
+        id: "register",
+        label: "Register",
+        language: "javascript",
+        code: `import { ForesightManager } from 'js.foresight'
 
-// Initialize the manager if you want custom settings (optional)
-ForesightManager.initialize({
-  touchDeviceStrategy: "viewport",
-  tabOffset: 5,
-})
-
-// Register an element for prediction
-const myLink = document.querySelector('#my-link')
+const myButton = document.querySelector('#my-button')
 
 ForesightManager.instance.register({
-  element: myLink,
-  callback: () => {
-    console.log('User intent detected!')
-  },
+  element: myButton,
+  callback: () => console.log("prefetch logic here"),
 })`,
+      },
+    ],
   },
   {
     id: "react",
     label: "React",
-    language: "tsx",
     docsLink: "/docs/react/installation",
     docsLabel: "React docs",
     disclaimer:
       "@foresightjs/react is in beta. It works and is tested, but the API may still change.",
-    code: `import { useForesight } from '@foresightjs/react'
+    variants: [
+      {
+        id: "component",
+        label: "Foresight component",
+        language: "tsx",
+        code: `import { Foresight } from '@foresightjs/react'
 
-function PrefetchLink() {
-  const { elementRef } = useForesight<HTMLAnchorElement>({
-    callback: () => {
-      console.log('User intent detected!')
-    },
+function PrefetchButton() {
+  return (
+    <Foresight as="button" callback={() => console.log("prefetch logic here")}>
+      Prefetch
+    </Foresight>
+  )
+}`,
+      },
+      {
+        id: "hook",
+        label: "useForesight hook",
+        language: "tsx",
+        code: `import { useForesight } from '@foresightjs/react'
+
+function PrefetchButton() {
+  const { elementRef } = useForesight<HTMLButtonElement>({
+    callback: () => console.log("prefetch logic here"),
   })
 
-  return <a ref={elementRef} href="/about">About</a>
+  return <button ref={elementRef}>Prefetch</button>
 }`,
+      },
+    ],
   },
   {
     id: "vue",
     label: "Vue",
-    language: "markup",
     docsLink: "/docs/vue/installation",
     docsLabel: "Vue docs",
     disclaimer:
       "@foresightjs/vue is in beta. It works and is tested, but the API may still change.",
-    code: `<script setup lang="ts">
+    variants: [
+      {
+        id: "component",
+        label: "Foresight component",
+        language: "markup",
+        code: `<script setup lang="ts">
+import { Foresight } from '@foresightjs/vue'
+</script>
+
+<template>
+  <Foresight as="button" :callback="() => console.log('prefetch logic here')">
+    Prefetch
+  </Foresight>
+</template>`,
+      },
+      {
+        id: "directive",
+        label: "v-foresight directive",
+        language: "markup",
+        code: `<script setup lang="ts">
+import { vForesight } from '@foresightjs/vue'
+</script>
+
+<template>
+  <button v-foresight="() => console.log('prefetch logic here')">Prefetch</button>
+</template>`,
+      },
+      {
+        id: "composable",
+        label: "useForesight composable",
+        language: "markup",
+        code: `<script setup lang="ts">
 import { useForesight } from '@foresightjs/vue'
 
 const { elementRef } = useForesight({
-  callback: () => {
-    console.log('User intent detected!')
-  },
+  callback: () => console.log("prefetch logic here"),
 })
 </script>
 
 <template>
-  <a :ref="elementRef" href="/about">About</a>
+  <button :ref="elementRef">Prefetch</button>
 </template>`,
+      },
+    ],
   },
 ]
 
 export const QuickStart = () => {
   const [activeTab, setActiveTab] = useState(TABS[0].id)
   const tab = TABS.find(t => t.id === activeTab) ?? TABS[0]
+  const [activeVariant, setActiveVariant] = useState(tab.variants[0].id)
+  const variant = tab.variants.find(v => v.id === activeVariant) ?? tab.variants[0]
+
+  const selectTab = (nextTab: Tab) => {
+    setActiveTab(nextTab.id)
+    setActiveVariant(nextTab.variants[0].id)
+  }
 
   return (
     <section className={styles.quickStartSection}>
@@ -104,13 +162,27 @@ export const QuickStart = () => {
                   key={t.id}
                   type="button"
                   className={`${styles.tab} ${t.id === activeTab ? styles.tabActive : ""}`}
-                  onClick={() => setActiveTab(t.id)}
+                  onClick={() => selectTab(t)}
                 >
                   {t.label}
                 </button>
               ))}
             </div>
-            <Highlight theme={themes.vsDark} code={tab.code} language={tab.language}>
+            {tab.variants.length > 1 && (
+              <div className={styles.codeHeader}>
+                {tab.variants.map(v => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className={`${styles.tab} ${v.id === activeVariant ? styles.tabActive : ""}`}
+                    onClick={() => setActiveVariant(v.id)}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Highlight theme={themes.vsDark} code={variant.code} language={variant.language}>
               {({ className, style, tokens, getLineProps, getTokenProps }) => (
                 <pre className={`${styles.codeBlock} ${className}`} style={style}>
                   {tokens.map((line, i) => (
