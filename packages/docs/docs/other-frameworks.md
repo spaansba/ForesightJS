@@ -41,7 +41,11 @@ The options are the same [registration options](./configuration/registration-opt
 
 ## The subscribe pattern
 
-If you only fire a callback, the snippet above is all you need. But `register()` returns more: the element's full [state snapshot](./configuration/registration-options.md#registration-return-value) plus `subscribe` and `getSnapshot`. The state is an immutable snapshot whose reference is replaced (never mutated) on every logical change, which makes it plug into any reactivity system:
+:::tip Most of the time you don't need this
+If you only want to fire a callback (prefetching, preloading, etc.), the registration snippet above is all you need and you can skip this entire section. The subscribe pattern only matters when you want to drive reactive state from a registration, which is mainly something full framework adapters do (like our official [React](./react/installation.md) and [Vue](./vue/installation.md) packages).
+:::
+
+`register()` returns more than the unregister function: the element's full [state snapshot](./configuration/registration-options.md#registration-return-value) plus `subscribe` and `getSnapshot`. The state is an immutable snapshot whose reference is replaced (never mutated) on every logical change, which makes it plug into any reactivity system:
 
 ```js
 const reg = ForesightManager.instance.register({
