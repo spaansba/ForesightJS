@@ -32,6 +32,12 @@ Official Vue 3 bindings: the `v-foresight` directive, the `useForesight` and `us
 
 **Published as:** `@foresightjs/vue` on npm
 
+### [foresightjs-angular](./foresightjs-angular/)
+
+Official Angular bindings: the `[fsForesight]` directive, `ForesightService`, `injectForesightEvent`, and the `ForesightComponent` wrapper.
+
+**Published as:** `@foresightjs/angular` on npm
+
 ## Development Packages
 
 ### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/)

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "paths": {}
+  },
+  "exclude": ["src/**/*.test.ts", "src/tests/**"],
+  "references": []
+}

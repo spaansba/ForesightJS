@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDecoratorMetadata": false,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "inlineSources": true,
+    "noImplicitOverride": true,
+    "strict": true,
+    "useDefineForClassFields": false
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "partial",
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "references": [{ "path": "../js.foresight" }]
+}
