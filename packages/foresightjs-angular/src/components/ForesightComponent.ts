@@ -1,12 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  computed,
-  signal,
-} from "@angular/core"
+import { Component, ElementRef, Input, OnChanges, OnDestroy, computed, signal } from "@angular/core"
 import {
   createUnregisteredSnapshot,
   type ForesightCallback,

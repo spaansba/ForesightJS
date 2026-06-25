@@ -20,7 +20,7 @@ export class ForesightService {
     let unsubscribe: (() => void) | null = null
     let isRegistered = false
 
-    const callback = (s: ForesightElementState) => optionsRef.callback(s)
+    const callback = (s: ForesightElementState) => this.zone.run(() => optionsRef.callback(s))
     const syncState = () => {
       const currentResult = result
       if (currentResult) {
@@ -34,7 +34,8 @@ export class ForesightService {
       callback,
     })
     isRegistered = true
-    state.set(result.getSnapshot())
+    const initialResult = result
+    this.zone.run(() => state.set(initialResult.getSnapshot()))
     unsubscribe = result.subscribe(syncState)
 
     return {
@@ -61,7 +62,7 @@ export class ForesightService {
         result?.unregister()
         result = null
         isRegistered = false
-        state.set(createUnregisteredSnapshot(false))
+        this.zone.run(() => state.set(createUnregisteredSnapshot(false)))
       },
       getSnapshot: () => result?.getSnapshot() ?? createUnregisteredSnapshot(false),
     }

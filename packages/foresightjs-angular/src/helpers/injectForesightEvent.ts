@@ -2,7 +2,7 @@ import { DestroyRef, effect, inject, isSignal, type Signal } from "@angular/core
 import type { ForesightEvent, ForesightEventMap } from "js.foresight"
 import { ForesightService } from "../services/ForesightService"
 
-type EventTypeInput<K extends ForesightEvent> = K | Signal<K> | (() => K)
+type EventTypeInput<K extends ForesightEvent> = K | Signal<K>
 type ListenerInput<K extends ForesightEvent> =
   | ((event: ForesightEventMap[K]) => void)
   | Signal<(event: ForesightEventMap[K]) => void>
@@ -10,10 +10,6 @@ type ListenerInput<K extends ForesightEvent> =
 const resolveEventType = <K extends ForesightEvent>(eventType: EventTypeInput<K>): K => {
   if (isSignal(eventType)) {
     return eventType()
-  }
-
-  if (typeof eventType === "function") {
-    return (eventType as () => K)()
   }
 
   return eventType
@@ -29,6 +25,11 @@ const resolveListener = <K extends ForesightEvent>(
   return listener as (event: ForesightEventMap[K]) => void
 }
 
+/**
+ * Subscribes to a ForesightManager event for the lifetime of the current
+ * injection context. Pass signals when the event type or listener must change
+ * over time; plain values are intentionally treated as static.
+ */
 export const injectForesightEvent = <K extends ForesightEvent>(
   eventType: EventTypeInput<K>,
   listener: ListenerInput<K>

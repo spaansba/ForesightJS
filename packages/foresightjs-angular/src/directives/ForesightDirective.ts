@@ -1,12 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  computed,
-  signal,
-} from "@angular/core"
+import { Directive, ElementRef, Input, OnChanges, OnDestroy, computed, signal } from "@angular/core"
 import { createUnregisteredSnapshot, type ForesightElementState, type HitSlop } from "js.foresight"
 import { ForesightService } from "../services/ForesightService"
 import type { ForesightDirectiveValue, ForesightRegistration } from "../types"

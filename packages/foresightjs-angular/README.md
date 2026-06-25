@@ -7,7 +7,7 @@
 
 Official Angular bindings for [ForesightJS](https://foresightjs.com/), a lightweight library that predicts user intent (mouse trajectory, keyboard navigation, scroll, touch) to trigger callbacks like prefetching _before_ the user interacts.
 
-- **Docs:** [foresightjs.com/docs/angular](https://foresightjs.com/docs/angular)
+- **Docs:** [foresightjs.com/docs/angular/installation](https://foresightjs.com/docs/angular/installation)
 - **Core library:** [`js.foresight`](https://www.npmjs.com/package/js.foresight)
 - **Playground:** [foresightjs.com](https://foresightjs.com/#playground)
 
