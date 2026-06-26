@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from "react"
 import { useHistory, useLocation } from "@docusaurus/router"
 import styles from "./styles.module.css"
 
-type FrameworkId = "js" | "react" | "vue"
+type FrameworkId = "js" | "react" | "vue" | "angular"
 
 const ROOTS: Record<FrameworkId, string> = {
   js: "/docs/getting-started/what-is-foresightjs",
   react: "/docs/react/what-is-foresightjs",
   vue: "/docs/vue/what-is-foresightjs",
+  angular: "/docs/angular/what-is-foresightjs",
 }
 
 // Pages that exist in every framework tree. When switching frameworks from one
@@ -17,61 +18,73 @@ const EQUIVALENTS: Array<Record<FrameworkId, string>> = [
     js: "/docs/getting-started/what-is-foresightjs",
     react: "/docs/react/what-is-foresightjs",
     vue: "/docs/vue/what-is-foresightjs",
+    angular: "/docs/angular/what-is-foresightjs",
   },
   {
     js: "/docs/getting-started/initialize-the-manager",
     react: "/docs/react/initialize-the-manager",
     vue: "/docs/vue/initialize-the-manager",
+    angular: "/docs/angular/initialize-the-manager",
   },
   {
     js: "/docs/getting-started/quick-start",
     react: "/docs/react/quick-start",
     vue: "/docs/vue/quick-start",
+    angular: "/docs/angular/quick-start",
   },
   {
     js: "/docs/getting-started/typescript",
     react: "/docs/react/typescript",
     vue: "/docs/vue/typescript",
+    angular: "/docs/angular/typescript",
   },
   {
     js: "/docs/configuration/global-settings",
     react: "/docs/react/configuration/global-settings",
     vue: "/docs/vue/configuration/global-settings",
+    angular: "/docs/angular/configuration/global-settings",
   },
   {
     js: "/docs/configuration/registration-options",
     react: "/docs/react/configuration/registration-options",
     vue: "/docs/vue/configuration/registration-options",
+    angular: "/docs/angular/configuration/registration-options",
   },
   {
     js: "/docs/events",
     react: "/docs/react/events",
     vue: "/docs/vue/events",
+    angular: "/docs/angular/events",
   },
   {
     js: "/docs/debugging/devtools",
     react: "/docs/react/devtools",
     vue: "/docs/vue/devtools",
+    angular: "/docs/angular/devtools",
   },
   {
     js: "/docs/debugging/static-properties",
     react: "/docs/react/static-properties",
     vue: "/docs/vue/static-properties",
+    angular: "/docs/angular/static-properties",
   },
   {
     js: "/docs/migrating-to-v4",
     react: "/docs/react/migrating-to-v4",
     vue: "/docs/vue/migrating-to-v4",
+    angular: "/docs/angular/migrating-to-v4",
   },
   {
     js: "/docs/Behind_the_Scenes",
     react: "/docs/react/behind-the-scenes",
     vue: "/docs/vue/behind-the-scenes",
+    angular: "/docs/angular/behind-the-scenes",
   },
   {
     js: "/docs/ai-context",
     react: "/docs/react/ai-context",
     vue: "/docs/vue/ai-context",
+    angular: "/docs/angular/ai-context",
   },
 ]
 
@@ -116,10 +129,24 @@ const VueIcon = () => {
   )
 }
 
+const AngularIcon = () => {
+  return (
+    <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden="true">
+      <path fill="#dd0031" d="M16 2 3 6.6l2 17.1L16 30l11-6.3 2-17.1L16 2Z" />
+      <path fill="#c3002f" d="M16 2v28l11-6.3 2-17.1L16 2Z" />
+      <path
+        fill="#fff"
+        d="M16 6.1 7.9 24.2h3l1.6-4h7l1.6 4h3L16 6.1Zm2.5 11.7h-5l2.5-6 2.5 6Z"
+      />
+    </svg>
+  )
+}
+
 const FRAMEWORKS: Array<{ id: FrameworkId; label: string; Icon: () => React.ReactNode }> = [
   { id: "js", label: "JavaScript", Icon: JsIcon },
   { id: "react", label: "React", Icon: ReactIcon },
   { id: "vue", label: "Vue", Icon: VueIcon },
+  { id: "angular", label: "Angular", Icon: AngularIcon },
 ]
 
 const detectFramework = (pathname: string): FrameworkId => {
@@ -129,6 +156,10 @@ const detectFramework = (pathname: string): FrameworkId => {
 
   if (pathname.startsWith("/docs/vue/")) {
     return "vue"
+  }
+
+  if (pathname.startsWith("/docs/angular/")) {
+    return "angular"
   }
 
   return "js"

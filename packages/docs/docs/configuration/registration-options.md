@@ -52,6 +52,6 @@ ForesightManager.instance.updateElementOptions(myElement, {
 })
 ```
 
-The framework integrations use this under the hood: the React hooks and Vue composables/directive patch the registration in place whenever your options change.
+The framework integrations use this under the hood: the React hooks, Vue composables/directive, and Angular directive/service/component patch the registration in place whenever your options change.
 
 <ElementSettings />
