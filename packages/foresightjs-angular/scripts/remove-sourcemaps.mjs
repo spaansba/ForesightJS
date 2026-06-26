@@ -1,7 +1,11 @@
-import { readdirSync, rmSync } from "node:fs"
+import { existsSync, readdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
 
 const removeSourceMaps = directory => {
+  if (!existsSync(directory)) {
+    return
+  }
+
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name)
 
