@@ -9,7 +9,7 @@ type Props = WrapperProps<typeof DocVersionBannerType>
 
 /**
  * Renders the early-release notice on every page of the framework package
- * framework trees, above the doc content (same slot as version banners).
+ * docs, above the doc content (same slot as version banners).
  */
 export default function DocVersionBannerWrapper(props: Props): React.ReactNode {
   const { pathname } = useLocation()
