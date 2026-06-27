@@ -14,9 +14,8 @@ If you run into a bug, please post an issue in this [repo](https://github.com/sp
 
 ### Create Framework Integrations
 
-Since ForesightJS is framework agnostic, we welcome integrations for popular frameworks and routers. We already have Next.js and React Router integrations, but would love to see:
+Since ForesightJS is framework agnostic, we welcome integrations for popular frameworks and routers. We already have official React, Vue, and Angular packages plus Next.js and React Router examples, but would love to see:
 
-- Angular integration
 - Svelte integration
 - Other popular frameworks or routers
 

@@ -1,0 +1,71 @@
+{
+  "name": "@foresightjs/angular",
+  "version": "0.3.2",
+  "description": "Angular bindings for ForesightJS - directives and services to register elements with the ForesightManager from Angular components.",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
+    "build:prod": "ng-packagr -p ng-package.json -c tsconfig.lib.prod.json && node ./scripts/remove-sourcemaps.mjs",
+    "dev": "ng-packagr -p ng-package.json -c tsconfig.lib.json --watch",
+    "lint": "eslint . --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "prepublishOnly": "pnpm test:run && pnpm build:prod"
+  },
+  "main": "./dist/fesm2022/foresightjs-angular.mjs",
+  "module": "./dist/fesm2022/foresightjs-angular.mjs",
+  "types": "./dist/types/foresightjs-angular.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/foresightjs-angular.d.ts",
+      "default": "./dist/fesm2022/foresightjs-angular.mjs"
+    }
+  },
+  "homepage": "https://foresightjs.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/foresightjs-angular"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "angular",
+    "foresight",
+    "js.foresight",
+    "foresightjs",
+    "angular-directive",
+    "prefetch",
+    "interaction-prediction",
+    "mouse-trajectory",
+    "ForesightDirective"
+  ],
+  "author": "Bart Spaans",
+  "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
+  "peerDependencies": {
+    "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0",
+    "js.foresight": "^4.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^22.0.2",
+    "@angular/compiler-cli": "^22.0.2",
+    "@angular/core": "^22.0.2",
+    "js.foresight": "workspace:*",
+    "ng-packagr": "^22.0.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -3,7 +3,7 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs"
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 /**
- * Three sidebars, one per framework. The FrameworkSelector component
+ * One sidebar per framework. The FrameworkSelector component
  * (src/components/FrameworkSelector) switches between them by navigating to
  * the equivalent page in the target tree. JavaScript (core) is the default
  * tree and keeps the historical URLs; it must stay named `tutorialSidebar`
@@ -110,6 +110,43 @@ const sidebars: SidebarsConfig = {
     },
     "vue/behind-the-scenes",
     "vue/ai-context",
+  ],
+  angularSidebar: [
+    {
+      type: "category",
+      label: "Getting Started",
+      items: [
+        "angular/what-is-foresightjs",
+        "angular/installation",
+        "angular/initialize-the-manager",
+        "angular/quick-start",
+      ],
+    },
+    {
+      type: "category",
+      label: "API",
+      items: [
+        "angular/directive",
+        "angular/foresight-service",
+        "angular/foresight-component",
+        "angular/injectForesightEvent",
+      ],
+    },
+    {
+      type: "category",
+      label: "Configuration",
+      items: ["angular/configuration/global-settings", "angular/configuration/registration-options"],
+    },
+    "angular/typescript",
+    "angular/migrating-to-v4",
+    "angular/events",
+    {
+      type: "category",
+      label: "Debugging",
+      items: ["angular/devtools", "angular/static-properties"],
+    },
+    "angular/behind-the-scenes",
+    "angular/ai-context",
   ],
 }
 

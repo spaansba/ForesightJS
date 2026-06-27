@@ -9,7 +9,7 @@
 
 These tools are built entirely using `ForesightJS`'s [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
 
-Since the devtools observe the `ForesightManager` directly, they work with every Foresight integration: the [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start) core, the official [React](https://foresightjs.com/docs/react/installation) and [Vue](https://foresightjs.com/docs/vue/installation) packages, or your own [custom binding](https://foresightjs.com/docs/other-frameworks).
+Since the devtools observe the `ForesightManager` directly, they work with every Foresight integration: the [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start) core, the official [React](https://foresightjs.com/docs/react/installation), [Vue](https://foresightjs.com/docs/vue/installation), and [Angular](https://foresightjs.com/docs/angular/installation) packages, or your own [custom binding](https://foresightjs.com/docs/other-frameworks).
 
 ## Installation
 
