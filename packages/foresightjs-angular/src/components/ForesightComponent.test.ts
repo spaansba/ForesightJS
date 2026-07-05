@@ -10,7 +10,10 @@ const zone = {
 } as NgZone
 
 const createComponent = () =>
-  new ForesightComponent(new ElementRef(document.createElement("foresight")), new ForesightService(zone))
+  new ForesightComponent(
+    new ElementRef(document.createElement("foresight")),
+    new ForesightService(zone)
+  )
 
 beforeEach(() => {
   registerSpy.mockClear()

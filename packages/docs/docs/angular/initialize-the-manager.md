@@ -12,7 +12,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import InitializeTheManager from "../_partials/_initialize-the-manager.mdx"
+import InitializeTheManager from "../\_partials/\_initialize-the-manager.mdx"
 
 # Initialize the Manager
 

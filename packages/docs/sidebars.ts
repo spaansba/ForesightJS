@@ -135,7 +135,10 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Configuration",
-      items: ["angular/configuration/global-settings", "angular/configuration/registration-options"],
+      items: [
+        "angular/configuration/global-settings",
+        "angular/configuration/registration-options",
+      ],
     },
     "angular/typescript",
     "angular/migrating-to-v4",

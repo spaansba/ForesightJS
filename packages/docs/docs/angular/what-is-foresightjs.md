@@ -12,8 +12,8 @@ last_updated:
   author: Bart Spaans
 ---
 
-import WhatIsIntro from "../_partials/_what-is-intro.mdx"
-import WhatIsBody from "../_partials/_what-is-body.mdx"
+import WhatIsIntro from "../\_partials/\_what-is-intro.mdx"
+import WhatIsBody from "../\_partials/\_what-is-body.mdx"
 
 # What is ForesightJS
 

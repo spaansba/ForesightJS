@@ -11,7 +11,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import TypeScriptTypes from "../_partials/_typescript.mdx"
+import TypeScriptTypes from "../\_partials/\_typescript.mdx"
 
 # TypeScript
 

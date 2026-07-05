@@ -14,7 +14,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import ElementSettings from "../../_partials/_registration-options.mdx"
+import ElementSettings from "../../\_partials/\_registration-options.mdx"
 
 # Registration Options
 
@@ -36,7 +36,7 @@ import { ForesightDirective } from "@foresightjs/angular"
         name: 'about-link',
         meta: { route: '/about' },
         reactivateAfter: 5 * 60 * 1000,
-        enabled: true
+        enabled: true,
       }"
     >
       About

@@ -13,7 +13,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import GlobalSettings from "../../_partials/_global-settings.mdx"
+import GlobalSettings from "../../\_partials/\_global-settings.mdx"
 
 # Global Settings
 

@@ -12,7 +12,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import Events from "../_partials/_events.mdx"
+import Events from "../\_partials/\_events.mdx"
 
 # Events
 

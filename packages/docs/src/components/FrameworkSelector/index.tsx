@@ -134,10 +134,7 @@ const AngularIcon = () => {
     <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden="true">
       <path fill="#dd0031" d="M16 2 3 6.6l2 17.1L16 30l11-6.3 2-17.1L16 2Z" />
       <path fill="#c3002f" d="M16 2v28l11-6.3 2-17.1L16 2Z" />
-      <path
-        fill="#fff"
-        d="M16 6.1 7.9 24.2h3l1.6-4h7l1.6 4h3L16 6.1Zm2.5 11.7h-5l2.5-6 2.5 6Z"
-      />
+      <path fill="#fff" d="M16 6.1 7.9 24.2h3l1.6-4h7l1.6 4h3L16 6.1Zm2.5 11.7h-5l2.5-6 2.5 6Z" />
     </svg>
   )
 }

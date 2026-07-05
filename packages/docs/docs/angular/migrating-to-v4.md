@@ -11,7 +11,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import MigratingCore from "../_partials/_migrating-core.mdx"
+import MigratingCore from "../\_partials/\_migrating-core.mdx"
 
 # Migrating to v4
 

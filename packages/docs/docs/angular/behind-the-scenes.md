@@ -13,7 +13,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import BehindTheScenes from "../_partials/_behind-the-scenes.mdx"
+import BehindTheScenes from "../\_partials/\_behind-the-scenes.mdx"
 
 # Behind the Scenes
 

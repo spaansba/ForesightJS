@@ -12,7 +12,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import AiContext from "../_partials/_ai-context.mdx"
+import AiContext from "../\_partials/\_ai-context.mdx"
 
 # AI Context
 

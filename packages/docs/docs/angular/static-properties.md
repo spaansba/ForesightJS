@@ -11,7 +11,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import StaticProperties from "../_partials/_static-properties.mdx"
+import StaticProperties from "../\_partials/\_static-properties.mdx"
 
 # Static Properties
 

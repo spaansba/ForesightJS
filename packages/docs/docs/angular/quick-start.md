@@ -29,11 +29,7 @@ import { ForesightDirective } from "@foresightjs/angular"
   selector: "app-nav",
   standalone: true,
   imports: [ForesightDirective],
-  template: `
-    <button [fsForesight]="prefetchPricing">
-      Pricing
-    </button>
-  `,
+  template: ` <button [fsForesight]="prefetchPricing">Pricing</button> `,
 })
 export class NavComponent {
   readonly prefetchPricing = () => {

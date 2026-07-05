@@ -12,7 +12,7 @@ last_updated:
   author: Bart Spaans
 ---
 
-import Devtools from "../_partials/_devtools.mdx"
+import Devtools from "../\_partials/\_devtools.mdx"
 
 # Development Tools
 
