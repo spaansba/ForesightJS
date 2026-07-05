@@ -375,6 +375,8 @@ export class ElementsPageComponent implements AfterViewInit, OnDestroy {
       this.isResized.set(true)
       this.isRemoved.set(false)
       this.isVisible.set(true)
+      this.enabled.set(true)
+      this.hitSlop.set(20)
     })
   }
 

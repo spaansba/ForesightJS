@@ -26,6 +26,7 @@ const initialState = <T>(): QueryState<T> => ({
 class QueryCache {
   private readonly store = new Map<string, WritableSignal<QueryState<unknown>>>()
   private readonly inflight = new Map<string, Promise<unknown>>()
+  private readonly staleTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
   private entry<T>(key: string): WritableSignal<QueryState<T>> {
     let entry = this.store.get(key)
@@ -78,8 +79,12 @@ class QueryCache {
           fetchCount: state.fetchCount + 1,
         }))
 
+        clearTimeout(this.staleTimers.get(key))
         if (staleTime > 0) {
-          setTimeout(() => entry.update(state => ({ ...state, isStale: true })), staleTime)
+          this.staleTimers.set(
+            key,
+            setTimeout(() => entry.update(state => ({ ...state, isStale: true })), staleTime)
+          )
         }
 
         return data

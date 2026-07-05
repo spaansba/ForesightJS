@@ -47,7 +47,7 @@ import { ForesightDirective } from "@foresightjs/angular"
         @for (i of buttons(); track resetKey() + "-" + i) {
           <button
             type="button"
-            [fsForesight]="{ callback: onHit, hitSlop: 0 }"
+            [fsForesight]="buttonOptions"
             #ref="foresight"
             class="flex justify-center items-center size-10 text-xs font-medium border"
             [class.bg-emerald-500]="ref.state().isPredicted"
@@ -74,6 +74,7 @@ export class MassPageComponent {
   )
 
   protected readonly onHit = () => this.hitCount.update(count => count + 1)
+  protected readonly buttonOptions = { callback: this.onHit, hitSlop: 0 }
 
   protected updateCount(event: Event): void {
     const raw = parseInt((event.target as HTMLInputElement).value, 10) || 1
