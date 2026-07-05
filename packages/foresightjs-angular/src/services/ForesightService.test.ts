@@ -60,6 +60,25 @@ describe("ForesightService", () => {
     expect(callback).toHaveBeenCalledWith(fired)
   })
 
+  it("runs state writes inside the Angular zone", () => {
+    const run = vi.fn((fn: () => unknown) => fn())
+    const service = createServiceWithZone({ run: run as NgZone["run"] })
+    const registration = service.register(document.createElement("button"), { callback: vi.fn() })
+
+    run.mockClear()
+    mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isPredicted: true }
+    mockState.listeners.forEach(listener => listener())
+
+    expect(run).toHaveBeenCalledTimes(1)
+    expect(registration.state().isPredicted).toBe(true)
+
+    run.mockClear()
+    registration.unregister()
+
+    expect(run).toHaveBeenCalledTimes(1)
+    expect(registration.state().isRegistered).toBe(false)
+  })
+
   it("resets the state signal on unregister", () => {
     const service = createService()
     const registration = service.register(document.createElement("button"), { callback: vi.fn() })

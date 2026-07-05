@@ -19,21 +19,23 @@ export class ForesightService {
     const state = signal<Readonly<ForesightElementState>>(UNREGISTERED_STATE)
     let optionsRef = options
 
-    // NgZone only wraps the user-facing boundaries (callback, listener) so
-    // zone-based consumer apps run change detection after those fire. Signal
-    // writes below need no zone.run: they notify change detection on their own,
-    // zonefully or zoneless.
+    // NgZone wraps every boundary where the manager calls back into Angular
+    // (user callback, state writes). The manager fires from rAF and pointer
+    // listeners outside the zone, and Angular 17 does not schedule change
+    // detection for signal writes made there (18+ does via the hybrid
+    // scheduler). zone.run is a passthrough in zoneless apps.
     const callback = (s: ForesightElementState) => this.zone.run(() => optionsRef.callback(s))
+    const setState = (s: Readonly<ForesightElementState>) => this.zone.run(() => state.set(s))
 
     let result: ForesightRegisterResult | null = ForesightManager.instance.register({
       ...optionsRef,
       element,
       callback,
     })
-    state.set(result.getSnapshot())
+    setState(result.getSnapshot())
     let unsubscribe: (() => void) | null = result.subscribe(() => {
       if (result) {
-        state.set(result.getSnapshot())
+        setState(result.getSnapshot())
       }
     })
 
@@ -60,7 +62,7 @@ export class ForesightService {
         unsubscribe = null
         result.unregister()
         result = null
-        state.set(UNREGISTERED_STATE)
+        setState(UNREGISTERED_STATE)
       },
       getSnapshot: () => result?.getSnapshot() ?? UNREGISTERED_STATE,
     }
