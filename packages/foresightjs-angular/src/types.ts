@@ -19,15 +19,6 @@ export type ForesightRegistration = {
   getSnapshot: () => ForesightElementState
 }
 
-/**
- * Component/directive form of the registration options. The foresight `name`
- * option is exposed as `foresightName` so an element's native `name` attribute
- * can still be used independently.
- */
-export type ForesightComponentOptions = Omit<ForesightOptions, "name"> & {
-  foresightName?: string
-}
-
 export type ForesightDirectiveInputs = {
   value: ForesightDirectiveValue
   name?: string
@@ -36,9 +27,3 @@ export type ForesightDirectiveInputs = {
   reactivateAfter?: number
   enabled?: boolean
 }
-
-/** @deprecated Use {@link ForesightOptions} instead. */
-export type UseForesightOptions = ForesightOptions
-
-/** @deprecated Use {@link ForesightRegistration} instead. */
-export type UseForesightReturn = ForesightRegistration

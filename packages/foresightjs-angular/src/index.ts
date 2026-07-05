@@ -26,10 +26,6 @@ export {
   type ForesightDirectiveValue,
   type ForesightStateSignal,
   type ForesightRegistration,
-  type ForesightComponentOptions,
-  type ForesightDirectiveInputs,
-  type UseForesightOptions,
-  type UseForesightReturn,
 } from "./types"
 export { ForesightDirective } from "./directives/ForesightDirective"
 export { ForesightComponent } from "./components/ForesightComponent"
