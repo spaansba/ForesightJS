@@ -303,6 +303,7 @@ export class HomePageComponent {
     if (!response.ok) {
       throw new Error(`Failed to fetch page: ${slug} (${response.status})`)
     }
+
     const data = await response.json()
 
     return { ...data, fetchedAt: Date.now() }

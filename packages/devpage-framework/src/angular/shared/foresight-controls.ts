@@ -5,7 +5,7 @@ import { getReactivateAfter, onReset, subscribeReactivateAfter } from "../../sha
  * Reactive mirror of the shared top-bar "Reactivate ms" control. Must be called
  * from an injection context (a field initialiser or constructor).
  */
-export function injectReactivateAfter(): Signal<number> {
+export const injectReactivateAfter = (): Signal<number> => {
   const value = signal(getReactivateAfter())
   const unsubscribe = subscribeReactivateAfter(() => value.set(getReactivateAfter()))
   inject(DestroyRef).onDestroy(unsubscribe)
@@ -18,7 +18,7 @@ export function injectReactivateAfter(): Signal<number> {
  * already reactivates the manager's elements globally; pages read this to also
  * restore their own local UI toggles on top of that.
  */
-export function injectResetKey(): Signal<number> {
+export const injectResetKey = (): Signal<number> => {
   const key = signal(0)
   const unsubscribe = onReset(() => key.update(value => value + 1))
   inject(DestroyRef).onDestroy(unsubscribe)
