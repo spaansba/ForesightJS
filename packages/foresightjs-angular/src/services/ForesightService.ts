@@ -20,11 +20,14 @@ export class ForesightService {
     let unsubscribe: (() => void) | null = null
     let isRegistered = false
 
+    // NgZone only wraps the user-facing boundaries (callback, listener) so
+    // zone-based consumer apps run change detection after those fire. Signal
+    // writes below need no zone.run: they notify change detection on their own,
+    // zonefully or zoneless.
     const callback = (s: ForesightElementState) => this.zone.run(() => optionsRef.callback(s))
     const syncState = () => {
-      const currentResult = result
-      if (currentResult) {
-        this.zone.run(() => state.set(currentResult.getSnapshot()))
+      if (result) {
+        state.set(result.getSnapshot())
       }
     }
 
@@ -34,8 +37,7 @@ export class ForesightService {
       callback,
     })
     isRegistered = true
-    const initialResult = result
-    this.zone.run(() => state.set(initialResult.getSnapshot()))
+    state.set(result.getSnapshot())
     unsubscribe = result.subscribe(syncState)
 
     return {
@@ -62,7 +64,7 @@ export class ForesightService {
         result?.unregister()
         result = null
         isRegistered = false
-        this.zone.run(() => state.set(createUnregisteredSnapshot(false)))
+        state.set(createUnregisteredSnapshot(false))
       },
       getSnapshot: () => result?.getSnapshot() ?? createUnregisteredSnapshot(false),
     }
