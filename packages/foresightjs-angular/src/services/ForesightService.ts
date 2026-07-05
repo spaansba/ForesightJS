@@ -9,43 +9,40 @@ import {
 } from "js.foresight"
 import type { ForesightOptions, ForesightRegistration } from "../types"
 
+export const UNREGISTERED_STATE: Readonly<ForesightElementState> = createUnregisteredSnapshot(false)
+
 @Injectable({ providedIn: "root" })
 export class ForesightService {
   constructor(private readonly zone: NgZone) {}
 
   register(element: Element, options: ForesightOptions): ForesightRegistration {
-    const state = signal<Readonly<ForesightElementState>>(createUnregisteredSnapshot(false))
+    const state = signal<Readonly<ForesightElementState>>(UNREGISTERED_STATE)
     let optionsRef = options
-    let result: ForesightRegisterResult | null = null
-    let unsubscribe: (() => void) | null = null
-    let isRegistered = false
 
     // NgZone only wraps the user-facing boundaries (callback, listener) so
     // zone-based consumer apps run change detection after those fire. Signal
     // writes below need no zone.run: they notify change detection on their own,
     // zonefully or zoneless.
     const callback = (s: ForesightElementState) => this.zone.run(() => optionsRef.callback(s))
-    const syncState = () => {
-      if (result) {
-        state.set(result.getSnapshot())
-      }
-    }
 
-    result = ForesightManager.instance.register({
+    let result: ForesightRegisterResult | null = ForesightManager.instance.register({
       ...optionsRef,
       element,
       callback,
     })
-    isRegistered = true
     state.set(result.getSnapshot())
-    unsubscribe = result.subscribe(syncState)
+    let unsubscribe: (() => void) | null = result.subscribe(() => {
+      if (result) {
+        state.set(result.getSnapshot())
+      }
+    })
 
     return {
       state: state.asReadonly(),
       update: nextOptions => {
         optionsRef = nextOptions
 
-        if (!isRegistered || !ForesightManager.instance.registeredElements.has(element)) {
+        if (!result || !ForesightManager.instance.registeredElements.has(element)) {
           return
         }
 
@@ -55,18 +52,17 @@ export class ForesightService {
         })
       },
       unregister: () => {
-        if (!isRegistered) {
+        if (!result) {
           return
         }
 
         unsubscribe?.()
         unsubscribe = null
-        result?.unregister()
+        result.unregister()
         result = null
-        isRegistered = false
-        state.set(createUnregisteredSnapshot(false))
+        state.set(UNREGISTERED_STATE)
       },
-      getSnapshot: () => result?.getSnapshot() ?? createUnregisteredSnapshot(false),
+      getSnapshot: () => result?.getSnapshot() ?? UNREGISTERED_STATE,
     }
   }
 
