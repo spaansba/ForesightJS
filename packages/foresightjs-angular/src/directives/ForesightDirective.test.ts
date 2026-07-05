@@ -1,6 +1,6 @@
 import { ElementRef, NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { createUnregisteredSnapshot } from "js.foresight"
+import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { ForesightService } from "../services/ForesightService"
 import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { ForesightDirective } from "./ForesightDirective"
@@ -28,7 +28,7 @@ describe("ForesightDirective", () => {
     directive.fsForesight = callback
     directive.fsForesightName = "checkout"
 
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(HTMLButtonElement)
@@ -40,7 +40,7 @@ describe("ForesightDirective", () => {
     const directive = createDirective()
     directive.fsForesight = { callback, name: "options-name", hitSlop: 20, enabled: false }
 
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     expect(registerSpy.mock.calls[0][0].name).toBe("options-name")
@@ -55,7 +55,7 @@ describe("ForesightDirective", () => {
     directive.fsForesightName = "override"
     directive.fsForesightEnabled = false
 
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(registerSpy.mock.calls[0][0].name).toBe("override")
     expect(registerSpy.mock.calls[0][0].enabled).toBe(false)
@@ -63,8 +63,8 @@ describe("ForesightDirective", () => {
 
   it("unregisters on destroy", () => {
     const directive = createDirective()
-    directive.fsForesight = vi.fn()
-    directive.ngOnChanges({})
+    directive.fsForesight = vi.fn<ForesightCallback>()
+    directive.ngOnChanges()
 
     directive.ngOnDestroy()
 
@@ -74,10 +74,10 @@ describe("ForesightDirective", () => {
   it("patches options on the same element without unregistering", () => {
     const directive = createDirective()
     directive.fsForesight = { callback: vi.fn(), name: "first" }
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     directive.fsForesight = { callback: vi.fn(), name: "second" }
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     expect(unregisterSpy).not.toHaveBeenCalled()
@@ -89,10 +89,10 @@ describe("ForesightDirective", () => {
     const second = vi.fn()
     const directive = createDirective()
     directive.fsForesight = { callback: first, name: "callback" }
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     directive.fsForesight = { callback: second, name: "callback" }
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
     mockState.lastCallbackWrapper?.(fired)
@@ -103,8 +103,8 @@ describe("ForesightDirective", () => {
 
   it("exposes state as an Angular signal", () => {
     const directive = createDirective()
-    directive.fsForesight = vi.fn()
-    directive.ngOnChanges({})
+    directive.fsForesight = vi.fn<ForesightCallback>()
+    directive.ngOnChanges()
 
     expect(directive.state().isPredicted).toBe(false)
 
@@ -117,10 +117,10 @@ describe("ForesightDirective", () => {
   it("registers SVG elements", () => {
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
     const directive = createDirective(circle)
-    directive.fsForesight = vi.fn()
+    directive.fsForesight = vi.fn<ForesightCallback>()
     directive.fsForesightName = "circle"
 
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     expect(registerSpy.mock.calls[0][0].element).toBeInstanceOf(SVGElement)
@@ -129,11 +129,11 @@ describe("ForesightDirective", () => {
 
   it("unregisters when the directive value is cleared", () => {
     const directive = createDirective()
-    directive.fsForesight = vi.fn()
-    directive.ngOnChanges({})
+    directive.fsForesight = vi.fn<ForesightCallback>()
+    directive.ngOnChanges()
 
     directive.fsForesight = null
-    directive.ngOnChanges({})
+    directive.ngOnChanges()
 
     expect(unregisterSpy).toHaveBeenCalledTimes(1)
     expect(directive.state().isRegistered).toBe(false)
