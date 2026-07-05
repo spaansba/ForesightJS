@@ -47,8 +47,8 @@ describe("ForesightService", () => {
   })
 
   it("runs user callbacks inside the Angular zone", () => {
-    const run = vi.fn(<T>(fn: () => T): T => fn())
-    const service = createServiceWithZone({ run })
+    const run = vi.fn((fn: () => unknown) => fn())
+    const service = createServiceWithZone({ run: run as NgZone["run"] })
     const callback = vi.fn()
     service.register(document.createElement("button"), { callback })
 
@@ -60,16 +60,28 @@ describe("ForesightService", () => {
     expect(callback).toHaveBeenCalledWith(fired)
   })
 
-  it("runs state resets inside the Angular zone", () => {
-    const run = vi.fn(<T>(fn: () => T): T => fn())
-    const service = createServiceWithZone({ run })
+  it("resets the state signal on unregister", () => {
+    const service = createService()
     const registration = service.register(document.createElement("button"), { callback: vi.fn() })
 
-    run.mockClear()
+    mockState.currentSnapshot = { ...createUnregisteredSnapshot(false), isRegistered: true }
+    mockState.listeners.forEach(listener => listener())
+    expect(registration.state().isRegistered).toBe(true)
+
     registration.unregister()
 
-    expect(run).toHaveBeenCalledTimes(1)
     expect(registration.state().isRegistered).toBe(false)
+    expect(unregisterSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it("ignores repeated unregister calls", () => {
+    const service = createService()
+    const registration = service.register(document.createElement("button"), { callback: vi.fn() })
+
+    registration.unregister()
+    registration.unregister()
+
+    expect(unregisterSpy).toHaveBeenCalledTimes(1)
   })
 
   it("subscribes to manager events and aborts on unsubscribe", () => {
