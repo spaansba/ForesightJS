@@ -2,17 +2,14 @@
 
 [![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/js.foresight)](https://bundlephobia.com/package/js.foresight)
-[![GitHub last commit](https://img.shields.io/github/last-commit/spaansba/ForesightJS)](https://github.com/spaansba/ForesightJS/commits)
+[![Bundle Size](https://img.shields.io/bundlejs/size/js.foresight)](https://bundlejs.com/?q=js.foresight)
 
 [![GitHub stars](https://img.shields.io/github/stars/spaansba/ForesightJS.svg?style=social&label=Star)](https://github.com/spaansba/ForesightJS)
 [![Best of JS](https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=spaansba%2FForesightJS%26since=daily)](https://bestofjs.org/projects/foresightjs)
 
-[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com#playground)
 
-ForesightJS is a lightweight JavaScript library that predicts user intent to prefetch content before it's needed. **It works completely out of the box without configuration**, supporting both desktop and mobile devices with different prediction strategies.
+ForesightJS is a lightweight JavaScript library that predicts user intent to prefetch content before it's needed. It works completely out of the box without configuration, supporting both desktop and mobile devices with different prediction strategies.
 
 ### [Playground](https://foresightjs.com/)
 
@@ -27,8 +24,6 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 - **React** → [`@foresightjs/react`](https://foresightjs.com/docs/react/installation): `useForesight`, the `Foresight` component, `useForesightEvent`, plus [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router) examples.
 - **Vue** → [`@foresightjs/vue`](https://foresightjs.com/docs/vue/quick-start): the `v-foresight` directive, the `Foresight` component, and the `useForesight` / `useForesightEvent` composables.
 - **Angular** → [`@foresightjs/angular`](https://foresightjs.com/docs/angular/installation): the `[fsForesight]` directive, `ForesightService`, `ForesightComponent`, and `injectForesightEvent`.
-
-> **Note:** The `@foresightjs/react`, `@foresightjs/vue`, and `@foresightjs/angular` packages are in beta and not yet stable. They work and are fully tested, but the API may still change.
 
 Using another framework (Svelte, Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
 
