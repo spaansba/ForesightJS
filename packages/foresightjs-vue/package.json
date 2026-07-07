@@ -1,6 +1,6 @@
 {
   "name": "@foresightjs/vue",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "description": "Vue composables for ForesightJS - register elements with the ForesightManager from Vue components.",
   "type": "module",
   "sideEffects": false,

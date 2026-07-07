@@ -28,7 +28,7 @@ last_updated:
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Demo](https://img.shields.io/badge/demo-live-blue)](https://foresightjs.com#playground)
 
-ForesightJS is a lightweight JavaScript library that predicts user intent to prefetch content before it's needed. **It works completely out of the box without configuration**, supporting both desktop and mobile devices with different prediction strategies.
+ForesightJS is a lightweight JavaScript library that predicts user intent to prefetch content before it's needed. It works completely out of the box without configuration, supporting both desktop and mobile devices with different prediction strategies.
 
 ## Understanding ForesightJS's Role
 

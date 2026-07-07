@@ -15,7 +15,6 @@ type Tab = {
   label: string
   docsLink: string
   docsLabel: string
-  disclaimer?: string
   variants: Variant[]
 }
 
@@ -46,8 +45,6 @@ ForesightManager.instance.register({
     label: "React",
     docsLink: "/docs/react/installation",
     docsLabel: "React docs",
-    disclaimer:
-      "@foresightjs/react is in beta. It works and is tested, but the API may still change.",
     variants: [
       {
         id: "component",
@@ -84,8 +81,6 @@ function PrefetchButton() {
     label: "Vue",
     docsLink: "/docs/vue/installation",
     docsLabel: "Vue docs",
-    disclaimer:
-      "@foresightjs/vue is in beta. It works and is tested, but the API may still change.",
     variants: [
       {
         id: "component",
@@ -196,7 +191,6 @@ export const QuickStart = () => {
               )}
             </Highlight>
             <div className={styles.codeFooter}>
-              {tab.disclaimer && <span className={styles.disclaimer}>{tab.disclaimer}</span>}
               <Link to={tab.docsLink} className={styles.docsLink}>
                 {tab.docsLabel} →
               </Link>
