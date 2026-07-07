@@ -25,10 +25,11 @@ ForesightManager.initialize({
 })
 ForesightDevtools.initialize({})
 
-type Framework = "react" | "vue"
+type Framework = "react" | "vue" | "angular"
 
 const reactRoot = document.getElementById("react-root") as HTMLDivElement
 const vueRoot = document.getElementById("vue-root") as HTMLDivElement
+const angularRoot = document.getElementById("angular-root") as HTMLDivElement
 const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("#toolbar .switch button"))
 
 let active: Framework | null = null
@@ -72,6 +73,42 @@ const mountVue = async () => {
   mounted = { unmount: () => app.unmount() }
 }
 
+const mountAngular = async () => {
+  // Zoneless: the Angular adapter drives every template through signals, so we
+  // skip zone.js entirely and avoid it monkey-patching the globals the React
+  // and Vue demos share. bootstrapApplication into a fresh <app-root> gives a
+  // clean mount/unmount pair (appRef.destroy) that matches the other two
+  // frameworks, and its bootstrap lifecycle runs the router's initial
+  // navigation once the outlet exists. A brand-new host element each mount
+  // avoids stale Angular context lingering on a reused node across re-mounts.
+  const [
+    { bootstrapApplication },
+    { provideZonelessChangeDetection },
+    { provideRouter },
+    { AppComponent },
+    { routes },
+  ] = await Promise.all([
+    import("@angular/platform-browser"),
+    import("@angular/core"),
+    import("@angular/router"),
+    import("./angular/app.component"),
+    import("./angular/routes"),
+  ])
+
+  const host = document.createElement("app-root")
+  angularRoot.appendChild(host)
+
+  const appRef = await bootstrapApplication(AppComponent, {
+    providers: [provideZonelessChangeDetection(), provideRouter(routes)],
+  })
+  mounted = {
+    unmount: () => {
+      appRef.destroy()
+      host.remove()
+    },
+  }
+}
+
 const activate = async (fw: Framework) => {
   if (active === fw) {
     return
@@ -83,6 +120,7 @@ const activate = async (fw: Framework) => {
 
   reactRoot.style.display = fw === "react" ? "" : "none"
   vueRoot.style.display = fw === "vue" ? "" : "none"
+  angularRoot.style.display = fw === "angular" ? "" : "none"
 
   // Both demos use a browser-history router; reset to "/" (a route both share)
   // so the incoming framework always boots on a valid path.
@@ -99,8 +137,10 @@ const activate = async (fw: Framework) => {
 
   if (fw === "react") {
     await mountReact()
-  } else {
+  } else if (fw === "vue") {
     await mountVue()
+  } else {
+    await mountAngular()
   }
 }
 

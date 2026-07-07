@@ -9,7 +9,19 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    // Angular (Analog) needs these for the .ts files under src/angular. They are
+    // inert for the React (.tsx) and Vue (.vue) demos, which use no decorators
+    // or class fields.
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "importHelpers": true
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
   },
   "include": ["src"]
 }

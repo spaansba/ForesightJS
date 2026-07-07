@@ -8,8 +8,8 @@ import Admonition from "@theme/Admonition"
 type Props = WrapperProps<typeof DocVersionBannerType>
 
 /**
- * Renders the early-release notice on every page of the React and Vue
- * framework trees, above the doc content (same slot as version banners).
+ * Renders the early-release notice on every page of the framework package
+ * docs, above the doc content (same slot as version banners).
  */
 export default function DocVersionBannerWrapper(props: Props): React.ReactNode {
   const { pathname } = useLocation()
@@ -18,7 +18,9 @@ export default function DocVersionBannerWrapper(props: Props): React.ReactNode {
     ? "@foresightjs/react"
     : pathname.startsWith("/docs/vue/")
       ? "@foresightjs/vue"
-      : null
+      : pathname.startsWith("/docs/angular/")
+        ? "@foresightjs/angular"
+        : null
 
   return (
     <>

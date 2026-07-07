@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false
+  },
+  "include": ["src", "../foresightjs-angular/src"],
+  "exclude": ["../foresightjs-angular/src/**/*.test.ts", "../foresightjs-angular/src/tests"]
+}

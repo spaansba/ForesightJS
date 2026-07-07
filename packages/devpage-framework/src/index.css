@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-/* Both the React and Vue demos live under src/ — Tailwind v4 auto-scans them. */
+/* The React, Vue and Angular demos all live under src/. @source pins the
+   directory so a running dev server still picks up classes from newly added
+   framework folders (e.g. src/angular) without a manual restart. */
+@source "./";
 
 :root {
   background-color: rgb(71, 65, 65);

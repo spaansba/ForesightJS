@@ -21,15 +21,16 @@ _In the GIF above, the [ForesightJS DevTools](https://foresightjs.com/docs/debug
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. There are official packages for React and Vue:
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. There are official packages for React, Vue, and Angular:
 
 - **JavaScript** → [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start): the framework-agnostic core, usable in any project.
 - **React** → [`@foresightjs/react`](https://foresightjs.com/docs/react/installation): `useForesight`, the `Foresight` component, `useForesightEvent`, plus [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router) examples.
 - **Vue** → [`@foresightjs/vue`](https://foresightjs.com/docs/vue/quick-start): the `v-foresight` directive, the `Foresight` component, and the `useForesight` / `useForesightEvent` composables.
+- **Angular** → [`@foresightjs/angular`](https://foresightjs.com/docs/angular/installation): the `[fsForesight]` directive, `ForesightService`, `ForesightComponent`, and `injectForesightEvent`.
 
-> **Note:** The `@foresightjs/react` and `@foresightjs/vue` packages are in beta and not yet stable. They work and are fully tested, but the API may still change.
+> **Note:** The `@foresightjs/react`, `@foresightjs/vue`, and `@foresightjs/angular` packages are in beta and not yet stable. They work and are fully tested, but the API may still change.
 
-Using another framework (Angular, Svelte, Solid, …)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
+Using another framework (Svelte, Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration
 
