@@ -1,6 +1,6 @@
 {
   "name": "@foresightjs/angular",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "description": "Angular bindings for ForesightJS - directives and services to register elements with the ForesightManager from Angular components.",
   "type": "module",
   "sideEffects": false,
