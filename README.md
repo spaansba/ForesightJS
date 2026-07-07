@@ -25,8 +25,6 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 - **Vue** → [`@foresightjs/vue`](https://foresightjs.com/docs/vue/quick-start): the `v-foresight` directive, the `Foresight` component, and the `useForesight` / `useForesightEvent` composables.
 - **Angular** → [`@foresightjs/angular`](https://foresightjs.com/docs/angular/installation): the `[fsForesight]` directive, `ForesightService`, `ForesightComponent`, and `injectForesightEvent`.
 
-> **Note:** The `@foresightjs/react`, `@foresightjs/vue`, and `@foresightjs/angular` packages are in beta and not yet stable. They work and are fully tested, but the API may still change.
-
 Using another framework (Svelte, Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Configuration

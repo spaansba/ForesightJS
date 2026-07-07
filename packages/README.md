@@ -18,8 +18,6 @@ Visual development tools for ForesightJS. Provides an overlay system with trajec
 
 ## Framework Packages
 
-> These packages are in beta and not yet stable. They work and are fully tested, but their APIs may still change.
-
 ### [foresightjs-react](./foresightjs-react/)
 
 Official React bindings: the `useForesight` and `useForesightEvent` hooks plus the `Foresight` component. Registers elements with the `ForesightManager` from React components and exposes their reactive prediction state.
