@@ -31,6 +31,8 @@ type UpdateElementBoundsFunction = (
 
 export type ForesightModuleDependencies = {
   elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
+  /** Precomputed subset of {@link elements} that the mouse trajectory scan iterates. */
+  scannableElements: ReadonlySet<ForesightElementInternal>
   callCallback: CallCallbackFunction
   emit: EmitFunction
   hasListeners: HasListenersFunction
@@ -42,6 +44,7 @@ export type ForesightModuleDependencies = {
 export abstract class BaseForesightModule {
   protected abortController?: AbortController
   protected elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
+  protected scannableElements: ReadonlySet<ForesightElementInternal>
   protected callCallback: CallCallbackFunction
   protected emit: EmitFunction
   protected hasListeners: HasListenersFunction
@@ -58,6 +61,7 @@ export abstract class BaseForesightModule {
 
   constructor(dependencies: ForesightModuleDependencies) {
     this.elements = dependencies.elements
+    this.scannableElements = dependencies.scannableElements
     this.callCallback = dependencies.callCallback
     this.emit = dependencies.emit
     this.hasListeners = dependencies.hasListeners

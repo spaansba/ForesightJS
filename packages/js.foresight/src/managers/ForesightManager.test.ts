@@ -42,6 +42,10 @@ const getEntry = (
   return entry
 }
 
+const getScannableElements = (manager: ForesightManager): Set<ForesightElementInternal> =>
+  // @ts-expect-error - accessing private set for tests
+  manager.scannableElements as Set<ForesightElementInternal>
+
 const fire = (
   manager: ForesightManager,
   entry: ForesightElementInternal,
@@ -791,6 +795,95 @@ describe("ForesightManager", () => {
       manager.updateElementState(entry, { isIntersectingWithViewport: false })
 
       expect(entry.state.isIntersectingWithViewport).toBe(false)
+    })
+  })
+
+  describe("scannableElements set (mouse trajectory scan)", () => {
+    it("should include a freshly registered active, on-screen element", () => {
+      const { manager, entry } = setupBasicTest()
+
+      expect(getScannableElements(manager).has(entry)).toBe(true)
+    })
+
+    it("should exclude an element registered while disabled", () => {
+      const { manager, entry } = setupBasicTest({ enabled: false })
+
+      expect(entry.state.isActive).toBe(false)
+      expect(getScannableElements(manager).has(entry)).toBe(false)
+    })
+
+    it("should drop an element that leaves the viewport and re-add it on return", () => {
+      const { manager, entry } = setupBasicTest()
+      const scannable = getScannableElements(manager)
+      expect(scannable.has(entry)).toBe(true)
+
+      // @ts-expect-error - accessing private method
+      manager.updateElementState(entry, { isIntersectingWithViewport: false })
+      expect(scannable.has(entry)).toBe(false)
+
+      // @ts-expect-error - accessing private method
+      manager.updateElementState(entry, { isIntersectingWithViewport: true })
+      expect(scannable.has(entry)).toBe(true)
+    })
+
+    it("should drop an element once it is predicted (has fired)", async () => {
+      const { manager, entry } = setupBasicTest({ reactivateAfter: Infinity })
+      const scannable = getScannableElements(manager)
+      expect(scannable.has(entry)).toBe(true)
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+
+      expect(entry.state.isPredicted).toBe(true)
+      expect(scannable.has(entry)).toBe(false)
+    })
+
+    it("should re-add an element when it reactivates after firing", async () => {
+      const { manager, element, entry } = setupBasicTest({ reactivateAfter: Infinity })
+      const scannable = getScannableElements(manager)
+
+      fire(manager, entry)
+      await vi.runAllTimersAsync()
+      expect(scannable.has(entry)).toBe(false)
+
+      manager.reactivate(element)
+
+      expect(entry.state.isActive).toBe(true)
+      expect(scannable.has(entry)).toBe(true)
+    })
+
+    it("should remove an element from the set on unregister", () => {
+      const { manager, element, entry } = setupBasicTest()
+      const scannable = getScannableElements(manager)
+      expect(scannable.has(entry)).toBe(true)
+
+      manager.unregister(element)
+
+      expect(scannable.has(entry)).toBe(false)
+    })
+
+    it("should track only the on-screen active elements across a mixed set", () => {
+      const manager = ForesightManager.initialize()
+      const active = createMockElement("active")
+      const offscreen = createMockElement("offscreen")
+      const disabled = createMockElement("disabled")
+
+      manager.register({ element: active, callback: vi.fn() })
+      manager.register({ element: offscreen, callback: vi.fn() })
+      manager.register({ element: disabled, callback: vi.fn(), enabled: false })
+
+      const activeEntry = getEntry(manager, active)
+      const offscreenEntry = getEntry(manager, offscreen)
+      const disabledEntry = getEntry(manager, disabled)
+
+      // @ts-expect-error - accessing private method
+      manager.updateElementState(offscreenEntry, { isIntersectingWithViewport: false })
+
+      const scannable = getScannableElements(manager)
+      expect(scannable.size).toBe(1)
+      expect(scannable.has(activeEntry)).toBe(true)
+      expect(scannable.has(offscreenEntry)).toBe(false)
+      expect(scannable.has(disabledEntry)).toBe(false)
     })
   })
 

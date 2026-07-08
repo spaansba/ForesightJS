@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { MousePredictor } from "./MousePredictor"
 import { CircularBuffer } from "../helpers/CircularBuffer"
+import { isScannable } from "../helpers/isScannable"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type {
   ForesightElement,
@@ -25,11 +26,13 @@ const createInternalEntry = (id: string, expandedRect: Rect): ForesightElementIn
 const setupPredictor = (entries: ForesightElementInternal[], enableMousePrediction: boolean) => {
   const elements = new Map<ForesightElement, ForesightElementInternal>()
   entries.forEach((entry, i) => elements.set({ id: i } as unknown as ForesightElement, entry))
+  const scannableElements = new Set(entries.filter(entry => isScannable(entry.state)))
 
   const callCallback = vi.fn()
   const emit = vi.fn()
   const dependencies: ForesightModuleDependencies = {
     elements,
+    scannableElements,
     callCallback,
     emit,
     hasListeners: vi.fn(() => true),

@@ -30,6 +30,7 @@ const setupPredictor = (currentPoint = { x: 150, y: 150 }) => {
   const callCallback = vi.fn()
   const dependencies: ForesightModuleDependencies = {
     elements: new Map<ForesightElement, ForesightElementInternal>(),
+    scannableElements: new Set<ForesightElementInternal>(),
     callCallback,
     emit: vi.fn(),
     hasListeners: vi.fn(() => false),
