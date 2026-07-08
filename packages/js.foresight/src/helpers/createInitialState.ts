@@ -64,11 +64,13 @@ export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   }
 }
 
+const EMPTY_META: Record<string, unknown> = Object.freeze({})
+
 const createBaseElementState = (isLimitedConnection: boolean): ForesightElementState => {
   return {
     id: "",
     name: "",
-    meta: {},
+    meta: EMPTY_META,
     // Fresh object per call - Vue wraps the snapshot reactively.
     hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
     isLimitedConnection,
@@ -108,7 +110,7 @@ export const createElementInternal = (
     ...createBaseElementState(isLimitedConnection),
     id,
     name: name || element.id || "unnamed",
-    meta: meta ?? {},
+    meta: meta ?? EMPTY_META,
     hitSlop: normalizedHitSlop,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
@@ -129,8 +131,8 @@ export const createElementInternal = (
     element,
     callback,
     reactivateTimeoutId: undefined,
-    subscribers: new Set(),
-    boundsSubscribers: new Set(),
+    subscribers: undefined,
+    boundsSubscribers: undefined,
   }
 }
 
