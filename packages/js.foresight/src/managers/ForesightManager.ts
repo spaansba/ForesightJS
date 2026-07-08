@@ -650,13 +650,15 @@ export class ForesightManager {
   ): Promise<void> {
     this.updateHitCounters(callbackHitType)
 
-    this.eventEmitter.emit({
-      type: "callbackInvoked",
-      timestamp: Date.now(),
-      element: entry.element,
-      state: entry.state,
-      hitType: callbackHitType,
-    })
+    if (this.eventEmitter.hasListeners("callbackInvoked")) {
+      this.eventEmitter.emit({
+        type: "callbackInvoked",
+        timestamp: Date.now(),
+        element: entry.element,
+        state: entry.state,
+        hitType: callbackHitType,
+      })
+    }
 
     const start = performance.now()
     let errorMessage: string | null = null
@@ -698,20 +700,21 @@ export class ForesightManager {
       }, next.reactivateAfter)
     }
 
-    const isLastActiveElement = this.activeElementCount === 0
     this.removeGlobalListenersIfIdle()
 
-    this.eventEmitter.emit({
-      type: "callbackCompleted",
-      timestamp: Date.now(),
-      element: entry.element,
-      state: next,
-      hitType: callbackHitType,
-      elapsed,
-      status,
-      errorMessage,
-      wasLastActiveElement: isLastActiveElement,
-    })
+    if (this.eventEmitter.hasListeners("callbackCompleted")) {
+      this.eventEmitter.emit({
+        type: "callbackCompleted",
+        timestamp: Date.now(),
+        element: entry.element,
+        state: next,
+        hitType: callbackHitType,
+        elapsed,
+        status,
+        errorMessage,
+        wasLastActiveElement: this.activeElementCount === 0,
+      })
+    }
   }
 
   private updateHitCounters(callbackHitType: CallbackHitType): void {
