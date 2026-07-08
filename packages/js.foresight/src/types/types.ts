@@ -422,15 +422,7 @@ export interface ForesightEventMap {
   deviceStrategyChanged: DeviceStrategyChangedEvent
 }
 
-export type ForesightEvent =
-  | "elementRegistered"
-  | "elementUnregistered"
-  | "callbackInvoked"
-  | "callbackCompleted"
-  | "mouseTrajectoryUpdate"
-  | "scrollTrajectoryUpdate"
-  | "managerSettingsChanged"
-  | "deviceStrategyChanged"
+export type ForesightEvent = keyof ForesightEventMap
 
 export interface DeviceStrategyChangedEvent extends ForesightBaseEvent {
   type: "deviceStrategyChanged"
