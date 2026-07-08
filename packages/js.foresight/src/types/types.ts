@@ -196,7 +196,7 @@ export type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementState>
   globalSettings: Readonly<ForesightManagerSettings>
   globalCallbackHits: Readonly<CallbackHits>
-  eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]>
+  eventListeners: ReadonlyMap<keyof ForesightEventMap, ReadonlySet<ForesightEventListener>>
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
   parkedElementCount: number
