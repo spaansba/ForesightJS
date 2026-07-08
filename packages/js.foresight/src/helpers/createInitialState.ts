@@ -64,6 +64,30 @@ export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   }
 }
 
+const createBaseElementState = (isLimitedConnection: boolean): ForesightElementState => {
+  return {
+    id: "",
+    name: "",
+    meta: {},
+    // Fresh object per call - Vue wraps the snapshot reactively.
+    hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
+    isLimitedConnection,
+    isIntersectingWithViewport: false,
+    isRegistered: false,
+    isActive: false,
+    isParked: false,
+    isEnabled: false,
+    isPredicted: false,
+    isCallbackRunning: false,
+    hitCount: 0,
+    registerCount: 0,
+    durationMs: undefined,
+    status: undefined,
+    error: null,
+    reactivateAfter: DEFAULT_REACTIVATE_AFTER,
+  }
+}
+
 /**
  * Creates the internal record for a newly registered element, including the
  * initial immutable state snapshot.
@@ -81,23 +105,16 @@ export const createElementInternal = (
   const isEnabled = enabled !== false
 
   const state: ForesightElementState = {
+    ...createBaseElementState(isLimitedConnection),
     id,
     name: name || element.id || "unnamed",
     meta: meta ?? {},
     hitSlop: normalizedHitSlop,
-    isLimitedConnection,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
     isActive: isEnabled && !isLimitedConnection,
-    isParked: false,
     isEnabled,
-    isPredicted: false,
-    isCallbackRunning: false,
-    hitCount: 0,
     registerCount: 1,
-    durationMs: undefined,
-    status: undefined,
-    error: null,
     reactivateAfter: reactivateAfter ?? DEFAULT_REACTIVATE_AFTER,
   }
 
@@ -131,25 +148,5 @@ export const createElementInternal = (
  *    during that brief window. Pass `isLimitedConnection: false` for this case.
  */
 export const createUnregisteredSnapshot = (isLimitedConnection: boolean): ForesightElementState => {
-  return {
-    id: "",
-    name: "",
-    meta: {},
-    // Fresh object per call - Vue wraps the snapshot reactively.
-    hitSlop: { top: 0, left: 0, right: 0, bottom: 0 },
-    isLimitedConnection,
-    isIntersectingWithViewport: false,
-    isRegistered: false,
-    isActive: false,
-    isParked: false,
-    isEnabled: false,
-    isPredicted: false,
-    isCallbackRunning: false,
-    hitCount: 0,
-    registerCount: 0,
-    durationMs: undefined,
-    status: undefined,
-    error: null,
-    reactivateAfter: DEFAULT_REACTIVATE_AFTER,
-  }
+  return createBaseElementState(isLimitedConnection)
 }
