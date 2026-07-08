@@ -64,7 +64,6 @@ export class ElementOverlays extends LitElement {
         top: 0;
         left: 0;
         box-sizing: border-box;
-        will-change: transform;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
         transition:
@@ -132,9 +131,7 @@ export class ElementOverlays extends LitElement {
         position: absolute;
         top: 0;
         left: 0;
-        will-change: transform;
-        background-color: rgba(27, 31, 35, 0.85);
-        backdrop-filter: blur(4px);
+        background-color: rgba(27, 31, 35, 0.95);
         color: white;
         padding: 4px 8px;
         font-size: 11px;
