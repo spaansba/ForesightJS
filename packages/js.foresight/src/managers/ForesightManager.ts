@@ -798,7 +798,7 @@ export class ForesightManager {
     this.devLog("Initializing global listeners (pointermove, MutationObserver)")
     this.setDeviceStrategy(this.currentDeviceStrategy)
 
-    document.addEventListener("pointermove", this.handlePointerMove)
+    document.addEventListener("pointermove", this.handlePointerMove, { passive: true })
 
     this.domObserver = new MutationObserver(this.handleDomMutations)
     this.domObserver.observe(document.documentElement, {
