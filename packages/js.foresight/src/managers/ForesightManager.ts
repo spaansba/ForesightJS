@@ -294,9 +294,7 @@ export class ForesightManager {
       return this.buildRegisterResult(previousEntry, options.element)
     }
 
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
-    }
+    this.initializeGlobalListeners()
 
     const entry = createElementInternal(
       options,
@@ -560,9 +558,7 @@ export class ForesightManager {
       return
     }
 
-    if (!this.isSetup) {
-      this.initializeGlobalListeners()
-    }
+    this.initializeGlobalListeners()
 
     this.clearReactivateTimeout(entry)
 
@@ -595,9 +591,7 @@ export class ForesightManager {
     if (isActive) {
       // Global listeners may have been torn down when the active count last hit
       // zero; re-arm them so prediction actually resumes.
-      if (!this.isSetup) {
-        this.initializeGlobalListeners()
-      }
+      this.initializeGlobalListeners()
 
       this.currentlyActiveHandler?.observeElement(element)
     } else {
@@ -900,9 +894,7 @@ export class ForesightManager {
     // (isPredicted) was already inactive, so it stays inactive on reconnect.
     const isActive = eligible && !entry.state.isPredicted
     if (isActive) {
-      if (!this.isSetup) {
-        this.initializeGlobalListeners()
-      }
+      this.initializeGlobalListeners()
 
       this.currentlyActiveHandler?.observeElement(entry.element)
     }
