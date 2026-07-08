@@ -184,7 +184,7 @@ export class DesktopHandler extends ElementObservingModule {
   /** For debugging: returns which predictors have been lazy loaded */
   public get loadedPredictors() {
     return {
-      mouse: this.mousePredictor !== null,
+      mouse: true,
       tab: this.tabPredictor !== null,
       scroll: this.scrollPredictor !== null,
     }
