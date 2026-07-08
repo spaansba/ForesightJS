@@ -211,7 +211,7 @@ export class ForesightManager {
       return undefined
     }
 
-    return this.makeSubscribe(entry.subscribers)(listener)
+    return this.makeSubscribe(entry, "subscribers")(listener)
   }
 
   /**
@@ -230,7 +230,7 @@ export class ForesightManager {
       return undefined
     }
 
-    return this.makeSubscribe(entry.boundsSubscribers)(listener)
+    return this.makeSubscribe(entry, "boundsSubscribers")(listener)
   }
 
   /**
@@ -347,9 +347,9 @@ export class ForesightManager {
       unregister: () => {
         this.unregister(element)
       },
-      subscribe: this.makeSubscribe(entry.subscribers),
+      subscribe: this.makeSubscribe(entry, "subscribers"),
       getSnapshot: () => entry.state,
-      subscribeToBounds: this.makeSubscribe(entry.boundsSubscribers),
+      subscribeToBounds: this.makeSubscribe(entry, "boundsSubscribers"),
       getBounds: () => entry.bounds,
     }
   }
@@ -421,12 +421,13 @@ export class ForesightManager {
    * Create a subscribe function for a listener set (state or bounds subscribers).
    * Returns an unsubscribe callback when called.
    */
-  private makeSubscribe(subscribers: Set<() => void>) {
+  private makeSubscribe(entry: ForesightElementInternal, key: "subscribers" | "boundsSubscribers") {
     return (listener: () => void): (() => void) => {
+      const subscribers = (entry[key] ??= new Set())
       subscribers.add(listener)
 
       return () => {
-        subscribers.delete(listener)
+        entry[key]?.delete(listener)
       }
     }
   }
@@ -467,11 +468,13 @@ export class ForesightManager {
       applyDataAttributes(entry.element, next)
     }
 
-    for (const listener of entry.subscribers) {
-      try {
-        listener()
-      } catch (error) {
-        console.error(`Error in element subscriber for ${next.name}:`, error)
+    if (entry.subscribers) {
+      for (const listener of entry.subscribers) {
+        try {
+          listener()
+        } catch (error) {
+          console.error(`Error in element subscriber for ${next.name}:`, error)
+        }
       }
     }
 
@@ -497,11 +500,13 @@ export class ForesightManager {
     }
 
     entry.bounds = next
-    for (const listener of entry.boundsSubscribers) {
-      try {
-        listener()
-      } catch (error) {
-        console.error(`Error in element bounds subscriber for ${entry.state.name}:`, error)
+    if (entry.boundsSubscribers) {
+      for (const listener of entry.boundsSubscribers) {
+        try {
+          listener()
+        } catch (error) {
+          console.error(`Error in element bounds subscriber for ${entry.state.name}:`, error)
+        }
       }
     }
 
@@ -541,8 +546,8 @@ export class ForesightManager {
 
     this.elementEntries.delete(element)
     this.scannableElements.delete(entry)
-    entry.subscribers.clear()
-    entry.boundsSubscribers.clear()
+    entry.subscribers?.clear()
+    entry.boundsSubscribers?.clear()
 
     if (this._globalSettings.setDataAttributes) {
       removeDataAttributes(element)
@@ -942,15 +947,24 @@ export class ForesightManager {
   }
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
-    const result = applySettingsChanges(this._globalSettings, props)
+    const changedSettings = applySettingsChanges(this._globalSettings, props)
+    if (changedSettings.length === 0) {
+      return
+    }
 
-    if (result.positionHistorySizeChanged && this.desktopHandler) {
+    const changed = new Set(changedSettings.map(s => s.setting))
+
+    if (changed.has("positionHistorySize") && this.desktopHandler) {
       this.desktopHandler.trajectoryPositions.positions.resize(
         this._globalSettings.positionHistorySize
       )
     }
 
-    if (result.scrollPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
+    if (
+      changed.has("enableScrollPrediction") &&
+      this.isUsingDesktopHandler &&
+      this.desktopHandler
+    ) {
       if (this._globalSettings.enableScrollPrediction) {
         this.desktopHandler.connectScrollPredictor()
       } else {
@@ -958,7 +972,7 @@ export class ForesightManager {
       }
     }
 
-    if (result.tabPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
+    if (changed.has("enableTabPrediction") && this.isUsingDesktopHandler && this.desktopHandler) {
       if (this._globalSettings.enableTabPrediction) {
         this.desktopHandler.connectTabPredictor()
       } else {
@@ -966,11 +980,11 @@ export class ForesightManager {
       }
     }
 
-    if (result.hitSlopChanged) {
+    if (changed.has("defaultHitSlop")) {
       this.forceUpdateAllElementBounds()
     }
 
-    if (result.setDataAttributesChanged) {
+    if (changed.has("setDataAttributes")) {
       const mirror = this._globalSettings.setDataAttributes
       for (const entry of this.elementEntries.values()) {
         if (mirror) {
@@ -981,18 +995,20 @@ export class ForesightManager {
       }
     }
 
-    if (result.touchStrategyChanged && !this.isUsingDesktopHandler && this.touchDeviceHandler) {
+    if (
+      changed.has("touchDeviceStrategy") &&
+      !this.isUsingDesktopHandler &&
+      this.touchDeviceHandler
+    ) {
       this.touchDeviceHandler.setTouchPredictor()
     }
 
-    if (result.changedSettings.length > 0) {
-      this.eventEmitter.emit({
-        type: "managerSettingsChanged",
-        timestamp: Date.now(),
-        managerData: this.getManagerData,
-        updatedSettings: result.changedSettings,
-      })
-    }
+    this.eventEmitter.emit({
+      type: "managerSettingsChanged",
+      timestamp: Date.now(),
+      managerData: this.getManagerData,
+      updatedSettings: changedSettings,
+    })
   }
 
   private forceUpdateAllElementBounds(): void {

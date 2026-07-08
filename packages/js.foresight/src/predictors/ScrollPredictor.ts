@@ -21,7 +21,7 @@ export class ScrollPredictor extends BaseForesightModule {
   // Reused across the batch to avoid allocating a point per scroll change
   private readonly predictedScrollPoint: Point = { x: 0, y: 0 }
   private hasPredictedScrollPoint = false
-  private scrollDirection: ScrollDirection | null = null
+  private scrollDirection: Exclude<ScrollDirection, "none"> | null = null
   private trajectoryPositions: Readonly<TrajectoryPositions>
 
   // Pre-allocated event object to avoid creating a new object every scroll frame
@@ -97,7 +97,6 @@ export class ScrollPredictor extends BaseForesightModule {
   public emitTrajectoryUpdate(): void {
     if (
       !this.scrollDirection ||
-      this.scrollDirection === "none" ||
       !this.hasPredictedScrollPoint ||
       !this.hasListeners("scrollTrajectoryUpdate")
     ) {

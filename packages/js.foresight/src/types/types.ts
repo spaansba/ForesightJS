@@ -152,10 +152,10 @@ export type ForesightElementInternal = {
   callback: ForesightCallback
   /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
-  /** Listeners notified whenever `state` is replaced. */
-  subscribers: Set<() => void>
-  /** Listeners notified whenever `bounds` is replaced. */
-  boundsSubscribers: Set<() => void>
+  /** Listeners notified whenever `state` is replaced. Created on first subscribe. */
+  subscribers: Set<() => void> | undefined
+  /** Listeners notified whenever `bounds` is replaced. Created on first subscribe. */
+  boundsSubscribers: Set<() => void> | undefined
 }
 
 export type callbackStatus = "error" | "success" | undefined
