@@ -52,12 +52,7 @@ export class MousePredictor extends BaseForesightModule {
     const enablePrediction = this.settings.enableMousePrediction
     const currentPoint = this.trajectoryPositions.currentPoint
 
-    for (const internal of this.elements.values()) {
-      const state = internal.state
-      if (!state.isIntersectingWithViewport || !state.isActive || state.isPredicted) {
-        continue
-      }
-
+    for (const internal of this.scannableElements) {
       const expandedRect = internal.bounds.expandedRect
 
       if (!enablePrediction) {

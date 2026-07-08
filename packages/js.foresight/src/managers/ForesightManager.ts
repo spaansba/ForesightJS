@@ -8,6 +8,7 @@ import {
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
 import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
+import { isScannable } from "../helpers/isScannable"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { ElementObservingModule } from "../core/ElementObservingModule"
@@ -58,6 +59,13 @@ export class ForesightManager {
 
   /** Internal entries containing full element data, callbacks, and subscribers. */
   private elementEntries: Map<ForesightElement, ForesightElementInternal> = new Map()
+  /**
+   * Precomputed subset of {@link elementEntries} that the mouse trajectory scan
+   * iterates every pointer move (see {@link isScannable}). Kept in sync by
+   * {@link updateElementState} plus register/unregister, so the hot loop skips
+   * the full registry and its per-element flag checks.
+   */
+  private scannableElements: Set<ForesightElementInternal> = new Set()
   /** Public read-only view exposing only external state, derived from {@link elementEntries}. */
   public readonly registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> =
     new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
@@ -86,6 +94,7 @@ export class ForesightManager {
 
     this.handlerDependencies = {
       elements: this.elementEntries,
+      scannableElements: this.scannableElements,
       callCallback: this.callCallback.bind(this),
       emit: this.eventEmitter.emit.bind(this.eventEmitter),
       hasListeners: this.eventEmitter.hasListeners.bind(this.eventEmitter),
@@ -305,6 +314,10 @@ export class ForesightManager {
 
     this.elementEntries.set(options.element, entry)
 
+    if (isScannable(entry.state)) {
+      this.scannableElements.add(entry)
+    }
+
     if (this._globalSettings.setDataAttributes) {
       applyDataAttributes(entry.element, entry.state)
     }
@@ -444,6 +457,12 @@ export class ForesightManager {
     const next = { ...current, ...patch }
     entry.state = next
 
+    if (isScannable(next)) {
+      this.scannableElements.add(entry)
+    } else {
+      this.scannableElements.delete(entry)
+    }
+
     if (this._globalSettings.setDataAttributes) {
       applyDataAttributes(entry.element, next)
     }
@@ -521,6 +540,7 @@ export class ForesightManager {
     })
 
     this.elementEntries.delete(element)
+    this.scannableElements.delete(entry)
     entry.subscribers.clear()
     entry.boundsSubscribers.clear()
 
