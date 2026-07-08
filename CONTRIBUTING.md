@@ -86,7 +86,21 @@ pnpm test
 
 All tests must pass before your PR will be reviewed.
 
-**6. Submit a Pull Request**
+**6. Add a changeset**
+
+If your change should trigger a package release, add a changeset:
+
+```bash
+pnpm changeset
+```
+
+Select the affected packages, pick the bump type (patch/minor/major), write a short summary, and commit the generated file in `.changeset/`. For changes that do not affect published packages (docs, dev pages, tooling), add an empty changeset instead:
+
+```bash
+pnpm changeset --empty
+```
+
+**7. Submit a Pull Request**
 
 - Push your changes to your fork
 - Create a pull request with a clear description of what you've changed
