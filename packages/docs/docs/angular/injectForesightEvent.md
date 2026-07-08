@@ -39,9 +39,9 @@ export class PrefetchCounterComponent {
 
 You don't need to remove the listener yourself. Angular destroys the subscription with the component, directive, service, or other injection context where the helper was called.
 
-## Dynamic event type or listener
+## Dynamic event type
 
-Pass Angular signals when the event type or listener needs to change over time:
+Pass an Angular signal when the event type needs to change over time. The subscription re-binds automatically:
 
 ```ts
 readonly eventType = signal<"callbackInvoked" | "callbackCompleted">("callbackInvoked")

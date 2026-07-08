@@ -18,7 +18,7 @@ last_updated:
 
 ## React Router's Prefetching
 
-React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesnt have the same flexibility as ForesightJS. To add ForesightJS to React Router you can wrap the `Link` component.
+React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesn't have the same flexibility as ForesightJS. To add ForesightJS to React Router you can wrap the `Link` component.
 
 ## ForesightLink Component
 

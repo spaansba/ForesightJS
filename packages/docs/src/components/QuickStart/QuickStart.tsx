@@ -141,7 +141,7 @@ export const QuickStart = () => {
 
   return (
     <section className={styles.quickStartSection}>
-      <div className="container">
+      <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Quick Start</h2>
           <p className={styles.sectionSubtitle}>

@@ -16,7 +16,7 @@ import Events from "./\_partials/\_events.mdx"
 
 # Events
 
-ForesightManager emits various events during to provide insight into element registration, prediction activities, and callback executions. These events are primarily used by the [ForesightJS DevTools](./debugging/devtools.md) for visual debugging and monitoring, but can also be leveraged for telemetry, analytics, and performance monitoring in your applications.
+ForesightManager emits events for element registration, prediction, and callback execution. The [ForesightJS DevTools](./debugging/devtools.md) use them for visual debugging, and you can listen to them yourself for telemetry, analytics, or counters.
 
 ## Usage
 

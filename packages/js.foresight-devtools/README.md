@@ -3,11 +3,11 @@
 [![npm version](https://img.shields.io/npm/v/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
 
-`ForesightJS` offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), written in [Lit](https://lit.dev/), to help you better understand and fine-tune how `ForesightJS` works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
+`ForesightJS` offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), to help you better understand and fine-tune how `ForesightJS` works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
-These tools are built entirely using `ForesightJS`'s [built-in events](/docs/events), demonstrating how you can create your own monitoring and debugging tools using the same event system.
+They are built entirely on `ForesightJS`'s [built-in events](https://foresightjs.com/docs/events), so they double as a working example of what you can build on the same event system.
 
-Since the devtools observe the `ForesightManager` directly, they work with every Foresight integration: the [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start) core, the official [React](https://foresightjs.com/docs/react/installation), [Vue](https://foresightjs.com/docs/vue/installation), and [Angular](https://foresightjs.com/docs/angular/installation) packages, or your own [custom binding](https://foresightjs.com/docs/other-frameworks).
+Since the devtools observe the `ForesightManager` directly, they work with every Foresight integration that is based on the the [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start) core.
 
 ## Installation
 
@@ -65,7 +65,7 @@ The control panel provides three main tabs for debugging and configuration. Each
 
 #### Settings Tab
 
-The Settings tab provides real-time controls for all [Global Configurations](/docs/configuration/global-settings). Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
+The Settings tab provides real-time controls for all [Global Configurations](https://foresightjs.com/docs/configuration/global-settings). Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
 
 #### Elements Tab
 
@@ -77,18 +77,10 @@ The Elements tab displays a overview of all currently registered elements within
 - 🟡 **Yellow** - Elements which callbacks are currently executing
 - 🔘 **Light Gray** - Inactive elements
 
-Each element can also be expanded to reveal its [`ForesightElementData`](/docs/next/getting-started/typescript#foresightelementdata) information including settings, callback status, and metadata. A countdown timer appears for elements in their reactivation cooldown period (`reactivateAfter`), clicking this timer will instantly reactivate the element.
+Each element can also be expanded to reveal its [`ForesightElementState`](https://foresightjs.com/docs/getting-started/typescript#foresightelementstate) information including settings, callback status, and metadata. A countdown timer appears for elements in their reactivation cooldown period (`reactivateAfter`), clicking this timer will instantly reactivate the element.
 
 #### Log Tab
 
-The Log tab displays real-time [events](/docs/events) emitted by `ForesightJS`. You can see callback execution times, the full element's lifecycle and other system events. Events can be filtered through the devtools initialization configuration or in the control panel itself.
+The Log tab displays real-time [events](https://foresightjs.com/docs/events) emitted by `ForesightJS`. You can see callback execution times, the full element's lifecycle and other system events. Events can be filtered through the devtools initialization configuration or in the control panel itself.
 
-You can also print out the complete [`ForesightManager.instance.getManagerData`](/docs/debugging/static-properties#foresightmanagerinstancegetmanagerdata) state without having to call it from your code.
-
-:::caution
-Avoid logging frequently emitted events to the browser console, as it can noticeably slow down your development environment. Use the control panel for this instead.
-:::
-
-:::note
-Element overlay visualization and visibility sorting in the control panel only work with desktop/mouse prediction strategies. When debugging `touchDeviceStrategy` configurations, these features are not available as touch strategies don't track the same positioning data.
-:::
+You can also print out the complete [`ForesightManager.instance.getManagerData`](https://foresightjs.com/docs/debugging/static-properties#foresightmanagerinstancegetmanagerdata) state without having to call it from your code.

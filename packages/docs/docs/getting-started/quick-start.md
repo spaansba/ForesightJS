@@ -14,11 +14,11 @@ last_updated:
 
 # Quick Start
 
-This guide will walk you through registering your first element with `ForesightJS` and understanding how the prediction system works.
+Register your first element with `ForesightJS` and see how prediction works.
 
 ## Basic Usage Example
 
-This basic example is in vanilla JS, ofcourse most people will use ForesightJS with a framework. You can read about framework integrations below.
+This example is vanilla JS. Most people use ForesightJS with a framework, covered [below](#using-a-framework).
 
 ```javascript
 import { ForesightManager } from "js.foresight"
@@ -31,7 +31,7 @@ ForesightManager.instance.register({
 })
 ```
 
-Thats it!
+That's it!
 
 :::note Remember to unregister
 If you permanently remove a registered element from the DOM, call `ForesightManager.instance.unregister(element)` to stop tracking it. Detaching an element does not unregister it. It is parked (kept registered but inactive) and resumes if it reattaches, so an element you discard without unregistering stays parked and cannot be garbage collected. The official React, Vue, and Angular integrations do this for you on unmount.
@@ -39,7 +39,7 @@ If you permanently remove a registered element from the DOM, call `ForesightMana
 
 ## Provide registration options
 
-However if you want to add a bit more power to your element you can give it the following props:
+For finer control, pass any of these options:
 
 ```javascript
 import { ForesightManager } from "js.foresight"

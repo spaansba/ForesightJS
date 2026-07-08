@@ -66,7 +66,7 @@ Note: This also triggers during animations or dynamic layout changes.
 
 ## Touch Device Users
 
-Touch devices require different prediction strategies due to the lack of continuous cursor movement. ForesightJS provides two strategies via the `touchDeviceStrategy` prop:
+Touch devices have no continuous cursor, so prediction works differently. The `touchDeviceStrategy` setting picks one of two active strategies (a third, `"none"`, turns touch prediction off entirely):
 
 **Viewport Entry**: Uses `IntersectionObserver` to detect when elements enter the viewport. Callbacks trigger when elements become visible during scrolling, providing anticipatory loading for content that will soon be in view.
 
@@ -74,7 +74,7 @@ Touch devices require different prediction strategies due to the lack of continu
 
 ## Element Lifecycle
 
-1. **Registration**: `ForesightManager.instance.register(element, options)` adds element to internal Map
+1. **Registration**: `ForesightManager.instance.register({ element, callback })` adds the element to the internal Map
 2. **Callback Execution**: When user intent is detected, element's callback function triggers
 3. **Deactivation**: `isPredicted` set to `true` and the element becomes inactive after callback execution
 4. **Reactivation Wait**: Element remains inactive for `reactivateAfter` duration (defaults to infinity)
@@ -84,7 +84,7 @@ Touch devices require different prediction strategies due to the lack of continu
 
 ## Bundle Optimization
 
-ForesightJS is designed to be lightweight. The entire library with all features is only **~32 KB** minified. But we go further with **code splitting** to minimize your initial bundle even more. Both handlers and predictors are lazy-loaded based on device type and enabled features:
+The full library is **~32 KB** minified, but you rarely load all of it. Code splitting lazy-loads handlers and predictors based on device type and which features are enabled, so your initial bundle only contains what you actually use:
 
 | Chunk                           | Size    | Loaded When                      |
 | ------------------------------- | ------- | -------------------------------- |
@@ -95,8 +95,4 @@ ForesightJS is designed to be lightweight. The entire library with all features 
 | ScrollPredictor                 | ~1.5 KB | `enableScrollPrediction: true`   |
 | Touch predictors                | ~1.5 KB | Touch device (based on strategy) |
 
-**Result**:
-
-- Touch devices load only **~19 KB** (core + touch handler + touch predictor)
-- Desktop with mouse-only loads **~32 KB** (core + desktop handler + mouse predictor)
-- Additional predictors (Tab, Scroll) load on-demand when enabled
+**Result**: a touch device loads only the core, the touch handler, and one touch predictor. A desktop user loads the core, the desktop handler, and whichever predictors they have enabled (mouse, tab, scroll). You never ship the strategies you don't use.

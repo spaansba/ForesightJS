@@ -97,8 +97,8 @@ Snapshot of the current `ForesightManager` state, including all global settings,
 - `registeredElements` - `Map` of all currently registered elements and their associated [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
 - `eventListeners` - `Map` of all event listeners listening to ForesightManager events.
 - `globalSettings` - Current global configuration settings
-- `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajctory for mouse, forwards/reverse for tab, direction for scroll)
-- `currentDeviceStrategy` - Which strategy is being used. Can be either `touch` or `mouse`, this changes dynamically
+- `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajectory for mouse, forwards/reverse for tab, direction for scroll)
+- `currentDeviceStrategy` - Which strategy is being used: `mouse`, `touch`, or `pen`. This changes dynamically as the input method changes
 - `activeElementCount` - Amount of elements currently active (not the same as registered)
 - `parkedElementCount` - Amount of elements currently parked: detached from the DOM (`isParked: true`) and waiting to reconnect
 - `loadedModules` - Shows which handlers and predictors have been [lazy loaded](../behind-the-scenes.md#bundle-optimization)
@@ -141,18 +141,22 @@ The return will look something like this:
   },
   "globalSettings": {
     "defaultHitSlop": {
-      "bottom": 10,
-      "left": 10,
-      "right": 10,
-      "top": 10
+      "bottom": 0,
+      "left": 0,
+      "right": 0,
+      "top": 0
     },
     "enableMousePrediction": true,
     "enableScrollPrediction": true,
     "enableTabPrediction": true,
-    "positionHistorySize": 10,
+    "positionHistorySize": 8,
     "scrollMargin": 150,
     "tabOffset": 2,
-    "trajectoryPredictionTime": 100
+    "trajectoryPredictionTime": 120,
+    "touchDeviceStrategy": "onTouchStart",
+    "minimumConnectionType": "3g",
+    "enableManagerLogging": false,
+    "setDataAttributes": true
   },
   "globalCallbackHits": {
     "mouse": {

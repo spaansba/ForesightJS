@@ -1,6 +1,6 @@
 .heroSection {
   color: var(--site-text);
-  padding: 96px 0 80px;
+  padding: 96px 0 56px;
 }
 
 .heroContainer {
@@ -92,7 +92,7 @@
 
 @media screen and (max-width: 768px) {
   .heroSection {
-    padding: 64px 0 48px;
+    padding: 64px 0 32px;
   }
 
   .heroContainer {

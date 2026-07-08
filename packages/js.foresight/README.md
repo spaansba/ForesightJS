@@ -27,10 +27,6 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 
 Using another framework (Svelte, Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
 
-## Configuration
-
-ForesightJS works out of the box with no setup required, but it can be configured both [globally](https://foresightjs.com/docs/configuration/global-settings) and per [element](https://foresightjs.com/docs/configuration/registration-options) if needed.
-
 ## Prediction Strategies
 
 ForesightJS uses different prediction strategies depending on the device type:
@@ -38,6 +34,10 @@ ForesightJS uses different prediction strategies depending on the device type:
 **Desktop/Keyboard Users**: Mouse trajectory prediction, keyboard navigation tracking, and scroll-based prefetching. [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#keyboardmouse-users)
 
 **Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`]). [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#touch-devices-v330)
+
+## Configuration
+
+ForesightJS works out of the box with no setup required, but it can be configured both [globally](https://foresightjs.com/docs/configuration/global-settings) and per [element](https://foresightjs.com/docs/configuration/registration-options) if needed.
 
 ## Development Tools
 
@@ -48,16 +48,6 @@ pnpm add js.foresight-devtools
 ```
 
 See the [development tools documentation](https://foresightjs.com/docs/debugging/devtools) for more details.
-
-## Providing Context to AI Tools
-
-ForesightJS is a newer library, so most AI assistants and LLMs may not have much built-in knowledge about it. To improve their responses, you can provide the following context:
-
-- Use [llms.txt](https://foresightjs.com/llms.txt) for a concise overview of the API and usage patterns.
-- Use [llms-full.txt](https://foresightjs.com/llms-full.txt) for a full markdown version of the docs, ideal for AI tools that support context injection or uploads.
-- All documentation pages are also available in markdown. You can view them by adding .md to the end of any URL, for example: [https://foresightjs.com/docs/getting-started/what-is-foresightjs.md](https://foresightjs.com/docs/getting-started/what-is-foresightjs.md).
-
-[Read more](https://foresightjs.com/docs/ai-context)
 
 # Contributing
 

@@ -38,7 +38,7 @@ All numeric settings are clamped to their specified Min/Max values to prevent in
 - **Type:** `boolean`
 - **Default:** `true`
 - **Description:** Toggles whether trajectory prediction is active. If `false`, only direct hovers will trigger the callback for mouse users.
-- **Note:** When this is turned off `ForesightJS` will still trigger `callbacks` while hovering over the element's extended range (`rect` + `hitslop`)
+- **Note:** When this is turned off `ForesightJS` will still trigger `callbacks` while hovering over the element's extended range (`rect` + `hitSlop`)
 
 ```javascript
 ForesightManager.initialize({
@@ -148,7 +148,7 @@ ForesightManager.initialize({
 - **Default:** `{top: 0, left: 0, right: 0, bottom: 0}`
 - **Clamped between:** `0-2000` pixels (per side)
 - **Description:** Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox.
-- **Note:** This can be overwritten on an element basis by setting its `hitslop`.
+- **Note:** This can be overridden per element by setting its `hitSlop`.
 
 ```javascript
 // Uniform hit slop
@@ -247,7 +247,7 @@ ForesightManager.initialize({
 
 ## Runtime Configuration Changes
 
-You can update global settings at runtime using `alterGlobalSettings()`. This is not adviced for regular use and is mainly used for developers creating tools on top of `Foresight`. For regular use, you should set global settings during initialization with `ForesightManager.initialize()`.
+You can update global settings at runtime using `alterGlobalSettings()`. This is mainly for developers building tools on top of `Foresight`. For regular use, set your global settings once during initialization with `ForesightManager.initialize()`.
 
 ```javascript
 // Change settings after initialization
@@ -256,8 +256,6 @@ ForesightManager.instance.alterGlobalSettings({
   enableScrollPrediction: false,
 })
 ```
-
-This is particularly useful when integrating with development tools or when you need to adjust settings based on user preferences or device capabilities.
 
 ## Development Tools Integration
 

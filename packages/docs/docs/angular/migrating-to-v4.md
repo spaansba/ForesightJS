@@ -7,7 +7,7 @@ keywords:
   - "@foresightjs/angular"
 description: Moving from the v3 copy-paste Angular directive to the official @foresightjs/angular package
 last_updated:
-  date: 2026-06-26
+  date: 2026-06-z26
   author: Bart Spaans
 ---
 

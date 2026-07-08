@@ -5,7 +5,7 @@ import Playground from "./Playground/Playground"
 const DemoWrapper = () => {
   return (
     <section id="playground" className={styles.playgroundSection}>
-      <div className="container">
+      <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Playground</h2>
           <p className={styles.sectionSubtitle}>

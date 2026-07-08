@@ -77,6 +77,7 @@ You can also pass common options through inputs:
   fsForesightName="docs-link"
   [fsForesightHitSlop]="40"
   [fsForesightMeta]="{ route: '/docs' }"
+  [fsForesightReactivateAfter]="300000"
   [fsForesightEnabled]="isDocsEnabled()"
 >
   Docs
