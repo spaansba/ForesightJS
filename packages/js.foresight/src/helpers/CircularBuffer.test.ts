@@ -11,13 +11,6 @@ const makeBuffer = (capacity: number, ...items: number[]): CircularBuffer<number
   return buffer
 }
 
-const expectBufferEmpty = (buffer: CircularBuffer<unknown>) => {
-  expect(buffer.length).toBe(0)
-  expect(buffer.isEmpty).toBe(true)
-  expect(buffer.getFirst()).toBeUndefined()
-  expect(buffer.getLast()).toBeUndefined()
-}
-
 const expectFirstLast = <T>(buffer: CircularBuffer<T>, first: T, last: T) => {
   expect(buffer.getFirst()).toBe(first)
   expect(buffer.getLast()).toBe(last)
@@ -25,12 +18,11 @@ const expectFirstLast = <T>(buffer: CircularBuffer<T>, first: T, last: T) => {
 
 describe("CircularBuffer", () => {
   describe("constructor", () => {
-    it("should create a buffer with specified capacity", () => {
+    it("should create an empty buffer", () => {
       const buffer = new CircularBuffer<number>(5)
-      expect(buffer.size).toBe(5)
       expect(buffer.length).toBe(0)
-      expect(buffer.isEmpty).toBe(true)
-      expect(buffer.isFull).toBe(false)
+      expect(buffer.getFirst()).toBeUndefined()
+      expect(buffer.getLast()).toBeUndefined()
     })
 
     it("should throw error for invalid capacity", () => {
@@ -58,7 +50,6 @@ describe("CircularBuffer", () => {
       const buffer = makeBuffer(3, 1, 2, 3)
 
       expect(buffer.length).toBe(3)
-      expect(buffer.isFull).toBe(true)
       expect(buffer.getFirst()).toBe(1)
       expect(buffer.getLast()).toBe(3)
     })
@@ -151,7 +142,6 @@ describe("CircularBuffer", () => {
 
       buffer.resize(4)
 
-      expect(buffer.size).toBe(4)
       expect(buffer.length).toBe(2)
       expect(buffer.getFirst()).toBe(1)
       expect(buffer.getLast()).toBe(2)
@@ -167,7 +157,6 @@ describe("CircularBuffer", () => {
 
       buffer.resize(3)
 
-      expect(buffer.size).toBe(3)
       expect(buffer.length).toBe(3)
       expect(buffer.getFirst()).toBe(3)
       expect(buffer.getLast()).toBe(5)
@@ -178,7 +167,6 @@ describe("CircularBuffer", () => {
 
       buffer.resize(3)
 
-      expect(buffer.size).toBe(3)
       expect(buffer.length).toBe(2)
       expect(buffer.getFirst()).toBe(1)
       expect(buffer.getLast()).toBe(2)
@@ -190,7 +178,6 @@ describe("CircularBuffer", () => {
 
       buffer.resize(2)
 
-      expect(buffer.size).toBe(2)
       expect(buffer.length).toBe(2)
       expectFirstLast(buffer, 3, 4)
     })
@@ -199,34 +186,6 @@ describe("CircularBuffer", () => {
       const buffer = new CircularBuffer<number>(3)
       expect(() => buffer.resize(0)).toThrow("CircularBuffer capacity must be greater than 0")
       expect(() => buffer.resize(-1)).toThrow("CircularBuffer capacity must be greater than 0")
-    })
-  })
-
-  describe("clear", () => {
-    it("should clear empty buffer", () => {
-      const buffer = new CircularBuffer<number>(3)
-      buffer.clear()
-
-      expectBufferEmpty(buffer)
-    })
-
-    it("should clear partially filled buffer", () => {
-      const buffer = makeBuffer(3, 1, 2)
-
-      buffer.clear()
-
-      expectBufferEmpty(buffer)
-    })
-
-    it("should clear full buffer", () => {
-      const buffer = makeBuffer(2, 1, 2, 3)
-
-      expect(buffer.isFull).toBe(true)
-
-      buffer.clear()
-
-      expectBufferEmpty(buffer)
-      expect(buffer.isFull).toBe(false)
     })
   })
 
@@ -247,33 +206,6 @@ describe("CircularBuffer", () => {
 
       buffer.add(4)
       expect(buffer.length).toBe(3)
-    })
-
-    it("should track isEmpty correctly", () => {
-      const buffer = new CircularBuffer<number>(2)
-
-      expect(buffer.isEmpty).toBe(true)
-
-      buffer.add(1)
-      expect(buffer.isEmpty).toBe(false)
-
-      buffer.clear()
-      expect(buffer.isEmpty).toBe(true)
-    })
-
-    it("should track isFull correctly", () => {
-      const buffer = new CircularBuffer<number>(2)
-
-      expect(buffer.isFull).toBe(false)
-
-      buffer.add(1)
-      expect(buffer.isFull).toBe(false)
-
-      buffer.add(2)
-      expect(buffer.isFull).toBe(true)
-
-      buffer.add(3)
-      expect(buffer.isFull).toBe(true)
     })
   })
 

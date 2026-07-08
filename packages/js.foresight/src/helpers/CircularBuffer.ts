@@ -106,24 +106,7 @@ export class CircularBuffer<T> {
     return result
   }
 
-  clear(): void {
-    this.head = 0
-    this.count = 0
-  }
-
   get length(): number {
     return this.count
-  }
-
-  get size(): number {
-    return this.capacity
-  }
-
-  get isFull(): boolean {
-    return this.count === this.capacity
-  }
-
-  get isEmpty(): boolean {
-    return this.count === 0
   }
 }
