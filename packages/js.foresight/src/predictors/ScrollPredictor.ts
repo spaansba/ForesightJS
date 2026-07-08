@@ -18,7 +18,9 @@ interface ScrollPredictorConfig {
 export class ScrollPredictor extends BaseForesightModule {
   protected readonly moduleName = "ScrollPredictor"
 
-  private predictedScrollPoint: Point | null = null
+  // Reused across the batch to avoid allocating a point per scroll change
+  private readonly predictedScrollPoint: Point = { x: 0, y: 0 }
+  private hasPredictedScrollPoint = false
   private scrollDirection: ScrollDirection | null = null
   private trajectoryPositions: Readonly<TrajectoryPositions>
 
@@ -38,7 +40,7 @@ export class ScrollPredictor extends BaseForesightModule {
 
   public resetScrollProps(): void {
     this.scrollDirection = null
-    this.predictedScrollPoint = null
+    this.hasPredictedScrollPoint = false
   }
 
   public handleScrollPrefetch(entry: ForesightElementInternal, newRect: DOMRect): void {
@@ -58,13 +60,15 @@ export class ScrollPredictor extends BaseForesightModule {
     }
 
     // ONCE per handlePositionChange batch we decide the predicted scroll point
-    this.predictedScrollPoint =
-      this.predictedScrollPoint ??
+    if (!this.hasPredictedScrollPoint) {
       predictNextScrollPosition(
         this.trajectoryPositions.currentPoint,
         this.scrollDirection,
-        this.settings.scrollMargin
+        this.settings.scrollMargin,
+        this.predictedScrollPoint
       )
+      this.hasPredictedScrollPoint = true
+    }
 
     // Check if the scroll is going to intersect with an registered element
     if (
@@ -90,7 +94,7 @@ export class ScrollPredictor extends BaseForesightModule {
     if (
       !this.scrollDirection ||
       this.scrollDirection === "none" ||
-      !this.predictedScrollPoint ||
+      !this.hasPredictedScrollPoint ||
       !this.hasListeners("scrollTrajectoryUpdate")
     ) {
       return
