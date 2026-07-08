@@ -942,15 +942,20 @@ export class ForesightManager {
   }
 
   public alterGlobalSettings(props?: Partial<UpdateForsightManagerSettings>): void {
-    const result = applySettingsChanges(this._globalSettings, props)
+    const changedSettings = applySettingsChanges(this._globalSettings, props)
+    if (changedSettings.length === 0) {
+      return
+    }
 
-    if (result.positionHistorySizeChanged && this.desktopHandler) {
+    const changed = new Set(changedSettings.map(s => s.setting))
+
+    if (changed.has("positionHistorySize") && this.desktopHandler) {
       this.desktopHandler.trajectoryPositions.positions.resize(
         this._globalSettings.positionHistorySize
       )
     }
 
-    if (result.scrollPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
+    if (changed.has("enableScrollPrediction") && this.isUsingDesktopHandler && this.desktopHandler) {
       if (this._globalSettings.enableScrollPrediction) {
         this.desktopHandler.connectScrollPredictor()
       } else {
@@ -958,7 +963,7 @@ export class ForesightManager {
       }
     }
 
-    if (result.tabPredictionChanged && this.isUsingDesktopHandler && this.desktopHandler) {
+    if (changed.has("enableTabPrediction") && this.isUsingDesktopHandler && this.desktopHandler) {
       if (this._globalSettings.enableTabPrediction) {
         this.desktopHandler.connectTabPredictor()
       } else {
@@ -966,11 +971,11 @@ export class ForesightManager {
       }
     }
 
-    if (result.hitSlopChanged) {
+    if (changed.has("defaultHitSlop")) {
       this.forceUpdateAllElementBounds()
     }
 
-    if (result.setDataAttributesChanged) {
+    if (changed.has("setDataAttributes")) {
       const mirror = this._globalSettings.setDataAttributes
       for (const entry of this.elementEntries.values()) {
         if (mirror) {
@@ -981,18 +986,20 @@ export class ForesightManager {
       }
     }
 
-    if (result.touchStrategyChanged && !this.isUsingDesktopHandler && this.touchDeviceHandler) {
+    if (
+      changed.has("touchDeviceStrategy") &&
+      !this.isUsingDesktopHandler &&
+      this.touchDeviceHandler
+    ) {
       this.touchDeviceHandler.setTouchPredictor()
     }
 
-    if (result.changedSettings.length > 0) {
-      this.eventEmitter.emit({
-        type: "managerSettingsChanged",
-        timestamp: Date.now(),
-        managerData: this.getManagerData,
-        updatedSettings: result.changedSettings,
-      })
-    }
+    this.eventEmitter.emit({
+      type: "managerSettingsChanged",
+      timestamp: Date.now(),
+      managerData: this.getManagerData,
+      updatedSettings: changedSettings,
+    })
   }
 
   private forceUpdateAllElementBounds(): void {

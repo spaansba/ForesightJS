@@ -91,48 +91,19 @@ const updateBooleanSetting = (
 }
 
 /**
- * Result of applying settings changes at runtime.
- * Contains the list of changed settings for event emission.
- */
-interface SettingsChangeResult {
-  changedSettings: UpdatedManagerSetting[]
-  positionHistorySizeChanged: boolean
-  scrollPredictionChanged: boolean
-  tabPredictionChanged: boolean
-  hitSlopChanged: boolean
-  touchStrategyChanged: boolean
-  setDataAttributesChanged: boolean
-}
-
-/**
- * Apply settings changes at runtime.
- * Returns information about what changed for the caller to handle side effects.
+ * Apply settings changes at runtime. Returns the list of changed settings; the
+ * caller derives which side effects to run from the set of changed keys.
  */
 export const applySettingsChanges = (
   settings: ForesightManagerSettings,
   props: Partial<UpdateForsightManagerSettings> | undefined
-): SettingsChangeResult => {
+): UpdatedManagerSetting[] => {
   const changedSettings: UpdatedManagerSetting[] = []
-  let positionHistorySizeChanged = false
-  let scrollPredictionChanged = false
-  let tabPredictionChanged = false
-  let hitSlopChanged = false
-  let touchStrategyChanged = false
-  let setDataAttributesChanged = false
 
   if (!props) {
-    return {
-      changedSettings,
-      positionHistorySizeChanged,
-      scrollPredictionChanged,
-      tabPredictionChanged,
-      hitSlopChanged,
-      touchStrategyChanged,
-      setDataAttributesChanged,
-    }
+    return changedSettings
   }
 
-  // Numeric settings
   const numericKeys: NumericSettingKeys[] = [
     "trajectoryPredictionTime",
     "positionHistorySize",
@@ -148,14 +119,9 @@ export const applySettingsChanges = (
         oldValue,
         newValue: settings[key],
       } as UpdatedManagerSetting)
-
-      if (key === "positionHistorySize") {
-        positionHistorySizeChanged = true
-      }
     }
   }
 
-  // Boolean settings
   const booleanKeys: ManagerBooleanSettingKeys[] = [
     "enableMousePrediction",
     "enableScrollPrediction",
@@ -172,22 +138,9 @@ export const applySettingsChanges = (
         oldValue,
         newValue: settings[key],
       } as UpdatedManagerSetting)
-
-      if (key === "enableScrollPrediction") {
-        scrollPredictionChanged = true
-      }
-
-      if (key === "enableTabPrediction") {
-        tabPredictionChanged = true
-      }
-
-      if (key === "setDataAttributes") {
-        setDataAttributesChanged = true
-      }
     }
   }
 
-  // HitSlop
   if (props.defaultHitSlop !== undefined) {
     const oldHitSlop = settings.defaultHitSlop
     const normalizedNewHitSlop = normalizeHitSlop(props.defaultHitSlop)
@@ -199,11 +152,9 @@ export const applySettingsChanges = (
         oldValue: oldHitSlop,
         newValue: normalizedNewHitSlop,
       })
-      hitSlopChanged = true
     }
   }
 
-  // Touch strategy
   if (shouldUpdateSetting(props.touchDeviceStrategy, settings.touchDeviceStrategy)) {
     const oldValue = settings.touchDeviceStrategy
     settings.touchDeviceStrategy = props.touchDeviceStrategy
@@ -212,10 +163,8 @@ export const applySettingsChanges = (
       oldValue,
       newValue: props.touchDeviceStrategy,
     })
-    touchStrategyChanged = true
   }
 
-  // Minimum connection type
   if (shouldUpdateSetting(props.minimumConnectionType, settings.minimumConnectionType)) {
     const oldValue = settings.minimumConnectionType
     settings.minimumConnectionType = props.minimumConnectionType
@@ -226,13 +175,5 @@ export const applySettingsChanges = (
     })
   }
 
-  return {
-    changedSettings,
-    positionHistorySizeChanged,
-    scrollPredictionChanged,
-    tabPredictionChanged,
-    hitSlopChanged,
-    touchStrategyChanged,
-    setDataAttributesChanged,
-  }
+  return changedSettings
 }
