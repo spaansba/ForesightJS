@@ -62,6 +62,11 @@ export class TouchDeviceHandler extends ElementObservingModule {
         this.settings.touchDeviceStrategy satisfies never
     }
 
+    // The handler may have disconnected while the dynamic import was resolving.
+    if (!this.isConnected) {
+      return
+    }
+
     this.predictor?.connect()
 
     for (const [element, entry] of this.elements) {
