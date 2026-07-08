@@ -158,6 +158,11 @@ export class DesktopHandler extends ElementObservingModule {
       this.devLog("TabPredictor lazy loaded")
     }
 
+    // The handler may have disconnected while the dynamic import was resolving.
+    if (!this.isConnected) {
+      return
+    }
+
     this.tabPredictor.connect()
   }
 
@@ -170,6 +175,11 @@ export class DesktopHandler extends ElementObservingModule {
       })
 
       this.devLog("ScrollPredictor lazy loaded")
+    }
+
+    // The handler may have disconnected while the dynamic import was resolving.
+    if (!this.isConnected) {
+      return
     }
 
     this.scrollPredictor.connect()
