@@ -49,14 +49,18 @@ export class ScrollPredictor extends BaseForesightModule {
       return
     }
 
-    // ONCE per handlePositionChange batch we decide what the scroll direction is.
+    // ONCE per handlePositionChange batch we lock in a real scroll direction.
+    // A "none" element (e.g. position:fixed) does not move, so we must keep
+    // probing later elements instead of caching "none" for the whole batch.
     // entry.bounds still holds the PRE-scroll rect here - the DesktopHandler only
     // updates bounds after this runs (see handlePositionChange ordering).
-    this.scrollDirection =
-      this.scrollDirection ?? getScrollDirection(entry.bounds.originalRect, newRect)
+    if (!this.scrollDirection) {
+      const direction = getScrollDirection(entry.bounds.originalRect, newRect)
+      if (direction === "none") {
+        return
+      }
 
-    if (this.scrollDirection === "none") {
-      return
+      this.scrollDirection = direction
     }
 
     // ONCE per handlePositionChange batch we decide the predicted scroll point
