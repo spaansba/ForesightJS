@@ -5,7 +5,7 @@ import type { ForesightEvent, ForesightEventListener, ForesightEventMap } from "
  * Handles event registration, removal, and emission with error handling.
  */
 export class ForesightEventEmitter {
-  private eventListeners: Map<ForesightEvent, ForesightEventListener[]> = new Map()
+  private eventListeners: Map<ForesightEvent, Set<ForesightEventListener>> = new Map()
 
   public addEventListener<K extends ForesightEvent>(
     eventType: K,
@@ -16,8 +16,8 @@ export class ForesightEventEmitter {
       return
     }
 
-    const listeners = this.eventListeners.get(eventType) ?? []
-    listeners.push(listener as ForesightEventListener)
+    const listeners = this.eventListeners.get(eventType) ?? new Set()
+    listeners.add(listener as ForesightEventListener)
     this.eventListeners.set(eventType, listeners)
 
     options?.signal?.addEventListener("abort", () => this.removeEventListener(eventType, listener))
@@ -27,16 +27,7 @@ export class ForesightEventEmitter {
     eventType: K,
     listener: ForesightEventListener<K>
   ): void {
-    const listeners = this.eventListeners.get(eventType)
-
-    if (!listeners) {
-      return
-    }
-
-    const index = listeners.indexOf(listener as ForesightEventListener)
-    if (index > -1) {
-      listeners.splice(index, 1)
-    }
+    this.eventListeners.get(eventType)?.delete(listener as ForesightEventListener)
   }
 
   /**
@@ -46,18 +37,15 @@ export class ForesightEventEmitter {
   public emit<K extends ForesightEvent>(event: ForesightEventMap[K]): void {
     const listeners = this.eventListeners.get(event.type)
 
-    if (!listeners || listeners.length === 0) {
+    if (!listeners || listeners.size === 0) {
       return
     }
 
-    for (let i = 0; i < listeners.length; i++) {
+    for (const listener of listeners) {
       try {
-        const listener = listeners[i]
-        if (listener) {
-          listener(event)
-        }
+        listener(event)
       } catch (error) {
-        console.error(`Error in ForesightManager event listener ${i} for ${event.type}:`, error)
+        console.error(`Error in ForesightManager event listener for ${event.type}:`, error)
       }
     }
   }
@@ -69,10 +57,10 @@ export class ForesightEventEmitter {
   public hasListeners<K extends ForesightEvent>(eventType: K): boolean {
     const listeners = this.eventListeners.get(eventType)
 
-    return listeners !== undefined && listeners.length > 0
+    return listeners !== undefined && listeners.size > 0
   }
 
-  public getEventListeners(): ReadonlyMap<ForesightEvent, ForesightEventListener[]> {
+  public getEventListeners(): ReadonlyMap<ForesightEvent, ReadonlySet<ForesightEventListener>> {
     return this.eventListeners
   }
 }

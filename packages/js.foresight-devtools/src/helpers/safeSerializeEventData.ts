@@ -124,7 +124,7 @@ export const safeSerializeManagerData = (
 ): ManagerDataPayload => {
   const eventListeners: Record<string, number> = {}
   data.eventListeners.forEach((listeners, eventType) => {
-    eventListeners[eventType] = listeners.length
+    eventListeners[eventType] = listeners.size
   })
   const registeredElements: Array<ForesightElementState & { elementInfo: string }> = []
   data.registeredElements.forEach((state, element) => {
