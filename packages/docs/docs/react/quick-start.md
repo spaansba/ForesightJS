@@ -15,7 +15,7 @@ last_updated:
 
 # Quick Start
 
-This guide will walk you through registering your first element with ForesightJS in React and understanding how the prediction system works.
+Register your first element with ForesightJS in React and see how prediction works.
 
 ## Basic Usage Example
 
@@ -33,7 +33,7 @@ function PrefetchButton() {
 }
 ```
 
-Thats it!
+That's it!
 
 :::note Unregistration is automatic
 The hook registers the element when it mounts and unregisters it when the component unmounts, so you never have to call `unregister()` yourself.
@@ -41,7 +41,7 @@ The hook registers the element when it mounts and unregisters it when the compon
 
 ## Provide registration options
 
-However if you want to add a bit more power to your element you can give it the following props:
+For finer control, pass any of these options:
 
 ```tsx
 import { useForesight } from "@foresightjs/react"

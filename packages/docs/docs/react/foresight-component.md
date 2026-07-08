@@ -76,7 +76,7 @@ function CheckoutButton() {
 }
 ```
 
-In this form the data attributes are not set — you own the element, so render them from the state if you want them.
+Whichever element you attach `elementRef` to gets registered, so the manager still mirrors its prediction state onto `data-*` attributes (unless you turn off the global [`setDataAttributes`](./configuration/global-settings.md#setdataattributes)). Style it with plain CSS via those attributes, or read the reactive state directly as shown above.
 
 ## Options
 

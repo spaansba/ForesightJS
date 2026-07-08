@@ -82,5 +82,5 @@ export default function Navigation() {
 ```
 
 :::caution
-If you dont see the correct prefetching behaviour make sure you are in production. Next.js only prefetches in production and not in development
+If you don't see the correct prefetching behaviour make sure you are in production. Next.js only prefetches in production, not in development.
 :::

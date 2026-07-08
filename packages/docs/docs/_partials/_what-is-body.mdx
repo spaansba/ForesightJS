@@ -20,7 +20,7 @@ While desktop systems use multiple concurrent prediction strategies, touch devic
 
 ## Why ForesightJS?
 
-ForesightJS is designed for developers who want to squeeze every drop of performance out of their web applications. It's a specialized tool, not something to drop into every project.
+ForesightJS is a specialized performance tool, not something to drop into every project.
 
 ### Which problems does ForesightJS solve?
 
@@ -36,6 +36,6 @@ Many modern frameworks (like Next.js) automatically prefetch resources for all l
 
 Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
 
-## Lightweight & Optimized
+## Lightweight
 
-ForesightJS is built to be tiny. The entire library with all features is only **~32 KB** minified. On top of that, we use code splitting so you only load what you use: touch devices load just **~19 KB**, and desktop users load **~32 KB** with predictors lazy-loaded when enabled. See [Behind the Scenes](../behind-the-scenes.md#bundle-optimization) for details.
+The full library is **~32 KB** minified, and code splitting means you only ship the parts you actually use. See [Behind the Scenes](../behind-the-scenes.md#bundle-optimization) for the per-chunk breakdown.

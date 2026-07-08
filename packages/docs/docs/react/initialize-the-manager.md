@@ -22,7 +22,7 @@ This step is **not needed** if you don't want to configure ForesightJS. The mana
 If you don't want to configure anything, skip to [Quick Start](./quick-start.md).
 :::
 
-If you want to customize ForesightJS's global behavior, call `ForesightManager.initialize()` once at your application's entry point (e.g. `main.tsx`, or a top-level layout in Next.js), before your components render.:
+If you want to customize ForesightJS's global behavior, call `ForesightManager.initialize()` once at your application's entry point (e.g. `main.tsx`, or a top-level layout in Next.js), before your components render:
 
 ```tsx
 import { ForesightManager } from "@foresightjs/react"
@@ -34,4 +34,4 @@ You can configure any of these [global settings](./configuration/global-settings
 
 <InitializeTheManager />
 
-The manager also provides several static methods you can use to get information about which elements are registered, how many callbacks have been ran and all the listening [event](./events.md) listeners. You can find a list of these methods [here](./static-properties.md).
+The manager also provides several static methods for inspecting which elements are registered, how many callbacks have run, and the registered [event](./events.md) listeners. You can find a list of these methods [here](./static-properties.md).

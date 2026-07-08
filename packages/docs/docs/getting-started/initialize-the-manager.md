@@ -30,4 +30,4 @@ You can configure any of these [global settings](../configuration/global-setting
 
 <InitializeTheManager />
 
-The manager also provides several static methods you can use to get information about which elements are registered, how many callbacks have been ran and all the listening [event](../events.md) listeners. You can find a list of these methods [here](../debugging/static-properties.md).
+The manager also provides several static methods for inspecting which elements are registered, how many callbacks have run, and the registered [event](../events.md) listeners. You can find a list of these methods [here](../debugging/static-properties.md).

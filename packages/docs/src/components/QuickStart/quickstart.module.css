@@ -1,6 +1,12 @@
 .quickStartSection {
-  padding: 64px 32px;
+  padding: 40px 0;
   color: var(--site-text);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
 }
 
 .sectionHeader {
@@ -24,15 +30,14 @@
   font-size: 1.125rem;
   color: var(--site-text-dim);
   line-height: 1.6;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 800px;
 }
 
 .contentGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;
-  max-width: 1200px;
-  margin: 0 auto;
   align-items: start;
 }
 
@@ -178,7 +183,11 @@
 
 @media screen and (max-width: 768px) {
   .quickStartSection {
-    padding: 48px 20px;
+    padding: 28px 0;
+  }
+
+  .container {
+    padding: 0 20px;
   }
 
   .sectionHeader {

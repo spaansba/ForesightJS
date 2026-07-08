@@ -16,7 +16,7 @@ last_updated:
 
 # Quick Start
 
-This guide will walk you through registering your first element with ForesightJS in Vue and understanding how the prediction system works.
+Register your first element with ForesightJS in Vue and see how prediction works.
 
 ## Basic Usage Example
 
@@ -32,7 +32,7 @@ The simplest way to register an element is the [`v-foresight`](./directive.md) d
 </template>
 ```
 
-Thats it!
+That's it!
 
 :::note Unregistration is automatic
 The directive registers the element when it mounts and unregisters it when it unmounts, so you never have to call `unregister()` yourself. The same goes for the `useForesight` composable below.
@@ -40,7 +40,7 @@ The directive registers the element when it mounts and unregisters it when it un
 
 ## Provide registration options
 
-However if you want to add a bit more power to your element you can pass a full options object instead of just a callback:
+To configure the element, pass an options object instead of a bare callback:
 
 ```html
 <template>

@@ -189,7 +189,7 @@ Removes the element from `ForesightManager`'s tracking. Call this when you perma
 
 #### `subscribe(listener)`
 
-Subscribes to logical state changes for this element. The listener is called every time the state snapshot is replaced - never for geometry-only changes during scroll/resize, which live on the separate bounds channel (`subscribeToBounds`). Returns an unsubscribe function. Together with `getSnapshot` this makes the state usable as an external store (e.g. React's `useSyncExternalStore`) without any scroll-induced re-renders.
+Subscribes to logical state changes for this element. The listener is called every time the state snapshot is replaced - never for geometry-only changes during scroll/resize, which live on the separate bounds channel (`subscribeToBounds`). Returns an unsubscribe function. Together with `getSnapshot` this makes the state usable as an external store without any scroll-induced re-renders.
 
 #### `getSnapshot()`
 
