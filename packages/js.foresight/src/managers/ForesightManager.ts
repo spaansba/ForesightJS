@@ -399,9 +399,7 @@ export class ForesightManager {
       }
 
       if (reactivateAfter !== Infinity && next.isPredicted) {
-        entry.reactivateTimeoutId = setTimeout(() => {
-          this.reactivate(element)
-        }, reactivateAfter)
+        this.scheduleReactivateTimeout(entry, reactivateAfter)
       }
     }
 
@@ -623,6 +621,12 @@ export class ForesightManager {
     entry.reactivateTimeoutId = undefined
   }
 
+  private scheduleReactivateTimeout(entry: ForesightElementInternal, delay: number): void {
+    entry.reactivateTimeoutId = setTimeout(() => {
+      this.reactivate(entry.element)
+    }, delay)
+  }
+
   private callCallback(entry: ForesightElementInternal, callbackHitType: CallbackHitType): void {
     if (entry.state.isPredicted || !entry.state.isActive) {
       return
@@ -695,9 +699,7 @@ export class ForesightManager {
     })
 
     if (next.reactivateAfter !== Infinity) {
-      entry.reactivateTimeoutId = setTimeout(() => {
-        this.reactivate(entry.element)
-      }, next.reactivateAfter)
+      this.scheduleReactivateTimeout(entry, next.reactivateAfter)
     }
 
     this.removeGlobalListenersIfIdle()
@@ -910,9 +912,7 @@ export class ForesightManager {
     // If it fired with a finite reactivateAfter, resume the reactivation timer that
     // was cleared when it parked, so the cooldown continues from reconnect.
     if (eligible && entry.state.isPredicted && entry.state.reactivateAfter !== Infinity) {
-      entry.reactivateTimeoutId = setTimeout(() => {
-        this.reactivate(entry.element)
-      }, entry.state.reactivateAfter)
+      this.scheduleReactivateTimeout(entry, entry.state.reactivateAfter)
     }
   }
 
