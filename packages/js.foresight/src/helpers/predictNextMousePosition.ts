@@ -21,8 +21,18 @@ export const predictNextMousePosition = (
   out: Point
 ): void => {
   const now = performance.now()
-  // Create a copy of currentPoint for buffer storage (buffer needs independent copies)
-  buffer.add({ point: { x: currentPoint.x, y: currentPoint.y }, time: now })
+  // Recycle the slot the buffer is about to overwrite instead of allocating a
+  // fresh MousePosition every move (this runs once per pointer move).
+  const slot = buffer.peekWriteSlot()
+
+  if (slot) {
+    slot.point.x = currentPoint.x
+    slot.point.y = currentPoint.y
+    slot.time = now
+    buffer.add(slot)
+  } else {
+    buffer.add({ point: { x: currentPoint.x, y: currentPoint.y }, time: now })
+  }
 
   const { x, y } = currentPoint
 
@@ -33,7 +43,8 @@ export const predictNextMousePosition = (
     return
   }
 
-  const [first, last] = buffer.getFirstLast()
+  const first = buffer.getFirst()
+  const last = buffer.getLast()
   if (!first || !last) {
     out.x = x
     out.y = y

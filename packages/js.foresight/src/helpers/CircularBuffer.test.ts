@@ -125,29 +125,23 @@ describe("CircularBuffer", () => {
     })
   })
 
-  describe("getFirstLast", () => {
-    it("should return [undefined, undefined] for empty buffer", () => {
-      const buffer = new CircularBuffer<number>(5)
-      expect(buffer.getFirstLast()).toEqual([undefined, undefined])
-    })
-
-    it("should return [item, item] for single item", () => {
+  describe("peekWriteSlot", () => {
+    it("should return undefined before the slot is filled", () => {
       const buffer = new CircularBuffer<number>(3)
-      buffer.add(42)
+      expect(buffer.peekWriteSlot()).toBeUndefined()
 
-      expect(buffer.getFirstLast()).toEqual([42, 42])
+      buffer.add(1)
+      buffer.add(2)
+      expect(buffer.peekWriteSlot()).toBeUndefined()
     })
 
-    it("should return [first, last] for multiple items", () => {
-      const buffer = makeBuffer(4, 10, 20, 30)
+    it("should return the oldest item once the buffer has wrapped", () => {
+      const buffer = makeBuffer(3, 1, 2, 3)
 
-      expect(buffer.getFirstLast()).toEqual([10, 30])
-    })
+      expect(buffer.peekWriteSlot()).toBe(1)
 
-    it("should return correct [first, last] after wrapping", () => {
-      const buffer = makeBuffer(3, 1, 2, 3, 4, 5)
-
-      expect(buffer.getFirstLast()).toEqual([3, 5])
+      buffer.add(4)
+      expect(buffer.peekWriteSlot()).toBe(2)
     })
   })
 

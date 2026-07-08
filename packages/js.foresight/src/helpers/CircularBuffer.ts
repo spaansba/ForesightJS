@@ -22,6 +22,15 @@ export class CircularBuffer<T> {
     }
   }
 
+  /**
+   * The slot the next {@link add} will overwrite, or `undefined` if it has not
+   * been filled yet. Lets a hot-path caller mutate and re-add the existing
+   * object instead of allocating a fresh one on every push.
+   */
+  peekWriteSlot(): T | undefined {
+    return this.buffer[this.head]
+  }
+
   getFirst(): T | undefined {
     if (this.count === 0) {
       return undefined
@@ -46,23 +55,6 @@ export class CircularBuffer<T> {
 
       return this.buffer[lastIndex]
     }
-  }
-
-  getFirstLast(): [T | undefined, T | undefined] {
-    if (this.count === 0) {
-      return [undefined, undefined]
-    }
-
-    if (this.count === 1) {
-      const item = this.count < this.capacity ? this.buffer[0] : this.buffer[this.head]
-
-      return [item, item]
-    }
-
-    const first = this.getFirst()
-    const last = this.getLast()
-
-    return [first, last]
   }
 
   resize(newCapacity: number): void {
