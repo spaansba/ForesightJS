@@ -1,0 +1,26 @@
+---
+import Layout from "../layouts/Layout.astro"
+
+const links = Array.from({ length: 1000 }, (_, i) => i)
+---
+
+<Layout title="Mass registration">
+  <p class="text-sm text-gray-700 leading-relaxed max-w-2xl">
+    1000 links registered at once. Mouse and scroll trajectories only predict the targets in your
+    path (they turn green), compare with
+    <code class="font-mono text-xs">viewport</code>, which would fetch everything on screen.
+  </p>
+
+  <div class="flex flex-wrap gap-1">
+    {
+      links.map(n => (
+        <a
+          href={`/about/?n=${n}`}
+          class="flex justify-center items-center size-10 text-xs font-medium border bg-white text-gray-700 border-gray-300 data-predicted:bg-emerald-500 data-predicted:text-white data-predicted:border-emerald-600"
+        >
+          {n}
+        </a>
+      ))
+    }
+  </div>
+</Layout>

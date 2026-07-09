@@ -1,0 +1,22 @@
+---
+import type { HTMLAttributes } from "astro/types"
+import {
+  FORESIGHT_STRATEGY,
+  serializeHitSlop,
+  type ForesightLinkOptions,
+} from "@foresightjs/astro"
+
+interface Props
+  extends ForesightLinkOptions,
+    Omit<HTMLAttributes<"a">, "data-astro-prefetch" | keyof ForesightLinkOptions> {}
+
+const { hitSlop, name, reactivateAfter, enabled, ...rest } = Astro.props
+---
+
+<a
+  {...rest}
+  data-astro-prefetch={FORESIGHT_STRATEGY}
+  data-foresight-hit-slop={serializeHitSlop(hitSlop)}
+  data-foresight-name={name}
+  data-foresight-reactivate-after={reactivateAfter}
+  data-foresight-enabled={enabled === false ? "false" : undefined}><slot /></a>
