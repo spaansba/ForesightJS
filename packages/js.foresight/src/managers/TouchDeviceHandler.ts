@@ -1,4 +1,4 @@
-import type { ForesightElement } from "../types/types"
+import type { ForesightElement, ForesightManagerSettings } from "../types/types"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ElementObservingModule } from "../core/ElementObservingModule"
 import type { ViewportPredictor } from "../predictors/ViewportPredictor"
@@ -35,6 +35,12 @@ export class TouchDeviceHandler extends ElementObservingModule {
     }
 
     return this.touchStartPredictor
+  }
+
+  public onSettingsChanged(changed: ReadonlySet<keyof ForesightManagerSettings>): void {
+    if (changed.has("touchDeviceStrategy") && this.isConnected) {
+      this.setTouchPredictor()
+    }
   }
 
   public async setTouchPredictor() {
