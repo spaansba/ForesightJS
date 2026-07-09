@@ -7,6 +7,7 @@ import { PositionObserver, PositionObserverEntry } from "position-observer"
 import type {
   ForesightElement,
   ForesightElementInternal,
+  ForesightManagerSettings,
   TrajectoryPositions,
 } from "../types/types"
 import { CircularBuffer } from "../helpers/CircularBuffer"
@@ -136,6 +137,32 @@ export class DesktopHandler extends ElementObservingModule {
     this.disconnectScrollPredictor()
     this.positionObserver?.disconnect()
     this.positionObserver = null
+  }
+
+  public onSettingsChanged(changed: ReadonlySet<keyof ForesightManagerSettings>): void {
+    if (changed.has("positionHistorySize")) {
+      this.trajectoryPositions.positions.resize(this.settings.positionHistorySize)
+    }
+
+    if (!this.isConnected) {
+      return
+    }
+
+    if (changed.has("enableScrollPrediction")) {
+      if (this.settings.enableScrollPrediction) {
+        this.connectScrollPredictor()
+      } else {
+        this.disconnectScrollPredictor()
+      }
+    }
+
+    if (changed.has("enableTabPrediction")) {
+      if (this.settings.enableTabPrediction) {
+        this.connectTabPredictor()
+      } else {
+        this.disconnectTabPredictor()
+      }
+    }
   }
 
   public processMouseMovement = (event: PointerEvent) =>

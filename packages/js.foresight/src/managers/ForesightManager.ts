@@ -954,31 +954,8 @@ export class ForesightManager {
 
     const changed = new Set(changedSettings.map(s => s.setting))
 
-    if (changed.has("positionHistorySize") && this.desktopHandler) {
-      this.desktopHandler.trajectoryPositions.positions.resize(
-        this._globalSettings.positionHistorySize
-      )
-    }
-
-    if (
-      changed.has("enableScrollPrediction") &&
-      this.isUsingDesktopHandler &&
-      this.desktopHandler
-    ) {
-      if (this._globalSettings.enableScrollPrediction) {
-        this.desktopHandler.connectScrollPredictor()
-      } else {
-        this.desktopHandler.disconnectScrollPredictor()
-      }
-    }
-
-    if (changed.has("enableTabPrediction") && this.isUsingDesktopHandler && this.desktopHandler) {
-      if (this._globalSettings.enableTabPrediction) {
-        this.desktopHandler.connectTabPredictor()
-      } else {
-        this.desktopHandler.disconnectTabPredictor()
-      }
-    }
+    this.desktopHandler?.onSettingsChanged(changed)
+    this.touchDeviceHandler?.onSettingsChanged(changed)
 
     if (changed.has("defaultHitSlop")) {
       this.forceUpdateAllElementBounds()
@@ -993,14 +970,6 @@ export class ForesightManager {
           removeDataAttributes(entry.element)
         }
       }
-    }
-
-    if (
-      changed.has("touchDeviceStrategy") &&
-      !this.isUsingDesktopHandler &&
-      this.touchDeviceHandler
-    ) {
-      this.touchDeviceHandler.setTouchPredictor()
     }
 
     this.eventEmitter.emit({
