@@ -5,13 +5,6 @@ import {
 } from "../types"
 import { parseHitSlop } from "../hitSlop"
 
-/**
- * Unknown `data-astro-prefetch` values are ignored by Astro, which is what
- * makes `data-astro-prefetch="foresight"` safe to claim. Attributed links,
- * including the bare attribute form, stay with Astro's own script - Astro
- * handles those even with `prefetchAll: false`, so claiming them too would
- * prefetch twice.
- */
 export const shouldRegister = (
   anchor: HTMLAnchorElement,
   options: ForesightClientOptions

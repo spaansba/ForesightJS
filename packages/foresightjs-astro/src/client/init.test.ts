@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { ForesightRegisterOptions } from "js.foresight"
+import type { ForesightElementState, ForesightRegisterOptions } from "js.foresight"
 
 const registerSpy = vi.fn<(options: ForesightRegisterOptions) => void>()
 const registeredElements = new Map<Element, unknown>()
@@ -64,7 +64,7 @@ describe("initForesight", () => {
     const options = registerSpy.mock.calls[0][0]
 
     expect(options.element).toBe(link)
-    options.callback()
+    options.callback({} as ForesightElementState)
     expect(prefetch).toHaveBeenCalledWith(link.href)
   })
 

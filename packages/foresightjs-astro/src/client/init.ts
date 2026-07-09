@@ -44,8 +44,6 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
   syncLinks()
   document.addEventListener("astro:page-load", syncLinks)
 
-  // Anchors injected or removed after load (server islands, client-rendered
-  // content).
   let scheduled = false
 
   const observer = new MutationObserver(() => {

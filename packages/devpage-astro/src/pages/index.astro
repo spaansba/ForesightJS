@@ -9,10 +9,10 @@ const card =
 
 <Layout title="Foresight prefetch strategies">
   <p class="text-sm text-gray-700 leading-relaxed max-w-2xl">
-    Every unattributed link on this page is registered with ForesightJS
-    (<code class="font-mono text-xs">prefetchAll: true, defaultStrategy: "foresight"</code>).
-    Open the devtools overlay and the network tab, then move the mouse toward a link:
-    predicted links turn green and the page is prefetched before the cursor arrives.
+    Every unattributed link on this page is registered with ForesightJS (<code
+      class="font-mono text-xs">prefetchAll: true, defaultStrategy: "foresight"</code
+    >). Open the devtools overlay and the network tab, then move the mouse toward a link: predicted
+    links turn green and the page is prefetched before the cursor arrives.
   </p>
 
   <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -25,7 +25,7 @@ const card =
       class={card}
       href="/strategies/"
       data-astro-prefetch="foresight"
-      data-foresight-hit-slop="40"
+      data-foresight-hit-slop="60 10 5 0"
     >
       <span class="text-sm font-medium text-gray-900">Explicit foresight</span>
       <span class="block text-xs text-gray-500">hitSlop 40 via data attribute</span>

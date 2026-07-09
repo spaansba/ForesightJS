@@ -176,6 +176,7 @@ export class ElementOverlays extends LitElement {
     if (this.hasUpdated) {
       this._syncAlreadyRegisteredElements()
     }
+
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {

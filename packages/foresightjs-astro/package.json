@@ -1,7 +1,7 @@
 {
   "name": "@foresightjs/astro",
-  "version": "0.1.0",
-  "description": "Astro integration for ForesightJS - predictive prefetching that fires before hover, configured like Astro's built-in prefetch strategies.",
+  "version": "1.0.0",
+  "description": "Astro integration for ForesightJS. Predictive prefetching that fires before hover, configured like Astro's built-in prefetch strategies.",
   "type": "module",
   "sideEffects": false,
   "scripts": {

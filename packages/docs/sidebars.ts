@@ -151,6 +151,42 @@ const sidebars: SidebarsConfig = {
     "angular/behind-the-scenes",
     "angular/ai-context",
   ],
+  astroSidebar: [
+    {
+      type: "category",
+      label: "Getting Started",
+      items: [
+        "astro/what-is-foresightjs",
+        "astro/installation",
+        "astro/initialize-the-manager",
+        "astro/quick-start",
+      ],
+    },
+    {
+      type: "category",
+      label: "API",
+      items: [
+        "astro/integration",
+        "astro/data-attributes",
+        "astro/foresight-link",
+        "astro/register-foresight",
+      ],
+    },
+    {
+      type: "category",
+      label: "Configuration",
+      items: ["astro/configuration/global-settings", "astro/configuration/registration-options"],
+    },
+    "astro/typescript",
+    "astro/events",
+    {
+      type: "category",
+      label: "Debugging",
+      items: ["astro/devtools", "astro/static-properties"],
+    },
+    "astro/behind-the-scenes",
+    "astro/ai-context",
+  ],
 }
 
 export default sidebars
