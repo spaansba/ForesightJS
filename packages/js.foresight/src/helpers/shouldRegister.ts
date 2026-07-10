@@ -36,6 +36,11 @@ export const hasConnectionLimitations = (minimumConnectionType: MinimumConnectio
   const currentConnectionIndex = connectionTypes.indexOf(
     connection.effectiveType as MinimumConnectionType
   )
+
+  if (currentConnectionIndex === -1) {
+    return !!connection.saveData
+  }
+
   // Get index of the minimum connection speed required in settings (e.g. "3g" would be index 2)
   const minimumConnectionIndex = connectionTypes.indexOf(minimumConnectionType)
 
