@@ -55,6 +55,7 @@
     "js.foresight",
     "foresightjs",
     "prefetch",
+    "performance",
     "interaction-prediction",
     "mouse-trajectory"
   ],
