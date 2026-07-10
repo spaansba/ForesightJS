@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["docs", "devpage-framework", "devpage-nextjs"]
+  "ignore": ["docs", "devpage-framework", "devpage-nextjs", "devpage-astro"]
 }
