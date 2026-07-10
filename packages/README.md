@@ -36,9 +36,15 @@ Official Angular bindings: the `[fsForesight]` directive, `ForesightService`, `i
 
 **Published as:** `@foresightjs/angular` on npm
 
+### [foresightjs-astro](./foresightjs-astro/)
+
+Official Astro integration: adds `foresight` as a prefetch strategy alongside Astro's native four, configured like Astro's built-in prefetch. Includes the `<ForesightLink>` component, per-link data attributes, and the `registerForesight` client API.
+
+**Published as:** `@foresightjs/astro` on npm
+
 ## Development Packages
 
-### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/)
+### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/) · [devpage-astro](./devpage-astro/)
 
 Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React and Vue demos on a single page, sharing one `ForesightManager` singleton — toggle between them with one click.
 

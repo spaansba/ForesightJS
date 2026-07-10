@@ -34,7 +34,7 @@ ForesightManager.instance.register({
 That's it!
 
 :::note Remember to unregister
-If you permanently remove a registered element from the DOM, call `ForesightManager.instance.unregister(element)` to stop tracking it. Detaching an element does not unregister it. It is parked (kept registered but inactive) and resumes if it reattaches, so an element you discard without unregistering stays parked and cannot be garbage collected. The official React, Vue, and Angular integrations do this for you on unmount.
+If you permanently remove a registered element from the DOM, call `ForesightManager.instance.unregister(element)` to stop tracking it. Detaching an element does not unregister it. It is parked (kept registered but inactive) and resumes if it reattaches, so an element you discard without unregistering stays parked and cannot be garbage collected. The official React, Vue, and Angular integrations do this for you on unmount, and the Astro integration unregisters links that leave the DOM.
 :::
 
 ## Provide registration options
@@ -60,7 +60,7 @@ ForesightManager.instance.register({
 
 ## Using a framework?
 
-ForesightJS is framework agnostic, but official [React](../react/installation.md), [Vue](../vue/installation.md), and [Angular](../angular/installation.md) packages exist that handle registration for you. Switch framework with the dropdown at the top of the sidebar to read those docs. Using something else? See [Other Frameworks](../other-frameworks.md) for how to build your own binding.
+ForesightJS is framework agnostic, but official [React](../react/installation.md), [Vue](../vue/installation.md), [Angular](../angular/installation.md), and [Astro](../astro/installation.md) packages exist that handle registration for you. Switch framework with the dropdown at the top of the sidebar to read those docs. Using something else? See [Other Frameworks](../other-frameworks.md) for how to build your own binding.
 
 ## Development Tools
 

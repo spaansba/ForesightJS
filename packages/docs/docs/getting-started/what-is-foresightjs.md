@@ -31,8 +31,8 @@ npm install js.foresight
 yarn add js.foresight
 ```
 
-:::note Using React, Vue, or Angular?
-There are official [React](../react/installation.md), [Vue](../vue/installation.md), and [Angular](../angular/installation.md) packages that handle registration for you. Switch framework with the dropdown at the top of the sidebar to read those docs. `js.foresight` itself is for frameworks without an official adapter yet, or for when you want full control.
+:::note Using React, Vue, Angular, or Astro?
+There are official [React](../react/installation.md), [Vue](../vue/installation.md), [Angular](../angular/installation.md), and [Astro](../astro/installation.md) packages that handle registration for you. Switch framework with the dropdown at the top of the sidebar to read those docs. `js.foresight` itself is for frameworks without an official adapter yet, or for when you want full control.
 :::
 
 <WhatIsBody />
