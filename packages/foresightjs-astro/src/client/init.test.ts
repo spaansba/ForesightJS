@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ForesightElementState, ForesightRegisterOptions } from "js.foresight"
 
 const registerSpy = vi.fn<(options: ForesightRegisterOptions) => void>()
@@ -43,10 +43,33 @@ const addLink = (href: string, attributes: Record<string, string> = {}): HTMLAnc
   return a
 }
 
+// Each test leaks the observer init.ts creates. Disconnect them so their
+// queued syncLinks microtasks can't fire after jsdom is torn down.
+const observers: MutationObserver[] = []
+const NativeMutationObserver = MutationObserver
+
+vi.stubGlobal(
+  "MutationObserver",
+  class extends NativeMutationObserver {
+    constructor(callback: MutationCallback) {
+      super(callback)
+      observers.push(this)
+    }
+  }
+)
+
 beforeEach(() => {
   document.body.innerHTML = ""
   registeredElements.clear()
   registerSpy.mockClear()
+})
+
+afterEach(async () => {
+  for (const observer of observers.splice(0)) {
+    observer.disconnect()
+  }
+
+  await new Promise<void>(resolve => queueMicrotask(resolve))
 })
 
 describe("initForesight", () => {

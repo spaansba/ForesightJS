@@ -43,6 +43,8 @@
   "files": [
     "dist",
     "src/components",
+    "src/hitSlop.ts",
+    "src/types.ts",
     "README.md",
     "LICENSE"
   ],

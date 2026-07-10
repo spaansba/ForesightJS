@@ -1,10 +1,7 @@
 ---
 import type { HTMLAttributes } from "astro/types"
-import {
-  FORESIGHT_STRATEGY,
-  serializeHitSlop,
-  type ForesightLinkOptions,
-} from "@foresightjs/astro"
+import { serializeHitSlop } from "../hitSlop"
+import { FORESIGHT_STRATEGY, type ForesightLinkOptions } from "../types"
 
 interface Props
   extends ForesightLinkOptions,
