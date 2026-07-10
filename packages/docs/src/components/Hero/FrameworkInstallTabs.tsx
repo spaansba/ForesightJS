@@ -6,6 +6,7 @@ const frameworks = [
   { name: "React", command: "pnpm add @foresightjs/react" },
   { name: "Vue", command: "pnpm add @foresightjs/vue" },
   { name: "Angular", command: "pnpm add @foresightjs/angular js.foresight" },
+  { name: "Astro", command: "pnpm add @foresightjs/astro js.foresight" },
 ]
 
 export const FrameworkInstallTabs = () => {

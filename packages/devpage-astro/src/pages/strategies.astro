@@ -1,0 +1,38 @@
+---
+import Layout from "../layouts/Layout.astro"
+
+const card =
+  "block border border-gray-300 bg-white p-6 space-y-1 " +
+  "data-predicted:border-emerald-600 data-predicted:bg-emerald-50"
+
+const strategies = [
+  { strategy: "foresight", detail: "fires on predicted intent, before arrival" },
+  { strategy: "hover", detail: "fires 80ms after entering the link" },
+  { strategy: "tap", detail: "fires on touchstart / mousedown" },
+  { strategy: "viewport", detail: "fires 300ms after entering the viewport" },
+  { strategy: "load", detail: "fires immediately on page load" },
+]
+---
+
+<Layout title="Foresight vs native strategies">
+  <p class="text-sm text-gray-700 leading-relaxed max-w-2xl">
+    The same target page linked once per strategy. Watch the network tab to compare
+    when each one fires.
+  </p>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    {
+      strategies.map(({ strategy, detail }) => (
+        <a class={card} href="/about/" data-astro-prefetch={strategy}>
+          <span class="text-sm font-medium text-gray-900 font-mono">{strategy}</span>
+          <span class="block text-xs text-gray-500">{detail}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <p class="text-xs text-gray-400 font-mono">
+    all five point at the same url, whichever fires first wins and the rest dedupe against
+    astro's prefetch cache
+  </p>
+</Layout>

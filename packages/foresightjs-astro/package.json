@@ -1,0 +1,86 @@
+{
+  "name": "@foresightjs/astro",
+  "version": "1.0.0",
+  "description": "Astro integration for ForesightJS. Predictive prefetching that fires before hover, configured like Astro's built-in prefetch strategies.",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsdown --sourcemap",
+    "build:prod": "tsdown",
+    "dev": "tsdown --sourcemap --watch",
+    "lint": "eslint . --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "prepublishOnly": "pnpm test:run && pnpm build:prod"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.mts",
+      "default": "./dist/client.mjs"
+    },
+    "./components": {
+      "types": "./src/components/index.ts",
+      "default": "./src/components/index.ts"
+    }
+  },
+  "homepage": "https://foresightjs.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/foresightjs-astro"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src/components",
+    "src/hitSlop.ts",
+    "src/types.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "astro-component",
+    "withastro",
+    "foresight",
+    "js.foresight",
+    "foresightjs",
+    "prefetch",
+    "performance",
+    "interaction-prediction",
+    "mouse-trajectory"
+  ],
+  "author": "Bart Spaans",
+  "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
+  "peerDependencies": {
+    "astro": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "js.foresight": "^4.2.1",
+    "js.foresight-devtools": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "js.foresight-devtools": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "astro": "^7.0.7",
+    "js.foresight": "workspace:*",
+    "jsdom": "^29.0.1",
+    "tsdown": "^0.21.7",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

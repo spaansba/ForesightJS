@@ -1,0 +1,40 @@
+---
+import { ClientRouter } from "astro:transitions"
+import "../styles/global.css"
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | ForesightJS Astro</title>
+    <ClientRouter />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="bg-white border-b border-gray-300 sticky top-0 z-10">
+      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <a href="/" class="text-base font-semibold text-gray-900">ForesightJS Astro</a>
+        <nav class="flex items-center gap-4 text-sm">
+          <a href="/" class="text-gray-700 hover:text-gray-900">Home</a>
+          <a href="/strategies/" class="text-gray-700 hover:text-gray-900">Strategies</a>
+          <a href="/mass/" class="text-gray-700 hover:text-gray-900">Mass test</a>
+          <a href="/about/" class="text-gray-700 hover:text-gray-900">About</a>
+        </nav>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <h1 class="text-lg font-semibold">{title}</h1>
+      <slot />
+    </main>
+    <script>
+      import { ForesightManager } from "js.foresight"
+      ;(window as any).__fm = ForesightManager.instance
+    </script>
+  </body>
+</html>

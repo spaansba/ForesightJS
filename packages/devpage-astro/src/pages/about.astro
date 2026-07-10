@@ -1,0 +1,46 @@
+---
+import Layout from "../layouts/Layout.astro"
+---
+
+<Layout title="Target page">
+  <section class="border border-gray-300 bg-white p-6 space-y-4 max-w-2xl">
+    <p class="text-sm text-gray-700 leading-relaxed">
+      This page mostly exists as a prefetch target. If you navigated here after
+      hovering toward a link, it was probably already in the cache.
+    </p>
+
+    <p class="text-sm text-gray-700 leading-relaxed">
+      The button below is registered with
+      <code class="font-mono text-xs">registerForesight</code> from
+      <code class="font-mono text-xs">@foresightjs/astro/client</code> instead of data
+      attributes, the only way to attach a custom callback or <code class="font-mono text-xs">meta</code>.
+    </p>
+
+    <button
+      id="custom-callback"
+      class="border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 data-predicted:bg-emerald-500 data-predicted:text-white data-predicted:border-emerald-600"
+    >
+      Predict me
+    </button>
+    <p id="custom-result" class="text-xs text-gray-400 font-mono"></p>
+  </section>
+</Layout>
+
+<script>
+  import { registerForesight } from "@foresightjs/astro/client"
+
+  const result = document.querySelector<HTMLParagraphElement>("#custom-result")
+  const button = document.querySelector<HTMLButtonElement>("#custom-callback")
+
+  if (button && result) {
+    registerForesight(button, {
+      hitSlop: 40,
+      name: "custom-callback-button",
+      reactivateAfter: 2000,
+      meta: { page: "about" },
+      callback: () => {
+        result.textContent = `callback fired at ${new Date().toLocaleTimeString()}`
+      },
+    })
+  }
+</script>

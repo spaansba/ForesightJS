@@ -15,7 +15,7 @@ last_updated:
 
 # Other Frameworks
 
-There are official packages for [React](./react/installation.md), [Vue](./vue/installation.md), and [Angular](./angular/installation.md). For every other framework (Svelte, Solid, etc.) `js.foresight` has everything you need to build your own thin binding. This page shows the two pieces involved: registering from a component lifecycle, and the subscribe pattern for reactive state.
+There are official packages for [React](./react/installation.md), [Vue](./vue/installation.md), [Angular](./angular/installation.md), and [Astro](./astro/installation.md). For every other framework (Svelte, Solid, etc.) `js.foresight` has everything you need to build your own thin binding. This page shows the two pieces involved: registering from a component lifecycle, and the subscribe pattern for reactive state.
 
 ## Registering from a component
 

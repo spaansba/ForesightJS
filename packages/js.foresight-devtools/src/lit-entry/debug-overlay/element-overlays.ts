@@ -170,13 +170,13 @@ export class ElementOverlays extends LitElement {
       { signal }
     )
 
-    // Subscribe to already-registered elements
-    for (const [element, state] of ForesightManager.instance.registeredElements) {
-      this._subscribeToElement(element)
-      if (state.isIntersectingWithViewport && state.isActive) {
-        this.createOrUpdateElementOverlay(element, state)
-      }
+    // Elements registered before the devtools mounted (e.g. devtools is
+    // lazy-loaded) can only get an overlay once the container has rendered,
+    // so the initial sync runs in firstUpdated. On reconnects it can run now.
+    if (this.hasUpdated) {
+      this._syncAlreadyRegisteredElements()
     }
+
     ForesightManager.instance.addEventListener(
       "callbackInvoked",
       (e: CallbackInvokedEvent) => {
@@ -192,6 +192,19 @@ export class ElementOverlays extends LitElement {
       },
       { signal }
     )
+  }
+
+  protected firstUpdated(): void {
+    this._syncAlreadyRegisteredElements()
+  }
+
+  private _syncAlreadyRegisteredElements(): void {
+    for (const [element, state] of ForesightManager.instance.registeredElements) {
+      this._subscribeToElement(element)
+      if (state.isIntersectingWithViewport && state.isActive) {
+        this.createOrUpdateElementOverlay(element, state)
+      }
+    }
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -338,6 +351,12 @@ export class ElementOverlays extends LitElement {
   }
 
   private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
+    // Before the first render there is no container to append to; the element
+    // is picked up by the firstUpdated sync instead.
+    if (!this.containerElement) {
+      return
+    }
+
     const bounds = ForesightManager.instance.getElementBounds(element)
     if (!bounds) {
       return

@@ -16,6 +16,8 @@
       "js.foresight/*": ["./packages/js.foresight/src/*"],
       "@foresightjs/angular": ["./packages/foresightjs-angular/src/index.ts"],
       "@foresightjs/angular/*": ["./packages/foresightjs-angular/src/*"],
+      "@foresightjs/astro": ["./packages/foresightjs-astro/src/index.ts"],
+      "@foresightjs/astro/*": ["./packages/foresightjs-astro/src/*"],
       "@foresightjs/react": ["./packages/foresightjs-react/src/index.ts"],
       "@foresightjs/react/*": ["./packages/foresightjs-react/src/*"],
       "@foresightjs/vue": ["./packages/foresightjs-vue/src/index.ts"],
