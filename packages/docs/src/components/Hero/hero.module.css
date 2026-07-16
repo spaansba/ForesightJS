@@ -127,4 +127,7 @@
   .heroTitle {
     font-size: 2rem;
   }
+  .heroDemo {
+    max-width: calc(100vw - 50px);
+  }
 }
