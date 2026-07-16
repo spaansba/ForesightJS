@@ -54,6 +54,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.codeHeader::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
@@ -69,6 +75,8 @@
     color 0.15s ease,
     background 0.15s ease;
   font-family: inherit;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tab:hover {
