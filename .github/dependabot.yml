@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    groups:
+      npm:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+      semver-major-days: 40
