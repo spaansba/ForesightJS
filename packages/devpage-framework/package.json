@@ -10,9 +10,9 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@angular/common": "^22.0.3",
-    "@angular/compiler": "^22.0.3",
-    "@angular/core": "^22.0.3",
+    "@angular/common": "^22.1.1",
+    "@angular/compiler": "^22.1.7",
+    "@angular/core": "^22.1.0",
     "@angular/platform-browser": "^22.0.3",
     "@angular/router": "^22.0.3",
     "@foresightjs/angular": "workspace:*",
