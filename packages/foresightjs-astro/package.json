@@ -76,7 +76,7 @@
     }
   },
   "devDependencies": {
-    "astro": "^7.1.0",
+    "astro": "^7.2.8",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*",
     "jsdom": "^29.0.1",

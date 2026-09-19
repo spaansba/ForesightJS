@@ -1,6 +1,17 @@
 packages:
   - packages/*
 
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  core-js: set this to true or false
+  core-js-pure: set this to true or false
+  esbuild: set this to true or false
+  fallow: set this to true or false
+  lmdb: set this to true or false
+  msgpackr-extract: set this to true or false
+  protobufjs: set this to true or false
+  sharp: set this to true or false
+
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - core-js
