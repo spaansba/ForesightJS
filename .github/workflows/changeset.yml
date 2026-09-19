@@ -9,6 +9,7 @@ concurrency:
 
 jobs:
   changeset:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
