@@ -8091,8 +8091,8 @@ packages:
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-symbols@7.0.1:
     resolution: {integrity: sha512-ja1E3yCr9i/0hmBVaM0bfwDjnGy8I/s6PP4DFp+yP+a+mrHO4Rm7DtmnqROTUkHIkqffC84YY7AeqX6oFk0WFg==}
@@ -13163,7 +13163,7 @@ snapshots:
       html-tags: 3.3.1
       html-webpack-plugin: 5.6.4(webpack@5.101.3(esbuild@0.28.1))
       leven: 3.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map: 4.0.0
       prompts: 2.4.2
@@ -13283,7 +13283,7 @@ snapshots:
       cheerio: 1.0.0-rc.12
       feed: 4.2.2
       fs-extra: 11.3.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       schema-dts: 1.1.5
@@ -13326,7 +13326,7 @@ snapshots:
       combine-promises: 1.2.0
       fs-extra: 11.3.1
       js-yaml: 4.3.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       schema-dts: 1.1.5
@@ -13649,7 +13649,7 @@ snapshots:
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.2.4)
       clsx: 2.1.1
       infima: 0.2.0-alpha.45
-      lodash: 4.17.21
+      lodash: 4.18.1
       nprogress: 0.2.0
       postcss: 8.5.28
       prism-react-renderer: 2.4.1(react@19.2.4)
@@ -13719,7 +13719,7 @@ snapshots:
       clsx: 2.1.1
       eta: 2.2.0
       fs-extra: 11.3.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       tslib: 2.8.1
@@ -13797,7 +13797,7 @@ snapshots:
       fs-extra: 11.3.1
       joi: 17.13.8
       js-yaml: 4.3.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
@@ -13823,7 +13823,7 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 1.21.7
       js-yaml: 4.3.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       micromatch: 4.0.8
       p-queue: 6.6.2
       prompts: 2.4.2
@@ -18971,7 +18971,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.2
     optionalDependencies:
@@ -19607,7 +19607,7 @@ snapshots:
 
   lodash.uniq@4.5.0: {}
 
-  lodash@4.17.21: {}
+  lodash@4.18.1: {}
 
   log-symbols@7.0.1:
     dependencies:
@@ -21356,7 +21356,7 @@ snapshots:
 
   pretty-error@4.0.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       renderkid: 3.0.0
 
   pretty-format@27.5.1:
@@ -21815,7 +21815,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
