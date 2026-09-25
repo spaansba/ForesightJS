@@ -57,7 +57,7 @@
     "tslib": "^2.8.1",
     "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   },
   "dependencies": {
     "lit": "^3.3.2"
