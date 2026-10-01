@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "@foresightjs/astro": "workspace:*",
-    "astro": "^7.2.8",
+    "astro": "^7.3.2",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "tailwindcss": "^4.2.2"
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }

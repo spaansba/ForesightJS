@@ -55,11 +55,11 @@
     "@types/node": "^25.5.2",
     "js.foresight": "workspace:*",
     "tslib": "^2.8.1",
-    "tsdown": "^0.21.7",
+    "tsdown": "^0.23.0",
     "typescript": "^6.0.2",
     "vitest": "^5.0.2"
   },
   "dependencies": {
-    "lit": "^3.3.2"
+    "lit": "^3.3.3"
   }
 }
