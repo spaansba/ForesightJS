@@ -20,6 +20,7 @@ import type {
 } from "../types/types"
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
 import { initialViewportState } from "./initialViewportState"
+import { canBeActive } from "./canBeActive"
 
 export const createInitialCallbackHits = (): CallbackHits => {
   return {
@@ -139,7 +140,7 @@ export const createElementInternal = (
     hitSlop,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
-    isActive: isEnabled && !isLimitedConnection,
+    isActive: canBeActive({ isEnabled, isLimitedConnection, isParked: false }),
     isEnabled,
     registerCount: 1,
     reactivateAfter,
