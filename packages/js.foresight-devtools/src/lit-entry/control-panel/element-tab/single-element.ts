@@ -346,14 +346,14 @@ export class SingleElement extends LitElement {
                 ? html`
                     <span class="reason-tags">
                       ${inactiveReasons.map(
-                      reason =>
-                        html`<span
-                          class="reason-tag"
-                          style="--reason-color: ${reason.color}"
-                          title="${reason.label}: ${reason.description}"
-                          >${reason.label}</span
-                        >`
-                    )}
+                        reason =>
+                          html`<span
+                            class="reason-tag"
+                            style="--reason-color: ${reason.color}"
+                            title="${reason.label}: ${reason.description}"
+                            >${reason.label}</span
+                          >`
+                      )}
                     </span>
                   `
                 : ""
