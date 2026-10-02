@@ -2,7 +2,7 @@ import { ElementRef, NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
 import { ForesightService } from "../services/ForesightService"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { ForesightComponent } from "./ForesightComponent"
 
 const zone = {
@@ -17,7 +17,7 @@ const createComponent = () =>
 
 beforeEach(() => {
   registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
+  replaceElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -49,7 +49,7 @@ describe("ForesightComponent", () => {
 
     expect(registerSpy).toHaveBeenCalledTimes(1)
     expect(unregisterSpy).not.toHaveBeenCalled()
-    expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("second")
+    expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("second")
   })
 
   it("exposes state as an Angular signal and unregisters on destroy", () => {

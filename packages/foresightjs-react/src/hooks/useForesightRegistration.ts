@@ -61,7 +61,7 @@ export const useForesightRegistration = <T extends HTMLElement = HTMLElement>(
       return
     }
 
-    ForesightManager.instance.updateElementOptions(element, {
+    ForesightManager.instance.replaceElementOptions(element, {
       ...optionsRef.current,
       callback: (state: ForesightElementState) => optionsRef.current.callback(state),
     })

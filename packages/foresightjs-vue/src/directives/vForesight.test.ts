@@ -2,12 +2,12 @@ import { defineComponent, h, ref, withDirectives } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { vForesight } from "./vForesight"
 
 beforeEach(() => {
   registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
+  replaceElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -76,9 +76,9 @@ describe("vForesight directive", () => {
     wrapper.vm.name = "second"
     await wrapper.vm.$nextTick()
 
-    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    expect(replaceElementOptionsSpy).toHaveBeenCalled()
     const lastCall =
-      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+      replaceElementOptionsSpy.mock.calls[replaceElementOptionsSpy.mock.calls.length - 1]
     expect(lastCall?.[1].name).toBe("second")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
@@ -146,7 +146,7 @@ describe("vForesight directive", () => {
     expect(arg.name).toBe("svg-circle")
   })
 
-  it("skips updateElementOptions when binding value has not changed", async () => {
+  it("skips replaceElementOptions when binding value has not changed", async () => {
     const options = { name: "stable", callback: vi.fn() }
     const Component = defineComponent({
       setup() {
@@ -163,13 +163,13 @@ describe("vForesight directive", () => {
     })
 
     const wrapper = mount(Component, { attachTo: document.body })
-    updateElementOptionsSpy.mockClear()
+    replaceElementOptionsSpy.mockClear()
 
     // Trigger a re-render without changing the directive value
     wrapper.vm.counter = 1
     await wrapper.vm.$nextTick()
 
-    expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+    expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
   })
 
   describe("enabled option", () => {
@@ -212,7 +212,7 @@ describe("vForesight directive", () => {
       await wrapper.vm.$nextTick()
 
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(true)
     })
 
@@ -237,12 +237,12 @@ describe("vForesight directive", () => {
       await wrapper.vm.$nextTick()
 
       expect(unregisterSpy).not.toHaveBeenCalled()
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(false)
     })
   })
 
-  it("calls updateElementOptions when binding value changes reference", async () => {
+  it("calls replaceElementOptions when binding value changes reference", async () => {
     const cb = vi.fn()
     const Component = defineComponent({
       setup() {
@@ -256,15 +256,15 @@ describe("vForesight directive", () => {
     })
 
     const wrapper = mount(Component, { attachTo: document.body })
-    updateElementOptionsSpy.mockClear()
+    replaceElementOptionsSpy.mockClear()
 
     // Assign a new object (different reference)
     wrapper.vm.opts = { name: "second", callback: cb }
     await wrapper.vm.$nextTick()
 
-    expect(updateElementOptionsSpy).toHaveBeenCalledTimes(1)
+    expect(replaceElementOptionsSpy).toHaveBeenCalledTimes(1)
     const lastCall =
-      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+      replaceElementOptionsSpy.mock.calls[replaceElementOptionsSpy.mock.calls.length - 1]
     expect(lastCall?.[1].name).toBe("second")
   })
 })

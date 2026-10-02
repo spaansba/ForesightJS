@@ -52,6 +52,14 @@ ForesightManager.instance.updateElementOptions(myElement, {
 })
 ```
 
-The framework integrations use this under the hood: the React hooks, Vue composables/directive, and Angular directive/service/component patch the registration in place whenever your options change.
+To replace all options instead, use `replaceElementOptions`. It takes the same options as `register` and resets every omitted field to its default.
+
+```javascript
+ForesightManager.instance.replaceElementOptions(myElement, {
+  callback: () => console.log("new callback"),
+})
+```
+
+The framework integrations use `replaceElementOptions` under the hood: the React hooks, Vue composables/directive, and Angular directive/service/component update the registration in place whenever your options change, and removing an option resets it to its default.
 
 <ElementSettings />

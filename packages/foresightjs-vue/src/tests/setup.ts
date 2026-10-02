@@ -19,7 +19,7 @@ beforeEach(() => {
 })
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
-export const updateElementOptionsSpy =
+export const replaceElementOptionsSpy =
   vi.fn<(element: unknown, opts: Partial<ForesightRegisterOptionsWithoutElement>) => void>()
 export const unregisterSpy = vi.fn<() => void>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -60,11 +60,11 @@ vi.mock("js.foresight", async importOriginal => {
               mockState.currentSnapshot ?? actual.createUnregisteredSnapshot(false),
           }
         },
-        updateElementOptions: (
+        replaceElementOptions: (
           _element: unknown,
           opts: Partial<{ callback: ForesightCallback }>
         ) => {
-          updateElementOptionsSpy(_element, opts)
+          replaceElementOptionsSpy(_element, opts)
           if (opts.callback) {
             mockState.lastCallbackWrapper = opts.callback
           }

@@ -16,7 +16,7 @@ export const mockState = {
 const EMPTY_RECT = { top: 0, left: 0, right: 0, bottom: 0 }
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
-export const updateElementOptionsSpy =
+export const replaceElementOptionsSpy =
   vi.fn<(element: unknown, opts: Partial<{ callback: ForesightCallback }>) => void>()
 export const unregisterSpy = vi.fn<() => void>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -82,11 +82,11 @@ vi.mock("js.foresight", async importOriginal => {
             }),
           }
         },
-        updateElementOptions: (
+        replaceElementOptions: (
           _element: unknown,
           opts: Partial<{ callback: ForesightCallback }>
         ) => {
-          updateElementOptionsSpy(_element, opts)
+          replaceElementOptionsSpy(_element, opts)
           if (opts.callback) {
             mockState.lastCallbackWrapper = opts.callback
           }

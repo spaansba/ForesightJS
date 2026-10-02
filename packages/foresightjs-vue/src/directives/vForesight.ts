@@ -45,7 +45,7 @@ export const vForesight: ObjectDirective<ForesightDirectiveElement, ForesightDir
       return
     }
 
-    ForesightManager.instance.updateElementOptions(element, resolveOptions(binding.value))
+    ForesightManager.instance.replaceElementOptions(element, resolveOptions(binding.value))
   },
 
   unmounted(element) {

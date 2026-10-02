@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { emitSnapshot } from "../tests/helpers"
 import { Foresight } from "./Foresight"
 
@@ -73,7 +73,7 @@ describe("Foresight", () => {
 
     expect(registerSpy).not.toHaveBeenCalled()
     expect(unregisterSpy).not.toHaveBeenCalled()
-    expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("renamed")
+    expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("renamed")
   })
 
   describe("as form", () => {
