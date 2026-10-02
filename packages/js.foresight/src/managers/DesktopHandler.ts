@@ -181,12 +181,12 @@ export class DesktopHandler extends ElementObservingModule {
   public connectTabPredictor = async () => {
     if (!this.tabPredictor) {
       const { TabPredictor } = await import("../predictors/TabPredictor")
-      this.tabPredictor = new TabPredictor(this.storedDependencies)
+      this.tabPredictor ??= new TabPredictor(this.storedDependencies)
       this.devLog("TabPredictor lazy loaded")
     }
 
-    // The handler may have disconnected while the dynamic import was resolving.
-    if (!this.isConnected) {
+    // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
+    if (!this.isConnected || !this.settings.enableTabPrediction) {
       return
     }
 
@@ -196,7 +196,7 @@ export class DesktopHandler extends ElementObservingModule {
   public connectScrollPredictor = async () => {
     if (!this.scrollPredictor) {
       const { ScrollPredictor } = await import("../predictors/ScrollPredictor")
-      this.scrollPredictor = new ScrollPredictor({
+      this.scrollPredictor ??= new ScrollPredictor({
         dependencies: this.storedDependencies,
         trajectoryPositions: this.trajectoryPositions,
       })
@@ -204,8 +204,8 @@ export class DesktopHandler extends ElementObservingModule {
       this.devLog("ScrollPredictor lazy loaded")
     }
 
-    // The handler may have disconnected while the dynamic import was resolving.
-    if (!this.isConnected) {
+    // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
+    if (!this.isConnected || !this.settings.enableScrollPrediction) {
       return
     }
 
