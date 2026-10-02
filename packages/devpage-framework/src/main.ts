@@ -18,7 +18,7 @@ ForesightManager.initialize({
   trajectoryPredictionTime: 100,
   defaultHitSlop: { top: 10, left: 10, right: 10, bottom: 10 },
   enableTabPrediction: true,
-  enableManagerLogging: false,
+  enableManagerLogging: true,
   tabOffset: 2,
   touchDeviceStrategy: "onTouchStart",
   minimumConnectionType: "3g",
