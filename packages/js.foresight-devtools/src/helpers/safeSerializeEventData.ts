@@ -6,6 +6,7 @@ import type {
   ForesightEventMap,
   ForesightManagerData,
   ForesightManagerSettings,
+  ForesightMeta,
   HitSlop,
   ForesightPoint,
   ScrollDirection,
@@ -31,7 +32,7 @@ interface ElementRegisteredPayload extends PayloadBase {
   id: string
   state: ForesightElementState
   hitslop: HitSlop
-  meta: Record<string, unknown>
+  meta: ForesightMeta
 }
 
 interface ElementUnregisteredEvent extends PayloadBase {
@@ -39,7 +40,7 @@ interface ElementUnregisteredEvent extends PayloadBase {
   name: string
   id: string
   state: ForesightElementState
-  meta: Record<string, unknown>
+  meta: ForesightMeta
   wasLastRegisteredElement: boolean
 }
 
@@ -48,7 +49,7 @@ interface CallbackInvokedPayload extends PayloadBase {
   name: string
   hitType: CallbackHitType
   state: ForesightElementState
-  meta: Record<string, unknown>
+  meta: ForesightMeta
 }
 
 interface CallbackCompletedPayload extends PayloadBase {
@@ -60,7 +61,7 @@ interface CallbackCompletedPayload extends PayloadBase {
   errorMessage: string | undefined | null
   state: ForesightElementState
   wasLastActiveElement: boolean
-  meta: Record<string, unknown>
+  meta: ForesightMeta
 }
 
 interface MouseTrajectoryUpdatePayload extends PayloadBase {

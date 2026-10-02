@@ -14,6 +14,7 @@ import type {
   ForesightElementInternal,
   ForesightElementState,
   ForesightManagerSettings,
+  ForesightMeta,
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
   HitSlop,
@@ -66,7 +67,7 @@ export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   }
 }
 
-const EMPTY_META: Record<string, unknown> = Object.freeze({})
+const EMPTY_META = Object.freeze({}) as ForesightMeta
 
 const createBaseElementState = (isLimitedConnection: boolean): ForesightElementState => {
   return {

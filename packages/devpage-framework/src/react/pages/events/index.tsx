@@ -28,9 +28,12 @@ const DemoElement = ({
   delayMs: number
   reactivateAfter: number
 }) => {
-  const { elementRef, isPredicted, hitCount, isCallbackRunning, status } =
+  const [callbackHref, setCallbackHref] = useState<string>()
+  const { elementRef, isPredicted, hitCount, isCallbackRunning, status, meta } =
     useForesight<HTMLDivElement>({
-      callback: async () => {
+      callback: async state => {
+        setCallbackHref(state.meta.href)
+
         if (name === "error-callback") {
           throw new Error("Intentional error for demo")
         }
@@ -38,6 +41,7 @@ const DemoElement = ({
         await new Promise(resolve => setTimeout(resolve, delayMs))
       },
       name,
+      meta: { href: `/events#${name}` },
       hitSlop: 20,
       reactivateAfter,
     })
@@ -55,6 +59,8 @@ const DemoElement = ({
           hits: {hitCount} | {status ?? "idle"}
         </div>
         <div>{isCallbackRunning ? "running..." : isPredicted ? "predicted" : "waiting"}</div>
+        <div>meta.href: {meta.href ?? "waiting"}</div>
+        <div>callback href: {callbackHref ?? "waiting"}</div>
       </div>
     </div>
   )

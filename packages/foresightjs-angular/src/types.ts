@@ -1,6 +1,7 @@
 import type {
   ForesightCallback,
   ForesightElementState,
+  ForesightMeta,
   ForesightRegisterOptionsWithoutElement,
   HitSlop,
 } from "js.foresight"
@@ -23,7 +24,7 @@ export type ForesightDirectiveInputs = {
   value: ForesightDirectiveValue
   name?: string
   hitSlop?: HitSlop
-  meta?: Record<string, unknown>
+  meta?: ForesightMeta
   reactivateAfter?: number
   enabled?: boolean
 }

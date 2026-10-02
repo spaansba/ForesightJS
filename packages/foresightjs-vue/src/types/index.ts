@@ -2,6 +2,7 @@ import type { Component, ComponentPublicInstance, MaybeRefOrGetter, ToRefs } fro
 import type {
   ForesightCallback,
   ForesightElementState,
+  ForesightMeta,
   ForesightRegisterOptionsWithoutElement,
   HitSlop,
 } from "js.foresight"
@@ -49,7 +50,7 @@ export interface ForesightProps {
   callback: ForesightCallback
   foresightName?: string
   hitSlop?: HitSlop
-  meta?: Record<string, unknown>
+  meta?: ForesightMeta
   reactivateAfter?: number
   enabled?: boolean
 }

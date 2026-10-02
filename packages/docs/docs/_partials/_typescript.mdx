@@ -1,3 +1,35 @@
+## Typed metadata
+
+Define your metadata shape once in a `.d.ts` file included by your app's `tsconfig.json`:
+
+```typescript
+import "js.foresight"
+
+declare module "js.foresight" {
+  interface ForesightRegister {
+    meta: {
+      href: string
+    }
+  }
+}
+```
+
+Registration options, callback state, events, devtools, and all framework bindings use this shape automatically. No generics are needed.
+
+```typescript
+import { ForesightManager } from "js.foresight"
+
+ForesightManager.instance.register({
+  element: document.querySelector("a")!,
+  meta: { href: "/about" },
+  callback: state => {
+    console.log(state.meta.href.toUpperCase())
+  },
+})
+```
+
+Without augmentation, `ForesightMeta` defaults to `Record<string, unknown>`. Metadata remains optional and defaults to `{}`. Unregistered framework snapshots also contain `{}`, so use optional fields such as `href?: string` if you read them before registration or register elements without metadata. Augmentation only changes types, it does not validate metadata at runtime.
+
 ## Most Used Internal types
 
 ### ForesightElementState
@@ -8,7 +40,7 @@ This is the main type used in ForesightJS: the flat, immutable state snapshot of
 type ForesightElementState = {
   id: string // unique id assigned during registration
   name: string // name visible in the devtools
-  meta: Record<string, unknown> // your custom meta data
+  meta: ForesightMeta
   hitSlop: Exclude<HitSlop, number> // normalized hit slop applied to this element
   isLimitedConnection: boolean
   isIntersectingWithViewport: boolean

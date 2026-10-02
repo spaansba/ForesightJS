@@ -8,6 +8,7 @@ interface ForesightLinkProps
   extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
   children: React.ReactNode
   className?: string
+  onPrefetch?: (href: string | undefined) => void
 }
 
 export const ForesightLink = ({
@@ -16,13 +17,15 @@ export const ForesightLink = ({
   hitSlop,
   name,
   meta,
+  onPrefetch,
   reactivateAfter,
   ...linkProps
 }: ForesightLinkProps) => {
   const router = useRouter()
   const { elementRef, isRegistered } = useForesight<HTMLAnchorElement>({
-    callback: () => {
+    callback: state => {
       router.prefetch(linkProps.href.toString())
+      onPrefetch?.(state.meta.href)
     },
     hitSlop,
     name,

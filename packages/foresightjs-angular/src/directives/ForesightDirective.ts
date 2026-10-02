@@ -1,5 +1,5 @@
 import { Directive, Input, OnChanges } from "@angular/core"
-import type { HitSlop } from "js.foresight"
+import type { ForesightMeta, HitSlop } from "js.foresight"
 import type { ForesightDirectiveValue } from "../types"
 import { resolveOptions } from "../utils/resolveOptions"
 import { ForesightBase } from "./ForesightBase"
@@ -13,7 +13,7 @@ export class ForesightDirective extends ForesightBase implements OnChanges {
   @Input("fsForesight") fsForesight: ForesightDirectiveValue = null
   @Input() fsForesightName?: string
   @Input() fsForesightHitSlop?: HitSlop
-  @Input() fsForesightMeta?: Record<string, unknown>
+  @Input() fsForesightMeta?: ForesightMeta
   @Input() fsForesightReactivateAfter?: number
   @Input() fsForesightEnabled?: boolean
 

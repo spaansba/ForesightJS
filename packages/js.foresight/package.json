@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:run": "vitest run",
+    "test:types": "tsc -p type-tests/tsconfig.json && tsc -p type-tests/tsconfig.registered.json",
     "prepublishOnly": "pnpm test:run && pnpm build:prod"
   },
   "main": "./dist/index.mjs",

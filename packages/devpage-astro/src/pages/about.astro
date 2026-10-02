@@ -22,7 +22,9 @@ import Layout from "../layouts/Layout.astro"
     >
       Predict me
     </button>
-    <p id="custom-result" class="text-xs text-gray-400 font-mono"></p>
+    <p id="custom-result" class="text-xs text-gray-400 font-mono">
+      Hover the button to read its typed meta.href in the callback. Inspect events in devtools.
+    </p>
   </section>
 </Layout>
 
@@ -37,9 +39,9 @@ import Layout from "../layouts/Layout.astro"
       hitSlop: 40,
       name: "custom-callback-button",
       reactivateAfter: 2000,
-      meta: { page: "about" },
-      callback: () => {
-        result.textContent = `callback fired at ${new Date().toLocaleTimeString()}`
+      meta: { href: "/about/" },
+      callback: state => {
+        result.textContent = `callback meta.href: ${state.meta.href} at ${new Date().toLocaleTimeString()}`
       },
     })
   }

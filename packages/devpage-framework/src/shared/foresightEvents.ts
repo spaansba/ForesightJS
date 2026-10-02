@@ -37,7 +37,9 @@ export const formatHitType = (hitType: CallbackHitType): string => {
 }
 
 export const formatElementName = (state: ForesightElementState): string => {
-  return state.name || state.id.slice(0, 8)
+  const name = state.name || state.id.slice(0, 8)
+
+  return state.meta.href ? `${name} (meta.href: ${state.meta.href})` : name
 }
 
 export const summarizeEvent = (event: ForesightEventMap[ForesightEvent]): string => {

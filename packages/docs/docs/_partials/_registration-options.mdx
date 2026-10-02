@@ -124,10 +124,12 @@ ForesightManager.instance.register({
 
 #### `meta`
 
-- **Type:** `Record<string, unknown>`
+- **Type:** `ForesightMeta` (defaults to `Record<string, unknown>`)
 - **Required:** No
 - **Default:** `{}`
 - **Description:** Stores additional information about the registered element. Visible in all element-related events and in the devtools.
+
+Use [module augmentation](../getting-started/typescript.md#typed-metadata) to define its type once for your entire app, including framework bindings.
 
 ```javascript
 ForesightManager.instance.register({
@@ -213,7 +215,7 @@ The `ForesightElementState` fields, also passed to your [`callback`](#callback):
 | ---------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                         | `string`                            | Unique identifier assigned during registration.                                                                                                                                                                                                                         |
 | `name`                       | `string`                            | Human-readable name for debugging, set via the [`name`](#name) option.                                                                                                                                                                                                  |
-| `meta`                       | `Record<string, unknown>`           | Arbitrary user-supplied metadata, set via the [`meta`](#meta) option.                                                                                                                                                                                                   |
+| `meta`                       | `ForesightMeta`                     | Arbitrary user-supplied metadata, set via the [`meta`](#meta) option.                                                                                                                                                                                                   |
 | `hitSlop`                    | `Exclude<HitSlop, number>`          | The normalized hit slop applied to this element, set via the [`hitSlop`](#hitslop) option. The element's rects are not part of the state, read them via `getBounds()`.                                                                                                  |
 | `isRegistered`               | `boolean`                           | Whether the element is currently tracked by the manager. Stays `true` from registration until it is explicitly unregistered. Detaching the element from the DOM does **not** unregister it: it is parked (kept registered but inactive) and resumes when it reconnects. |
 | `isActive`                   | `boolean`                           | Whether the element is currently eligible to fire its callback. `false` when the element is disabled (`isEnabled: false`), on a limited connection, or parked (`isParked: true`).                                                                                       |
