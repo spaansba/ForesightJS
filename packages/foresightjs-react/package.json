@@ -66,6 +66,6 @@
     "react-dom": "^19.3.0",
     "tsdown": "^0.23.0",
     "typescript": "^6.0.2",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.3"
   }
 }
