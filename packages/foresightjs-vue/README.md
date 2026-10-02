@@ -27,6 +27,46 @@ npm install @foresightjs/vue js.foresight
 
 For usage and examples, see the [Vue documentation](https://foresightjs.com/docs/vue/installation).
 
+## Quick start
+
+Save this as `AboutLink.vue` and render `<AboutLink />` in your app:
+
+```vue
+<script setup lang="ts">
+import { useForesight } from "@foresightjs/vue"
+
+const { elementRef } = useForesight({
+  callback: async () => {
+    await fetch("/about")
+  },
+})
+</script>
+
+<template>
+  <a :ref="elementRef" href="/about">About</a>
+</template>
+```
+
+ForesightJS runs the callback when it predicts interaction with the link. Replace `fetch` with your router or data cache's prefetch function. Your app owns caching and navigation.
+
+The composable registers when the template ref receives the element and unregisters when the scope is disposed.
+
+### SSR and client initialization
+
+The composable can run during [SSR](https://vuejs.org/guide/scaling-up/ssr.html). Registration waits for the DOM element in the browser.
+
+The manager initializes automatically with defaults. For custom global settings, run this in your client entry before mounting or hydrating the app. Guard the call if that module also runs on the server:
+
+```ts
+import { ForesightManager } from "@foresightjs/vue"
+
+if (typeof window !== "undefined") {
+  ForesightManager.initialize({ defaultHitSlop: 20 })
+}
+```
+
+`initialize()` uses settings only on its first call. Later changes go through `ForesightManager.instance.alterGlobalSettings()`.
+
 ## Contributing
 
 Please see the [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md).

@@ -26,6 +26,50 @@ npm install @foresightjs/react js.foresight
 
 For usage and examples, see the [React documentation](https://foresightjs.com/docs/react/installation), including guides for [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router).
 
+## Quick start
+
+```tsx
+"use client"
+
+import { useForesight } from "@foresightjs/react"
+
+export function AboutLink() {
+  const { elementRef } = useForesight<HTMLAnchorElement>({
+    callback: async () => {
+      await fetch("/about")
+    },
+  })
+
+  return (
+    <a ref={elementRef} href="/about">
+      About
+    </a>
+  )
+}
+```
+
+Render `<AboutLink />` in your app. ForesightJS runs the callback when it predicts interaction with the link. Replace `fetch` with your router or data cache's prefetch function. Your app owns caching and navigation.
+
+The hook registers after mount and unregisters on unmount.
+
+### SSR and client initialization
+
+The hook can render during SSR. Registration happens in a client effect. Frameworks using [React Server Components](https://react.dev/reference/rsc/use-client) need the `"use client"` directive shown above.
+
+The manager initializes automatically with defaults. For custom global settings, initialize in your browser entry or an imported client setup module before components mount. Guard the call if that module also runs on the server:
+
+```ts
+"use client"
+
+import { ForesightManager } from "@foresightjs/react"
+
+if (typeof window !== "undefined") {
+  ForesightManager.initialize({ defaultHitSlop: 20 })
+}
+```
+
+`initialize()` uses settings only on its first call. A parent effect may run after child registrations, so configure before mounting instead. Later changes go through `ForesightManager.instance.alterGlobalSettings()`.
+
 ## Contributing
 
 Please see the [contributing guidelines](https://github.com/spaansba/ForesightJS/blob/main/CONTRIBUTING.md).
