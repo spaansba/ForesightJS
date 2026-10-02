@@ -53,7 +53,10 @@ export default [
   {
     files: ["packages/js.foresight/src/types/types.ts"],
     rules: {
-      "@typescript-eslint/no-empty-object-type": ["error", { allowWithName: "^ForesightRegister$" }],
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        { allowWithName: "^ForesightRegister$" },
+      ],
     },
   },
 
