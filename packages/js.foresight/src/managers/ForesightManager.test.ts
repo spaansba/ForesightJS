@@ -2090,6 +2090,36 @@ describe("ForesightManager", () => {
       expectState(entry.state, { isPredicted: true, isCallbackRunning: false, isActive: false })
     })
 
+    it("leaves no data attributes when unregistered while the callback runs", async () => {
+      const { manager, element, entry, resolve } = setupDeferredCallbackTest()
+
+      fire(manager, entry)
+      manager.unregister(element)
+      resolve()
+      await vi.runAllTimersAsync()
+
+      expect(element.hasAttribute("data-status")).toBe(false)
+      expect(element.hasAttribute("data-predicted")).toBe(false)
+    })
+
+    it("does not reactivate a re-registration when an old callback completes", async () => {
+      const { manager, element, entry, resolve } = setupDeferredCallbackTest(1000)
+
+      fire(manager, entry)
+      manager.unregister(element)
+
+      manager.register({ element, callback: vi.fn() })
+      const next = getEntry(manager, element)
+      fire(manager, next)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(next.state.isActive).toBe(false)
+
+      resolve()
+      await vi.advanceTimersByTimeAsync(1000)
+
+      expect(next.state.isActive).toBe(false)
+    })
+
     it("cannot fire during callback execution", async () => {
       const { manager, entry, callback, resolve } = setupDeferredCallbackTest()
 
