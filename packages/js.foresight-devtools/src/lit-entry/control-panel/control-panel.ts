@@ -292,11 +292,9 @@ export class ControlPanel extends LitElement {
         </div>
 
         <div
-          class="touch-device-warning ${this.isMinimized ||
-          !this.isTouchDevice ||
-          this.isWarningDismissed
-            ? "hidden"
-            : ""}"
+          class="touch-device-warning ${
+            this.isMinimized || !this.isTouchDevice || this.isWarningDismissed ? "hidden" : ""
+          }"
         >
           <div class="warning-content">
             <span class="warning-icon">⚠️</span>
@@ -307,18 +305,20 @@ export class ControlPanel extends LitElement {
           </button>
         </div>
 
-        ${this.isMinimized
-          ? ""
-          : html`
-              <div class="tab-container">
-                <tab-selector
-                  .activeTab="${this.activeTab}"
-                  @tab-change="${this._handleTabChange}"
-                ></tab-selector>
+        ${
+          this.isMinimized
+            ? ""
+            : html`
+                <div class="tab-container">
+                  <tab-selector
+                    .activeTab="${this.activeTab}"
+                    @tab-change="${this._handleTabChange}"
+                  ></tab-selector>
 
-                <div class="tab-content">${this.renderActiveTab()}</div>
-              </div>
-            `}
+                  <div class="tab-content">${this.renderActiveTab()}</div>
+                </div>
+              `
+        }
       </div>
     `
   }

@@ -59,9 +59,8 @@ export class SettingItemCheckbox extends LitElement {
   @property({ type: String }) header: string = ""
   @property({ type: String }) description: string = ""
   @property({ type: String }) setting:
-    | keyof ForesightManagerSettings
-    | keyof DevtoolsSettings
-    | ShowSettingKey = "enableMousePrediction"
+    keyof ForesightManagerSettings | keyof DevtoolsSettings | ShowSettingKey =
+    "enableMousePrediction"
 
   private handleCheckboxChange(event: Event): void {
     const target = event.target

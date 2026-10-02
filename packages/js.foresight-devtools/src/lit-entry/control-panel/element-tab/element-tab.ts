@@ -436,28 +436,30 @@ export class ElementTab extends LitElement {
         >
           ${label} (${elements.length})
         </h3>
-        ${!collapsed
-          ? repeat(
-              elements,
-              element => this.elementListItems.get(element)?.id ?? "",
-              element => {
-                const state = this.elementListItems.get(element)
-                if (!state) {
-                  return ""
-                }
+        ${
+          !collapsed
+            ? repeat(
+                elements,
+                element => this.elementListItems.get(element)?.id ?? "",
+                element => {
+                  const state = this.elementListItems.get(element)
+                  if (!state) {
+                    return ""
+                  }
 
-                return html`
-                  <single-element
-                    .element=${element}
-                    .state=${state}
-                    .isExpanded=${this.expandedElementIds.has(state.id)}
-                    .onToggle=${this.handleElementToggle}
-                  >
-                  </single-element>
-                `
-              }
-            )
-          : ""}
+                  return html`
+                    <single-element
+                      .element=${element}
+                      .state=${state}
+                      .isExpanded=${this.expandedElementIds.has(state.id)}
+                      .onToggle=${this.handleElementToggle}
+                    >
+                    </single-element>
+                  `
+                }
+              )
+            : ""
+        }
       </div>
     `
   }

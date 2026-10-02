@@ -331,18 +331,21 @@ export class SingleElement extends LitElement {
           <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
             <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
             <span
-              class="element-name ${this.state.isCallbackRunning
-                ? "callback-active"
-                : !this.state.isActive
-                  ? "callback-inactive"
-                  : ""}"
+              class="element-name ${
+                this.state.isCallbackRunning
+                  ? "callback-active"
+                  : !this.state.isActive
+                    ? "callback-inactive"
+                    : ""
+              }"
             >
               ${this.state.name || "unnamed"}
             </span>
-            ${inactiveReasons.length
-              ? html`
-                  <span class="reason-tags">
-                    ${inactiveReasons.map(
+            ${
+              inactiveReasons.length
+                ? html`
+                    <span class="reason-tags">
+                      ${inactiveReasons.map(
                       reason =>
                         html`<span
                           class="reason-tag"
@@ -351,30 +354,33 @@ export class SingleElement extends LitElement {
                           >${reason.label}</span
                         >`
                     )}
-                  </span>
-                `
-              : ""}
-            ${this.state.isEnabled
-              ? html`
-                  <reactivate-countdown .element=${this.element} .state=${this.state}>
-                  </reactivate-countdown>
-                  <button
-                    class="toggle-enabled-button"
-                    @click="${this.handleToggleEnabled}"
-                    title="Disable element"
-                  >
-                    ${DISABLED_SVG}
-                  </button>
-                `
-              : html`
-                  <button
-                    class="enable-button"
-                    @click="${this.handleToggleEnabled}"
-                    title="Enable element"
-                  >
-                    ${ENABLE_SVG}
-                  </button>
-                `}
+                    </span>
+                  `
+                : ""
+            }
+            ${
+              this.state.isEnabled
+                ? html`
+                    <reactivate-countdown .element=${this.element} .state=${this.state}>
+                    </reactivate-countdown>
+                    <button
+                      class="toggle-enabled-button"
+                      @click="${this.handleToggleEnabled}"
+                      title="Disable element"
+                    >
+                      ${DISABLED_SVG}
+                    </button>
+                  `
+                : html`
+                    <button
+                      class="enable-button"
+                      @click="${this.handleToggleEnabled}"
+                      title="Enable element"
+                    >
+                      ${ENABLE_SVG}
+                    </button>
+                  `
+            }
             <button
               class="unregister-button"
               @click="${this.handleUnregister}"

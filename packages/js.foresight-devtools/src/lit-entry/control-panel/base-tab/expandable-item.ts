@@ -146,20 +146,22 @@ export class ExpandableItem extends LitElement {
             </svg>
           </span>
         </div>
-        ${this.isExpanded
-          ? html`
-              <div class="item-details">
-                <copy-icon
-                  positioned
-                  title="Copy Details"
-                  .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
-                ></copy-icon>
-                <pre class="item-data">
+        ${
+          this.isExpanded
+            ? html`
+                <div class="item-details">
+                  <copy-icon
+                    positioned
+                    title="Copy Details"
+                    .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
+                  ></copy-icon>
+                  <pre class="item-data">
                   <slot name="details"></slot>
                 </pre>
-              </div>
-            `
-          : ""}
+                </div>
+              `
+            : ""
+        }
       </div>
     `
   }
