@@ -32,8 +32,6 @@ yarn add @foresightjs/react js.foresight
 import { useForesight, ForesightManager } from "@foresightjs/react"
 ```
 
-Requires React 18 or 19 and `js.foresight` 4.2.2 or later within v4.
-
 ## Configuring the manager
 
 You don't have to configure anything. The manager auto-initializes with sensible defaults the first time you register an element.

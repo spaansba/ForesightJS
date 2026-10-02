@@ -13,8 +13,6 @@ It is configured exactly like Astro's [built-in prefetch](https://docs.astro.bui
 npm install @foresightjs/astro js.foresight
 ```
 
-Requires Astro 5 through 7 and `js.foresight` 4.2.2 or later within v4.
-
 ## Usage
 
 ```js

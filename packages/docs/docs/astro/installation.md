@@ -38,8 +38,6 @@ export default defineConfig({
 })
 ```
 
-Requires Astro 5 through 7 and `js.foresight` 4.2.2 or later within v4.
-
 ## Configuring the manager
 
 You don't have to configure anything. The manager auto-initializes with sensible defaults when the first page loads.

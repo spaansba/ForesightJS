@@ -18,8 +18,6 @@ pnpm add @foresightjs/react js.foresight
 npm install @foresightjs/react js.foresight
 ```
 
-Requires React 18 or 19 and `js.foresight` 4.2.2 or later within v4.
-
 ## What's included
 
 - `useForesight` -> register a single element and get its live state plus a callback ref to bind it

@@ -32,8 +32,6 @@ yarn add @foresightjs/angular js.foresight
 import { ForesightDirective, ForesightManager, ForesightService } from "@foresightjs/angular"
 ```
 
-Requires Angular 17 through 22 and `js.foresight` 4.2.2 or later within v4.
-
 ## Configuring the manager
 
 You don't have to configure anything. The manager auto-initializes with sensible defaults the first time you register an element.
