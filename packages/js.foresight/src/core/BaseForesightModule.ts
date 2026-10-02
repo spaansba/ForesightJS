@@ -87,8 +87,8 @@ export abstract class BaseForesightModule {
     }
 
     this.devLog(`Connecting ${this.moduleName}...`)
-    this.onConnect()
     this._isConnected = true
+    this.onConnect()
   }
 
   public devLog(message: string): void {

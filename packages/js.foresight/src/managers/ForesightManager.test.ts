@@ -1080,6 +1080,27 @@ describe("ForesightManager", () => {
     it("should not load scroll predictor when disabled", async () => {
       await expectPredictorNotLoaded("scroll", { enableScrollPrediction: false })
     })
+
+    it("should reconnect tab predictor after the manager goes idle", async () => {
+      vi.useRealTimers()
+      const manager = ForesightManager.initialize({ enableTabPrediction: true })
+      const first = createMockElement("first")
+
+      manager.register({ element: first, callback: vi.fn() })
+      await vi.waitFor(() => {
+        expect(manager.getManagerData.loadedModules.predictors.tab).toBe(true)
+      })
+
+      manager.unregister(first)
+      manager.register({ element: createMockElement("second"), callback: vi.fn() })
+
+      // @ts-expect-error - accessing private predictor for tests
+      const { tabPredictor } = manager.desktopHandler
+      await vi.waitFor(() => {
+        expect(tabPredictor?.isConnected).toBe(true)
+      })
+      vi.useFakeTimers()
+    })
   })
 
   describe("NodeList Support", () => {
