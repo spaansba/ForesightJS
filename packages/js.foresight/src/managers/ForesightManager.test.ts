@@ -2250,6 +2250,15 @@ describe("ForesightManager", () => {
       expect(manager.getManagerData.activeElementCount).toBe(0)
     })
 
+    it("stays inactive when reactivate() is called during a limited connection", () => {
+      const { manager, element, entry } = setupBasicTest()
+
+      manager.reactivate(element)
+
+      expect(entry.state.isActive).toBe(false)
+      expect(manager.getManagerData.activeElementCount).toBe(0)
+    })
+
     it("registers as active when the connection is not limited", () => {
       setLimited(false)
       const { entry } = setupBasicTest()
@@ -2369,6 +2378,38 @@ describe("ForesightManager", () => {
 
       expect(manager.registeredElements.has(element)).toBe(false)
       expect(manager.getManagerData.parkedElementCount).toBe(0)
+    })
+
+    it("does not reactivate an element parked mid-callback, and restarts the cooldown on reconnect", async () => {
+      const { manager, element, entry, resolve } = setupDeferredCallbackTest(1000)
+
+      fire(manager, entry)
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      resolve()
+      await vi.advanceTimersByTimeAsync(500)
+
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+      await vi.advanceTimersByTimeAsync(600)
+      expect(entry.state.isActive).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(400)
+      expect(entry.state.isActive).toBe(true)
+      expect(entry.state.isParked).toBe(false)
+    })
+
+    it("stays inactive when its reactivation timer fires while parked", async () => {
+      const { manager, element, entry, resolve } = setupDeferredCallbackTest(1000)
+
+      fire(manager, entry)
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      resolve()
+      await vi.advanceTimersByTimeAsync(1000)
+
+      expect(entry.state.isParked).toBe(true)
+      expect(entry.state.isActive).toBe(false)
     })
 
     it("stays inactive on reconnect when the element is disabled", () => {

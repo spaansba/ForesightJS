@@ -9,6 +9,7 @@ import {
 } from "../helpers/createInitialState"
 import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
 import { isScannable } from "../helpers/isScannable"
+import { canBeActive } from "../helpers/canBeActive"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { ElementObservingModule } from "../core/ElementObservingModule"
@@ -579,7 +580,7 @@ export class ForesightManager {
 
   private reactivateElement(element: ForesightElement): void {
     const entry = this.elementEntries.get(element)
-    if (!entry || !entry.state.isEnabled) {
+    if (!entry || !canBeActive(entry.state)) {
       return
     }
 
@@ -608,10 +609,7 @@ export class ForesightManager {
       return
     }
 
-    // A limited connection keeps the element inactive even when enabled (a data
-    // saver never starts firing just because enabled flipped); a parked element
-    // (detached from the DOM) stays inactive until it reconnects.
-    const isActive = enabled && !entry.state.isLimitedConnection && !entry.state.isParked
+    const isActive = canBeActive({ ...entry.state, isEnabled: enabled })
 
     if (isActive) {
       // Global listeners may have been torn down when the active count last hit
@@ -641,6 +639,7 @@ export class ForesightManager {
   }
 
   private scheduleReactivateTimeout(entry: ForesightElementInternal, delay: number): void {
+    this.clearReactivateTimeout(entry)
     entry.reactivateTimeoutId = setTimeout(() => {
       this.reactivate(entry.element)
     }, delay)
@@ -914,7 +913,7 @@ export class ForesightManager {
    * (it resumes the same state it had before it detached).
    */
   private resumeReconnected(entry: ForesightElementInternal): void {
-    const eligible = entry.state.isEnabled && !entry.state.isLimitedConnection
+    const eligible = canBeActive({ ...entry.state, isParked: false })
     // Only resume as active if it was active before detaching. A fired element
     // (isPredicted) was already inactive, so it stays inactive on reconnect.
     const isActive = eligible && !entry.state.isPredicted
