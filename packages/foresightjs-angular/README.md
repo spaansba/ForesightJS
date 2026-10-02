@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@foresightjs/angular.svg)](https://www.npmjs.com/package/@foresightjs/angular)
 [![npm downloads](https://img.shields.io/npm/dt/@foresightjs/angular.svg)](https://www.npmjs.com/package/@foresightjs/angular)
+[![core downloads](https://img.shields.io/npm/dt/js.foresight.svg?label=core%20downloads)](https://www.npmjs.com/package/js.foresight)
 
 Official Angular bindings for [ForesightJS](https://foresightjs.com/), a lightweight library that predicts user intent (mouse trajectory, keyboard navigation, scroll, touch) to trigger callbacks like prefetching _before_ the user interacts.
 

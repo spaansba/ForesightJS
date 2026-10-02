@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
 [![npm downloads](https://img.shields.io/npm/dt/@foresightjs/react.svg)](https://www.npmjs.com/package/@foresightjs/react)
+[![core downloads](https://img.shields.io/npm/dt/js.foresight.svg?label=core%20downloads)](https://www.npmjs.com/package/js.foresight)
 
 Official React bindings for [ForesightJS](https://foresightjs.com/), a lightweight library that predicts user intent (mouse trajectory, keyboard navigation, scroll, touch) to trigger callbacks like prefetching _before_ the user interacts.
 

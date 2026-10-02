@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@foresightjs/vue.svg)](https://www.npmjs.com/package/@foresightjs/vue)
 [![npm downloads](https://img.shields.io/npm/dt/@foresightjs/vue.svg)](https://www.npmjs.com/package/@foresightjs/vue)
+[![core downloads](https://img.shields.io/npm/dt/js.foresight.svg?label=core%20downloads)](https://www.npmjs.com/package/js.foresight)
 
 Official Vue 3 bindings for [ForesightJS](https://foresightjs.com/), a lightweight library that predicts user intent (mouse trajectory, keyboard navigation, scroll, touch) to trigger callbacks like prefetching _before_ the user interacts.
 

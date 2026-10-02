@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight-devtools.svg)](https://www.npmjs.com/package/js.foresight-devtools)
+[![core downloads](https://img.shields.io/npm/dt/js.foresight.svg?label=core%20downloads)](https://www.npmjs.com/package/js.foresight)
 
 `ForesightJS` offers dedicated [Development Tools](https://github.com/spaansba/ForesightJS/tree/main/packages/js.foresight-devtools), to help you better understand and fine-tune how `ForesightJS` works within your application. You can see the development tools in action on the [playground page](https://foresightjs.com/#playground), which includes visual trajectory indicators, element boundaries, and a control panel in the bottom-right corner.
 
