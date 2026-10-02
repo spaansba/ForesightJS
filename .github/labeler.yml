@@ -1,0 +1,35 @@
+js.foresight:
+  - changed-files:
+      - any-glob-to-any-file: "packages/js.foresight/**"
+
+js.foresight-devtools:
+  - changed-files:
+      - any-glob-to-any-file: "packages/js.foresight-devtools/**"
+
+foresightjs-react:
+  - changed-files:
+      - any-glob-to-any-file: "packages/foresightjs-react/**"
+
+foresightjs-vue:
+  - changed-files:
+      - any-glob-to-any-file: "packages/foresightjs-vue/**"
+
+foresightjs-angular:
+  - changed-files:
+      - any-glob-to-any-file: "packages/foresightjs-angular/**"
+
+foresightjs-astro:
+  - changed-files:
+      - any-glob-to-any-file: "packages/foresightjs-astro/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: "packages/docs/**"
+
+devpage:
+  - changed-files:
+      - any-glob-to-any-file: "packages/devpage-*/**"
+
+repository:
+  - changed-files:
+      - all-globs-to-all-files: "!packages/**"

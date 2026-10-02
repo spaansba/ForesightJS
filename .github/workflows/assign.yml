@@ -1,0 +1,23 @@
+name: Auto assign
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+  NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - run: gh api "repos/$REPO/issues/$NUMBER/assignees" -f "assignees[]=spaansba"
+      - if: github.event.pull_request && github.event.pull_request.user.login != 'spaansba'
+        run: gh api "repos/$REPO/pulls/$NUMBER/requested_reviewers" -f "reviewers[]=spaansba"
