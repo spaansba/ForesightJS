@@ -1,6 +1,6 @@
 ## Typed metadata
 
-Define your metadata shape once in a `.d.ts` file included by your app's `tsconfig.json`:
+Augment `ForesightRegister`, the global type registry, to define your metadata shape once in a `.d.ts` file included by your app's `tsconfig.json`:
 
 ```typescript
 import "js.foresight"
@@ -13,6 +13,8 @@ declare module "js.foresight" {
   }
 }
 ```
+
+Declare `meta` as a **required key** in the registry. Writing `meta?: AppMeta` silently falls back to `Record<string, unknown>`. Put optionality on the fields inside it instead, for example `meta: { href?: string }`.
 
 Registration options, callback state, events, devtools, and all framework bindings use this shape automatically. No generics are needed.
 
