@@ -5,12 +5,15 @@ import { useReactivateAfter } from "../../../composables/useReactivateAfter"
 
 const toggleableMounted = ref(true)
 const reactivateAfter = useReactivateAfter()
+const callbackHref = ref<string>()
 
 const fast = useForesight(() => ({
-  callback: async () => {
+  callback: async state => {
+    callbackHref.value = state.meta.href
     await new Promise(resolve => setTimeout(resolve, 50))
   },
   name: "fast-callback",
+  meta: { href: "/events#fast-callback" },
   hitSlop: 20,
   reactivateAfter: reactivateAfter.value,
 }))
@@ -53,6 +56,8 @@ const toggle = useForesight({
         </div>
         <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
           <div>hits: {{ fast.hitCount.value }} | {{ fast.status.value ?? "idle" }}</div>
+          <div>meta.href: {{ fast.meta.value.href ?? "waiting" }}</div>
+          <div>callback href: {{ callbackHref ?? "waiting" }}</div>
           <div>
             {{
               fast.isCallbackRunning.value

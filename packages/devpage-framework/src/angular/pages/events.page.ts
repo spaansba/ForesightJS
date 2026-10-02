@@ -1,5 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from "@angular/core"
-import { ForesightDirective, injectForesightEvent, type ForesightEvent } from "@foresightjs/angular"
+import {
+  ForesightDirective,
+  injectForesightEvent,
+  type ForesightCallback,
+  type ForesightEvent,
+} from "@foresightjs/angular"
 import {
   ALL_EVENTS,
   EVENT_COLORS,
@@ -54,15 +59,21 @@ import { sleep } from "../shared/foresight-controls"
         <div class="flex flex-wrap gap-6">
           <div class="flex flex-col items-center gap-2">
             <div
+              #fast="foresight"
               [fsForesight]="{
                 callback: fastCallback,
                 name: 'fast-callback',
+                meta: { href: '/events#fast-callback' },
                 hitSlop: 20,
                 reactivateAfter: 2000,
               }"
               class="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-green-200 cursor-default select-none"
             >
               Fast callback
+            </div>
+            <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
+              <div>meta.href: {{ fast.state().meta.href ?? "waiting" }}</div>
+              <div>callback href: {{ callbackHref() ?? "waiting" }}</div>
             </div>
           </div>
           <div class="flex flex-col items-center gap-2">
@@ -179,6 +190,7 @@ export class EventsPageComponent {
   protected readonly toggleMounted = signal(true)
   protected readonly focusedEvent = signal<ForesightEvent>("callbackInvoked")
   protected readonly focusedCount = signal(0)
+  protected readonly callbackHref = signal<string | undefined>(undefined)
 
   protected readonly counts = computed(() =>
     this.entries().reduce<Partial<Record<ForesightEvent, number>>>((acc, entry) => {
@@ -190,7 +202,10 @@ export class EventsPageComponent {
 
   private nextId = 0
 
-  protected readonly fastCallback = () => sleep(50)
+  protected readonly fastCallback: ForesightCallback = async state => {
+    this.callbackHref.set(state.meta.href)
+    await sleep(50)
+  }
   protected readonly slowCallback = () => sleep(1500)
   protected readonly errorCallback = async () => {
     throw new Error("Intentional error for demo")

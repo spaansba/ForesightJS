@@ -1,5 +1,11 @@
 import type { CircularBuffer } from "../helpers/CircularBuffer"
 
+export interface ForesightRegister {}
+
+export type ForesightMeta = ForesightRegister extends { meta: infer Meta extends object }
+  ? Meta
+  : Record<string, unknown>
+
 export type Rect = {
   top: number
   left: number
@@ -64,7 +70,7 @@ export type ForesightElementState = {
   /** Human-readable name for debugging. */
   name: string
   /** Arbitrary user-supplied metadata. */
-  meta: Record<string, unknown>
+  meta: ForesightMeta
   /** The normalized hit slop applied to this element. The element's rects live in
    * {@link ElementBounds} (see `getBounds`/`subscribeToBounds`), not in this snapshot. */
   hitSlop: Exclude<HitSlop, number>
@@ -371,7 +377,7 @@ export type ForesightRegisterOptionsWithoutElement = {
   /**
    * If set by user, stores additional information about the registered element
    */
-  meta?: Record<string, unknown>
+  meta?: ForesightMeta
   /**
    * Time in milliseconds after which the callback can be fired again and we reactivate the element.
    * Set to Infinity to prevent callback from firing again after first execution.

@@ -27,3 +27,5 @@ jobs:
       - run: pnpm install
 
       - run: pnpm build
+
+      - run: pnpm --filter js.foresight test:types

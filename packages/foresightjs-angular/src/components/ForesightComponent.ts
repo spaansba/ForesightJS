@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges } from "@angular/core"
-import type { ForesightCallback, HitSlop } from "js.foresight"
+import type { ForesightCallback, ForesightMeta, HitSlop } from "js.foresight"
 import { ForesightBase } from "../directives/ForesightBase"
 import { resolveOptions } from "../utils/resolveOptions"
 
@@ -12,7 +12,7 @@ export class ForesightComponent extends ForesightBase implements OnChanges {
   @Input({ required: true }) callback!: ForesightCallback
   @Input() foresightName?: string
   @Input() hitSlop?: HitSlop
-  @Input() meta?: Record<string, unknown>
+  @Input() meta?: ForesightMeta
   @Input() reactivateAfter?: number
   @Input() enabled?: boolean
 

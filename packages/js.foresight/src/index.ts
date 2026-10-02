@@ -1,6 +1,8 @@
 export { ForesightManager } from "./managers/ForesightManager"
 export { createUnregisteredSnapshot } from "./helpers/createInitialState"
 export type {
+  ForesightRegister,
+  ForesightMeta,
   Rect as ForesightRect,
   ForesightElement,
   ForesightElementState,

@@ -50,6 +50,16 @@ export default [
     },
   },
 
+  {
+    files: ["packages/js.foresight/src/types/types.ts"],
+    rules: {
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        { allowWithName: "^ForesightRegister$" },
+      ],
+    },
+  },
+
   // Specific config for React packages (hooks correctness)
   {
     files: [
