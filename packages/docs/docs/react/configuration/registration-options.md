@@ -46,6 +46,6 @@ function AboutLink() {
 }
 ```
 
-You can change these options on every render, the hook patches the existing registration in place.
+You can change these options on every render. The hook updates the existing registration in place, resetting omitted fields to their defaults.
 
 <ElementSettings />

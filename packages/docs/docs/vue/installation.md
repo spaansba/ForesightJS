@@ -22,16 +22,18 @@ last_updated:
 `@foresightjs/vue` is the official Vue 3 package for ForesightJS. It ships the [`v-foresight`](./directive.md) directive for the common case, plus the [`useForesight`](./useForesight.md) and [`useForesightEvent`](./useForesightEvent.md) composables and the [`Foresight`](./foresight-component.md) component when you want the element's prediction state.
 
 ```bash
-npm install @foresightjs/vue
+npm install @foresightjs/vue js.foresight
 # or
-pnpm add @foresightjs/vue
+pnpm add @foresightjs/vue js.foresight
 # or
-yarn add @foresightjs/vue
+yarn add @foresightjs/vue js.foresight
 ```
 
 ```ts
 import { useForesight, vForesight, ForesightManager } from "@foresightjs/vue"
 ```
+
+Requires Vue 3.5 or later within v3 and `js.foresight` 4.2.2 or later within v4.
 
 ## Configuring the manager
 

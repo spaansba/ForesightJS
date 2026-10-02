@@ -1,4 +1,4 @@
-The ForesightManager exposes several static properties for accessing and checking the manager state.
+The ForesightManager exposes static properties and instance APIs for accessing and controlling manager state.
 
 **_All properties are read-only_**
 
@@ -33,9 +33,9 @@ Gets a Map of all currently registered elements and their associated [`Foresight
 
 **Returns:** `ReadonlyMap<ForesightElement, ForesightElementState>`
 
-## ForesightManager.instance.isInitiated
+## ForesightManager.isInitiated
 
-Checks whether the ForesightManager has been initialized.
+Checks whether the ForesightManager has been initialized without initializing it.
 
 **Returns:** `Readonly<boolean>`
 

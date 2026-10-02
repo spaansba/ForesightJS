@@ -18,7 +18,7 @@ pnpm add @foresightjs/vue js.foresight
 npm install @foresightjs/vue js.foresight
 ```
 
-Requires Vue 3.5+
+Requires Vue 3.5 or later within v3 and `js.foresight` 4.2.2 or later within v4.
 
 ## What's included
 

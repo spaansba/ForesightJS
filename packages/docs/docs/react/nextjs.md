@@ -27,6 +27,8 @@ To avoid this, we can wrap the `Link` component and add ForesightJS. The officia
 
 Below is a wrapper around the Next.js `Link` component that prefetches with ForesightJS using the [`useForesight`](./useForesight.md) hook. We disable Next's own prefetching (`prefetch={false}`) and prefetch from the callback instead. On mobile devices ForesightJS falls back to the configured [`touchDeviceStrategy`](./configuration/global-settings.md#touch-device-settings).
 
+This wrapper accepts string `href` values. Include query parameters in the string, for example `"/products?category=books"`.
+
 ```tsx
 "use client"
 import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
@@ -34,7 +36,10 @@ import Link, { type LinkProps } from "next/link"
 import { useRouter } from "next/navigation"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
+  extends
+    Omit<LinkProps, "prefetch" | "href">,
+    Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
+  href: string
   children: React.ReactNode
   className?: string
 }
@@ -51,7 +56,7 @@ export function ForesightLink({
 }: ForesightLinkProps) {
   const router = useRouter() // import from "next/navigation" not "next/router"
   const { elementRef } = useForesight<HTMLAnchorElement>({
-    callback: () => router.prefetch(props.href.toString()),
+    callback: () => router.prefetch(props.href),
     hitSlop,
     name,
     meta,

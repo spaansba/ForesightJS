@@ -46,7 +46,7 @@ Official Astro integration: adds `foresight` as a prefetch strategy alongside As
 
 ### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/) · [devpage-astro](./devpage-astro/)
 
-Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React and Vue demos on a single page, sharing one `ForesightManager` singleton — toggle between them with one click.
+Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React, Vue, and Angular demos on a single page, sharing one `ForesightManager` singleton. Toggle between them with one click.
 
 ### [docs](./docs/)
 

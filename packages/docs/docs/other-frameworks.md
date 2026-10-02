@@ -68,7 +68,7 @@ reg.unregister()
 This is exactly how the official packages are built:
 
 - **React** feeds the pair straight into `useSyncExternalStore(reg.subscribe, reg.getSnapshot)`.
-- **Vue** stores the snapshot in a `shallowRef` and replaces it inside `subscribe`.
+- **Vue** copies snapshot fields into a reactive object inside `subscribe` and exposes them as readonly refs.
 - **Angular** stores the snapshot in a signal and updates it inside `subscribe`.
 - **Svelte (runes)** is the same idea: keep the snapshot in `$state.raw` and reassign it inside `subscribe`.
 - **Solid** can wrap it with `from(set => reg.subscribe(() => set(reg.getSnapshot())))`.

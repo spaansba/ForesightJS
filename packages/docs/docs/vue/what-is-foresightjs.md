@@ -25,7 +25,7 @@ In Vue you use ForesightJS through the official `@foresightjs/vue` package: the 
 ## Installation
 
 ```bash
-npm install @foresightjs/vue
+npm install @foresightjs/vue js.foresight
 ```
 
 Continue with [Installation](./installation.md) and the [Quick Start](./quick-start.md).

@@ -32,7 +32,7 @@ yarn add @foresightjs/angular js.foresight
 import { ForesightDirective, ForesightManager, ForesightService } from "@foresightjs/angular"
 ```
 
-Requires Angular 17 or newer.
+Requires Angular 17 through 22 and `js.foresight` 4.2.2 or later within v4.
 
 ## Configuring the manager
 

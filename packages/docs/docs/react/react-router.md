@@ -18,7 +18,9 @@ last_updated:
 
 ## React Router's Prefetching
 
-React Router DOM (v6.4+) uses no prefetching by default. While you can enable prefetching with options like `intent` (hover/focus) or `viewport`, it doesn't have the same flexibility as ForesightJS. To add ForesightJS to React Router you can wrap the `Link` component.
+This example requires React Router v7 in [Framework Mode](https://reactrouter.com/7.18.4/start/modes#framework). Its `Link` supports `prefetch="intent"` and `prefetch="viewport"`, and `PrefetchPageLinks` can prefetch a route when ForesightJS predicts intent.
+
+`PrefetchPageLinks` requires framework context and cannot be used under a plain `BrowserRouter` or standalone `RouterProvider`. In those apps, put your own data fetch or route-module import in the Foresight callback instead.
 
 ## ForesightLink Component
 
@@ -27,7 +29,7 @@ Below is a wrapper around the React Router `Link` that prefetches with Foresight
 ```tsx
 import { useForesight, type ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
 import { useState } from "react"
-import { Link, PrefetchPageLinks, type LinkProps } from "react-router"
+import { createPath, Link, PrefetchPageLinks, useResolvedPath, type LinkProps } from "react-router"
 
 interface ForesightLinkProps
   extends Omit<LinkProps, "prefetch">, Omit<ForesightRegisterOptionsWithoutElement, "callback"> {
@@ -46,6 +48,7 @@ export function ForesightLink({
   ...props
 }: ForesightLinkProps) {
   const [shouldPrefetch, setShouldPrefetch] = useState(false)
+  const page = createPath(useResolvedPath(props.to, { relative: props.relative }))
   const { elementRef } = useForesight<HTMLAnchorElement>({
     callback: () => setShouldPrefetch(true),
     hitSlop,
@@ -57,8 +60,8 @@ export function ForesightLink({
 
   return (
     <>
-      {shouldPrefetch && <PrefetchPageLinks page={props.to.toString()} />}
-      <Link {...props} ref={elementRef} className={className}>
+      {shouldPrefetch && <PrefetchPageLinks page={page} />}
+      <Link {...props} ref={elementRef} prefetch="none" className={className}>
         {children}
       </Link>
     </>

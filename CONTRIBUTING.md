@@ -78,7 +78,7 @@ Before submitting your pull request, make sure to run the test suite:
 
 ```bash
 # Run all tests
-pnpm test:run
+pnpm -r --if-present test:run
 
 # Run tests in watch mode during development
 pnpm test

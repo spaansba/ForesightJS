@@ -13,6 +13,8 @@ It is configured exactly like Astro's [built-in prefetch](https://docs.astro.bui
 npm install @foresightjs/astro js.foresight
 ```
 
+Requires Astro 5 through 7 and `js.foresight` 4.2.2 or later within v4.
+
 ## Usage
 
 ```js
@@ -130,5 +132,5 @@ For custom callbacks or `meta` (options that can't be serialized into attributes
 - The four native strategies (`tap`/`hover`/`viewport`/`load`) and the `astro:prefetch` module keep working. Native `prefetchAll` and `defaultStrategy` values are forwarded to Astro's own prefetch config.
 - With `prefetchAll: true` and `defaultStrategy: "foresight"`, unattributed links are registered with foresight. Without `prefetchAll`, unattributed links are not prefetched at all, exactly like Astro's own config.
 - A link opts into foresight either through `defaultStrategy: "foresight"` (unattributed links) or an explicit `data-astro-prefetch="foresight"`. A bare `data-astro-prefetch` attribute stays with Astro's own default strategy.
-- On slow connections or data-saver mode, foresight links gracefully fall back to Astro's `tap` strategy.
+- On connections Astro considers slow, or in data-saver mode, links with an explicit `data-astro-prefetch="foresight"` attribute fall back to Astro's `tap` strategy. Unattributed links handled by `prefetchAll: true` and `defaultStrategy: "foresight"` stay inactive without a tap fallback.
 - Links are re-scanned after view transitions and when anchors are injected or removed (server islands).

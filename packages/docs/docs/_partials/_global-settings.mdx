@@ -148,7 +148,7 @@ ForesightManager.initialize({
 - **Default:** `{top: 0, left: 0, right: 0, bottom: 0}`
 - **Clamped between:** `0-2000` pixels (per side)
 - **Description:** Default fully invisible "slop" around elements for all registered elements. Basically increases the hover hitbox.
-- **Note:** This can be overridden per element by setting its `hitSlop`.
+- **Note:** This can be overridden per element by setting its `hitSlop`. Changing `defaultHitSlop` at runtime does not replace existing elements' hit slop. Use `updateElementOptions` to change it, or `replaceElementOptions` with `hitSlop` omitted to restore the current default.
 
 ```javascript
 // Uniform hit slop
@@ -176,7 +176,7 @@ ForesightManager.initialize({
 - **Type:** `TouchDeviceStrategy`
 - **Default:** `"onTouchStart"`
 - **Options:** `"none"`, `"viewport"`, `"onTouchStart"`
-- **Description:** Strategy to use for touch devices (mobile / pen users).
+- **Description:** Strategy to use for touch devices. Pen input uses the desktop handler with mouse, keyboard, and scroll prediction.
 
 ```javascript
 ForesightManager.initialize({
@@ -195,6 +195,7 @@ ForesightManager.initialize({
 - **Options:** `"slow-2g"`, `"2g"`, `"3g"`, `"4g"`
 - **Description:** The minimum connection speed required for prefetching. When the user's connection is slower than this threshold (or data saver is enabled), elements are still registered but stay inactive: they are excluded from prediction and never fire their callback.
 - **Note:** This feature relies on the [Network Information API](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) which is not supported in all major browsers. When the API is not available, ForesightJS treats the connection as unlimited.
+- **Runtime behavior:** Connection limitations are checked when an element is first registered. Later connection changes or updates to `minimumConnectionType` do not recalculate existing registrations. Unregister and register again to recheck.
 
 ```javascript
 ForesightManager.initialize({

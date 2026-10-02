@@ -55,6 +55,6 @@ The directive takes the same options object:
 </template>
 ```
 
-When the options change, both the directive and the composable patch the existing registration in place.
+When options change, both APIs update the existing registration in place, resetting omitted fields to their defaults. The directive requires a new binding reference, while the composable also tracks in-place mutations of reactive options.
 
 <ElementSettings />

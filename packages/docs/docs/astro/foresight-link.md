@@ -17,12 +17,12 @@ last_updated:
 
 `<ForesightLink>` is typed sugar over the [data attributes](./data-attributes.md). It renders a plain `<a>` with `data-astro-prefetch="foresight"` and the `data-foresight-*` attributes filled in from its props:
 
-```html
+```astro
 ---
 import { ForesightLink } from "@foresightjs/astro/components"
 ---
 
-<ForesightLink href="/pricing" hitSlop="{30}" name="pricing-cta">Pricing</ForesightLink>
+<ForesightLink href="/pricing" hitSlop={30} name="pricing-cta">Pricing</ForesightLink>
 ```
 
 ## Props
@@ -36,7 +36,7 @@ Besides all regular `<a>` attributes it accepts the options from [`ForesightLink
 | `reactivateAfter` | `number`         | Time in ms after which the link can trigger again          |
 | `enabled`         | `boolean`        | Set to `false` to keep the link registered but inactive    |
 
-```html
+```astro
 <ForesightLink
   href="/checkout"
   hitSlop={{ top: 20, right: 50, bottom: 20, left: 50 }}

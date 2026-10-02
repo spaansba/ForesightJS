@@ -114,5 +114,5 @@ Only same-origin links are registered. When a registered link's callback fires, 
 ## How it composes with Astro's prefetch
 
 - The four native strategies and the `astro:prefetch` module keep working. Native `prefetchAll` and `defaultStrategy` values are forwarded to Astro's own prefetch config.
-- On slow connections or data-saver mode, foresight links gracefully fall back to Astro's `tap` strategy.
+- On connections Astro considers slow, or in data-saver mode, links with an explicit `data-astro-prefetch="foresight"` attribute fall back to Astro's `tap` strategy. Unattributed links handled by `prefetchAll: true` and `defaultStrategy: "foresight"` stay inactive without a tap fallback.
 - Links are re-scanned after view transitions and when anchors are injected or removed (server islands), so dynamically added links register automatically.

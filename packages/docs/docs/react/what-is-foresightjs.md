@@ -24,7 +24,7 @@ In React you use ForesightJS through the official `@foresightjs/react` package: 
 ## Installation
 
 ```bash
-npm install @foresightjs/react
+npm install @foresightjs/react js.foresight
 ```
 
 Continue with [Installation](./installation.md) and the [Quick Start](./quick-start.md).

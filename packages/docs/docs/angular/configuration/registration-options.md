@@ -50,6 +50,6 @@ export class AboutLinkComponent {
 }
 ```
 
-When options change, the Angular integration patches the existing registration in place.
+When options change, the Angular integration updates the existing registration in place, resetting omitted fields to their defaults.
 
 <ElementSettings />

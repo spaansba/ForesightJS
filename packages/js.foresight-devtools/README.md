@@ -66,7 +66,7 @@ The control panel provides three main tabs for debugging and configuration. Each
 
 #### Settings Tab
 
-The Settings tab provides real-time controls for all [Global Configurations](https://foresightjs.com/docs/configuration/global-settings). Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
+The Settings tab provides controls for mouse, keyboard, scroll, touch, and connection settings. Configure `defaultHitSlop`, `setDataAttributes`, and `enableManagerLogging` through the [manager API](https://foresightjs.com/docs/configuration/global-settings). Changes made through the panel update the `ForesightManager` configuration.
 
 #### Elements Tab
 

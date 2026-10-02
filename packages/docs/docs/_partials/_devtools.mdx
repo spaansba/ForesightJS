@@ -20,6 +20,7 @@ yarn add -D js.foresight-devtools
 ## Enabling Development Tools
 
 ```javascript
+import { ForesightManager } from "js.foresight"
 import { ForesightDevtools } from "js.foresight-devtools"
 
 // Initialize ForesightJS
@@ -60,7 +61,7 @@ The control panel has three tabs: Settings, Elements, and Log.
 
 #### Settings Tab
 
-The Settings tab provides real-time controls for all Global Configurations. Changes made through these controls immediately affect the `ForesightManager` configuration, allowing you to see how different settings impact your app without fiddling in your code.
+The Settings tab provides controls for mouse, keyboard, scroll, touch, and connection settings. Configure `defaultHitSlop`, `setDataAttributes`, and `enableManagerLogging` through the manager API. Changes made through the panel update the `ForesightManager` configuration.
 
 #### Elements Tab
 

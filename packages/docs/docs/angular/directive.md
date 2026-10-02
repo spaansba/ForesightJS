@@ -64,7 +64,7 @@ For more control, pass any [registration options](./configuration/registration-o
 </button>
 ```
 
-If the bound value changes, the directive patches the existing registration in place rather than tearing it down, so flipping `enabled` or changing `hitSlop` keeps the same element tracked.
+If the bound value changes, the directive updates the existing registration in place. Each options object describes the full configuration, so omitted fields reset to their defaults.
 
 ## Individual inputs
 
@@ -84,7 +84,7 @@ You can also pass common options through inputs:
 </a>
 ```
 
-Object options and individual inputs are resolved into the same registration options. If you need a native `name` attribute, use `fsForesightName` for the Foresight debug name.
+Defined individual inputs override the matching fields in the options object. If you need a native `name` attribute, use `fsForesightName` for the Foresight debug name.
 
 ## Reading state
 
