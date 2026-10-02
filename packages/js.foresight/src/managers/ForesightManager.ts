@@ -726,29 +726,34 @@ export class ForesightManager {
   ): void {
     const elapsed = performance.now() - startTime
 
-    this.currentlyActiveHandler?.unobserveElement(entry.element)
+    // Unregistered while the callback ran (the element may even be registered
+    // again under a new entry): leave its state, attributes and observation alone
+    // and only report the completion.
+    if (this.elementEntries.get(entry.element) === entry) {
+      this.currentlyActiveHandler?.unobserveElement(entry.element)
 
-    entry.completedAt = Date.now()
-    const next = this.updateElementState(entry, {
-      isCallbackRunning: false,
-      isActive: false,
-      durationMs: elapsed,
-      status,
-      error: errorMessage,
-    })
+      entry.completedAt = Date.now()
+      const next = this.updateElementState(entry, {
+        isCallbackRunning: false,
+        isActive: false,
+        durationMs: elapsed,
+        status,
+        error: errorMessage,
+      })
 
-    if (next.reactivateAfter !== Infinity) {
-      this.scheduleReactivateTimeout(entry, next.reactivateAfter)
+      if (next.reactivateAfter !== Infinity) {
+        this.scheduleReactivateTimeout(entry, next.reactivateAfter)
+      }
+
+      this.removeGlobalListenersIfIdle()
     }
-
-    this.removeGlobalListenersIfIdle()
 
     if (this.eventEmitter.hasListeners("callbackCompleted")) {
       this.eventEmitter.emit({
         type: "callbackCompleted",
         timestamp: Date.now(),
         element: entry.element,
-        state: next,
+        state: entry.state,
         hitType: callbackHitType,
         elapsed,
         status,
