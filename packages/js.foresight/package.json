@@ -58,7 +58,7 @@
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.1",
     "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "4.1.11",
     "@vitest/ui": "^4.1.11",
