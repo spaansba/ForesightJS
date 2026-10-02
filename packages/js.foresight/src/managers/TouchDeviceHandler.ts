@@ -10,6 +10,8 @@ export class TouchDeviceHandler extends ElementObservingModule {
   private viewportPredictor: ViewportPredictor | null = null
   private touchStartPredictor: TouchStartPredictor | null = null
   private predictor: ElementObservingModule | null = null
+  /** Bumped per strategy change so a stale lazy load never connects. */
+  private predictorRequest = 0
   private storedDependencies: ForesightModuleDependencies
 
   constructor(dependencies: ForesightModuleDependencies) {
@@ -20,7 +22,7 @@ export class TouchDeviceHandler extends ElementObservingModule {
   private async getOrCreateViewportPredictor(): Promise<ViewportPredictor> {
     if (!this.viewportPredictor) {
       const { ViewportPredictor } = await import("../predictors/ViewportPredictor")
-      this.viewportPredictor = new ViewportPredictor(this.storedDependencies)
+      this.viewportPredictor ??= new ViewportPredictor(this.storedDependencies)
       this.devLog("ViewportPredictor lazy loaded")
     }
 
@@ -30,7 +32,7 @@ export class TouchDeviceHandler extends ElementObservingModule {
   private async getOrCreateTouchStartPredictor(): Promise<TouchStartPredictor> {
     if (!this.touchStartPredictor) {
       const { TouchStartPredictor } = await import("../predictors/TouchStartPredictor")
-      this.touchStartPredictor = new TouchStartPredictor(this.storedDependencies)
+      this.touchStartPredictor ??= new TouchStartPredictor(this.storedDependencies)
       this.devLog("TouchStartPredictor lazy loaded")
     }
 
@@ -44,40 +46,41 @@ export class TouchDeviceHandler extends ElementObservingModule {
   }
 
   public async setTouchPredictor() {
+    const request = ++this.predictorRequest
+    const strategy = this.settings.touchDeviceStrategy
     this.predictor?.disconnect()
 
-    switch (this.settings.touchDeviceStrategy) {
+    let predictor: ElementObservingModule | null = null
+    switch (strategy) {
       case "viewport":
-        this.predictor = await this.getOrCreateViewportPredictor()
-        this.devLog(
-          `Connected touch strategy: ${this.settings.touchDeviceStrategy} (ViewportPredictor)`
-        )
+        predictor = await this.getOrCreateViewportPredictor()
         break
       case "onTouchStart":
-        this.predictor = await this.getOrCreateTouchStartPredictor()
-        this.devLog(
-          `Connected touch strategy: ${this.settings.touchDeviceStrategy} (TouchStartPredictor)`
-        )
+        predictor = await this.getOrCreateTouchStartPredictor()
         break
       case "none":
-        this.predictor = null
-        this.devLog(`Touch strategy set to "none" - no predictor connected`)
-
-        return
+        break
       default:
-        this.settings.touchDeviceStrategy satisfies never
+        strategy satisfies never
     }
 
-    // The handler may have disconnected while the dynamic import was resolving.
-    if (!this.isConnected) {
+    // A newer strategy change or a disconnect happened while the predictor was loading.
+    if (request !== this.predictorRequest || !this.isConnected) {
       return
     }
 
-    this.predictor?.connect()
+    this.predictor = predictor
+    this.devLog(`Connected touch strategy: ${strategy}`)
+
+    if (!predictor) {
+      return
+    }
+
+    predictor.connect()
 
     for (const [element, entry] of this.elements) {
       if (entry.state.isActive) {
-        this.predictor?.observeElement(element)
+        predictor.observeElement(element)
       }
     }
   }

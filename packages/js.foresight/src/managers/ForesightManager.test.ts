@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
-import { hasConnectionLimitations } from "../helpers/shouldRegister"
+import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
+  ForesightModules,
   ForesightRegisterOptions,
 } from "../types/types"
 
@@ -1100,6 +1101,78 @@ describe("ForesightManager", () => {
         expect(tabPredictor?.isConnected).toBe(true)
       })
       vi.useFakeTimers()
+    })
+  })
+
+  describe("Lazy loading races", () => {
+    beforeEach(() => vi.useRealTimers())
+    afterEach(() => vi.useFakeTimers())
+
+    // Waits for a lazy module to finish loading, then lets the awaiting code run on.
+    const loaded = async (manager: ForesightManager, check: (m: ForesightModules) => boolean) => {
+      await vi.waitFor(() => expect(check(manager.getManagerData.loadedModules)).toBe(true))
+      await new Promise(resolve => setTimeout(resolve, 0))
+    }
+
+    it("does not connect a handler that finished loading after teardown", async () => {
+      const manager = ForesightManager.initialize({ enableTabPrediction: true })
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+      manager.unregister(element)
+      await loaded(manager, m => m.desktopHandler)
+
+      // @ts-expect-error - accessing private handler for tests
+      expect(manager.desktopHandler.isConnected).toBe(false)
+    })
+
+    it("only connects the latest device strategy when switching mid-load", async () => {
+      const manager = ForesightManager.initialize()
+      manager.register({ element: createMockElement(), callback: vi.fn() })
+      await loaded(manager, m => m.desktopHandler)
+
+      const move = (pointerType: string) =>
+        document.dispatchEvent(
+          Object.assign(new Event("pointermove"), { pointerType, clientX: -999, clientY: -999 })
+        )
+      move("touch")
+      move("mouse")
+      await loaded(manager, m => m.touchHandler)
+
+      // @ts-expect-error - accessing private handlers for tests
+      const { desktopHandler, touchDeviceHandler, currentlyActiveHandler } = manager
+      expect(currentlyActiveHandler).toBe(desktopHandler)
+      expect(desktopHandler?.isConnected).toBe(true)
+      expect(touchDeviceHandler?.isConnected).toBe(false)
+    })
+
+    it("does not connect a touch predictor when the strategy changed mid-load", async () => {
+      vi.mocked(userUsesTouchDevice).mockReturnValueOnce(true)
+      const manager = ForesightManager.initialize()
+      manager.register({ element: createMockElement(), callback: vi.fn() })
+      await loaded(manager, m => m.predictors.touchStart)
+
+      manager.alterGlobalSettings({ touchDeviceStrategy: "viewport" })
+      manager.alterGlobalSettings({ touchDeviceStrategy: "none" })
+      await loaded(manager, m => m.predictors.viewport)
+
+      // @ts-expect-error - accessing private handler for tests
+      const { predictor, viewportPredictor } = manager.touchDeviceHandler
+      expect(predictor).toBeNull()
+      expect(viewportPredictor.isConnected).toBe(false)
+    })
+
+    it("does not connect a desktop predictor disabled mid-load", async () => {
+      const manager = ForesightManager.initialize({ enableTabPrediction: false })
+      manager.register({ element: createMockElement(), callback: vi.fn() })
+      await loaded(manager, m => m.desktopHandler)
+
+      manager.alterGlobalSettings({ enableTabPrediction: true })
+      manager.alterGlobalSettings({ enableTabPrediction: false })
+      await loaded(manager, m => m.predictors.tab)
+
+      // @ts-expect-error - accessing private handler for tests
+      expect(manager.desktopHandler.tabPredictor.isConnected).toBe(false)
     })
   })
 

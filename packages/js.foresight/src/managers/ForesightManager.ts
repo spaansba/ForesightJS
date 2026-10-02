@@ -77,6 +77,8 @@ export class ForesightManager {
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
   private currentlyActiveHandler: ElementObservingModule | null = null
+  /** Bumped per strategy switch and on teardown so a stale lazy load never connects. */
+  private deviceStrategyRequest = 0
   private handlerDependencies: ForesightModuleDependencies
 
   private isSetup: boolean = false
@@ -113,7 +115,7 @@ export class ForesightManager {
   private async getOrCreateDesktopHandler(): Promise<DesktopHandler> {
     if (!this.desktopHandler) {
       const { DesktopHandler } = await import("./DesktopHandler")
-      this.desktopHandler = new DesktopHandler(this.handlerDependencies)
+      this.desktopHandler ??= new DesktopHandler(this.handlerDependencies)
       this.devLog("DesktopHandler lazy loaded")
     }
 
@@ -123,7 +125,7 @@ export class ForesightManager {
   private async getOrCreateTouchHandler(): Promise<TouchDeviceHandler> {
     if (!this.touchDeviceHandler) {
       const { TouchDeviceHandler } = await import("./TouchDeviceHandler")
-      this.touchDeviceHandler = new TouchDeviceHandler(this.handlerDependencies)
+      this.touchDeviceHandler ??= new TouchDeviceHandler(this.handlerDependencies)
       this.devLog("TouchDeviceHandler lazy loaded")
     }
 
@@ -780,6 +782,7 @@ export class ForesightManager {
   }
 
   private async setDeviceStrategy(strategy: CurrentDeviceStrategy): Promise<void> {
+    const request = ++this.deviceStrategyRequest
     const previousStrategy = this.currentDeviceStrategy
 
     if (previousStrategy !== strategy) {
@@ -788,13 +791,18 @@ export class ForesightManager {
 
     this.currentlyActiveHandler?.disconnect()
 
-    // Lazy load the handler
-    this.currentlyActiveHandler =
+    const handler =
       strategy === "mouse" || strategy === "pen"
         ? await this.getOrCreateDesktopHandler()
         : await this.getOrCreateTouchHandler()
 
-    this.currentlyActiveHandler.connect()
+    // A newer switch or a teardown happened while the handler was loading.
+    if (request !== this.deviceStrategyRequest) {
+      return
+    }
+
+    this.currentlyActiveHandler = handler
+    handler.connect()
   }
 
   private handlePointerMove = (e: PointerEvent): void => {
@@ -858,6 +866,7 @@ export class ForesightManager {
     }
 
     this.isSetup = false
+    this.deviceStrategyRequest++
     this.domObserver?.disconnect()
     this.domObserver = null
 
