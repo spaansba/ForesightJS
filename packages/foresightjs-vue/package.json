@@ -60,7 +60,7 @@
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/test-utils": "^2.5.0",
     "js.foresight": "workspace:*",
-    "jsdom": "^29.0.1",
+    "jsdom": "^30.0.1",
     "tsdown": "^0.23.0",
     "typescript": "^6.0.2",
     "unplugin-vue": "^7.2.0",
