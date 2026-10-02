@@ -1,14 +1,14 @@
 import { defineComponent, h, nextTick, type PropType } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { emitSnapshot } from "../tests/helpers"
 import type { ForesightSlotProps } from "../types"
 import Foresight from "./Foresight.vue"
 
 beforeEach(() => {
   registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
+  replaceElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -116,7 +116,7 @@ describe("Foresight", () => {
 
     expect(registerSpy).not.toHaveBeenCalled()
     expect(unregisterSpy).not.toHaveBeenCalled()
-    expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("renamed")
+    expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].name).toBe("renamed")
   })
 
   describe("as form", () => {

@@ -48,7 +48,7 @@ export class ForesightService {
           return
         }
 
-        ForesightManager.instance.updateElementOptions(element, {
+        ForesightManager.instance.replaceElementOptions(element, {
           ...optionsRef,
           callback,
         })

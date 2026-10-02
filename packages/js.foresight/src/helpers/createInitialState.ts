@@ -15,6 +15,7 @@ import type {
   ForesightElementState,
   ForesightManagerSettings,
   ForesightRegisterOptions,
+  ForesightRegisterOptionsWithoutElement,
   HitSlop,
 } from "../types/types"
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
@@ -91,6 +92,24 @@ const createBaseElementState = (isLimitedConnection: boolean): ForesightElementS
 }
 
 /**
+ * Fills every omitted registration option with its default. Shared by
+ * registration and {@link ForesightManager.replaceElementOptions} so both agree
+ * on what an omitted option means.
+ */
+export const resolveElementOptions = (
+  options: ForesightRegisterOptions,
+  defaultHitSlop: Exclude<HitSlop, number>
+) =>
+  ({
+    callback: options.callback,
+    name: options.name || options.element.id || "unnamed",
+    meta: options.meta ?? EMPTY_META,
+    hitSlop: options.hitSlop !== undefined ? normalizeHitSlop(options.hitSlop) : defaultHitSlop,
+    reactivateAfter: options.reactivateAfter ?? DEFAULT_REACTIVATE_AFTER,
+    enabled: options.enabled !== false,
+  }) satisfies Required<ForesightRegisterOptionsWithoutElement>
+
+/**
  * Creates the internal record for a newly registered element, including the
  * initial immutable state snapshot.
  */
@@ -100,31 +119,37 @@ export const createElementInternal = (
   defaultHitSlop: Exclude<HitSlop, number>,
   isLimitedConnection: boolean
 ): ForesightElementInternal => {
-  const { element, callback, hitSlop, name, meta, reactivateAfter, enabled } = options
+  const { element } = options
+  const {
+    callback,
+    name,
+    meta,
+    hitSlop,
+    reactivateAfter,
+    enabled: isEnabled,
+  } = resolveElementOptions(options, defaultHitSlop)
 
   const initialRect = element.getBoundingClientRect()
-  const normalizedHitSlop = hitSlop !== undefined ? normalizeHitSlop(hitSlop) : defaultHitSlop
-  const isEnabled = enabled !== false
 
   const state: ForesightElementState = {
     ...createBaseElementState(isLimitedConnection),
     id,
-    name: name || element.id || "unnamed",
-    meta: meta ?? EMPTY_META,
-    hitSlop: normalizedHitSlop,
+    name,
+    meta,
+    hitSlop,
     isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
     isActive: isEnabled && !isLimitedConnection,
     isEnabled,
     registerCount: 1,
-    reactivateAfter: reactivateAfter ?? DEFAULT_REACTIVATE_AFTER,
+    reactivateAfter,
   }
 
   return {
     state,
     bounds: {
       originalRect: initialRect,
-      expandedRect: getExpandedRect(initialRect, normalizedHitSlop),
+      expandedRect: getExpandedRect(initialRect, hitSlop),
     },
     invokedAt: undefined,
     completedAt: undefined,

@@ -5,6 +5,7 @@ import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/should
 import {
   createDefaultManagerSettings,
   createElementInternal,
+  resolveElementOptions,
   createInitialCallbackHits,
 } from "../helpers/createInitialState"
 import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
@@ -415,6 +416,24 @@ export class ForesightManager {
     }
 
     return next
+  }
+
+  /**
+   * Replaces all options of an already-registered element. Unlike
+   * {@link updateElementOptions}, omitted fields reset to their registration
+   * defaults. Used by the framework integrations, whose props always describe
+   * the full options.
+   *
+   * @throws Error if the element is not registered.
+   */
+  public replaceElementOptions(
+    element: ForesightElement,
+    options: ForesightRegisterOptionsWithoutElement
+  ): ForesightElementState {
+    return this.updateElementOptions(
+      element,
+      resolveElementOptions({ ...options, element }, this._globalSettings.defaultHitSlop)
+    )
   }
 
   /**

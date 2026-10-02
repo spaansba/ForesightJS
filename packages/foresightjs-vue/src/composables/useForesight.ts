@@ -97,7 +97,7 @@ export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): Fores
         registerResults &&
         ForesightManager.instance.registeredElements.has(currentElement)
       ) {
-        ForesightManager.instance.updateElementOptions(currentElement, { ...newOptions, callback })
+        ForesightManager.instance.replaceElementOptions(currentElement, { ...newOptions, callback })
       }
     },
     { deep: true, flush: "post" }

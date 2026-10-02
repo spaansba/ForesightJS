@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { emitSnapshot } from "../tests/helpers"
 import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
@@ -82,9 +82,9 @@ describe("useForesight", () => {
 
     rerender(<ButtonProbe options={{ name: "y", callback: vi.fn() }} />)
 
-    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    expect(replaceElementOptionsSpy).toHaveBeenCalled()
     const lastCall =
-      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+      replaceElementOptionsSpy.mock.calls[replaceElementOptionsSpy.mock.calls.length - 1]
     expect(lastCall?.[1].name).toBe("y")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
@@ -148,7 +148,7 @@ describe("useForesight", () => {
 
       rerender(<ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: true }} />)
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(true)
+      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(true)
     })
 
     it("patches enabled (true → false) without unregistering", () => {
@@ -159,7 +159,7 @@ describe("useForesight", () => {
 
       rerender(<ButtonProbe options={{ callback: vi.fn(), name: "x", enabled: false }} />)
       expect(unregisterSpy).not.toHaveBeenCalled()
-      expect(updateElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(false)
+      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].enabled).toBe(false)
     })
   })
 
@@ -169,11 +169,11 @@ describe("useForesight", () => {
       const { rerender } = render(
         <ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />
       )
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { v: 2 } }} />)
 
-      const metaCalls = updateElementOptionsSpy.mock.calls.filter(
+      const metaCalls = replaceElementOptionsSpy.mock.calls.filter(
         c => (c[1].meta as { v?: number } | undefined)?.v === 2
       )
       expect(metaCalls.length).toBeGreaterThan(0)
@@ -184,18 +184,18 @@ describe("useForesight", () => {
       const { rerender } = render(
         <ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />
       )
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       // New object, identical content - must not trigger a patch.
       rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { v: 1 } }} />)
 
-      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
 
     it("does not loop when an inline meta object causes patches to replace the snapshot", () => {
       // Mimic the real manager: meta is compared by identity, so every patch
       // with a fresh meta object replaces the snapshot and notifies subscribers.
-      updateElementOptionsSpy.mockImplementation(() => {
+      replaceElementOptionsSpy.mockImplementation(() => {
         mockState.currentSnapshot = {
           ...(mockState.currentSnapshot ?? createUnregisteredSnapshot(false)),
         }
@@ -219,9 +219,9 @@ describe("useForesight", () => {
         // and React throws "Maximum update depth exceeded".
         render(<InlineMetaProbe />)
 
-        expect(updateElementOptionsSpy.mock.calls.length).toBeLessThanOrEqual(2)
+        expect(replaceElementOptionsSpy.mock.calls.length).toBeLessThanOrEqual(2)
       } finally {
-        updateElementOptionsSpy.mockReset()
+        replaceElementOptionsSpy.mockReset()
       }
     })
   })
@@ -232,11 +232,11 @@ describe("useForesight", () => {
       const { rerender } = render(
         <ButtonProbe options={{ name: "x", callback: cb, hitSlop: 10 }} />
       )
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       rerender(<ButtonProbe options={{ name: "x", callback: cb, hitSlop: 50 }} />)
 
-      const hitSlopCalls = updateElementOptionsSpy.mock.calls.filter(c => c[1].hitSlop === 50)
+      const hitSlopCalls = replaceElementOptionsSpy.mock.calls.filter(c => c[1].hitSlop === 50)
       expect(hitSlopCalls.length).toBeGreaterThan(0)
     })
 
@@ -247,7 +247,7 @@ describe("useForesight", () => {
           options={{ name: "x", callback: cb, hitSlop: { top: 1, left: 2, right: 3, bottom: 4 } }}
         />
       )
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       // New object, identical content - must not trigger a patch.
       rerender(
@@ -256,7 +256,7 @@ describe("useForesight", () => {
         />
       )
 
-      expect(updateElementOptionsSpy).not.toHaveBeenCalled()
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
   })
 })

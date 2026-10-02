@@ -2,13 +2,13 @@ import { defineComponent, h, nextTick, reactive, ref } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
-import { mockState, registerSpy, updateElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
 beforeEach(() => {
   registerSpy.mockClear()
-  updateElementOptionsSpy.mockClear()
+  replaceElementOptionsSpy.mockClear()
   unregisterSpy.mockClear()
   mockState.listeners = []
   mockState.lastCallbackWrapper = null
@@ -238,9 +238,9 @@ describe("useForesight", () => {
     await nextTick()
     await nextTick()
 
-    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    expect(replaceElementOptionsSpy).toHaveBeenCalled()
     const lastCall =
-      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+      replaceElementOptionsSpy.mock.calls[replaceElementOptionsSpy.mock.calls.length - 1]
     expect(lastCall?.[1].name).toBe("second")
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
@@ -270,9 +270,9 @@ describe("useForesight", () => {
     await nextTick()
     await nextTick()
 
-    expect(updateElementOptionsSpy).toHaveBeenCalled()
+    expect(replaceElementOptionsSpy).toHaveBeenCalled()
     const lastCall =
-      updateElementOptionsSpy.mock.calls[updateElementOptionsSpy.mock.calls.length - 1]
+      replaceElementOptionsSpy.mock.calls[replaceElementOptionsSpy.mock.calls.length - 1]
     expect(lastCall?.[1].hitSlop).toBe(50)
     expect(unregisterSpy).not.toHaveBeenCalled()
   })
@@ -399,7 +399,7 @@ describe("useForesight", () => {
       await nextTick()
 
       expect(unregisterSpy).not.toHaveBeenCalled()
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(false)
     })
 
@@ -422,14 +422,14 @@ describe("useForesight", () => {
       mount(Component, { attachTo: document.body })
       await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       options.value.enabled = false
       await nextTick()
       await nextTick()
 
       expect(unregisterSpy).not.toHaveBeenCalled()
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(false)
     })
 
@@ -452,14 +452,14 @@ describe("useForesight", () => {
       mount(Component, { attachTo: document.body })
       await nextTick()
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      updateElementOptionsSpy.mockClear()
+      replaceElementOptionsSpy.mockClear()
 
       options.enabled = false
       await nextTick()
       await nextTick()
 
       expect(unregisterSpy).not.toHaveBeenCalled()
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(false)
     })
 
@@ -489,7 +489,7 @@ describe("useForesight", () => {
       await nextTick()
 
       expect(registerSpy).toHaveBeenCalledTimes(1)
-      const lastCall = updateElementOptionsSpy.mock.calls.at(-1)
+      const lastCall = replaceElementOptionsSpy.mock.calls.at(-1)
       expect(lastCall?.[1].enabled).toBe(true)
     })
   })

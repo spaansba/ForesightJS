@@ -1923,6 +1923,31 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("replaceElementOptions", () => {
+    it("resets omitted options to their registration defaults", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement("my-el")
+      manager.register({
+        element,
+        callback: vi.fn(),
+        name: "custom",
+        meta: { a: 1 },
+        hitSlop: 50,
+        reactivateAfter: 1000,
+        enabled: false,
+      })
+
+      const state = manager.replaceElementOptions(element, { callback: vi.fn() })
+
+      expect(state.name).toBe("my-el")
+      expect(state.meta).toEqual({})
+      expect(state.hitSlop).toEqual(manager.getManagerData.globalSettings.defaultHitSlop)
+      expect(state.reactivateAfter).toBe(Infinity)
+      expect(state.isEnabled).toBe(true)
+      expect(state.isActive).toBe(true)
+    })
+  })
+
   describe("Element State Lifecycle", () => {
     it("full lifecycle: register → predict → complete → reactivate", async () => {
       const { manager, entry, resolve } = setupDeferredCallbackTest(1000)
