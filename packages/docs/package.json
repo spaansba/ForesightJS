@@ -25,8 +25,8 @@
     "dotenv": "^17.4.2",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*",
-    "lucide-react": "^1.44.0",
-    "posthog-js": "^1.429.5",
+    "lucide-react": "^1.45.0",
+    "posthog-js": "^1.430.2",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
