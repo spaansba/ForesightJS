@@ -1,5 +1,8 @@
 # @foresightjs/astro
 
+[![npm downloads](https://img.shields.io/npm/dt/@foresightjs/astro.svg)](https://www.npmjs.com/package/@foresightjs/astro)
+[![core downloads](https://img.shields.io/npm/dt/js.foresight.svg?label=core%20downloads)](https://www.npmjs.com/package/js.foresight)
+
 Astro integration for [ForesightJS](https://foresightjs.com/). Prefetches pages when user intent is _predicted_ (mouse trajectory, tab navigation, scroll direction) instead of reacting to hover or viewport entry. Earlier than `hover`, far less wasteful than `viewport` or `load`.
 
 It is configured exactly like Astro's [built-in prefetch](https://docs.astro.build/en/guides/prefetch/) and composes with it: the four native strategies keep working, foresight becomes the fifth.
