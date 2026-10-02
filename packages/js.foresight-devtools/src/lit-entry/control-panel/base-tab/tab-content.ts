@@ -56,9 +56,11 @@ export class TabContent extends LitElement {
   render() {
     return html`
       <div class="content-container">
-        ${this.hasContent
-          ? html`<slot></slot>`
-          : html`<div class="no-content-message">${this.noContentMessage}</div>`}
+        ${
+          this.hasContent
+            ? html`<slot></slot>`
+            : html`<div class="no-content-message">${this.noContentMessage}</div>`
+        }
       </div>
     `
   }

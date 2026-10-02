@@ -294,17 +294,19 @@ export class LogTab extends LitElement {
           </chip-element>
         </div>
         <div slot="actions">
-          ${this.shouldShowPerformanceWarning()
-            ? html`
-                <div
-                  class="warning-container"
-                  title="Console logging can be slow with frequent trajectory events.
+          ${
+            this.shouldShowPerformanceWarning()
+              ? html`
+                  <div
+                    class="warning-container"
+                    title="Console logging can be slow with frequent trajectory events.
 Consider using 'Control Panel' only for better performance."
-                >
-                  ${WARNING_SVG}
-                </div>
-              `
-            : ""}
+                  >
+                    ${WARNING_SVG}
+                  </div>
+                `
+              : ""
+          }
           <single-select-dropdown
             .dropdownOptions="${this.logDropdown}"
             .selectedOptionValue="${this.store.logLocation}"
@@ -334,19 +336,21 @@ Consider using 'Control Panel' only for better performance."
         </div>
       </tab-header>
       <tab-content .noContentMessage=${this.noContentMessage} .hasContent=${!!logs.length}>
-        ${logs.length === 0
-          ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
-          : repeat(
-              logs,
-              log => log.logId,
-              log => html`
-                <single-log
-                  .log=${log}
-                  .isExpanded=${this.expandedLogIds.has(log.logId)}
-                  .onToggle=${this.handleLogToggle}
-                ></single-log>
-              `
-            )}
+        ${
+          logs.length === 0
+            ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
+            : repeat(
+                logs,
+                log => log.logId,
+                log => html`
+                  <single-log
+                    .log=${log}
+                    .isExpanded=${this.expandedLogIds.has(log.logId)}
+                    .onToggle=${this.handleLogToggle}
+                  ></single-log>
+                `
+              )
+        }
       </tab-content>
     `
   }
