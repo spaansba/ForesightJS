@@ -1,5 +1,23 @@
 # js.foresight
 
+## 4.3.0
+
+### Minor Changes
+
+- [#226](https://github.com/spaansba/ForesightJS/pull/226) [`5b6cc9c`](https://github.com/spaansba/ForesightJS/commit/5b6cc9c593958668e41ad9fb63bf81ada24958be) Thanks [@spaansba](https://github.com/spaansba)! - Add `ForesightRegister` module augmentation to type metadata across registration options, callbacks, events, devtools, and framework bindings without generics. Export `ForesightMeta`, which preserves `Record<string, unknown>` when no metadata type is registered.
+
+### Patch Changes
+
+- [#222](https://github.com/spaansba/ForesightJS/pull/222) [`88bd7db`](https://github.com/spaansba/ForesightJS/commit/88bd7db116ef1064358621157c8ac587f103bd15) Thanks [@spaansba](https://github.com/spaansba)! - Fix handlers and predictors connecting after a lazy load that was superseded: a device switch (touch to mouse) or touch strategy change mid-load, a teardown mid-load, or a tab/scroll prediction setting turned off mid-load.
+
+- [#220](https://github.com/spaansba/ForesightJS/pull/220) [`65993e3`](https://github.com/spaansba/ForesightJS/commit/65993e30a9add8a425905acc307c6d0a1cf36350) Thanks [@spaansba](https://github.com/spaansba)! - Fix `reactivate()` activating elements on a limited connection or while detached from the DOM, and a double reactivation timer when an element reconnects mid-cooldown.
+
+- [#221](https://github.com/spaansba/ForesightJS/pull/221) [`9dd3681`](https://github.com/spaansba/ForesightJS/commit/9dd3681d4106b04db5cc3bbb586f5970c1a3030b) Thanks [@spaansba](https://github.com/spaansba)! - Add `ForesightManager.replaceElementOptions`, which resets omitted options to their defaults. The framework integrations now use it, so removing a prop (e.g. `enabled={false}` to no `enabled`) resets that option instead of keeping its old value.
+
+- [#210](https://github.com/spaansba/ForesightJS/pull/210) [`c99854e`](https://github.com/spaansba/ForesightJS/commit/c99854edba4224e49684eb99bcb423bdb0ae7694) Thanks [@spaansba](https://github.com/spaansba)! - Fix tab prediction not reconnecting after the manager goes idle (e.g. after all elements unregister on client-side navigation).
+
+- [#224](https://github.com/spaansba/ForesightJS/pull/224) [`8da4323`](https://github.com/spaansba/ForesightJS/commit/8da43231bc85fda172b1b67686ee5b907cca2df7) Thanks [@spaansba](https://github.com/spaansba)! - Fix an element unregistered while its callback runs getting its `data-*` attributes back, and the late completion unobserving or reactivating a later re-registration of the same element.
+
 ## 4.2.2
 
 ### Patch Changes
