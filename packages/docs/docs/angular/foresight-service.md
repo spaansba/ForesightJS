@@ -51,11 +51,13 @@ export class ManualPrefetchComponent implements AfterViewInit, OnDestroy {
 `register()` returns a `ForesightRegistration`:
 
 - `state`: an Angular signal with the latest [`ForesightElementState`](./configuration/registration-options.md#state-fields)
-- `update(options)`: patches the existing registration
+- `update(options)`: updates the existing registration, resetting omitted fields to their defaults
 - `unregister()`: removes the element from the manager
 - `getSnapshot()`: reads the current state snapshot
 
 ## Update options
+
+Pass the full configuration you want to keep. For example, this update removes the initial `hitSlop: 40` and restores the current global `defaultHitSlop`:
 
 ```ts
 this.registration?.update({

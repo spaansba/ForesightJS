@@ -15,10 +15,16 @@ import TypeScriptTypes from "../\_partials/\_typescript.mdx"
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript`, and all types are exported from `@foresightjs/vue`:
+`@foresightjs/vue` exports its binding types and common core types such as `ForesightElementState`, `ForesightCallback`, and `ForesightRegisterOptionsWithoutElement`:
 
 ```ts
 import type { ForesightRegisterOptionsWithoutElement } from "@foresightjs/vue"
+```
+
+Other core types come from `js.foresight` directly:
+
+```ts
+import type { ElementBounds, ForesightRegisterResult, ForesightManagerData } from "js.foresight"
 ```
 
 <TypeScriptTypes />

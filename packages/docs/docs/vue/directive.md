@@ -78,4 +78,4 @@ For more control, pass any [registration options](./configuration/registration-o
 </template>
 ```
 
-If the bound value changes, the directive patches the existing registration in place rather than tearing it down, so things like flipping `enabled` or growing the `hitSlop` keep the same element tracked.
+When the bound value changes reference, the directive updates the existing registration in place. Each options object describes the full configuration, so omitted fields reset to their defaults. Replace the options object when updating it, as in-place mutations of the same object are skipped.

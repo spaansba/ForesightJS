@@ -38,8 +38,6 @@ export default defineConfig({
 })
 ```
 
-Requires Astro 5 or newer.
-
 ## Configuring the manager
 
 You don't have to configure anything. The manager auto-initializes with sensible defaults when the first page loads.

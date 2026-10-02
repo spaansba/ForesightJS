@@ -18,8 +18,6 @@ pnpm add @foresightjs/vue js.foresight
 npm install @foresightjs/vue js.foresight
 ```
 
-Requires Vue 3.5+
-
 ## What's included
 
 - `v-foresight` -> directive to register an element with a callback or full options object

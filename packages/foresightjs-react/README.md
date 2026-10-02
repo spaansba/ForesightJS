@@ -18,12 +18,10 @@ pnpm add @foresightjs/react js.foresight
 npm install @foresightjs/react js.foresight
 ```
 
-Requires React 18+
-
 ## What's included
 
 - `useForesight` -> register a single element and get its live state plus a callback ref to bind it
-- `Foresight` -> component form of useForesight with a render prop, for dynamic lists or wherever the hook is awkward
+- `Foresight` -> component form of useForesight, rendering an element with `as` or accepting a render prop
 - `useForesightEvent` -> subscribe to a ForesightManager event for the lifetime of the component
 
 For usage and examples, see the [React documentation](https://foresightjs.com/docs/react/installation), including guides for [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router).

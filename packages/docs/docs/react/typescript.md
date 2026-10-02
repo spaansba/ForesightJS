@@ -14,10 +14,16 @@ import TypeScriptTypes from "../\_partials/\_typescript.mdx"
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript`, and all types are exported from `@foresightjs/react`:
+`@foresightjs/react` exports its binding types and common core types such as `ForesightElementState`, `ForesightCallback`, and `ForesightRegisterOptionsWithoutElement`:
 
 ```tsx
 import type { ForesightRegisterOptionsWithoutElement } from "@foresightjs/react"
+```
+
+Other core types come from `js.foresight` directly:
+
+```ts
+import type { ElementBounds, ForesightRegisterResult, ForesightManagerData } from "js.foresight"
 ```
 
 The hooks are generic over the element type, so the returned ref is correctly typed:

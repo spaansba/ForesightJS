@@ -34,7 +34,7 @@ ForesightJS uses different prediction strategies depending on the device type:
 
 **Desktop/Keyboard Users**: Mouse trajectory prediction, keyboard navigation tracking, and scroll-based prefetching. [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#keyboardmouse-users)
 
-**Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`]). [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#touch-devices-v330)
+**Mobile Devices**: Viewport enter detection and touch start events (configurable via [`touchDeviceStrategy`](https://foresightjs.com/docs/configuration/global-settings#touchdevicestrategy)). [Read more](https://foresightjs.com/docs/getting-started/what-is-foresightjs#touch-devices)
 
 ## Configuration
 

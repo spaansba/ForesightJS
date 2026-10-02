@@ -52,7 +52,7 @@ useForesight({
 })
 ```
 
-You can change these on every render. The hook patches the existing registration in place.
+You can change these on every render. The hook updates the existing registration in place. Each options object describes the full configuration, so omitted fields reset to their defaults. Removing `hitSlop`, for example, restores the current global `defaultHitSlop`.
 
 ## Reactive state
 

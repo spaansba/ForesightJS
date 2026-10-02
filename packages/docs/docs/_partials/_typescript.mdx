@@ -2,7 +2,7 @@
 
 ### ForesightElementState
 
-This is the main type used in ForesightJS: the flat, immutable state snapshot of a registered element. Your [callback](#foresightcallback) receives it, most [events](../events.md) carry it as `state`, and `register()` returns it (plus a few functions, see [ForesightRegisterResult](#foresightregisterresult)). The reference is replaced on every logical change, never mutated - and never on scroll: the element's rects live in [ElementBounds](#elementbounds), on their own subscription channel.
+This is the main type used in ForesightJS: the flat, immutable state snapshot of a registered element. Your [callback](#foresightcallback) receives it, most [events](../events.md) carry it as `state`, and `register()` returns it (plus a few functions, see [ForesightRegisterResult](#foresightregisterresult)). The reference is replaced on every logical change, never mutated. Geometry-only changes use [ElementBounds](#elementbounds), on their own subscription channel. Scrolling can still change logical state, such as viewport visibility or prediction status.
 
 ```TS
 type ForesightElementState = {
@@ -31,7 +31,7 @@ See the [registration return value](../configuration/registration-options.md#reg
 
 ### ElementBounds
 
-The element's geometry: its measured rect and the [hitSlop](../configuration/global-settings.md)-expanded rect used for interaction detection. Geometry changes on every scroll/resize tick for visible elements, so it is published on a separate channel (`getBounds`/`subscribeToBounds`) and deliberately kept out of `ForesightElementState` - state subscribers never fire on scroll.
+The element's geometry: its measured rect and the [hitSlop](../configuration/global-settings.md)-expanded rect used for interaction detection. Visible elements' position and size changes are published on a separate channel (`getBounds`/`subscribeToBounds`) and kept out of `ForesightElementState`, so geometry-only updates do not notify state subscribers.
 
 ```TS
 type ElementBounds = {
@@ -84,7 +84,7 @@ type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> // See above for ForesightElementState
   globalSettings: Readonly<ForesightManagerSettings> // See configuration for global settings
   globalCallbackHits: Readonly<CallbackHits> // See above for CallbackHitType, this is that but all of them combined
-  eventListeners: ReadonlyMap<keyof ForesightEventMap, ForesightEventListener[]> // All event listeners currently listening
+  eventListeners: ReadonlyMap<keyof ForesightEventMap, ReadonlySet<ForesightEventListener>> // All event listeners currently listening
   currentDeviceStrategy: CurrentDeviceStrategy
   activeElementCount: number
   parkedElementCount: number // elements detached from the DOM, waiting to reconnect

@@ -52,7 +52,7 @@ Events fired during element registration, updates, and cleanup.
 
 #### <code style={{backgroundColor: '#1e293b', color: '#f97316', padding: '4px 8px', borderRadius: '6px', fontSize: '1.1rem', fontWeight: '600'}}>elementRegistered</code>
 
-Fired when an element is successfully registered with `ForesightManager` using `ForesightManager.instance.register(element)`.
+Fired when a new element is registered with `ForesightManager` using `ForesightManager.instance.register({ element, callback })`. Registering an already-tracked element updates its options without emitting another `elementRegistered` event.
 
 ```typescript
 type ElementRegisteredEvent = {

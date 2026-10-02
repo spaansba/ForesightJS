@@ -4,7 +4,7 @@ Reading this is not necessary to use the library; this is just for understanding
 
 ## Architecture
 
-ForesightJS uses a singleton pattern with `ForesightManager` as the central instance managing all prediction logic, registered elements, and global settings. Elements are stored in a `Map` where the key is the registered element itself. Multiple registrations of the same element overwrite the existing entry.
+ForesightJS uses a singleton pattern with `ForesightManager` as the central instance managing all prediction logic, registered elements, and global settings. Elements are stored in a `Map` where the key is the registered element itself. Registering the same element again patches its options and increments `registerCount`, preserving its identity, state, and subscriptions. Omitted options keep their current values.
 
 Since DOM elements can change position and we need to keep the DOM clean, we require `element.getBoundingClientRect()` for each element on each update. To avoid triggering reflows, ForesightJS uses observers:
 
@@ -23,13 +23,13 @@ The `PositionObserver` uses layered observation:
 
 Mouse prediction tracks cursor movement patterns to anticipate click targets by analyzing velocity and trajectory.
 
-**Event Handling**: `mousemove` events record `clientX` and `clientY` coordinates. Position history is limited by `positionHistorySize` setting.
+**Event Handling**: `pointermove` events record `clientX` and `clientY` coordinates for mouse and pen input. Position history is limited by `positionHistorySize` setting.
 
 **Prediction Algorithm**: The `predictNextMousePosition` function implements linear extrapolation:
 
 1. **History Tracking**: Stores past mouse positions with timestamps
 2. **Velocity Calculation**: Calculates average velocity using oldest and newest points in history
-3. **Extrapolation**: Projects current position along trajectory using calculated velocity and `trajectoryPredictionTimeInMs` setting
+3. **Extrapolation**: Projects current position along trajectory using calculated velocity and `trajectoryPredictionTime` setting
 
 **Intersection Detection**: The `lineSegmentIntersectsRect` function implements the Liang-Barsky line clipping algorithm to check intersections between the predicted mouse path and element rectangles:
 
@@ -70,7 +70,7 @@ Touch devices have no continuous cursor, so prediction works differently. The `t
 
 **Viewport Entry**: Uses `IntersectionObserver` to detect when elements enter the viewport. Callbacks trigger when elements become visible during scrolling, providing anticipatory loading for content that will soon be in view.
 
-**Touch Start**: Listens for `touchstart` events on registered elements. Callbacks fire immediately when users begin touching an element, before the actual `click` event occurs, providing a performance advantage for touch interactions.
+**Touch Start**: Listens for `pointerdown` events on registered HTML elements. Callbacks fire when users begin interacting with an element, before the actual `click` event occurs, providing a performance advantage for touch interactions.
 
 ## Element Lifecycle
 

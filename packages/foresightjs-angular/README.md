@@ -18,8 +18,6 @@ pnpm add @foresightjs/angular js.foresight
 npm install @foresightjs/angular js.foresight
 ```
 
-Requires Angular 17+
-
 ## What's included
 
 - `ForesightDirective` -> standalone `[fsForesight]` directive to register an element with a callback or full options object

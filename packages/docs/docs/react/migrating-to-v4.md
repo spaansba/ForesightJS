@@ -20,7 +20,7 @@ In v3 there was no React package - the docs handed you a `useForesight` hook to 
 Install the package and delete your hand-rolled `useForesight.ts`:
 
 ```bash
-npm install @foresightjs/react
+npm install @foresightjs/react js.foresight
 ```
 
 Then update the import and the return shape:

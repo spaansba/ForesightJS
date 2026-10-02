@@ -21,7 +21,7 @@ In v3 there was no Vue package - the docs handed you a directive and composable 
 Install the package and delete your hand-rolled `vForesight.ts` / `useForesight.ts`:
 
 ```bash
-npm install @foresightjs/vue
+npm install @foresightjs/vue js.foresight
 ```
 
 ## Directive

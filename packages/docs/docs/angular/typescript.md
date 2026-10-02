@@ -15,10 +15,16 @@ import TypeScriptTypes from "../\_partials/\_typescript.mdx"
 
 # TypeScript
 
-ForesightJS is fully written in `TypeScript`, and all core and Angular helper types are exported from `@foresightjs/angular`:
+`@foresightjs/angular` exports its binding types and common core types such as `ForesightElementState`, `ForesightCallback`, and `ForesightRegisterOptionsWithoutElement`:
 
 ```ts
 import type { ForesightOptions, ForesightRegistration } from "@foresightjs/angular"
+```
+
+Other core types come from `js.foresight` directly:
+
+```ts
+import type { ElementBounds, ForesightRegisterResult, ForesightManagerData } from "js.foresight"
 ```
 
 Angular prediction state is exposed as signals:
