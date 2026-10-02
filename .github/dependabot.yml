@@ -11,7 +11,10 @@ updates:
           - "minor"
           - "patch"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
+      day: "saturday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
     open-pull-requests-limit: 5
     cooldown:
       default-days: 21
