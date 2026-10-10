@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@foresightjs/astro": "workspace:*",
-    "astro": "^7.3.2",
+    "astro": "^7.3.3",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*"
   },
