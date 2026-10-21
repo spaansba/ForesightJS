@@ -10,6 +10,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     schedule:
       interval: "weekly"
       day: "saturday"
