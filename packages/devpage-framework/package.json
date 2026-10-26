@@ -14,7 +14,7 @@
     "@angular/compiler": "^22.1.7",
     "@angular/core": "^22.1.7",
     "@angular/platform-browser": "^22.1.7",
-    "@angular/router": "^22.2.0",
+    "@angular/router": "^22.2.1",
     "@foresightjs/angular": "workspace:*",
     "@foresightjs/react": "workspace:*",
     "@foresightjs/vue": "workspace:*",
@@ -42,7 +42,7 @@
     "react-scan": "^0.5.7",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
-    "vite": "^8.3.0",
+    "vite": "^8.3.3",
     "vue-tsc": "^3.3.11"
   }
 }
