@@ -15,8 +15,7 @@ updates:
         patterns:
           - "*"
     schedule:
-      interval: "weekly"
-      day: "saturday"
+      interval: "monthly"
       time: "09:00"
       timezone: "Europe/Amsterdam"
     open-pull-requests-limit: 5
