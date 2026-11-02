@@ -22,7 +22,7 @@
     "@signalwire/docusaurus-plugin-llms-txt": "^1.2.2",
     "@tanstack/react-query": "^5.104.1",
     "clsx": "^2.1.1",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.3",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*",
     "lucide-react": "^1.55.0",
