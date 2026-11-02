@@ -76,11 +76,11 @@
     }
   },
   "devDependencies": {
-    "astro": "^7.3.6",
+    "astro": "^7.3.8",
     "js.foresight": "workspace:*",
     "js.foresight-devtools": "workspace:*",
     "jsdom": "^30.1.2",
-    "tsdown": "^0.23.0",
+    "tsdown": "^0.23.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   }
