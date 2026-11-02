@@ -138,10 +138,10 @@ importers:
     devDependencies:
       '@analogjs/vite-plugin-angular':
         specifier: ^2.8.0
-        version: 2.8.0(@angular/build@22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(yaml@2.9.0))
+        version: 2.8.0(c8d3bdcb30ee88a97eff8436f31bc57d)
       '@angular/build':
         specifier: ^22.2.2
-        version: 22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)
+        version: 22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)
       '@angular/compiler-cli':
         specifier: ^22.2.2
         version: 22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3)
@@ -240,8 +240,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
+        specifier: ^18.0.3
+        version: 18.0.7
       js.foresight:
         specifier: workspace:*
         version: link:../js.foresight
@@ -303,7 +303,7 @@ importers:
         version: link:../js.foresight
       ng-packagr:
         specifier: ^22.2.4
-        version: 22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+        version: 22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -5199,84 +5199,6 @@ packages:
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  '@yuku-codegen/binding-android-arm64@0.9.5':
-    resolution: {integrity: sha512-jrOY5WM+AaAqkv51fHP1x28ifto4WgcZVzodLUyMU1jMWn5Sq+VciRdk/n8E0Ey5w4p4cWWE+m5GfXWOYh7Kzw==}
-    cpu: [arm64]
-    os: [android]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-darwin-arm64@0.9.5':
-    resolution: {integrity: sha512-4O4lkCQIzPZGjiNB1GORSI6hBECbiiSBS/APZXPvNKYH+nhY4uuqv03LNXA+SET3hoBjvr95P5rIhY8KQaQUBA==}
-    cpu: [arm64]
-    os: [darwin]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-darwin-x64@0.9.5':
-    resolution: {integrity: sha512-9EvoUO0SEhD6/d8VHdWuPerepPMSR1y84+UEgz8Un1Ope14Oe7xMvePpEQLTLovoIFZ8Zg3iZ8z8E11pZMqC3g==}
-    cpu: [x64]
-    os: [darwin]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-freebsd-x64@0.9.5':
-    resolution: {integrity: sha512-HqT78WwgHTmp8lwujoUa9CrIortX4DdpuiVC18ZPSGvuuJf4ylpIEI6QrQEM78Zwz3muhAWAOXZ5irdiYY+AyA==}
-    cpu: [x64]
-    os: [freebsd]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-arm-gnu@0.9.5':
-    resolution: {integrity: sha512-QJXwIW6Ms3QIawbcBIedmrmXnfdpuAOjZJ/eAABq5XTzWvSxZ7lutu9W5yIHahlaTaFnBo7ikrVMD1szLTpPUw==}
-    cpu: [arm]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-arm-musl@0.9.5':
-    resolution: {integrity: sha512-eHbFy3IHGb+IYarrYwAo0yWSEQV3eAmEn6VrsKA6I1Wy1YPJxWqSJlV69JhqsHtJuJlljUIF3ex0y46yaKIu9w==}
-    cpu: [arm]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-arm64-gnu@0.9.5':
-    resolution: {integrity: sha512-ByoJMbySTaDhjAXSu8q6Lh7HKg3YoesXpcT72aYk0Aiw4PCznmY4ybpLTq0RCvp0RIPhFm/6yECFiGBwyCC1nw==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-arm64-musl@0.9.5':
-    resolution: {integrity: sha512-gD9vfXIoBw1toSxhO9rgmSu/FEfy3PMznJAxVjIuH8DrWEiDKXmJO0pJKfj1Ltbe/TmtWVZR+TjISqeSIGQzMg==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-x64-gnu@0.9.5':
-    resolution: {integrity: sha512-BARvdnvqMGjOr5Iel2JH+9H5vAIE0R6H0Z2fsT02xrvmI/1ZXNB8lkuX+ZGevPhZb3zJ9WeC/R8JZstrsUOK5g==}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-linux-x64-musl@0.9.5':
-    resolution: {integrity: sha512-x8flcevS1fbb7ESrmpOY/pON4eInSaE/7Ktjqx2udOE2W33BNSZmJuwpyUgo54AoHNqrcaM7szqydyJn5fNvew==}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-win32-arm64@0.9.5':
-    resolution: {integrity: sha512-KOL/rBatWqH4ZpCNoF8ZtSNdOJbAxBJLmk/VeRciepGROPTbPum1A9t67GpFgOU7qrkUWlPJdJ+KHKbvbmOt+w==}
-    cpu: [arm64]
-    os: [win32]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
-  '@yuku-codegen/binding-win32-x64@0.9.5':
-    resolution: {integrity: sha512-FxENahEjWSan59Syh/us/Kf4wNq8qrJLFJ3R2N4Oiwtb6yNdz/rWLNTIoNSssnsp7IoWJdUP6o/Z8ppg7lXMcg==}
-    cpu: [x64]
-    os: [win32]
-    deprecated: yuku-codegen is pure JavaScript since 0.14
-
   '@yuku-core/binding-android-arm64@0.18.1':
     resolution: {integrity: sha512-1XTUWTmnpwXNyPwRLSQDjvHu7WPgykzCniYtTk+5ppnriznVONWd9TRPcFxCR8dlZ7HFGtv8v1wzbQmtmVlHNQ==}
     cpu: [arm64]
@@ -5343,89 +5265,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@yuku-parser/binding-android-arm64@0.9.5':
-    resolution: {integrity: sha512-A2JCFCSHfnficqYEw4Iujpx7XrkMM3UfFcgJFmYpZSo9zM4nyhmdIIE0FogSduuU60lhM0/UcfuUBXIVNBMlGQ==}
-    cpu: [arm64]
-    os: [android]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-darwin-arm64@0.9.5':
-    resolution: {integrity: sha512-3PiyU+Eare4YuKaQ22N98/yAiROPY5o/NQJHraICzDvk4pgS+m+bgLKOvkGBRn33OnV95Vdv1Mn38b+MQHpULQ==}
-    cpu: [arm64]
-    os: [darwin]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-darwin-x64@0.9.5':
-    resolution: {integrity: sha512-blFMAFI7AInI83XaiOF8cIeiRM46Nz9EfpZtZPRLbKxSA9aAr5v8aHYpmfN6NoyXxAv/10pwS4gsAuc1W6fy5Q==}
-    cpu: [x64]
-    os: [darwin]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-freebsd-x64@0.9.5':
-    resolution: {integrity: sha512-TsNuL4qsZdO0tHp5GW43Y5fHeLPpPHA675wdcPNTcdq2ZO5AvsQWFFoiDg8CH4oBktfsQ9tdvKhjLnLYwKvp4g==}
-    cpu: [x64]
-    os: [freebsd]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-arm-gnu@0.9.5':
-    resolution: {integrity: sha512-b0afYK5gHeV8RdmOcqAlgM8ONsye4cax4DMnIBaoJyPMd1UTGvTbpkqQcPVdhmHlcfcGVGMV1laeVovlr/dscw==}
-    cpu: [arm]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-arm-musl@0.9.5':
-    resolution: {integrity: sha512-fD3lKzl+r6j6n8DwiMY53qnh5DLqD8KJjCp+NbVud54Nnh3Q9Wprqss3YzyMHP3NSJk663Wlg1E1X5qOuFVFig==}
-    cpu: [arm]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-arm64-gnu@0.9.5':
-    resolution: {integrity: sha512-aRU/aCphV1MWCl/lvI6NX8LgucHQ68Fx+vz7NBb/5MEr2EuzCxiPOQqeFcMdWh+2AED/p0AvAREch0c+cSnlhA==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-arm64-musl@0.9.5':
-    resolution: {integrity: sha512-5+Guro0l8H473YXlEjVNBRLN/IbPbJdnQh1zo0OLt49xxnON+XMJRRaEyTOTfkn9QSRg0+BhEKGR4W9Gu2uZJQ==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-x64-gnu@0.9.5':
-    resolution: {integrity: sha512-pwwSyV9q+GlvzSXlsMZBMlgk22L5bud714/vqZCdeUTivzeUVltQzUaf3IQXOGXdpc59JYTeuMCtbGquaAUoCA==}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-linux-x64-musl@0.9.5':
-    resolution: {integrity: sha512-z18j6JN3lBHH8vzN7gG1M8fI0nlgItSfnC9PfbmUbt97iHViKfw2iA2G9fGwRMe5LyPRZBrejIlapbygPbpdaw==}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-win32-arm64@0.9.5':
-    resolution: {integrity: sha512-s6Gwttb1dQvtPX6Bgkw+UPC9IO3UBDXc6Zezog8MMgvu3UfJBBB9TQqKBX/2quu0Eyh+lLSAyNlIyyecaagUPg==}
-    cpu: [arm64]
-    os: [win32]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
-  '@yuku-parser/binding-win32-x64@0.9.5':
-    resolution: {integrity: sha512-FrERt9YWatY3bJfSUdi4YWY+6iQcyo3MzCC821BxlWM5TFZEHijnpz/bknR79VHlXY/9CvXz8ZlaAGPsTtN3nw==}
-    cpu: [x64]
-    os: [win32]
-    deprecated: yuku-parser runs on yuku-core since 0.14
-
   '@yuku-toolchain/types@0.18.1':
     resolution: {integrity: sha512-rWtqVdjA8O34nV/4mBFIdUm5Zj+FIzZDR7P2PEpqXXp53VEHabTROu7j2RjzzJbLMVYjW6gDKwOgPgiKRA+x4w==}
-
-  '@yuku-toolchain/types@0.9.5':
-    resolution: {integrity: sha512-KiuLNNgX9uNealaWAR+G3/cMXnRk9x4TY2EkYe/KIag+UPdwiA0RRf1hr1WAxzTP8KGzCTkqUdLPvqh32sEO3w==}
 
   abbrev@5.0.0:
     resolution: {integrity: sha512-/XrFJgzQQQHpti1raDJC6m4ws6aNktmjBlhk8Fdlk7LwCEuDoieEJJY9OFHjfiFJFFRM2tK+Ky/IsfbbmlMu1w==}
@@ -5655,6 +5496,11 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
+  baseline-browser-mapping@2.11.28:
+    resolution: {integrity: sha512-br0LOmjJqr6Rt4AEkadbcNf67Zpo7EPwKsWbjnRrJIa1QYFHQBqM4C7F2WTbV8ahTEcg1Eo+Y0aWjjORInYFyA==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   baseline-browser-mapping@2.11.29:
     resolution: {integrity: sha512-YeesxhUmR4h5y5V8KF8iBCqJb8YFrBJ++XBTeGcWIaQOYXGN19JM0FoiOjAhwuDoln8owMgXcWBmgHtYSkky2w==}
     engines: {node: '>=6.0.0'}
@@ -5725,6 +5571,11 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
+
+  browserslist@4.29.3:
+    resolution: {integrity: sha512-1R4kiYKXGViqEN0CnoDrXc1StD9niAwu+j2dukWzrD4bJgsD4lDmEp0CRbc6E/vYJIfTHwPmwyaKtVSudICdPA==}
+    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
 
   browserslist@4.29.4:
     resolution: {integrity: sha512-2TcbbiwXEq+N0kD36tykpCfyyQigUXmuwNQbnPp4Xk4PX9JOqVIKjJlIDjpH7uY6tmRGoAd+apeT1p60T8wsdA==}
@@ -6450,9 +6301,10 @@ packages:
     resolution: {integrity: sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA==}
     engines: {node: '>=10'}
 
-  dotenv@17.4.2:
-    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+  dotenv@18.0.7:
+    resolution: {integrity: sha512-QEvMEF8ca3GNZJJnAbOgxpj5ULhBvnMcURp+XKrtvqFNPgjBvYoswQ0Jl2cO7JzCjxZjJhr9ZuIEhlrRxMft/Q==}
     engines: {node: '>=12'}
+    hasBin: true
 
   dset@3.1.4:
     resolution: {integrity: sha512-2QF/g9/zTaPDc3BjNcVTGoBbXBgYfMTTceLaYcFJ/W9kggFUkhxD/hMEeuLKbugyef9SqAx8cpgwlIP/jinUTA==}
@@ -6484,6 +6336,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  electron-to-chromium@1.5.452:
+    resolution: {integrity: sha512-cVvk1YBSj6571VmV6hdJTqj94Y79xSu8cj6Y9t6ae4Y4431z8/7EJFvu3rVp90xhfuv9BpPKUmaLfTo4+FOGBg==}
 
   electron-to-chromium@1.5.459:
     resolution: {integrity: sha512-4SC9HHSFjO/liAhifpdOL5hG9b4BP7/5G3y3UPZVO8trlAXr1CaUEEJL0gWK3kOcYcZrOA5rkwG45Gra/lTIgg==}
@@ -8375,6 +8230,10 @@ packages:
   node-mock-http@1.0.5:
     resolution: {integrity: sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw==}
 
+  node-releases@2.0.58:
+    resolution: {integrity: sha512-BdiKAgbfRlvfMq/XzO/AF9NPmaA8a+YpLAyAFTVFBj3gARrAIfWvNq7Q7NE4se3KgFu0KkrvQMxTS0XVnsGzHg==}
+    engines: {node: '>=18'}
+
   node-releases@2.0.59:
     resolution: {integrity: sha512-5qr2okC4ItAI0hG5SaV0HoYMpnM/Y6+Oqr7AmPYy/2uEoGvS+GbSKLeRxSS1uAdu59yz0ouzcuXievSgg///WA==}
     engines: {node: '>=18'}
@@ -9557,25 +9416,6 @@ packages:
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
-
-  rolldown-plugin-dts@0.28.5:
-    resolution: {integrity: sha512-yYd3C9CeJwqjOc9X23m0Tyxcqic491uLZlfg51szT287S8zCCqLR2uoySoElgqy2CLn7PdXcEo1dlkBs4n1WHg==}
-    engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
-    peerDependencies:
-      '@typescript/native-preview': '*'
-      '@volar/typescript': ~2.4.0
-      rolldown: ^1.2.0
-      typescript: ^5.0.0 || ^6.0.0 || ~7.0.0
-      vue-tsc: ~3.2.0 || ~3.3.0
-    peerDependenciesMeta:
-      '@typescript/native-preview':
-        optional: true
-      '@volar/typescript':
-        optional: true
-      typescript:
-        optional: true
-      vue-tsc:
-        optional: true
 
   rolldown-plugin-dts@0.28.7:
     resolution: {integrity: sha512-o0lA6/NPzBAhMFgnIVJgW4eMBbMBQ8sXEbq4GqEHloerWMLqLNatpFy5AlWpEKskFShWKNghMMI8naul9Lgo5Q==}
@@ -11051,15 +10891,9 @@ packages:
     resolution: {integrity: sha512-Y9YgmYeExF+13IOm4r9pTgmQiCVJtrhq014st78eAckWlCkbjzNd2AVrQHng5uiLz9j31O4sGYhuP3znSKJv9w==}
     engines: {node: '>=14.18.0'}
 
-  yuku-ast@0.9.5:
-    resolution: {integrity: sha512-Q8qW8WwQnN5Cm0ZZivdRIfv0sRLTjUq0YumXJkw8CYN1aCdICH9rk4C47/4n6kA5EqDtlj+F608twoTSV2MwdQ==}
-
   yuku-codegen@0.18.1:
     resolution: {integrity: sha512-0tNgBfNHW6+tEBGEf1N20C6tDsFR9Vj344Ey01wgAMeP+j0zR5WBF8dyzOu5oA/n6Yz6YqV1ZcASdi0cin+q8A==}
     engines: {node: '>=14.18.0'}
-
-  yuku-codegen@0.9.5:
-    resolution: {integrity: sha512-zGUVyDpSK4b6c9B0yyxi2P0wujn1XZTbG9dCb7d6gyAoP63EMgyLzUwPUvwxPG5jgYqhlI7w+S3oCyapqGr4PA==}
 
   yuku-core@0.18.1:
     resolution: {integrity: sha512-8PEOCKEi7r3nPY5cF0ZtJJSQj0ftwd0GC4En8fDQIP3nxw5ysSDwM0RcEuyHBblowRb82ad9AsExpqnKXAtC1Q==}
@@ -11068,9 +10902,6 @@ packages:
   yuku-parser@0.18.1:
     resolution: {integrity: sha512-t5pANCF6k9rgJre7jk8DMAU4lEoI1oWWZgXk0fcvmCYQquFVWv0rf6Awwt56nnPiHb0E24dhtrpfgf9ChTCbrQ==}
     engines: {node: '>=14.18.0'}
-
-  yuku-parser@0.9.5:
-    resolution: {integrity: sha512-IBnAdNVMswWbJcM7woPluOudectJzFjJ1N8jVRxP9Uq4CIv5hZdBIcdmtRbFDYF/Ph2j2gVup4YJ4N9mh0jYFA==}
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
@@ -11259,14 +11090,14 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@analogjs/vite-plugin-angular@2.8.0(@angular/build@22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(yaml@2.9.0))':
+  '@analogjs/vite-plugin-angular@2.8.0(c8d3bdcb30ee88a97eff8436f31bc57d)':
     dependencies:
       magic-string: 0.30.21
       obug: 2.2.1
       oxc-parser: 0.121.0(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@angular/build': 22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)
+      '@angular/build': 22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)
       vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@emnapi/core'
@@ -11290,7 +11121,7 @@ snapshots:
     optionalDependencies:
       chokidar: 5.0.0
 
-  '@angular/build@22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)':
+  '@angular/build@22.2.2(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@angular/compiler@22.2.2)(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(@angular/platform-browser@22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2)))(@types/node@26.6.5)(jiti@2.7.0)(less@4.6.7)(ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(postcss@8.5.32)(rollup@4.62.2)(supports-color@8.1.1)(tailwindcss@4.3.3)(terser@5.51.2)(tslib@2.8.1)(typescript@6.0.3)(vitest@5.0.5)(yaml@2.9.0)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2202.2(chokidar@5.0.0)
@@ -11328,7 +11159,7 @@ snapshots:
       '@angular/platform-browser': 22.2.2(@angular/common@22.2.2(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.2(@angular/compiler@22.2.2)(rxjs@7.8.2))
       less: 4.6.7
       lmdb: 3.5.6
-      ng-packagr: 22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      ng-packagr: 22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
       postcss: 8.5.32
       rollup: 4.62.2
       tailwindcss: 4.3.3
@@ -11558,7 +11389,7 @@ snapshots:
       '@babel/types': 8.0.5
       '@types/gensync': 1.0.5
       convert-source-map: 2.0.0
-      empathic: 2.0.1
+      empathic: 2.1.0
       gensync: 1.0.0-beta.2
       import-meta-resolve: 4.2.0
       json5: 2.2.3
@@ -11617,7 +11448,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 8.0.5
       '@babel/helper-validator-option': 8.0.0
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       lru-cache: 11.5.3
       verkit: 0.3.2
 
@@ -16224,7 +16055,7 @@ snapshots:
       '@vue/shared': 3.5.43
       estree-walker: 2.0.2
       magic-string: 0.30.21
-      postcss: 8.5.32
+      postcss: 8.5.28
       source-map-js: 1.2.2
 
   '@vue/compiler-ssr@3.5.43':
@@ -16381,42 +16212,6 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@yuku-codegen/binding-android-arm64@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-darwin-arm64@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-darwin-x64@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-freebsd-x64@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-arm-gnu@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-arm-musl@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-arm64-gnu@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-arm64-musl@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-x64-gnu@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-linux-x64-musl@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-win32-arm64@0.9.5':
-    optional: true
-
-  '@yuku-codegen/binding-win32-x64@0.9.5':
-    optional: true
-
   '@yuku-core/binding-android-arm64@0.18.1':
     optional: true
 
@@ -16453,45 +16248,7 @@ snapshots:
   '@yuku-core/binding-win32-x64@0.18.1':
     optional: true
 
-  '@yuku-parser/binding-android-arm64@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-darwin-arm64@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-darwin-x64@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-freebsd-x64@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-arm-gnu@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-arm-musl@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-arm64-gnu@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-arm64-musl@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-x64-gnu@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-linux-x64-musl@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-win32-arm64@0.9.5':
-    optional: true
-
-  '@yuku-parser/binding-win32-x64@0.9.5':
-    optional: true
-
   '@yuku-toolchain/types@0.18.1': {}
-
-  '@yuku-toolchain/types@0.9.5': {}
 
   abbrev@5.0.0: {}
 
@@ -16821,6 +16578,8 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
+  baseline-browser-mapping@2.11.28: {}
+
   baseline-browser-mapping@2.11.29: {}
 
   batch@0.6.1: {}
@@ -16918,6 +16677,14 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
+  browserslist@4.29.3:
+    dependencies:
+      baseline-browser-mapping: 2.11.28
+      caniuse-lite: 1.0.30001814
+      electron-to-chromium: 1.5.452
+      node-releases: 2.0.58
+      update-browserslist-db: 1.3.4(browserslist@4.29.3)
+
   browserslist@4.29.4:
     dependencies:
       baseline-browser-mapping: 2.11.29
@@ -16996,7 +16763,7 @@ snapshots:
 
   caniuse-api@3.0.0:
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-lite: 1.0.30001814
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
@@ -17404,7 +17171,7 @@ snapshots:
 
   cssnano-preset-default@6.1.2(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       css-declaration-sorter: 7.2.0(postcss@8.5.28)
       cssnano-utils: 4.0.2(postcss@8.5.28)
       postcss: 8.5.28
@@ -17438,7 +17205,7 @@ snapshots:
 
   cssnano-preset-default@6.1.2(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       css-declaration-sorter: 7.2.0(postcss@8.5.32)
       cssnano-utils: 4.0.2(postcss@8.5.32)
       postcss: 8.5.32
@@ -17684,7 +17451,7 @@ snapshots:
     dependencies:
       is-obj: 2.0.0
 
-  dotenv@17.4.2: {}
+  dotenv@18.0.7: {}
 
   dset@3.1.4: {}
 
@@ -17710,6 +17477,8 @@ snapshots:
       semver: 7.8.5
 
   ee-first@1.1.1: {}
+
+  electron-to-chromium@1.5.452: {}
 
   electron-to-chromium@1.5.459: {}
 
@@ -19985,12 +19754,12 @@ snapshots:
       - '@types/node'
       - babel-plugin-macros
 
-  ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
+  ng-packagr@22.2.4(@angular/compiler-cli@22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(tailwindcss@4.3.3)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular/compiler-cli': 22.2.2(@angular/compiler@22.2.2)(typescript@6.0.3)
       ajv: 8.20.0
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       chokidar: 5.0.0
       commander: 15.0.0
       dependency-graph: 1.0.0
@@ -20000,9 +19769,9 @@ snapshots:
       jsonc-parser: 3.3.1
       less: 4.6.7
       ora: 9.4.1
-      postcss: 8.5.32
+      postcss: 8.5.28
       rolldown: 1.2.8
-      rolldown-plugin-dts: 0.28.5(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(rolldown@1.2.8)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      rolldown-plugin-dts: 0.28.7(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(rolldown@1.2.8)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
       rxjs: 7.8.2
       sass: 1.104.1
       sass-embedded: 1.104.1
@@ -20014,6 +19783,7 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript/native-preview'
       - '@volar/typescript'
+      - '@vue/language-core'
       - oxc-resolver
       - vue-tsc
 
@@ -20046,6 +19816,8 @@ snapshots:
     optional: true
 
   node-mock-http@1.0.5: {}
+
+  node-releases@2.0.58: {}
 
   node-releases@2.0.59: {}
 
@@ -20551,7 +20323,7 @@ snapshots:
 
   postcss-colormin@6.1.0(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       colord: 2.10.0
       postcss: 8.5.28
@@ -20559,7 +20331,7 @@ snapshots:
 
   postcss-colormin@6.1.0(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       colord: 2.10.0
       postcss: 8.5.32
@@ -20568,13 +20340,13 @@ snapshots:
 
   postcss-convert-values@6.1.0(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.28
       postcss-value-parser: 4.2.0
 
   postcss-convert-values@6.1.0(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.32
       postcss-value-parser: 4.2.0
     optional: true
@@ -20728,7 +20500,7 @@ snapshots:
 
   postcss-merge-rules@6.1.1(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       cssnano-utils: 4.0.2(postcss@8.5.28)
       postcss: 8.5.28
@@ -20736,7 +20508,7 @@ snapshots:
 
   postcss-merge-rules@6.1.1(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       cssnano-utils: 4.0.2(postcss@8.5.32)
       postcss: 8.5.32
@@ -20771,14 +20543,14 @@ snapshots:
 
   postcss-minify-params@6.1.0(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       cssnano-utils: 4.0.2(postcss@8.5.28)
       postcss: 8.5.28
       postcss-value-parser: 4.2.0
 
   postcss-minify-params@6.1.0(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       cssnano-utils: 4.0.2(postcss@8.5.32)
       postcss: 8.5.32
       postcss-value-parser: 4.2.0
@@ -20889,13 +20661,13 @@ snapshots:
 
   postcss-normalize-unicode@6.1.0(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.28
       postcss-value-parser: 4.2.0
 
   postcss-normalize-unicode@6.1.0(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.32
       postcss-value-parser: 4.2.0
     optional: true
@@ -21033,13 +20805,13 @@ snapshots:
 
   postcss-reduce-initial@6.1.0(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       postcss: 8.5.28
 
   postcss-reduce-initial@6.1.0(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       caniuse-api: 3.0.0
       postcss: 8.5.32
     optional: true
@@ -21660,28 +21432,29 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-plugin-dts@0.28.5(@volar/typescript@2.4.28(typescript@6.0.3))(oxc-resolver@11.24.2)(rolldown@1.2.8)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
-    dependencies:
-      dts-resolver: 3.0.0(oxc-resolver@11.24.2)
-      get-tsconfig: 5.0.0-beta.6
-      obug: 2.2.1
-      rolldown: 1.2.8
-      yuku-ast: 0.9.5
-      yuku-codegen: 0.9.5
-      yuku-parser: 0.9.5
-    optionalDependencies:
-      '@volar/typescript': 2.4.28(typescript@6.0.3)
-      typescript: 6.0.3
-      vue-tsc: 3.3.13(typescript@6.0.3)
-    transitivePeerDependencies:
-      - oxc-resolver
-
   rolldown-plugin-dts@0.28.7(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(rolldown@1.2.15)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
     dependencies:
       dts-resolver: 3.0.0(oxc-resolver@11.24.2)
       get-tsconfig: 5.0.0-beta.6
       obug: 3.0.0
       rolldown: 1.2.15
+      yuku-ast: 0.18.1
+      yuku-codegen: 0.18.1
+      yuku-parser: 0.18.1
+    optionalDependencies:
+      '@volar/typescript': 2.4.28(typescript@6.0.3)
+      '@vue/language-core': 3.3.13
+      typescript: 6.0.3
+      vue-tsc: 3.3.13(typescript@6.0.3)
+    transitivePeerDependencies:
+      - oxc-resolver
+
+  rolldown-plugin-dts@0.28.7(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(oxc-resolver@11.24.2)(rolldown@1.2.8)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
+    dependencies:
+      dts-resolver: 3.0.0(oxc-resolver@11.24.2)
+      get-tsconfig: 5.0.0-beta.6
+      obug: 3.0.0
+      rolldown: 1.2.8
       yuku-ast: 0.18.1
       yuku-codegen: 0.18.1
       yuku-parser: 0.18.1
@@ -22323,13 +22096,13 @@ snapshots:
 
   stylehacks@6.1.1(postcss@8.5.28):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.28
       postcss-selector-parser: 6.1.4
 
   stylehacks@6.1.1(postcss@8.5.32):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       postcss: 8.5.32
       postcss-selector-parser: 6.1.4
     optional: true
@@ -22744,6 +22517,12 @@ snapshots:
       ofetch: 1.5.1
       ufo: 1.6.4
 
+  update-browserslist-db@1.3.4(browserslist@4.29.3):
+    dependencies:
+      browserslist: 4.29.3
+      escalade: 3.2.0
+      picocolors: 1.1.1
+
   update-browserslist-db@1.3.4(browserslist@4.29.4):
     dependencies:
       browserslist: 4.29.4
@@ -23057,7 +22836,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.25.1
       es-module-lexer: 2.3.2
@@ -23094,7 +22873,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      browserslist: 4.29.4
+      browserslist: 4.29.3
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.25.1
       es-module-lexer: 2.3.2
@@ -23245,30 +23024,9 @@ snapshots:
     dependencies:
       '@yuku-toolchain/types': 0.18.1
 
-  yuku-ast@0.9.5:
-    dependencies:
-      '@yuku-toolchain/types': 0.9.5
-
   yuku-codegen@0.18.1:
     dependencies:
       '@yuku-toolchain/types': 0.18.1
-
-  yuku-codegen@0.9.5:
-    dependencies:
-      '@yuku-toolchain/types': 0.9.5
-    optionalDependencies:
-      '@yuku-codegen/binding-android-arm64': 0.9.5
-      '@yuku-codegen/binding-darwin-arm64': 0.9.5
-      '@yuku-codegen/binding-darwin-x64': 0.9.5
-      '@yuku-codegen/binding-freebsd-x64': 0.9.5
-      '@yuku-codegen/binding-linux-arm-gnu': 0.9.5
-      '@yuku-codegen/binding-linux-arm-musl': 0.9.5
-      '@yuku-codegen/binding-linux-arm64-gnu': 0.9.5
-      '@yuku-codegen/binding-linux-arm64-musl': 0.9.5
-      '@yuku-codegen/binding-linux-x64-gnu': 0.9.5
-      '@yuku-codegen/binding-linux-x64-musl': 0.9.5
-      '@yuku-codegen/binding-win32-arm64': 0.9.5
-      '@yuku-codegen/binding-win32-x64': 0.9.5
 
   yuku-core@0.18.1:
     dependencies:
@@ -23291,24 +23049,6 @@ snapshots:
     dependencies:
       '@yuku-toolchain/types': 0.18.1
       yuku-core: 0.18.1
-
-  yuku-parser@0.9.5:
-    dependencies:
-      '@yuku-toolchain/types': 0.9.5
-      yuku-ast: 0.9.5
-    optionalDependencies:
-      '@yuku-parser/binding-android-arm64': 0.9.5
-      '@yuku-parser/binding-darwin-arm64': 0.9.5
-      '@yuku-parser/binding-darwin-x64': 0.9.5
-      '@yuku-parser/binding-freebsd-x64': 0.9.5
-      '@yuku-parser/binding-linux-arm-gnu': 0.9.5
-      '@yuku-parser/binding-linux-arm-musl': 0.9.5
-      '@yuku-parser/binding-linux-arm64-gnu': 0.9.5
-      '@yuku-parser/binding-linux-arm64-musl': 0.9.5
-      '@yuku-parser/binding-linux-x64-gnu': 0.9.5
-      '@yuku-parser/binding-linux-x64-musl': 0.9.5
-      '@yuku-parser/binding-win32-arm64': 0.9.5
-      '@yuku-parser/binding-win32-x64': 0.9.5
 
   zod-validation-error@4.0.2(zod@4.6.7):
     dependencies:
