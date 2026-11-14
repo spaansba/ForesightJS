@@ -23,6 +23,21 @@ describe("initForesight against the real ForesightManager", () => {
     expect(registeredElements.has(anchor)).toBe(false)
   })
 
+  it("leaves elements it did not register alone when they detach", async () => {
+    const element = document.createElement("div")
+    document.body.append(element)
+    ForesightManager.instance.register({ element, callback: () => {} })
+
+    element.remove()
+    await flush()
+    expect(registeredElements.get(element)?.isParked).toBe(true)
+
+    document.body.append(element)
+    await flush()
+    expect(registeredElements.get(element)?.isParked).toBe(false)
+    ForesightManager.instance.unregister(element)
+  })
+
   it("keeps registering links after a view transition swaps the body", async () => {
     document.body.replaceWith(document.createElement("body"))
     document.dispatchEvent(new Event("astro:page-load"))
