@@ -1,12 +1,11 @@
 import type { ForesightElement, ForesightManagerSettings } from "../types/types"
-import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
-import { ElementObservingModule } from "../core/ElementObservingModule"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ViewportPredictor } from "../predictors/ViewportPredictor"
 import { TouchStartPredictor } from "../predictors/TouchStartPredictor"
 
-export class TouchDeviceHandler extends ElementObservingModule {
+export class TouchDeviceHandler extends BaseForesightModule {
   private predictors: { viewport: ViewportPredictor; onTouchStart: TouchStartPredictor }
-  private predictor: ElementObservingModule | undefined
+  private predictor: ViewportPredictor | TouchStartPredictor | undefined
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
@@ -29,7 +28,7 @@ export class TouchDeviceHandler extends ElementObservingModule {
   private connectPredictor(): void {
     this.predictor?.disconnect()
 
-    const strategy = this.settings.touchDeviceStrategy
+    const strategy = this.deps.settings.touchDeviceStrategy
     this.predictor = strategy === "none" ? undefined : this.predictors[strategy]
 
     if (!this.predictor) {
@@ -38,7 +37,7 @@ export class TouchDeviceHandler extends ElementObservingModule {
 
     this.predictor.connect()
 
-    for (const [element, entry] of this.elements) {
+    for (const [element, entry] of this.deps.elements) {
       if (entry.state.isActive) {
         this.predictor.observeElement(element)
       }

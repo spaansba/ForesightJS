@@ -12,7 +12,6 @@ import { isScannable } from "../helpers/isScannable"
 import { canBeActive } from "../helpers/canBeActive"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
-import type { ElementObservingModule } from "../core/ElementObservingModule"
 import { applySettingsChanges } from "./SettingsManager"
 import type {
   CallbackHits,
@@ -74,7 +73,7 @@ export class ForesightManager {
 
   private desktopHandler: DesktopHandler | null = null
   private touchDeviceHandler: TouchDeviceHandler | null = null
-  private currentlyActiveHandler: ElementObservingModule | null = null
+  private currentlyActiveHandler: DesktopHandler | TouchDeviceHandler | null = null
   /** Bumped per strategy switch and on teardown so a stale lazy load never connects. */
   private deviceStrategyRequest = 0
   private handlerDependencies: ForesightModuleDependencies
