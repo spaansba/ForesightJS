@@ -1,5 +1,5 @@
-import { LitElement, html, css } from "lit"
-import { customElement } from "lit/decorators.js"
+import { LitElement, html, css, unsafeCSS } from "lit"
+import { customElement, query } from "lit/decorators.js"
 import {
   ForesightManager,
   type MouseTrajectoryUpdateEvent,
@@ -12,6 +12,8 @@ export type Point = {
   x: number
   y: number
 }
+const LINE_BASE_WIDTH = 100
+
 @customElement("mouse-trajectory")
 export class MouseTrajectory extends LitElement {
   static styles = [
@@ -20,32 +22,36 @@ export class MouseTrajectory extends LitElement {
         display: block;
       }
 
-      :host([hidden]) {
-        display: none;
-      }
-
-      .trajectory-line {
+      /* Every per-frame write is a transform: the line is a fixed-width bar
+         scaled to the trajectory length, so updates never trigger layout or paint. */
+      .trajectory {
         display: none;
         position: absolute;
         top: 0;
         left: 0;
-        will-change: transform, width;
-        transform-origin: left center;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.4));
+        transform-origin: 0 0;
+        will-change: transform;
         z-index: 9999;
+      }
+
+      .line {
+        position: absolute;
+        top: -2px;
+        left: 0;
+        width: ${unsafeCSS(LINE_BASE_WIDTH)}px;
+        height: 4px;
+        transform-origin: left center;
+        will-change: transform;
+        background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.4));
         border-radius: 2px;
         box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
       }
 
-      .trajectory-line::after {
-        content: "";
+      .arrow {
         position: absolute;
-        right: -6px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 0;
-        height: 0;
+        top: -4px;
+        left: -2px;
+        will-change: transform;
         border-left: 8px solid #3b82f6;
         border-top: 4px solid transparent;
         border-bottom: 4px solid transparent;
@@ -55,7 +61,9 @@ export class MouseTrajectory extends LitElement {
   ]
 
   private _abortController = new AbortController()
-  private _lineEl: HTMLElement | null = null
+  @query(".trajectory", true) private _trajectoryEl!: HTMLElement
+  @query(".line", true) private _lineEl!: HTMLElement
+  @query(".arrow", true) private _arrowEl!: HTMLElement
   private _mousePredictionIsEnabled =
     ForesightManager.instance.getManagerData.globalSettings.enableMousePrediction
   private _isVisible = false
@@ -93,24 +101,18 @@ export class MouseTrajectory extends LitElement {
     )
   }
 
-  protected firstUpdated(): void {
-    this._lineEl = this.shadowRoot!.querySelector<HTMLElement>(".trajectory-line")
-  }
-
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this._abortController.abort()
   }
 
   private _setVisible(visible: boolean): void {
-    if (this._isVisible === visible) {
+    if (!this.hasUpdated || this._isVisible === visible) {
       return
     }
 
     this._isVisible = visible
-    if (this._lineEl) {
-      this._lineEl.style.display = visible ? "block" : "none"
-    }
+    this._trajectoryEl.style.display = visible ? "block" : "none"
   }
 
   private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
@@ -120,10 +122,6 @@ export class MouseTrajectory extends LitElement {
 
     if (shouldReset) {
       this._setVisible(false)
-      if (this._lineEl) {
-        this._lineEl.style.transform = "translate3d(0px, 0px, 0) rotate(0deg)"
-        this._lineEl.style.width = "0px"
-      }
     }
   }
 
@@ -136,7 +134,7 @@ export class MouseTrajectory extends LitElement {
   }
 
   private handleTrajectoryUpdate = (e: MouseTrajectoryUpdateEvent) => {
-    if (!this._mousePredictionIsEnabled) {
+    if (!this.hasUpdated || !this._mousePredictionIsEnabled) {
       return
     }
 
@@ -148,13 +146,17 @@ export class MouseTrajectory extends LitElement {
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = Math.atan2(dy, dx) * 57.29577951308232 // Pre-calculate rad to deg
 
-    if (this._lineEl) {
-      this._lineEl.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
-      this._lineEl.style.width = `${length}px`
-    }
+    this._trajectoryEl.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
+    this._lineEl.style.transform = `scaleX(${length / LINE_BASE_WIDTH})`
+    this._arrowEl.style.transform = `translateX(${length}px)`
   }
 
   render() {
-    return html`<div class="trajectory-line"></div>`
+    return html`
+      <div class="trajectory">
+        <div class="line"></div>
+        <div class="arrow"></div>
+      </div>
+    `
   }
 }

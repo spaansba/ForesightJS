@@ -1,5 +1,5 @@
-import { LitElement, html, css, type PropertyValues } from "lit"
-import { customElement, state, query, property } from "lit/decorators.js"
+import { LitElement, html, css } from "lit"
+import { customElement, query, property } from "lit/decorators.js"
 import {
   type ForesightElement,
   type ForesightElementState,
@@ -17,8 +17,9 @@ import type {
 type HitSlop = ForesightElementState["hitSlop"]
 
 interface ElementOverlay {
-  nameLabel: HTMLElement
   slopArea: HTMLElement
+  nameLabel: HTMLElement
+  lastName: string | null
   /** Last applied document-coordinate rect; unchanged means no style writes needed. */
   lastSlopRect: { left: number; top: number; width: number; height: number } | null
   /** Size + hit slop the cached border radius was computed for. */
@@ -32,8 +33,8 @@ interface CallbackAnimation {
 
 @customElement("element-overlays")
 export class ElementOverlays extends LitElement {
-  @state() private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
-  @state() private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
+  private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
+  private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
   private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   @query("#overlays-container") private containerElement!: HTMLElement
 
@@ -55,10 +56,6 @@ export class ElementOverlays extends LitElement {
         z-index: 9999;
       }
 
-      :host([hidden]) {
-        display: none;
-      }
-
       .slop-area {
         position: absolute;
         top: 0;
@@ -66,71 +63,71 @@ export class ElementOverlays extends LitElement {
         box-sizing: border-box;
         border: 1px dashed rgba(100, 116, 139, 0.4);
         background-color: rgba(100, 116, 139, 0.05);
+        contain: layout style;
         transition:
           border-color 0.2s ease,
-          background-color 0.2s ease,
-          box-shadow 0.2s ease;
+          background-color 0.2s ease;
         pointer-events: none;
+      }
+
+      /* The glow pulses opacity on a pre-rendered shadow instead of animating
+         box-shadow, so the compositor runs it without repainting. */
+      .slop-area::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .slop-area[data-hit]::after {
+        animation: glow 2s ease-in-out infinite;
       }
 
       .slop-area[data-hit="mouse"] {
         border-color: #3b82f6;
         background-color: rgba(59, 130, 246, 0.1);
-        animation: glow-mouse 2s ease-in-out infinite;
+      }
+
+      .slop-area[data-hit="mouse"]::after {
+        box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.6);
       }
 
       .slop-area[data-hit="scroll"] {
         border-color: #eab308;
         background-color: rgba(234, 179, 8, 0.1);
-        animation: glow-scroll 2s ease-in-out infinite;
+      }
+
+      .slop-area[data-hit="scroll"]::after {
+        box-shadow: 0 0 15px 4px rgba(234, 179, 8, 0.6);
       }
 
       .slop-area[data-hit="tab"] {
         border-color: #f97316;
         background-color: rgba(249, 115, 22, 0.1);
-        animation: glow-tab 2s ease-in-out infinite;
       }
 
-      @keyframes glow-mouse {
-        0% {
-          box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.3);
+      .slop-area[data-hit="tab"]::after {
+        box-shadow: 0 0 15px 4px rgba(249, 115, 22, 0.6);
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          opacity: 0.4;
         }
         50% {
-          box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.6);
-        }
-        100% {
-          box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.3);
+          opacity: 1;
         }
       }
 
-      @keyframes glow-scroll {
-        0% {
-          box-shadow: 0 0 5px 2px rgba(234, 179, 8, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 15px 4px rgba(234, 179, 8, 0.6);
-        }
-        100% {
-          box-shadow: 0 0 5px 2px rgba(234, 179, 8, 0.3);
-        }
-      }
-
-      @keyframes glow-tab {
-        0% {
-          box-shadow: 0 0 5px 2px rgba(249, 115, 22, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 15px 4px rgba(249, 115, 22, 0.6);
-        }
-        100% {
-          box-shadow: 0 0 5px 2px rgba(249, 115, 22, 0.3);
-        }
-      }
-
+      /* Lives inside its slop area so it moves with the same transform. */
       .name-label {
         position: absolute;
-        top: 0;
-        left: 0;
+        top: -26px;
+        left: -1px;
+        z-index: 1;
         background-color: rgba(27, 31, 35, 0.95);
         color: white;
         padding: 4px 8px;
@@ -138,9 +135,13 @@ export class ElementOverlays extends LitElement {
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
           "Apple Color Emoji", "Segoe UI Emoji";
-        z-index: 10001;
         white-space: nowrap;
         pointer-events: none;
+      }
+
+      .name-label:empty,
+      #overlays-container[data-hide-names] .name-label {
+        display: none;
       }
     `,
   ]
@@ -207,12 +208,6 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  protected willUpdate(changed: PropertyValues<this>): void {
-    if (changed.has("showNameTags")) {
-      this.updateNameTagVisibility(this.showNameTags)
-    }
-  }
-
   private _subscribeToElement(element: ForesightElement): void {
     if (this._elementSubscriptions.has(element)) {
       return
@@ -253,9 +248,15 @@ export class ElementOverlays extends LitElement {
     slopArea.className = "slop-area"
     const nameLabel = document.createElement("div")
     nameLabel.className = "name-label"
+    slopArea.appendChild(nameLabel)
     this.containerElement.appendChild(slopArea)
-    this.containerElement.appendChild(nameLabel)
-    const overlay = { nameLabel, slopArea, lastSlopRect: null, lastRadiusKey: null }
+    const overlay = {
+      slopArea,
+      nameLabel,
+      lastName: null,
+      lastSlopRect: null,
+      lastRadiusKey: null,
+    }
     this.overlayMap.set(element, overlay)
 
     return overlay
@@ -331,23 +332,13 @@ export class ElementOverlays extends LitElement {
     }
   }
 
-  private updateNameLabel(
-    overlay: ElementOverlay,
-    state: ForesightElementState,
-    bounds: ElementBounds
-  ): void {
-    const { nameLabel } = overlay
-    const { expandedRect } = bounds
-
-    if (!this.showNameTags || state.name === "unnamed") {
-      nameLabel.style.display = "none"
-    } else {
-      nameLabel.textContent = state.name
-      nameLabel.style.display = "block"
-      nameLabel.style.transform = `translate3d(${expandedRect.left + window.scrollX}px, ${
-        expandedRect.top - 25 + window.scrollY
-      }px, 0)`
+  private updateNameLabel(overlay: ElementOverlay, name: string): void {
+    if (overlay.lastName === name) {
+      return
     }
+
+    overlay.lastName = name
+    overlay.nameLabel.textContent = name === "unnamed" ? "" : name
   }
 
   private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
@@ -368,13 +359,12 @@ export class ElementOverlays extends LitElement {
     }
 
     this.updateSlopArea(overlay, element, state.hitSlop, bounds)
-    this.updateNameLabel(overlay, state, bounds)
+    this.updateNameLabel(overlay, state.name)
   }
 
   private removeElementOverlay(element: ForesightElement) {
     const overlay = this.overlayMap.get(element)
     if (overlay) {
-      overlay.nameLabel.remove()
       overlay.slopArea.remove()
       this.overlayMap.delete(element)
     }
@@ -429,17 +419,6 @@ export class ElementOverlays extends LitElement {
     })
   }
 
-  public updateNameTagVisibility(showNameTags: boolean) {
-    this.overlayMap.forEach(overlay => {
-      const nameLabel = overlay.nameLabel
-      if (!showNameTags) {
-        nameLabel.style.display = "none"
-      } else {
-        nameLabel.style.display = "block"
-      }
-    })
-  }
-
   disconnectedCallback(): void {
     super.disconnectedCallback()
 
@@ -454,7 +433,6 @@ export class ElementOverlays extends LitElement {
     this.callbackAnimations.clear()
 
     for (const overlay of this.overlayMap.values()) {
-      overlay.nameLabel.remove()
       overlay.slopArea.remove()
     }
     this.overlayMap.clear()
@@ -463,7 +441,7 @@ export class ElementOverlays extends LitElement {
   }
 
   render() {
-    return html` <div id="overlays-container"></div> `
+    return html`<div id="overlays-container" ?data-hide-names=${!this.showNameTags}></div>`
   }
 }
 
