@@ -61,7 +61,7 @@ ForesightManager.instance.reactivate(navLinks)
 
 ## ForesightManager.instance.unregister(element, reason?)
 
-Removes an element (or all elements in a `NodeList`) from ForesightManager's tracking.
+Removes an element (or all elements in a `NodeList`) from ForesightManager's tracking immediately, including registrations that other code has not released yet. To release only your own registration, call `unregister()` on the result returned by `register()`.
 
 :::tip Frameworks handle this for you
 The official React, Vue, and Angular integrations call `unregister` automatically when a component unmounts, so you rarely call it yourself there.

@@ -187,7 +187,9 @@ const results = ForesightManager.instance.register({
 
 #### `unregister()`
 
-Removes the element from `ForesightManager`'s tracking. Call this when you permanently remove the element from the DOM, see [unregister](../debugging/static-properties.md#foresightmanagerinstanceunregisterelement-reason).
+Releases this registration. Call this when you permanently remove the element from the DOM.
+
+Every `register()` call counts as its own registration. When the same element is registered more than once, for example by two components, it stays tracked until every result has called `unregister()`. Calling it twice on the same result does nothing. To remove the element right away, whoever registered it, use [`ForesightManager.instance.unregister(element)`](../debugging/static-properties.md#foresightmanagerinstanceunregisterelement-reason).
 
 #### `subscribe(listener)`
 

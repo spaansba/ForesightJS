@@ -160,6 +160,7 @@ export const createElementInternal = (
     reactivateTimeoutId: undefined,
     subscribers: undefined,
     boundsSubscribers: undefined,
+    activeRegistrations: 1,
   }
 }
 

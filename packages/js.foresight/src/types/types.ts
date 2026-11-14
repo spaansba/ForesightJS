@@ -114,7 +114,13 @@ export type ForesightElementState = {
 }
 
 export type ForesightRegisterResult = ForesightElementState & {
-  /** Function to unregister the element
+  /**
+   * Releases this registration. The element stays registered while another
+   * `register()` call for it has not been released, so independent owners of
+   * the same element (e.g. two components) don't unregister each other.
+   * Calling it more than once is a no-op. Use
+   * `ForesightManager.instance.unregister(element)` to remove the element
+   * regardless of other registrations.
    */
   unregister: () => void
   /**
@@ -162,6 +168,8 @@ export type ForesightElementInternal = {
   subscribers: Set<() => void> | undefined
   /** Listeners notified whenever `bounds` is replaced. Created on first subscribe. */
   boundsSubscribers: Set<() => void> | undefined
+  /** Register results that have not called `unregister` yet. The element is removed when this reaches 0. */
+  activeRegistrations: number
 }
 
 export type callbackStatus = "error" | "success" | undefined

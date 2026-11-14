@@ -1,4 +1,4 @@
-import { ForesightManager } from "js.foresight"
+import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
 import { prefetch } from "astro:prefetch"
 import type { ForesightClientOptions } from "../types"
 import { optionsForAnchor, shouldRegister } from "./attributes"
@@ -14,16 +14,16 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
 
   const manager = ForesightManager.initialize(options.manager)
 
-  const anchors = new Set<HTMLAnchorElement>()
+  const registrations = new Map<HTMLAnchorElement, ForesightRegisterResult>()
 
   const syncLinks = () => {
     // The manager parks disconnected elements waiting for a reconnect, but
     // view transitions swap the whole document, so anchors from the previous
     // page never come back. Drop them instead of letting them pile up.
-    for (const anchor of anchors) {
+    for (const [anchor, registration] of registrations) {
       if (!anchor.isConnected) {
-        manager.unregister(anchor)
-        anchors.delete(anchor)
+        registration.unregister()
+        registrations.delete(anchor)
       }
     }
 
@@ -36,12 +36,14 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
         continue
       }
 
-      manager.register({
-        element: anchor,
-        callback: () => prefetch(anchor.href),
-        ...optionsForAnchor(anchor, options),
-      })
-      anchors.add(anchor)
+      registrations.set(
+        anchor,
+        manager.register({
+          element: anchor,
+          callback: () => prefetch(anchor.href),
+          ...optionsForAnchor(anchor, options),
+        })
+      )
     }
   }
 

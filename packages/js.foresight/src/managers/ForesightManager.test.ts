@@ -363,6 +363,55 @@ describe("ForesightManager", () => {
   })
 
   describe("Element Unregistration", () => {
+    it("keeps the element registered until every register result is released", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const first = manager.register({ element, callback: vi.fn() })
+      const second = manager.register({ element, callback: vi.fn() })
+
+      first.unregister()
+      expect(manager.registeredElements.has(element)).toBe(true)
+
+      second.unregister()
+      expect(manager.registeredElements.has(element)).toBe(false)
+    })
+
+    it("ignores repeated unregister calls on the same result", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const first = manager.register({ element, callback: vi.fn() })
+      manager.register({ element, callback: vi.fn() })
+
+      first.unregister()
+      first.unregister()
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
+    it("manager.unregister removes the element regardless of open registrations", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      manager.register({ element, callback: vi.fn() })
+      manager.register({ element, callback: vi.fn() })
+
+      manager.unregister(element)
+      expect(manager.registeredElements.has(element)).toBe(false)
+    })
+
+    it("a stale result does not unregister a later registration of the same element", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const stale = manager.register({ element, callback: vi.fn() })
+      manager.unregister(element)
+      manager.register({ element, callback: vi.fn() })
+
+      stale.unregister()
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
     it("should unregister an element", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
