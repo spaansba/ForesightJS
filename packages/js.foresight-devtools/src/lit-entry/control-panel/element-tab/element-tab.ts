@@ -449,7 +449,7 @@ export class ElementTab extends LitElement {
 
     return html`
       <tab-header>
-        <div slot="chips" data-tip="${this._generateHitsChipTitle(hits)}">
+        <div slot="chips" title="${this._generateHitsChipTitle(hits)}">
           ${hits.total} callbacks fired
         </div>
         <div slot="actions">

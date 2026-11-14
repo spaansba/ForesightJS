@@ -116,7 +116,7 @@ export class ExpandableItem extends LitElement {
             ? html`
                 <div class="details">
                   <copy-button
-                    data-tip="Copy as JSON"
+                    title="Copy as JSON"
                     .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
                   ></copy-button>
                   <pre><slot name="details"></slot></pre>

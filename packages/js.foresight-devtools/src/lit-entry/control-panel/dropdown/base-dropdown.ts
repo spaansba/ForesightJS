@@ -174,7 +174,7 @@ export abstract class BaseDropdown extends LitElement {
         <button
           class="${buttonClass}"
           part="trigger"
-          data-tip="${this._getTriggerTitle()}"
+          title="${this._getTriggerTitle()}"
           @click="${this._toggleDropdown}"
           aria-haspopup="true"
           aria-expanded="${this.isDropdownOpen}"
@@ -190,7 +190,7 @@ export abstract class BaseDropdown extends LitElement {
             option => html`
               <button
                 value="${option.value}"
-                data-tip="${option.title}"
+                title="${option.title}"
                 class="${this._isOptionSelected(option) ? "active" : ""}"
                 @click="${() => this._handleOptionClick(option)}"
                 role="menuitem"

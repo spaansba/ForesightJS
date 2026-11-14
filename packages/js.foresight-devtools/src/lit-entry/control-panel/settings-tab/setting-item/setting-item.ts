@@ -42,7 +42,7 @@ export class SettingItem extends LitElement {
   @property({ type: Boolean, reflect: true }) dimmed: boolean = false
 
   render() {
-    return html`<div class="row" data-tip=${this.description}>
+    return html`<div class="row" title=${this.description}>
       <span class="label">${this.header}</span>
       <div class="controls"><slot name="controls"></slot></div>
     </div>`

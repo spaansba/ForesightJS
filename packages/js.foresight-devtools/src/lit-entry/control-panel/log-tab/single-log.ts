@@ -76,8 +76,8 @@ export class SingleLog extends LitElement {
       >
         <div slot="content" class="row">
           <span class="time">${log.localizedTimestamp}</span>
-          <span class="type" style="color: ${look.color}" data-tip=${log.type}>${look.label}</span>
-          <span class="summary" data-tip="${log.summary}">${log.summary}</span>
+          <span class="type" style="color: ${look.color}" title=${log.type}>${look.label}</span>
+          <span class="summary" title="${log.summary}">${log.summary}</span>
         </div>
         <div slot="details">${this.serializeLogDataWithoutSummary(log)}</div>
       </expandable-item>
