@@ -31,6 +31,7 @@ export class PanelTooltip extends LitElement {
 
   private target: HTMLElement | null = null
   private timer: ReturnType<typeof setTimeout> | undefined
+  private frame = 0
   private abortController: AbortController | null = null
 
   connectedCallback(): void {
@@ -40,6 +41,7 @@ export class PanelTooltip extends LitElement {
     const options = { signal, capture: true }
 
     document.addEventListener("pointerover", this.handlePointerOver, options)
+    document.addEventListener("pointerout", this.handlePointerOut, options)
     document.addEventListener("pointerdown", this.hide, options)
     document.addEventListener("scroll", this.hide, options)
   }
@@ -47,7 +49,7 @@ export class PanelTooltip extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this.abortController?.abort()
-    clearTimeout(this.timer)
+    this.hide()
   }
 
   private handlePointerOver = (event: Event) => {
@@ -68,11 +70,46 @@ export class PanelTooltip extends LitElement {
     this.target = target
     this.timer = setTimeout(() => {
       this.tip = { text: target.dataset.tip ?? "", anchor: target.getBoundingClientRect() }
+      this.frame = requestAnimationFrame(this.track)
     }, SHOW_DELAY_MS)
+  }
+
+  private handlePointerOut = (event: PointerEvent) => {
+    if (!event.relatedTarget) {
+      this.hide()
+    }
+  }
+
+  private track = () => {
+    if (!this.target || !this.tip) {
+      return
+    }
+
+    const anchor = this.target.getBoundingClientRect()
+    const moved = anchor.top !== this.tip.anchor.top || anchor.left !== this.tip.anchor.left
+    if (!this.target.isConnected || moved) {
+      this.hide()
+
+      return
+    }
+
+    const text = this.target.dataset.tip
+    if (!text) {
+      this.hide()
+
+      return
+    }
+
+    if (text !== this.tip.text) {
+      this.tip = { text, anchor }
+    }
+
+    this.frame = requestAnimationFrame(this.track)
   }
 
   private hide = () => {
     clearTimeout(this.timer)
+    cancelAnimationFrame(this.frame)
     this.target = null
     this.tip = null
   }
