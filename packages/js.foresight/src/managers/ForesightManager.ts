@@ -304,7 +304,7 @@ export class ForesightManager {
         registerCount: previousEntry.state.registerCount + 1,
       })
 
-      return this.buildRegisterResult(previousEntry, options.element)
+      return this.buildRegisterResult(previousEntry)
     }
 
     this.initializeGlobalListeners()
@@ -339,17 +339,16 @@ export class ForesightManager {
       state: entry.state,
     })
 
-    return this.buildRegisterResult(entry, options.element)
+    return this.buildRegisterResult(entry)
   }
 
-  private buildRegisterResult(
-    entry: ForesightElementInternal,
-    element: ForesightElement
-  ): ForesightRegisterResult {
+  private buildRegisterResult(entry: ForesightElementInternal): ForesightRegisterResult {
     return {
       ...entry.state,
       unregister: () => {
-        this.unregister(element)
+        if (this.elementEntries.get(entry.element) === entry) {
+          this.unregisterElement(entry.element)
+        }
       },
       subscribe: this.makeSubscribe(entry, "subscribers"),
       getSnapshot: () => entry.state,
