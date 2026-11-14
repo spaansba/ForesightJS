@@ -22,4 +22,15 @@ describe("initForesight against the real ForesightManager", () => {
     await flush()
     expect(registeredElements.has(anchor)).toBe(false)
   })
+
+  it("keeps registering links after a view transition swaps the body", async () => {
+    document.body.replaceWith(document.createElement("body"))
+    document.dispatchEvent(new Event("astro:page-load"))
+
+    const anchor = document.createElement("a")
+    anchor.href = "/after-swap"
+    document.body.append(anchor)
+    await flush()
+    expect(registeredElements.has(anchor)).toBe(true)
+  })
 })
