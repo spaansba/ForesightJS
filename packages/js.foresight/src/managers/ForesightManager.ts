@@ -1,5 +1,4 @@
 import { DerivedMapView } from "../helpers/DerivedMapView"
-import { devLogMessage } from "../helpers/devLog"
 import { areRectsEqual, getExpandedRect, normalizeHitSlop } from "../helpers/rectAndHitSlop"
 import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import {
@@ -29,7 +28,6 @@ import type {
   ForesightEventListener,
   ForesightManagerData,
   ForesightManagerSettings,
-  ForesightModules,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
@@ -48,7 +46,7 @@ import type { TouchDeviceHandler } from "./TouchDeviceHandler"
  * - Detecting when a predicted trajectory intersects with a registered element's bounds.
  * - Invoking callbacks associated with elements upon predicted or actual interaction.
  * - Deactivating elements after their callback completes, with optional reactivation via `reactivateAfter`.
- * - Handling global settings for prediction behavior (e.g., history size, prediction time).
+ * - Handling global settings for prediction behavior (e.g., prediction time, tab offset).
  * - Delegating element bounds observation to device handlers ({@link DesktopHandler}, {@link TouchDeviceHandler}).
  * - Automatically unregistering elements removed from the DOM using {@link MutationObserver}.
  * - Detecting broader layout shifts via {@link MutationObserver} to update element positions.
@@ -107,8 +105,6 @@ export class ForesightManager {
       settings: this._globalSettings,
     }
 
-    // Handlers are created lazily when first needed as of 3.4.0
-    this.devLog(`ForesightManager initialized with device strategy: ${this.currentDeviceStrategy}`)
     this.initializeGlobalListeners()
   }
 
@@ -116,7 +112,6 @@ export class ForesightManager {
     if (!this.desktopHandler) {
       const { DesktopHandler } = await import("./DesktopHandler")
       this.desktopHandler ??= new DesktopHandler(this.handlerDependencies)
-      this.devLog("DesktopHandler lazy loaded")
     }
 
     return this.desktopHandler
@@ -126,7 +121,6 @@ export class ForesightManager {
     if (!this.touchDeviceHandler) {
       const { TouchDeviceHandler } = await import("./TouchDeviceHandler")
       this.touchDeviceHandler ??= new TouchDeviceHandler(this.handlerDependencies)
-      this.devLog("TouchDeviceHandler lazy loaded")
     }
 
     return this.touchDeviceHandler
@@ -254,23 +248,9 @@ export class ForesightManager {
       currentDeviceStrategy: this.currentDeviceStrategy,
       activeElementCount: this.activeElementCount,
       parkedElementCount: this.parkedElementCount,
-      loadedModules: this.getLoadedModulesSnapshot(),
-    }
-  }
-
-  private getLoadedModulesSnapshot(): ForesightModules {
-    const desktopPredictors = this.desktopHandler?.loadedPredictors
-    const touchPredictors = this.touchDeviceHandler?.loadedPredictors
-
-    return {
-      desktopHandler: this.desktopHandler !== null,
-      touchHandler: this.touchDeviceHandler !== null,
-      predictors: {
-        mouse: desktopPredictors?.mouse ?? false,
-        tab: desktopPredictors?.tab ?? false,
-        scroll: desktopPredictors?.scroll ?? false,
-        viewport: touchPredictors?.viewport ?? false,
-        touchStart: touchPredictors?.touchStart ?? false,
+      loadedModules: {
+        desktopHandler: this.desktopHandler !== null,
+        touchHandler: this.touchDeviceHandler !== null,
       },
     }
   }
@@ -576,7 +556,6 @@ export class ForesightManager {
 
     const wasLastRegisteredElement = this.elementEntries.size === 0 && this.isSetup
     if (wasLastRegisteredElement) {
-      this.devLog("All elements unregistered, removing global listeners")
       this.removeGlobalListeners()
     }
 
@@ -787,11 +766,6 @@ export class ForesightManager {
 
   private async setDeviceStrategy(strategy: CurrentDeviceStrategy): Promise<void> {
     const request = ++this.deviceStrategyRequest
-    const previousStrategy = this.currentDeviceStrategy
-
-    if (previousStrategy !== strategy) {
-      this.devLog(`Switching device strategy from ${previousStrategy} to ${strategy}`)
-    }
 
     this.currentlyActiveHandler?.disconnect()
 
@@ -849,7 +823,6 @@ export class ForesightManager {
       return
     }
 
-    this.devLog("Initializing global listeners (pointermove, MutationObserver)")
     this.setDeviceStrategy(this.currentDeviceStrategy)
 
     document.addEventListener("pointermove", this.handlePointerMove, { passive: true })
@@ -1030,11 +1003,5 @@ export class ForesightManager {
       originalRect: newOriginalRect,
       expandedRect: getExpandedRect(newOriginalRect, entry.state.hitSlop),
     })
-  }
-
-  private devLog(message: string): void {
-    if (this._globalSettings.enableManagerLogging) {
-      devLogMessage("🛠️ ForesightManager", message, "#16a34a")
-    }
   }
 }

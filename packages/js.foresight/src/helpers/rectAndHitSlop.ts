@@ -1,32 +1,27 @@
 import type { HitSlop, Point, Rect } from "../types/types"
 import { MAX_HITSLOP, MIN_HITSLOP } from "../constants"
-import { clampNumber } from "./clampNumber"
+
+const clampHitSlop = (value: number): number => Math.min(Math.max(value, MIN_HITSLOP), MAX_HITSLOP)
 
 /**
- * Normalizes a `hitSlop` value into a {@link Rect} object.
+ * Normalizes a `hitSlop` value into a {@link Rect} object, clamping every side
+ * between {@link MIN_HITSLOP} and {@link MAX_HITSLOP}.
  * If `hitSlop` is a number, it's applied uniformly to all sides (top, left, right, bottom).
- * If `hitSlop` is already a `Rect` object, it's returned as is.
  *
  * @param hitSlop - A number for uniform slop, or a {@link Rect} object for specific slop per side.
  * @returns A {@link Rect} object with `top`, `left`, `right`, and `bottom` properties.
  */
 export const normalizeHitSlop = (hitSlop: HitSlop): Rect => {
-  if (typeof hitSlop === "number") {
-    const clampedValue = clampNumber(hitSlop, MIN_HITSLOP, MAX_HITSLOP, "hitslop")
-
-    return {
-      top: clampedValue,
-      left: clampedValue,
-      right: clampedValue,
-      bottom: clampedValue,
-    }
-  }
+  const { top, left, right, bottom } =
+    typeof hitSlop === "number"
+      ? { top: hitSlop, left: hitSlop, right: hitSlop, bottom: hitSlop }
+      : hitSlop
 
   return {
-    top: clampNumber(hitSlop.top, MIN_HITSLOP, MAX_HITSLOP, "hitslop - top"),
-    left: clampNumber(hitSlop.left, MIN_HITSLOP, MAX_HITSLOP, "hitslop - left"),
-    right: clampNumber(hitSlop.right, MIN_HITSLOP, MAX_HITSLOP, "hitslop - right"),
-    bottom: clampNumber(hitSlop.bottom, MIN_HITSLOP, MAX_HITSLOP, "hitslop - bottom"),
+    top: clampHitSlop(top),
+    left: clampHitSlop(left),
+    right: clampHitSlop(right),
+    bottom: clampHitSlop(bottom),
   }
 }
 

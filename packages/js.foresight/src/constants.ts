@@ -3,10 +3,6 @@ export const MIN_TRAJECTORY_PREDICTION_TIME: number = 10
 export const MAX_TRAJECTORY_PREDICTION_TIME: number = 200
 export const DEFAULT_TRAJECTORY_PREDICTION_TIME: number = 120
 
-export const MIN_POSITION_HISTORY_SIZE: number = 2
-export const MAX_POSITION_HISTORY_SIZE: number = 30
-export const DEFAULT_POSITION_HISTORY_SIZE: number = 8
-
 export const MIN_TAB_OFFSET: number = 0
 export const MAX_TAB_OFFSET: number = 20
 export const DEFAULT_TAB_OFFSET: number = 2
