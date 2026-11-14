@@ -10,6 +10,7 @@
     "dev": "ng-packagr -p ng-package.json -c tsconfig.lib.json --watch",
     "lint": "eslint . --fix",
     "test": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
     "prepublishOnly": "pnpm test:run && pnpm build:prod"

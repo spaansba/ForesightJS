@@ -29,3 +29,5 @@ jobs:
       - run: pnpm build
 
       - run: pnpm --filter js.foresight test:types
+
+      - run: pnpm typecheck

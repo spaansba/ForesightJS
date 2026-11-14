@@ -1,7 +1,13 @@
 import { act, render } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
-import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import {
+  mockState,
+  registerSpy,
+  replaceElementOptionsSpy,
+  unregisterSpy,
+  HOVER_CONTEXT,
+} from "../tests/setup"
 import { emitSnapshot } from "../tests/helpers"
 import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
@@ -68,11 +74,11 @@ describe("useForesight", () => {
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
     act(() => {
-      mockState.lastCallbackWrapper?.(fired)
+      mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
     })
 
     expect(cb1).not.toHaveBeenCalled()
-    expect(cb2).toHaveBeenCalledWith(fired)
+    expect(cb2).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("patches options on the same element without unregistering", () => {
