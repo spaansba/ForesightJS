@@ -1,4 +1,4 @@
-import { Directive, ElementRef, OnDestroy, computed, signal } from "@angular/core"
+import { Directive, ElementRef, OnDestroy, computed, inject, signal } from "@angular/core"
 import { ForesightService, UNREGISTERED_STATE } from "../services/ForesightService"
 import type { ForesightOptions, ForesightRegistration, ForesightStateSignal } from "../types"
 
@@ -10,10 +10,8 @@ export abstract class ForesightBase implements OnDestroy {
     () => this.registration()?.state() ?? UNREGISTERED_STATE
   )
 
-  constructor(
-    private readonly elementRef: ElementRef<Element>,
-    private readonly foresight: ForesightService
-  ) {}
+  private readonly elementRef = inject<ElementRef<Element>>(ElementRef)
+  private readonly foresight = inject(ForesightService)
 
   protected applyOptions(options: ForesightOptions | null): void {
     const registration = this.registration()

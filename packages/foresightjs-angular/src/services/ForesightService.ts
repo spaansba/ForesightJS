@@ -1,4 +1,5 @@
-import { Injectable, NgZone, signal } from "@angular/core"
+import { Injectable, NgZone, PLATFORM_ID, inject, signal } from "@angular/core"
+import { isPlatformBrowser } from "@angular/common"
 import {
   ForesightManager,
   createUnregisteredSnapshot,
@@ -14,9 +15,19 @@ export const UNREGISTERED_STATE: Readonly<ForesightElementState> = createUnregis
 
 @Injectable({ providedIn: "root" })
 export class ForesightService {
-  constructor(private readonly zone: NgZone) {}
+  private readonly zone = inject(NgZone)
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID))
 
   register(element: Element, options: ForesightOptions): ForesightRegistration {
+    if (!this.isBrowser) {
+      return {
+        state: signal(UNREGISTERED_STATE).asReadonly(),
+        update: () => {},
+        unregister: () => {},
+        getSnapshot: () => UNREGISTERED_STATE,
+      }
+    }
+
     const state = signal<Readonly<ForesightElementState>>(UNREGISTERED_STATE)
     let optionsRef = options
 
@@ -74,7 +85,7 @@ export class ForesightService {
     eventType: K,
     listener: (event: ForesightEventMap[K]) => void
   ): () => void {
-    if (typeof document === "undefined") {
+    if (!this.isBrowser) {
       return () => {}
     }
 

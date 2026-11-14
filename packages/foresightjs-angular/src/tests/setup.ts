@@ -1,3 +1,4 @@
+import "@angular/compiler"
 import { beforeEach, vi } from "vitest"
 import type {
   ForesightCallback,

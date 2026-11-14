@@ -8,15 +8,12 @@ import {
   unregisterSpy,
   HOVER_CONTEXT,
 } from "../tests/setup"
+import { createInContext } from "../tests/helpers"
 import { ForesightService } from "./ForesightService"
 
-const zone = {
-  run: <T>(fn: () => T): T => fn(),
-} as NgZone
-
-const createService = () => new ForesightService(zone)
-const createServiceWithZone = (testZone: Pick<NgZone, "run">) =>
-  new ForesightService(testZone as NgZone)
+const createService = () => createInContext(() => new ForesightService())
+const createServiceWithZone = (zone: Pick<NgZone, "run">) =>
+  createInContext(() => new ForesightService(), { zone })
 
 beforeEach(() => {
   addEventListenerSpy.mockClear()

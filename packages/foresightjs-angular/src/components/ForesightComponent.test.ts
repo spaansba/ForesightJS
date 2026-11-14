@@ -1,19 +1,13 @@
-import { ElementRef, NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
-import { ForesightService } from "../services/ForesightService"
+import { createInContext } from "../tests/helpers"
 import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
 import { ForesightComponent } from "./ForesightComponent"
 
-const zone = {
-  run: <T>(fn: () => T): T => fn(),
-} as NgZone
-
 const createComponent = () =>
-  new ForesightComponent(
-    new ElementRef(document.createElement("foresight")),
-    new ForesightService(zone)
-  )
+  createInContext(() => new ForesightComponent(), {
+    element: document.createElement("foresight"),
+  })
 
 beforeEach(() => {
   registerSpy.mockClear()
