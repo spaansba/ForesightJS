@@ -1,6 +1,6 @@
 import type { ForesightEvent } from "js.foresight"
 import { LitElement, css, html } from "lit"
-import { customElement, property, state } from "lit/decorators.js"
+import { customElement, state } from "lit/decorators.js"
 import { repeat } from "lit/directives/repeat.js"
 import {
   BOTH_SVG,
@@ -20,11 +20,13 @@ import "../copy-icon/copy-icon"
 import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import { getEventLogStore, MAX_LOGS } from "./log-store"
+import { iconButtonStyles } from "../shared-styles"
 import "./single-log"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {
   static styles = [
+    iconButtonStyles,
     css`
       :host {
         display: flex;
@@ -32,91 +34,9 @@ export class LogTab extends LitElement {
         height: 100%;
       }
 
-      .chips-container {
-        display: flex;
-        gap: 4px;
-      }
-
-      .single-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        vertical-align: top;
-      }
-
-      .single-button svg {
-        width: 16px;
-        height: 16px;
-        stroke: white;
-        transition: stroke 0.2s;
-      }
-
-      .single-button:hover {
-        background-color: rgba(176, 196, 222, 0.1);
-      }
-
-      .single-button:hover svg {
-        stroke: #b0c4de;
-      }
-
-      .single-button:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-
-      .single-button:disabled:hover {
-        background: none;
-      }
-
-      .single-button:disabled svg {
-        stroke: #666;
-      }
-
-      .no-items {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 200px;
-        text-align: center;
-        font-family: "Courier New", monospace;
-        font-style: italic;
-        padding: 20px;
-        color: #999;
-      }
-
-      .warning-container {
-        background: none;
-        border: none;
+      .warning {
         color: #ffc107;
         cursor: help;
-        padding: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        vertical-align: top;
-      }
-
-      .warning-container svg {
-        width: 16px;
-        height: 16px;
-        stroke: #ffc107;
-        fill: none;
-        transition: stroke 0.2s;
-      }
-
-      .warning-container:hover {
-        background-color: rgba(255, 193, 7, 0.1);
-      }
-
-      .warning-container:hover svg {
-        stroke: #ffdc3e;
       }
     `,
   ]
@@ -126,7 +46,6 @@ export class LogTab extends LitElement {
   @state() private filterDropdown: DropdownOption[]
   @state() private expandedLogIds: Set<string> = new Set()
 
-  @property() noContentMessage: string = "No logs available"
   private _unsubscribeStore: (() => void) | null = null
 
   constructor() {
@@ -265,7 +184,6 @@ export class LogTab extends LitElement {
   private clearLogs(): void {
     this.store.clear()
     this.expandedLogIds.clear()
-    this.noContentMessage = "Logs cleared"
   }
 
   private logManagerData = (): void => {
@@ -288,8 +206,8 @@ export class LogTab extends LitElement {
 
     return html`
       <tab-header>
-        <div slot="chips" class="chips-container">
-          <chip-element title="Number of logged events (Max ${MAX_LOGS})">
+        <div slot="chips">
+          <chip-element title="Number of logged events (max ${MAX_LOGS})">
             ${logs.length} events
           </chip-element>
         </div>
@@ -297,13 +215,13 @@ export class LogTab extends LitElement {
           ${
             this.shouldShowPerformanceWarning()
               ? html`
-                  <div
-                    class="warning-container"
+                  <span
+                    class="icon-button warning"
                     title="Console logging can be slow with frequent trajectory events.
 Consider using 'Control Panel' only for better performance."
                   >
                     ${WARNING_SVG}
-                  </div>
+                  </span>
                 `
               : ""
           }
@@ -319,14 +237,14 @@ Consider using 'Control Panel' only for better performance."
             .onSelectionChange="${this.handleFilterChange}"
           ></multi-select-dropdown>
           <button
-            class="single-button"
+            class="icon-button"
             title="Log the state from the manager"
             @click="${this.logManagerData}"
           >
             ${STATE_SVG}
           </button>
           <button
-            class="single-button"
+            class="icon-button"
             title="Clear all logs"
             ?disabled="${logs.length === 0}"
             @click="${this.clearLogs}"
@@ -335,22 +253,18 @@ Consider using 'Control Panel' only for better performance."
           </button>
         </div>
       </tab-header>
-      <tab-content .noContentMessage=${this.noContentMessage} .hasContent=${!!logs.length}>
-        ${
-          logs.length === 0
-            ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
-            : repeat(
-                logs,
-                log => log.logId,
-                log => html`
-                  <single-log
-                    .log=${log}
-                    .isExpanded=${this.expandedLogIds.has(log.logId)}
-                    .onToggle=${this.handleLogToggle}
-                  ></single-log>
-                `
-              )
-        }
+      <tab-content .noContentMessage=${this.getNoLogsMessage()} .hasContent=${!!logs.length}>
+        ${repeat(
+          logs,
+          log => log.logId,
+          log => html`
+            <single-log
+              .log=${log}
+              .isExpanded=${this.expandedLogIds.has(log.logId)}
+              .onToggle=${this.handleLogToggle}
+            ></single-log>
+          `
+        )}
       </tab-content>
     `
   }

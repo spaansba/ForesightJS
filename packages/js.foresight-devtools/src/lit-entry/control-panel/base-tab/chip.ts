@@ -6,23 +6,21 @@ export class ChipElement extends LitElement {
   static styles = [
     css`
       :host {
-        display: inline-block;
+        display: inline-flex;
       }
 
       .chip {
         display: inline-flex;
         align-items: center;
-        padding: 3px 8px;
-        background-color: rgba(255, 255, 255, 0.05);
-        color: #e8e8e8;
-        font-size: 10px;
-        font-weight: 500;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: var(--fs-surface);
+        color: var(--fs-muted);
+        font-family: var(--fs-mono);
+        font-size: 10.5px;
         white-space: nowrap;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        font-family: "SF Mono", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-        transition: all 0.2s ease;
+        cursor: default;
       }
     `,
   ]

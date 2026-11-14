@@ -13,8 +13,10 @@ export class ReactivateCountdown extends LitElement {
       .reactivate-button {
         all: unset;
         cursor: pointer;
-        padding: 2px 4px;
-        transition: background-color 0.2s ease;
+        padding: 0 4px;
+        border-radius: 3px;
+        font-family: var(--fs-mono);
+        transition: background-color 0.12s ease;
       }
 
       .reactivate-button:hover {

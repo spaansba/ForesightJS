@@ -9,142 +9,143 @@ import "./settings-tab/settings-tab"
 import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
+import { CLOSE_SVG, MINUS_SVG, PLUS_SVG } from "../../svg/svg-icons"
+import { iconButtonStyles } from "./shared-styles"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
-  static styles = css`
-    .control-wrapper {
-      --panel-offset: 10px;
-      padding: 12px;
-      position: fixed;
-      background-color: rgba(0, 0, 0, 0.9);
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      z-index: 10001;
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      width: 450px;
-      height: 450px;
-      transition:
-        width 0.3s ease,
-        height 0.3s ease;
-      box-sizing: border-box;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+  static styles = [
+    iconButtonStyles,
+    css`
+      :host {
+        --fs-bg: rgba(18, 18, 20, 0.94);
+        --fs-surface: rgba(255, 255, 255, 0.04);
+        --fs-hover: rgba(255, 255, 255, 0.07);
+        --fs-border: rgba(255, 255, 255, 0.08);
+        --fs-text: #e6e6e6;
+        --fs-muted: #8b8b90;
+        --fs-accent: #8ab4f8;
+        --fs-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
 
-    .control-wrapper.top-left {
-      top: var(--panel-offset);
-      left: var(--panel-offset);
-    }
-    .control-wrapper.top-right {
-      top: var(--panel-offset);
-      right: var(--panel-offset);
-    }
-    .control-wrapper.bottom-left {
-      bottom: var(--panel-offset);
-      left: var(--panel-offset);
-    }
-    .control-wrapper.bottom-right {
-      bottom: var(--panel-offset);
-      right: var(--panel-offset);
-    }
+      .panel {
+        --panel-offset: 10px;
+        position: fixed;
+        z-index: 10001;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        width: 380px;
+        height: 400px;
+        max-width: calc(100vw - 2 * var(--panel-offset));
+        max-height: calc(100vh - 2 * var(--panel-offset));
+        box-sizing: border-box;
+        overflow: hidden;
+        background: var(--fs-bg);
+        backdrop-filter: blur(8px);
+        color: var(--fs-text);
+        border: 1px solid var(--fs-border);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        font-size: 12px;
+      }
 
-    .control-wrapper.minimized {
-      width: 230px;
-      height: 45px;
-    }
+      .panel.top-left {
+        top: var(--panel-offset);
+        left: var(--panel-offset);
+      }
+      .panel.top-right {
+        top: var(--panel-offset);
+        right: var(--panel-offset);
+      }
+      .panel.bottom-left {
+        bottom: var(--panel-offset);
+        left: var(--panel-offset);
+      }
+      .panel.bottom-right {
+        bottom: var(--panel-offset);
+        right: var(--panel-offset);
+      }
 
-    .title-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0;
-      flex-shrink: 0;
-    }
+      .panel.minimized {
+        width: auto;
+        height: auto;
+        border-radius: 8px;
+      }
 
-    .title-wrapper h1 {
-      margin: 0;
-      font-size: 15px;
-    }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 32px;
+        padding: 0 4px 0 10px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--fs-border);
+      }
 
-    .minimize-button {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0;
-    }
+      .minimized .bar {
+        border-bottom: none;
+      }
 
-    .tab-container {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
 
-    .tab-content {
-      flex: 1;
-      position: relative;
-    }
+      .brand::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--fs-accent);
+        box-shadow: 0 0 6px var(--fs-accent);
+      }
 
-    .tab-content > * {
-      display: flex;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
+      tab-selector {
+        flex: 1;
+      }
 
-    .touch-device-warning {
-      background-color: rgba(255, 193, 7, 0.9);
-      color: #000;
-      padding: 8px 12px;
-      margin: 8px 0;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+      .minimized .spacer {
+        flex: 1;
+      }
 
-    .touch-device-warning.hidden {
-      display: none;
-    }
+      .tab-content {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+      }
 
-    .warning-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      .tab-content > * {
+        position: absolute;
+        inset: 0;
+      }
 
-    .warning-icon {
-      font-weight: bold;
-      font-size: 14px;
-    }
+      .touch-warning {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 6px 4px 10px;
+        background: rgba(255, 193, 7, 0.12);
+        color: #ffd54f;
+        font-size: 11px;
+        border-bottom: 1px solid var(--fs-border);
+      }
 
-    .dismiss-button {
-      background: none;
-      border: none;
-      color: #000;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      font-weight: bold;
-    }
-
-    .dismiss-button:hover {
-      opacity: 0.7;
-    }
-  `
+      .touch-warning span {
+        flex: 1;
+      }
+    `,
+  ]
   @state() private activeTab: ControllerTabs
   @state() private isMinimized: boolean =
     ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
@@ -260,10 +261,6 @@ export class ControlPanel extends LitElement {
     this.isMinimized = !this.isMinimized
   }
 
-  private getMinimizeSymbol(): string {
-    return this.isMinimized ? "+" : "−"
-  }
-
   /**
    * Only the active tab is mounted; hidden tabs would otherwise keep their
    * manager listeners and element subscriptions running invisibly.
@@ -281,44 +278,42 @@ export class ControlPanel extends LitElement {
   }
 
   protected render() {
-    return html`
-      <div class="control-wrapper ${this.corner} ${this.isMinimized ? "minimized" : ""}">
-        <div class="title-wrapper">
-          <button @click="${this.handleMinimizeClick}" class="minimize-button">
-            ${this.getMinimizeSymbol()}
-          </button>
-          <h1>Foresight DevTools</h1>
-          <div></div>
-        </div>
+    const showWarning = !this.isMinimized && this.isTouchDevice && !this.isWarningDismissed
 
-        <div
-          class="touch-device-warning ${
-            this.isMinimized || !this.isTouchDevice || this.isWarningDismissed ? "hidden" : ""
-          }"
-        >
-          <div class="warning-content">
-            <span class="warning-icon">⚠️</span>
-            <span>Touch device mode: Overlays and visibility sorting not available</span>
-          </div>
-          <button @click="${this.dismissWarning}" class="dismiss-button" title="Dismiss warning">
-            ×
+    return html`
+      <div class="panel ${this.corner} ${this.isMinimized ? "minimized" : ""}">
+        <div class="bar">
+          <span class="brand">Foresight</span>
+          ${
+            this.isMinimized
+              ? html`<span class="spacer"></span>`
+              : html`<tab-selector
+                  .activeTab="${this.activeTab}"
+                  @tab-change="${this._handleTabChange}"
+                ></tab-selector>`
+          }
+          <button
+            class="icon-button"
+            @click="${this.handleMinimizeClick}"
+            title="${this.isMinimized ? "Expand" : "Minimize"}"
+          >
+            ${this.isMinimized ? PLUS_SVG : MINUS_SVG}
           </button>
         </div>
 
         ${
-          this.isMinimized
-            ? ""
-            : html`
-                <div class="tab-container">
-                  <tab-selector
-                    .activeTab="${this.activeTab}"
-                    @tab-change="${this._handleTabChange}"
-                  ></tab-selector>
-
-                  <div class="tab-content">${this.renderActiveTab()}</div>
+          showWarning
+            ? html`
+                <div class="touch-warning">
+                  <span>Touch mode: overlays and visibility sorting unavailable</span>
+                  <button class="icon-button" @click="${this.dismissWarning}" title="Dismiss">
+                    ${CLOSE_SVG}
+                  </button>
                 </div>
               `
+            : ""
         }
+        ${this.isMinimized ? "" : html`<div class="tab-content">${this.renderActiveTab()}</div>`}
       </div>
     `
   }

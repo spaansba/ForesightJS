@@ -9,154 +9,96 @@ import "../base-tab/expandable-item"
 import "./reactivate-countdown"
 import { ForesightManager } from "js.foresight"
 import { DISABLED_SVG, ENABLE_SVG, UNREGISTER_SVG } from "../../../svg/svg-icons"
+import { iconButtonStyles } from "../shared-styles"
+
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
+    iconButtonStyles,
     css`
       :host {
         display: block;
       }
 
-      .element-wrapper {
-        display: block;
+      .not-visible {
+        opacity: 0.5;
       }
 
-      .element-content {
+      .row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         flex: 1;
         min-width: 0;
       }
 
-      .status-indicator {
-        margin-left: 2px;
-        width: 8px;
-        height: 8px;
-        flex-shrink: 0;
-        transition: all 0.3s ease;
-      }
-
-      .status-indicator.visible {
-        background-color: #4caf50;
-        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
-      }
-
-      .status-indicator.hidden {
-        background-color: #666;
-        box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
-      }
-
-      .status-indicator.prefetching {
-        background-color: #ffeb3b;
-        box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
-      }
-
-      .status-indicator.inactive {
-        background-color: #999;
-        box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
-      }
-
-      .reason-tags {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 7px;
-        flex-shrink: 0;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 10px;
-      }
-
-      .reason-tag {
-        white-space: nowrap;
-        color: color-mix(in srgb, var(--reason-color) 80%, #fff);
-      }
-
-      .reason-tag::before {
-        content: "/";
-        margin-right: 3px;
-        color: #555;
-      }
-
-      .status-indicator.touch-device {
-        background-color: #ba68c8;
-        box-shadow: 0 0 0 2px rgba(186, 104, 200, 0.4);
-      }
-
-      .unregister-button,
-      .toggle-enabled-button,
-      .enable-button {
-        all: unset;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 14px;
-        height: 14px;
-        padding: 1px;
-        cursor: pointer;
-        color: #999;
-      }
-
-      .unregister-button svg,
-      .toggle-enabled-button svg,
-      .enable-button svg {
-        width: 12px;
-        height: 12px;
-      }
-
-      .unregister-button:hover {
-        background-color: rgba(255, 107, 107, 0.1);
-        color: #ff6b6b;
-      }
-
-      .toggle-enabled-button:hover {
-        background-color: rgba(255, 165, 0, 0.1);
-        color: #ffa726;
-      }
-
-      .enable-button:hover {
-        background-color: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
-      }
-
-      .element-name {
-        flex-grow: 1;
+      .name {
+        flex: 1;
         min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 11px;
-        font-weight: 500;
-        color: #e8e8e8;
+        font-size: 11.5px;
+        color: var(--fs-text);
       }
 
-      .element-name.callback-active {
+      .name.running {
         color: #fff;
         font-weight: 600;
       }
 
-      .element-name.callback-inactive {
-        color: #999;
-        font-weight: 500;
+      .name.inactive {
+        color: var(--fs-muted);
       }
 
-      .reactivate-countdown {
-        font-size: 14px;
+      .reason-tags {
+        display: inline-flex;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .reason-tag {
+        padding: 0 4px;
+        border-radius: 3px;
+        font-family: var(--fs-mono);
+        font-size: 9.5px;
+        line-height: 15px;
+        color: var(--reason-color);
+        background: color-mix(in srgb, var(--reason-color) 14%, transparent);
+      }
+
+      .actions {
+        display: flex;
+        opacity: 0;
+        transition: opacity 0.12s ease;
+      }
+
+      :host(:hover) .actions,
+      .actions:focus-within {
+        opacity: 1;
+      }
+
+      .icon-button {
+        height: 18px;
+        min-width: 18px;
+        padding: 0 2px;
+      }
+
+      .icon-button svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .icon-button.danger:hover {
+        color: #ff6b6b;
+      }
+
+      .icon-button.warn:hover {
         color: #ffa726;
-        font-weight: 500;
-        min-width: 0;
-        white-space: nowrap;
       }
 
-      .reactivate-countdown:empty {
-        display: none;
-      }
-
-      :host(.not-visible) {
-        opacity: 0.5;
-      }
-
-      .element-wrapper.not-visible {
-        opacity: 0.5;
+      .icon-button.ok:hover {
+        color: #66bb6a;
       }
     `,
   ]
@@ -241,7 +183,7 @@ export class SingleElement extends LitElement {
     return reasons
   }
 
-  private getBorderColor(): string {
+  private getStatusColor(): string {
     if (this.state.isCallbackRunning) {
       return "#ffeb3b"
     }
@@ -257,23 +199,6 @@ export class SingleElement extends LitElement {
 
     // Use green for desktop devices when active
     return this.state.isIntersectingWithViewport ? "#4caf50" : "#666"
-  }
-
-  private getStatusIndicatorClass(): string {
-    if (this.state.isCallbackRunning) {
-      return "prefetching"
-    }
-
-    if (!this.state.isActive) {
-      return "inactive"
-    }
-
-    // Use purple indicator for touch devices (no visibility distinction)
-    if (this.currentDeviceStrategy === "touch") {
-      return "touch-device"
-    }
-
-    return this.state.isIntersectingWithViewport ? "visible" : "hidden"
   }
 
   private getStatusText(): string {
@@ -314,84 +239,79 @@ export class SingleElement extends LitElement {
   }
 
   render() {
-    // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
     const isNotVisible =
       !this.state.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
     const inactiveReasons = this.getInactiveReasons()
+    const nameClass = this.state.isCallbackRunning
+      ? "running"
+      : !this.state.isActive
+        ? "inactive"
+        : ""
 
     return html`
-      <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
-        <expandable-item
-          .borderColor=${this.getBorderColor()}
-          .showCopyButton=${true}
-          .itemId=${this.state.id}
-          .isExpanded=${this.isExpanded}
-          .onToggle=${this.onToggle}
-        >
-          <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
-            <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
-            <span
-              class="element-name ${
-                this.state.isCallbackRunning
-                  ? "callback-active"
-                  : !this.state.isActive
-                    ? "callback-inactive"
-                    : ""
-              }"
-            >
-              ${this.state.name || "unnamed"}
-            </span>
-            ${
-              inactiveReasons.length
-                ? html`
-                    <span class="reason-tags">
-                      ${inactiveReasons.map(
-                        reason =>
-                          html`<span
-                            class="reason-tag"
-                            style="--reason-color: ${reason.color}"
-                            title="${reason.label}: ${reason.description}"
-                            >${reason.label}</span
-                          >`
-                      )}
-                    </span>
-                  `
-                : ""
-            }
+      <expandable-item
+        class="${isNotVisible ? "not-visible" : ""}"
+        .borderColor=${this.getStatusColor()}
+        .itemId=${this.state.id}
+        .isExpanded=${this.isExpanded}
+        .onToggle=${this.onToggle}
+      >
+        <div slot="content" class="row" title="Status: ${this.getStatusText()}">
+          <span class="name ${nameClass}">${this.state.name || "unnamed"}</span>
+          ${
+            inactiveReasons.length
+              ? html`
+                  <span class="reason-tags">
+                    ${inactiveReasons.map(
+                      reason =>
+                        html`<span
+                          class="reason-tag"
+                          style="--reason-color: ${reason.color}"
+                          title="${reason.label}: ${reason.description}"
+                          >${reason.label}</span
+                        >`
+                    )}
+                  </span>
+                `
+              : ""
+          }
+          ${
+            this.state.isEnabled
+              ? html`<reactivate-countdown
+                  .element=${this.element}
+                  .state=${this.state}
+                ></reactivate-countdown>`
+              : ""
+          }
+          <span class="actions">
             ${
               this.state.isEnabled
-                ? html`
-                    <reactivate-countdown .element=${this.element} .state=${this.state}>
-                    </reactivate-countdown>
-                    <button
-                      class="toggle-enabled-button"
-                      @click="${this.handleToggleEnabled}"
-                      title="Disable element"
-                    >
-                      ${DISABLED_SVG}
-                    </button>
-                  `
-                : html`
-                    <button
-                      class="enable-button"
-                      @click="${this.handleToggleEnabled}"
-                      title="Enable element"
-                    >
-                      ${ENABLE_SVG}
-                    </button>
-                  `
+                ? html`<button
+                    class="icon-button warn"
+                    @click="${this.handleToggleEnabled}"
+                    title="Disable element"
+                  >
+                    ${DISABLED_SVG}
+                  </button>`
+                : html`<button
+                    class="icon-button ok"
+                    @click="${this.handleToggleEnabled}"
+                    title="Enable element"
+                  >
+                    ${ENABLE_SVG}
+                  </button>`
             }
             <button
-              class="unregister-button"
+              class="icon-button danger"
               @click="${this.handleUnregister}"
               title="Unregister element"
             >
               ${UNREGISTER_SVG}
             </button>
-          </div>
-          <div slot="details">${this.formatElementDetails()}</div>
-        </expandable-item>
-      </div>
+          </span>
+        </div>
+        <div slot="details">${this.formatElementDetails()}</div>
+      </expandable-item>
     `
   }
 }

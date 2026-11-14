@@ -11,7 +11,7 @@ import type {
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
 type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
-import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
+import { CHEVRON_SVG, DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 import { ForesightDevtools } from "../../foresight-devtools"
 import "../base-tab/chip"
@@ -31,51 +31,39 @@ export class ElementTab extends LitElement {
       height: 100%;
     }
 
-    .chips-container {
-      display: flex;
-      gap: 8px;
-    }
-
-    .element-section {
-      margin-bottom: 16px;
-    }
-
-    .element-section:last-child {
-      margin-bottom: 0;
+    .section + .section {
+      margin-top: 6px;
     }
 
     .section-header {
-      margin: 4px 0 4px 0;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
+      all: unset;
       display: flex;
       align-items: center;
       gap: 4px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 6px;
+      color: var(--fs-muted);
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
     }
 
     .section-header:hover {
-      opacity: 0.8;
+      color: var(--fs-text);
     }
 
-    .section-header::before {
-      content: "▼";
-      display: inline-block;
+    .section-header svg {
+      width: 10px;
+      height: 10px;
+      transform: rotate(90deg);
       transition: transform 0.15s ease;
-      font-size: 10px;
     }
 
-    .section-header.collapsed::before {
-      transform: rotate(-90deg);
-    }
-
-    .section-header.active {
-      color: #e8e8e8;
-    }
-
-    .section-header.inactive {
-      color: #999;
+    .section-header.collapsed svg {
+      transform: none;
     }
   `
 
@@ -86,7 +74,7 @@ export class ElementTab extends LitElement {
   @state() private sortDropdown: DropdownOption[]
   @state() private sortOrder: SortElementList
   @state() private elementListItems: Map<ForesightElement, ForesightElementState> = new Map()
-  @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
+  @state() private noContentMessage: string = "No elements registered"
   @state() private expandedElementIds: Set<string> = new Set()
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
@@ -258,7 +246,7 @@ export class ElementTab extends LitElement {
         // Drop any queued update so a later debounce flush can't re-add it.
         this._pendingElementUpdates.delete(e.element)
         if (!this.elementListItems.size) {
-          this.noContentMessage = "No Elements Registered To The Foresight Manager"
+          this.noContentMessage = "No elements registered"
         }
 
         this._elementsCacheDirty = true
@@ -419,7 +407,6 @@ export class ElementTab extends LitElement {
 
   private renderElementSection(
     label: string,
-    modifierClass: string,
     elements: ForesightElement[],
     collapsed: boolean,
     toggleCollapsed: () => void
@@ -429,13 +416,10 @@ export class ElementTab extends LitElement {
     }
 
     return html`
-      <div class="element-section">
-        <h3
-          class="section-header ${modifierClass} ${collapsed ? "collapsed" : ""}"
-          @click=${toggleCollapsed}
-        >
-          ${label} (${elements.length})
-        </h3>
+      <div class="section">
+        <button class="section-header ${collapsed ? "collapsed" : ""}" @click=${toggleCollapsed}>
+          ${CHEVRON_SVG} ${label} · ${elements.length}
+        </button>
         ${
           !collapsed
             ? repeat(
@@ -467,7 +451,7 @@ export class ElementTab extends LitElement {
   render() {
     return html`
       <tab-header>
-        <div slot="chips" class="chips-container">
+        <div slot="chips">
           <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">
             ${this.hitCount.total} hits
           </chip-element>
@@ -485,8 +469,7 @@ export class ElementTab extends LitElement {
         .hasContent=${!!this.elementListItems.size}
       >
         ${this.renderElementSection(
-          "Active Elements",
-          "active",
+          "Active",
           this.activeElements,
           this.activeSectionCollapsed,
           () => {
@@ -494,8 +477,7 @@ export class ElementTab extends LitElement {
           }
         )}
         ${this.renderElementSection(
-          "Inactive Elements",
-          "inactive",
+          "Inactive",
           this.inactiveElements,
           this.inactiveSectionCollapsed,
           () => {

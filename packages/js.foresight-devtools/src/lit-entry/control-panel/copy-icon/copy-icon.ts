@@ -1,49 +1,26 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import { COPY_SVG, TICK_SVG } from "../../../svg/svg-icons"
+import { iconButtonStyles } from "../shared-styles"
 
 @customElement("copy-icon")
 export class CopyIcon extends LitElement {
-  static styles = css`
-    .copy-button {
-      background: transparent;
-      border: 0px;
-      cursor: pointer;
-      padding: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.6;
-      transition:
-        opacity 0.2s ease,
-        background-color 0.2s ease;
-    }
+  static styles = [
+    iconButtonStyles,
+    css`
+      :host {
+        display: inline-flex;
+      }
 
-    :host([positioned]) .copy-button {
-      position: absolute;
-      top: 10px;
-      right: 1px;
-    }
+      .copied {
+        color: #66bb6a;
+      }
 
-    .copy-button:hover {
-      background-color: rgba(176, 196, 222, 0.1);
-    }
-
-    .copy-button:hover svg {
-      stroke: #b0c4de;
-    }
-
-    .copy-button svg {
-      width: 14px;
-      height: 14px;
-      stroke: #ddd;
-      stroke-width: 2.5;
-    }
-
-    .copy-button.copied svg {
-      stroke: #4caf50;
-    }
-  `
+      .copied:hover {
+        color: #66bb6a;
+      }
+    `,
+  ]
 
   @property({ type: String }) title: string = "Copy to clipboard"
   @property({ type: Function }) onCopy?: (event: MouseEvent) => Promise<void> | void
@@ -87,7 +64,7 @@ export class CopyIcon extends LitElement {
   render() {
     return html`
       <button
-        class="copy-button ${this.isCopied ? "copied" : ""}"
+        class="icon-button ${this.isCopied ? "copied" : ""}"
         title="${this.title}"
         @click=${this.handleClick}
       >

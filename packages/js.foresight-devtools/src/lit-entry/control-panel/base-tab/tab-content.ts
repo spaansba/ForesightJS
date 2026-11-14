@@ -6,43 +6,28 @@ export class TabContent extends LitElement {
   static styles = [
     css`
       :host {
-        overflow: hidden;
+        display: block;
+        flex: 1;
+        min-height: 0;
       }
 
-      .content-container::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      .content-container::-webkit-scrollbar-track {
-        background: rgba(30, 30, 30, 0.5);
-      }
-
-      .content-container::-webkit-scrollbar-thumb {
-        background-color: rgba(176, 196, 222, 0.5);
-        border: 2px solid rgba(0, 0, 0, 0.2);
-      }
-
-      .content-container::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(176, 196, 222, 0.7);
-      }
-
-      .content-container {
-        scrollbar-gutter: stable;
+      .content {
         height: 100%;
-        min-height: 150px;
+        box-sizing: border-box;
+        padding: 4px;
         overflow-y: auto;
         scrollbar-width: thin;
-        scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5);
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
       }
 
-      .no-content-message {
+      .empty {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100%;
-        color: #afafaf;
-        font-style: italic;
-        font-family: "Courier New", monospace;
+        padding: 0 24px;
+        text-align: center;
+        color: var(--fs-muted);
       }
     `,
   ]
@@ -55,11 +40,11 @@ export class TabContent extends LitElement {
 
   render() {
     return html`
-      <div class="content-container">
+      <div class="content">
         ${
           this.hasContent
             ? html`<slot></slot>`
-            : html`<div class="no-content-message">${this.noContentMessage}</div>`
+            : html`<div class="empty">${this.noContentMessage}</div>`
         }
       </div>
     `

@@ -7,73 +7,57 @@ import { ForesightManager, type ForesightManagerSettings } from "js.foresight"
 export class SettingItemRange extends LitElement {
   static styles = [
     css`
-      .setting-range-value {
-        font-size: 12px;
-        color: #b0c4de;
-        font-weight: 500;
-        min-width: 45px;
-        text-align: right;
-      }
-
-      .range-wrapper {
+      .range {
         display: flex;
         align-items: center;
         gap: 8px;
-        width: 100%;
       }
 
-      input[type="range"] {
+      .value {
+        min-width: 44px;
+        text-align: right;
+        color: var(--fs-muted);
+        font-family: var(--fs-mono);
+        font-size: 10.5px;
+      }
+
+      input {
+        appearance: none;
+        width: 96px;
+        height: 14px;
         margin: 0;
-        cursor: pointer;
-        -webkit-appearance: none;
-        appearance: none;
         background: transparent;
-        height: 22px;
-        vertical-align: middle;
-        width: 100px;
+        cursor: pointer;
       }
 
-      input[type="range"]::-webkit-slider-runnable-track {
-        height: 6px;
-        background: #444;
-        border: 1px solid #555;
+      input::-webkit-slider-runnable-track {
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.14);
       }
 
-      input[type="range"]::-moz-range-track {
-        height: 6px;
-        background: #444;
-        border: 1px solid #555;
+      input::-moz-range-track {
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.14);
       }
 
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
+      input::-webkit-slider-thumb {
         appearance: none;
-        margin-top: -7px;
-        background: #b0c4de;
-        height: 20px;
-        width: 20px;
-        border: 2px solid #333;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        transition: all 0.2s ease;
+        width: 12px;
+        height: 12px;
+        margin-top: -4.5px;
+        border: none;
+        border-radius: 50%;
+        background: var(--fs-accent);
       }
 
-      input[type="range"]::-moz-range-thumb {
-        background: #b0c4de;
-        height: 20px;
-        width: 20px;
-        border: 2px solid #333;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        transition: all 0.2s ease;
-      }
-
-      input[type="range"]:hover::-webkit-slider-thumb {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
-      }
-
-      input[type="range"]:hover::-moz-range-thumb {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 4px rgba(176, 196, 222, 0.2);
+      input::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border: none;
+        border-radius: 50%;
+        background: var(--fs-accent);
       }
     `,
   ]
@@ -115,9 +99,8 @@ export class SettingItemRange extends LitElement {
 
   render() {
     return html`<setting-item header=${this.header} description=${this.description}>
-      <div slot="controls" class="range-wrapper">
+      <div slot="controls" class="range">
         <input
-          slot="controls"
           type="range"
           min="${this.minValue}"
           max="${this.maxValue}"
@@ -126,7 +109,7 @@ export class SettingItemRange extends LitElement {
           @input=${this.handleRangeInput}
           @change=${this.handleRangeChange}
         />
-        <span class="setting-range-value">${this.displayValue} ${this.unit}</span>
+        <span class="value">${this.displayValue} ${this.unit}</span>
       </div>
     </setting-item>`
   }

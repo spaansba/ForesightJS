@@ -1,5 +1,6 @@
 import { LitElement, html, css, type TemplateResult } from "lit"
 import { property, state } from "lit/decorators.js"
+import { iconButtonStyles } from "../shared-styles"
 
 export type DropdownOption = {
   value: string
@@ -12,79 +13,38 @@ export abstract class BaseDropdown extends LitElement {
   private static currentlyOpen: BaseDropdown | null = null
 
   static styles = [
+    iconButtonStyles,
     css`
       :host {
-        display: inline-block;
+        display: inline-flex;
       }
 
-      .dropdown-container {
-        position: relative;
-        display: inline-block;
+      .icon-button .arrow-icon {
+        width: 9px;
+        height: 9px;
+        opacity: 0.7;
+        transition: transform 0.15s ease;
       }
 
-      .trigger-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        transition: all 0.2s ease;
-      }
-
-      .trigger-button svg {
-        width: 16px;
-        height: 16px;
-        stroke: white;
-        transition: stroke 0.2s;
-      }
-
-      .trigger-button .arrow-icon {
-        width: 10px;
-        height: 10px;
-        stroke: white;
-        fill: none;
-        stroke-width: 2;
-        transition:
-          transform 0.2s ease,
-          stroke 0.2s;
-      }
-
-      .trigger-button:hover {
-        background-color: rgba(176, 196, 222, 0.1);
-      }
-
-      .trigger-button:hover svg,
-      .trigger-button:hover .arrow-icon {
-        stroke: #b0c4de;
-      }
-
-      .trigger-button.active {
-        background-color: rgba(176, 196, 222, 0.2);
-      }
-
-      .trigger-button.active svg {
-        stroke: #b0c4de;
-      }
-
-      .trigger-button.active .arrow-icon {
+      .active .arrow-icon {
         transform: rotate(180deg);
-        stroke: #b0c4de;
+      }
+
+      .trigger-label {
+        font-size: 11px;
       }
 
       .dropdown-menu {
         position: fixed;
-        z-index: 9999;
+        z-index: 10002;
         display: none;
         flex-direction: column;
-        background-color: #3a3a3a;
-        border: 1px solid #555;
-        min-width: 200px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        overflow: hidden;
+        min-width: 170px;
+        padding: 4px;
+        background: #1e1e21;
+        border: 1px solid var(--fs-border);
+        border-radius: 7px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       }
 
       .dropdown-menu.active {
@@ -92,40 +52,30 @@ export abstract class BaseDropdown extends LitElement {
       }
 
       .dropdown-menu button {
-        background: none;
-        border: none;
-        color: #ccc;
-        font-size: 12px;
-        text-align: left;
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
+        all: unset;
         display: flex;
         align-items: center;
-        position: relative;
-        width: 100%;
-        box-sizing: border-box;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 5px 8px;
+        border-radius: 4px;
+        color: #c8c8cc;
+        font-size: 12px;
+        cursor: pointer;
       }
 
       .dropdown-menu button:hover {
-        background-color: #555;
-        color: white;
+        background: var(--fs-hover);
+        color: var(--fs-text);
       }
 
       .dropdown-menu button.active {
-        color: #b0c4de;
-        font-weight: bold;
-        background-color: rgba(176, 196, 222, 0.1);
+        color: var(--fs-accent);
       }
 
       .dropdown-menu button.active::after {
         content: "✓";
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #b0c4de;
-        font-weight: bold;
+        font-size: 11px;
       }
     `,
   ]
@@ -175,7 +125,7 @@ export abstract class BaseDropdown extends LitElement {
       return
     }
 
-    const triggerButton = this.shadowRoot?.querySelector(".trigger-button") as HTMLElement
+    const triggerButton = this.shadowRoot?.querySelector(".icon-button") as HTMLElement
     const dropdownMenu = this.shadowRoot?.querySelector(".dropdown-menu") as HTMLElement
 
     if (triggerButton && dropdownMenu) {
@@ -213,7 +163,7 @@ export abstract class BaseDropdown extends LitElement {
   protected abstract _getTriggerLabel(): string
 
   render() {
-    const buttonClass = `trigger-button ${this.isDropdownOpen ? "active" : ""}`
+    const buttonClass = `icon-button ${this.isDropdownOpen ? "active" : ""}`
     const menuClass = `dropdown-menu ${this.isDropdownOpen ? "active" : ""}`
 
     return html`

@@ -10,47 +10,42 @@ type ShowSettingKey = `show.${ShowKey}`
 export class SettingItemCheckbox extends LitElement {
   static styles = [
     css`
-      input[type="checkbox"] {
+      input {
         appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
         position: relative;
-        width: 44px;
-        height: 22px;
-        background-color: #444;
+        width: 26px;
+        height: 14px;
+        margin: 0;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.14);
         cursor: pointer;
         outline: none;
-        transition: all 0.3s ease;
-        vertical-align: middle;
-        flex-shrink: 0;
-        margin: 0;
-        border: 2px solid #555;
+        transition: background-color 0.15s ease;
       }
 
-      input[type="checkbox"]::before {
+      input::before {
         content: "";
         position: absolute;
-        width: 16px;
-        height: 16px;
-        background-color: white;
-        top: 1px;
-        left: 1px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        top: 2px;
+        left: 2px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.15s ease;
       }
 
-      input[type="checkbox"]:checked {
-        background-color: #b0c4de;
-        border-color: #b0c4de;
+      input:checked {
+        background: var(--fs-accent);
       }
 
-      input[type="checkbox"]:checked::before {
-        transform: translateX(22px);
-        background-color: white;
+      input:checked::before {
+        transform: translateX(12px);
       }
 
-      input[type="checkbox"]:hover {
-        box-shadow: 0 0 0 3px rgba(176, 196, 222, 0.1);
+      input:focus-visible {
+        outline: 1px solid var(--fs-accent);
+        outline-offset: 2px;
       }
     `,
   ]
