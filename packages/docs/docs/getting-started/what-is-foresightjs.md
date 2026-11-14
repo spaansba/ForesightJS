@@ -10,7 +10,7 @@ keywords:
   - desktop prefetching
 description: Introduction to ForesightJS, an lightweight JavaScript library with full TypeScript support that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
-  date: 2026-06-09
+  date: 2026-11-14
   author: Bart Spaans
 ---
 

@@ -10,7 +10,7 @@ keywords:
   - PrefetchPageLinks
 description: Integration details to add ForesightJS to your React Router projects
 last_updated:
-  date: 2026-06-08
+  date: 2026-11-14
   author: Bart Spaans
 ---
 
@@ -19,6 +19,8 @@ last_updated:
 ## React Router's Prefetching
 
 This example requires React Router v7 in [Framework Mode](https://reactrouter.com/7.18.4/start/modes#framework). Its `Link` supports `prefetch="intent"` and `prefetch="viewport"`, and `PrefetchPageLinks` can prefetch a route when ForesightJS predicts intent.
+
+`prefetch="intent"` starts when the link is hovered or focused, and `prefetch="viewport"` prefetches every visible link. ForesightJS starts earlier than `intent` by predicting the target from mouse trajectory and Tab navigation, and only prefetches links the user is likely to click.
 
 `PrefetchPageLinks` requires framework context and cannot be used under a plain `BrowserRouter` or standalone `RouterProvider`. In those apps, put your own data fetch or route-module import in the Foresight callback instead.
 

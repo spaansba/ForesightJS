@@ -11,7 +11,7 @@ keywords:
   - React
 description: Integration details to add ForesightJS to your Next.js projects
 last_updated:
-  date: 2026-06-08
+  date: 2026-11-14
   author: Bart Spaans
 ---
 
@@ -19,9 +19,11 @@ last_updated:
 
 ## Next.js default prefetching
 
-Next.js's default prefetching method prefetches when links enter the viewport, this is a great user experience but can lead to unnecessary data transfer for bigger websites. For example by scrolling down the [Next.js homepage](https://nextjs.org/) it triggers **~1.59MB** of prefetch requests as every single link on the page gets prefetched, regardless of user intent.
+By default, Next.js prefetches each `Link` as it enters the viewport. On pages with many links this means a prefetch request for every visible link, regardless of user intent. The opt-in [Partial Prefetching](https://nextjs.org/docs/app/guides/prefetching#partial-prefetching) mode (`partialPrefetching`, requires `cacheComponents`) reduces this to one shared shell per route.
 
-To avoid this, we can wrap the `Link` component and add ForesightJS. The official Next.js [prefetching docs](https://nextjs.org/docs/app/guides/prefetching#extending-or-ejecting-link) mention ForesightJS as an example for custom prefetching strategies.
+ForesightJS prefetches only the links a user is predicted to click. It starts before the cursor reaches the link, which is earlier than hover prefetching, and it also prefetches for keyboard users navigating with Tab.
+
+To use it, wrap the `Link` component and add ForesightJS. The official Next.js [prefetching docs](https://nextjs.org/docs/app/guides/prefetching#extending-or-ejecting-link) mention ForesightJS as an example for custom prefetching strategies.
 
 ## ForesightLink Component
 

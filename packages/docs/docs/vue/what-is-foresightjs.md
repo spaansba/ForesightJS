@@ -9,7 +9,7 @@ keywords:
   - tab prediction
 description: Introduction to ForesightJS for Vue, a lightweight library that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
-  date: 2026-06-09
+  date: 2026-11-14
   author: Bart Spaans
 ---
 
