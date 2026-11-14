@@ -29,15 +29,13 @@ export class TabPredictor extends BaseForesightModule {
       return
     }
 
-    this.createAbortController()
-
     document.addEventListener("keydown", this.handleKeyDown, {
-      signal: this.abortController?.signal,
+      signal: this.abortController.signal,
       passive: true,
     })
 
     document.addEventListener("focusin", this.handleFocusIn, {
-      signal: this.abortController?.signal,
+      signal: this.abortController.signal,
       passive: true,
     })
   }
@@ -89,7 +87,7 @@ export class TabPredictor extends BaseForesightModule {
   }
 
   private predictUpcomingTabs(currentIndex: number, isReversed: boolean): void {
-    const tabOffset = this.settings.tabOffset
+    const tabOffset = this.deps.settings.tabOffset
     const subType = isReversed ? "reverse" : "forwards"
 
     for (let i = 0; i <= tabOffset; i++) {
@@ -100,9 +98,9 @@ export class TabPredictor extends BaseForesightModule {
         continue
       }
 
-      const entry = this.elements.get(element)
+      const entry = this.deps.elements.get(element)
       if (entry && !entry.state.isPredicted && entry.state.isActive) {
-        this.callCallback(entry, { kind: "tab", subType })
+        this.deps.callCallback(entry, { kind: "tab", subType })
       }
     }
   }

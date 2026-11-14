@@ -1,5 +1,4 @@
-import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
-import { ElementObservingModule } from "../core/ElementObservingModule"
+import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { MousePredictor } from "../predictors/MousePredictor"
 import { ScrollPredictor } from "../predictors/ScrollPredictor"
 import type { TabPredictor } from "../predictors/TabPredictor"
@@ -12,12 +11,11 @@ import type {
 } from "../types/types"
 import { areRectsEqual, getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
-export class DesktopHandler extends ElementObservingModule {
+export class DesktopHandler extends BaseForesightModule {
   private mousePredictor: MousePredictor
   private tabPredictor: TabPredictor | null = null
   private scrollPredictor: ScrollPredictor
   private positionObserver: PositionObserver | null = null
-  private dependencies: ForesightModuleDependencies
 
   public trajectoryPositions: TrajectoryPositions = {
     currentPoint: { x: 0, y: 0 },
@@ -26,7 +24,6 @@ export class DesktopHandler extends ElementObservingModule {
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
-    this.dependencies = dependencies
 
     const config = { dependencies, trajectoryPositions: this.trajectoryPositions }
     this.mousePredictor = new MousePredictor(config)
@@ -34,13 +31,13 @@ export class DesktopHandler extends ElementObservingModule {
   }
 
   protected onConnect(): void {
-    if (this.settings.enableTabPrediction) {
+    if (this.deps.settings.enableTabPrediction) {
       this.connectTabPredictor()
     }
 
     this.positionObserver = new PositionObserver(this.handlePositionChange)
 
-    for (const [element, entry] of this.elements) {
+    for (const [element, entry] of this.deps.elements) {
       if (entry.state.isActive) {
         this.positionObserver.observe(element)
       }
@@ -48,10 +45,10 @@ export class DesktopHandler extends ElementObservingModule {
   }
 
   private handlePositionChange = (entries: PositionObserverEntry[]) => {
-    const enableScrollPosition = this.settings.enableScrollPrediction
+    const enableScrollPosition = this.deps.settings.enableScrollPrediction
 
     for (const positionEntry of entries) {
-      const entry = this.elements.get(positionEntry.target)
+      const entry = this.deps.elements.get(positionEntry.target)
 
       if (!entry) {
         continue
@@ -78,7 +75,7 @@ export class DesktopHandler extends ElementObservingModule {
 
   private checkForMouseHover = (entry: ForesightElementInternal) => {
     if (isPointInRectangle(this.trajectoryPositions.currentPoint, entry.bounds.expandedRect)) {
-      this.callCallback(entry, {
+      this.deps.callCallback(entry, {
         kind: "mouse",
         subType: "hover",
       })
@@ -97,14 +94,14 @@ export class DesktopHandler extends ElementObservingModule {
       isNowIntersecting &&
       !areRectsEqual(positionEntry.boundingClientRect, entry.bounds.originalRect)
     ) {
-      this.updateElementBounds(entry, {
+      this.deps.updateElementBounds(entry, {
         originalRect: positionEntry.boundingClientRect,
         expandedRect: getExpandedRect(positionEntry.boundingClientRect, entry.state.hitSlop),
       })
     }
 
     if (entry.state.isIntersectingWithViewport !== isNowIntersecting) {
-      this.updateElementState(entry, { isIntersectingWithViewport: isNowIntersecting })
+      this.deps.updateElementState(entry, { isIntersectingWithViewport: isNowIntersecting })
     }
   }
 
@@ -119,7 +116,7 @@ export class DesktopHandler extends ElementObservingModule {
       return
     }
 
-    if (this.settings.enableTabPrediction) {
+    if (this.deps.settings.enableTabPrediction) {
       this.connectTabPredictor()
     } else {
       this.tabPredictor?.disconnect()
@@ -129,11 +126,11 @@ export class DesktopHandler extends ElementObservingModule {
   private async connectTabPredictor(): Promise<void> {
     if (!this.tabPredictor) {
       const { TabPredictor } = await import("../predictors/TabPredictor")
-      this.tabPredictor ??= new TabPredictor(this.dependencies)
+      this.tabPredictor ??= new TabPredictor(this.deps)
     }
 
     // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
-    if (this.isConnected && this.settings.enableTabPrediction) {
+    if (this.isConnected && this.deps.settings.enableTabPrediction) {
       this.tabPredictor.connect()
     }
   }

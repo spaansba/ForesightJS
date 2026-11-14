@@ -1,7 +1,7 @@
 import type { ForesightElement } from "../types/types"
-import { ElementObservingModule } from "../core/ElementObservingModule"
+import { BaseForesightModule } from "../core/BaseForesightModule"
 
-export class ViewportPredictor extends ElementObservingModule {
+export class ViewportPredictor extends BaseForesightModule {
   private intersectionObserver: IntersectionObserver | null = null
 
   protected onConnect(): void {
@@ -27,13 +27,13 @@ export class ViewportPredictor extends ElementObservingModule {
         continue
       }
 
-      const data = this.elements.get(entry.target as ForesightElement)
+      const data = this.deps.elements.get(entry.target as ForesightElement)
 
       if (!data) {
         continue
       }
 
-      this.callCallback(data, {
+      this.deps.callCallback(data, {
         kind: "viewport",
       })
 

@@ -41,30 +41,13 @@ export type ForesightModuleDependencies = {
 }
 
 export abstract class BaseForesightModule {
-  protected abortController?: AbortController
-  protected elements: ReadonlyMap<ForesightElement, ForesightElementInternal>
-  protected scannableElements: ReadonlySet<ForesightElementInternal>
-  protected callCallback: CallCallbackFunction
-  protected emit: EmitFunction
-  protected hasListeners: HasListenersFunction
-  protected updateElementState: UpdateElementStateFunction
-  protected updateElementBounds: UpdateElementBoundsFunction
-  protected settings: ForesightManagerSettings
+  protected abortController = new AbortController()
   private _isConnected = false
+
+  constructor(protected readonly deps: ForesightModuleDependencies) {}
 
   public get isConnected(): boolean {
     return this._isConnected
-  }
-
-  constructor(dependencies: ForesightModuleDependencies) {
-    this.elements = dependencies.elements
-    this.scannableElements = dependencies.scannableElements
-    this.callCallback = dependencies.callCallback
-    this.emit = dependencies.emit
-    this.hasListeners = dependencies.hasListeners
-    this.updateElementState = dependencies.updateElementState
-    this.updateElementBounds = dependencies.updateElementBounds
-    this.settings = dependencies.settings
   }
 
   public disconnect(): void {
@@ -72,7 +55,7 @@ export abstract class BaseForesightModule {
       return
     }
 
-    this.abortController?.abort()
+    this.abortController.abort()
     this.onDisconnect()
     this._isConnected = false
   }
@@ -83,17 +66,10 @@ export abstract class BaseForesightModule {
     }
 
     this._isConnected = true
+    this.abortController = new AbortController()
     this.onConnect()
   }
 
   protected onConnect(): void {}
   protected onDisconnect(): void {}
-
-  protected createAbortController(): void {
-    if (this.abortController && !this.abortController.signal.aborted) {
-      return
-    }
-
-    this.abortController = new AbortController()
-  }
 }
