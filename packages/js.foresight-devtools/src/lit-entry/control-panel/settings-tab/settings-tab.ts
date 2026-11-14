@@ -320,13 +320,13 @@ export class SettingsTab extends LitElement {
       <tab-header>
         ${
           changes.length
-            ? html`<span slot="chips" data-tip=${changedTip}>${changes.length} changed</span>`
+            ? html`<span slot="chips" title=${changedTip}>${changes.length} changed</span>`
             : ""
         }
         <div slot="actions">
           <copy-button
             label="copy config"
-            data-tip="Copy as ForesightManager.initialize({...})"
+            title="Copy as ForesightManager.initialize({...})"
             .onCopy=${() => this.handleCopySettings()}
           ></copy-button>
         </div>
@@ -336,12 +336,12 @@ export class SettingsTab extends LitElement {
         <div class="group" style="--tint: var(--fs-mouse)">
           <div class="group-head">
             <h4
-              data-tip="Fire callbacks when the cursor is heading for an element and will reach it within ${settings.trajectoryPredictionTime}ms"
+              title="Fire callbacks when the cursor is heading for an element and will reach it within ${settings.trajectoryPredictionTime}ms"
             >
               mouse
             </h4>
             <setting-toggle
-              data-tip="enableMousePrediction"
+              title="enableMousePrediction"
               .isChecked=${settings.enableMousePrediction}
               setting="enableMousePrediction"
             ></setting-toggle>
@@ -364,12 +364,12 @@ export class SettingsTab extends LitElement {
         <div class="group" style="--tint: var(--fs-tab)">
           <div class="group-head">
             <h4
-              data-tip="Fire callbacks when keyboard focus is ${settings.tabOffset} tab stops away from an element"
+              title="Fire callbacks when keyboard focus is ${settings.tabOffset} tab stops away from an element"
             >
               tab
             </h4>
             <setting-toggle
-              data-tip="enableTabPrediction"
+              title="enableTabPrediction"
               .isChecked=${settings.enableTabPrediction}
               setting="enableTabPrediction"
             ></setting-toggle>
@@ -392,12 +392,12 @@ export class SettingsTab extends LitElement {
         <div class="group" style="--tint: var(--fs-scroll)">
           <div class="group-head">
             <h4
-              data-tip="Fire callbacks for elements within ${settings.scrollMargin}px of the cursor in the direction you scroll"
+              title="Fire callbacks for elements within ${settings.scrollMargin}px of the cursor in the direction you scroll"
             >
               scroll
             </h4>
             <setting-toggle
-              data-tip="enableScrollPrediction"
+              title="enableScrollPrediction"
               .isChecked=${settings.enableScrollPrediction}
               setting="enableScrollPrediction"
             ></setting-toggle>

@@ -233,11 +233,10 @@ export class SingleElement extends LitElement {
         .onToggle=${this.onToggle}
       >
         <div slot="content" class="row">
-          <span class="marker ${status}" data-tip=${this.getStatusText()}></span>
+          <span class="marker ${status}" title=${this.getStatusText()}></span>
           <span class="name ${status}">${this.state.name || "unnamed"}</span>
           ${this.getInactiveReasons().map(
-            reason =>
-              html`<span class="reason" data-tip=${reason.description}>${reason.label}</span>`
+            reason => html`<span class="reason" title=${reason.description}>${reason.label}</span>`
           )}
           ${
             this.state.isEnabled
@@ -251,11 +250,11 @@ export class SingleElement extends LitElement {
             <button
               class="btn"
               @click="${this.handleToggleEnabled}"
-              data-tip="${this.state.isEnabled ? "Disable" : "Enable"}"
+              title="${this.state.isEnabled ? "Disable" : "Enable"}"
             >
               ${this.state.isEnabled ? DISABLED_SVG : ENABLE_SVG}
             </button>
-            <button class="btn danger" @click="${this.handleUnregister}" data-tip="Unregister">
+            <button class="btn danger" @click="${this.handleUnregister}" title="Unregister">
               ${UNREGISTER_SVG}
             </button>
           </span>

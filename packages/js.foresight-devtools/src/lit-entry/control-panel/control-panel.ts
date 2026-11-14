@@ -6,7 +6,6 @@ import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
-import "./panel-tooltip"
 import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
@@ -295,11 +294,7 @@ export class ControlPanel extends LitElement {
       <div class="panel ${this.corner} ${this.isMinimized ? "minimized" : ""}">
         ${
           this.isMinimized
-            ? html`<button
-                class="pill"
-                @click="${this.handleMinimizeClick}"
-                data-tip="Open devtools"
-              >
+            ? html`<button class="pill" @click="${this.handleMinimizeClick}" title="Open devtools">
                 foresight
               </button>`
             : html`<div class="bar">
@@ -308,7 +303,7 @@ export class ControlPanel extends LitElement {
                   .activeTab="${this.activeTab}"
                   @tab-change="${this._handleTabChange}"
                 ></tab-selector>
-                <button class="btn" @click="${this.handleMinimizeClick}" data-tip="Minimize">
+                <button class="btn" @click="${this.handleMinimizeClick}" title="Minimize">
                   ${MINIMIZE_SVG}
                 </button>
               </div>`
@@ -318,7 +313,7 @@ export class ControlPanel extends LitElement {
             ? html`
                 <div class="touch-warning">
                   <span><b>touch device</b>, no trajectories or visibility sort</span>
-                  <button class="btn" @click="${this.dismissWarning}" data-tip="Dismiss">
+                  <button class="btn" @click="${this.dismissWarning}" title="Dismiss">
                     ${CLOSE_SVG}
                   </button>
                 </div>
@@ -326,7 +321,6 @@ export class ControlPanel extends LitElement {
             : ""
         }
         ${this.isMinimized ? "" : html`<div class="tab-content">${this.renderActiveTab()}</div>`}
-        <panel-tooltip></panel-tooltip>
       </div>
     `
   }

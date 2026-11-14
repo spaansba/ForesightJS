@@ -137,13 +137,13 @@ export class LogTab extends LitElement {
 
     return html`
       <tab-header>
-        <span slot="chips" data-tip="Keeps the last ${MAX_LOGS}">${logs.length} logged</span>
+        <span slot="chips" title="Keeps the last ${MAX_LOGS}">${logs.length} logged</span>
         <div slot="actions">
           ${
             this.shouldShowPerformanceWarning()
               ? html`<span
                   class="warning"
-                  data-tip="Trajectory events fire on every frame. Logging them to the console gets slow"
+                  title="Trajectory events fire on every frame. Logging them to the console gets slow"
                   >!</span
                 >`
               : ""
@@ -161,7 +161,7 @@ export class LogTab extends LitElement {
           <span class="divider"></span>
           <button
             class="btn"
-            data-tip="Log a snapshot of the manager state"
+            title="Log a snapshot of the manager state"
             @click="${this.logManagerData}"
           >
             snapshot
