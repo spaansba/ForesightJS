@@ -13,7 +13,7 @@ import type {
   UpdatedManagerSetting,
 } from "js.foresight"
 
-type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
+export type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
 export type ControlPanelLogEntry = {
   eventData: SerializedEventData

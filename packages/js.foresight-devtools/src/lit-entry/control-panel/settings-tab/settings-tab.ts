@@ -28,13 +28,12 @@ import {
 } from "../../../constants"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
-import "../copy-icon/copy-icon"
-import "./setting-item/setting-item-checkbox"
-import "./setting-item/setting-item-range"
+import "../copy-button"
+import "./setting-item/setting-toggle"
+import "./setting-item/setting-range"
 import "./setting-item/setting-item"
 import "../dropdown/single-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
-import "../base-tab/chip"
 import { ForesightDevtools } from "../../foresight-devtools"
 
 // A helper type to represent a change in a Devtools setting
@@ -55,29 +54,38 @@ export class SettingsTab extends LitElement {
       height: 100%;
     }
 
-    .settings-content {
-      display: block;
+    .group {
+      padding-bottom: 6px;
     }
 
-    .settings-section {
+    .group-head {
       display: flex;
-      flex-direction: column;
-      gap: 16px;
+      align-items: center;
+      gap: 8px;
+      height: 24px;
+      padding: 0 10px;
     }
 
-    .settings-group {
-      background: rgba(30, 30, 30, 0.6);
-      padding: 16px;
-      border: 1px solid rgba(176, 196, 222, 0.1);
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      margin: 0;
+      color: var(--tint, var(--fs-muted));
+      font-size: inherit;
+      font-weight: 500;
+      cursor: default;
     }
 
-    .settings-group h4 {
-      margin: 0 0 12px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #b0c4de;
-      border-bottom: 1px solid rgba(176, 196, 222, 0.2);
-      padding-bottom: 8px;
+    single-select-dropdown {
+      margin-right: -5px;
+    }
+
+    h4::after {
+      content: "";
+      flex: 1;
+      border-top: 1px dashed var(--fs-line);
     }
   `
 
@@ -89,79 +97,24 @@ export class SettingsTab extends LitElement {
   @state() private devtoolsSettings: DevtoolsSettings
   @state() private changedSettings: (UpdatedManagerSetting | UpdatedDevtoolsSetting)[] = []
   @state() private currentCorner: Corner = "bottom-right"
-  @state() private touchDeviceStrategyOptions: DropdownOption[] = [
-    {
-      value: "onTouchStart",
-      label: "On Touch Start",
-      title: "Execute callbacks when user touches registered elements",
-      icon: html`<span>Touch</span>`,
-    },
-    {
-      value: "viewport",
-      label: "Viewport Entry",
-      title: "Execute callbacks when registered elements enter the viewport",
-      icon: html`<span>Viewport</span>`,
-    },
-    {
-      value: "none",
-      label: "None",
-      title: "Disable touch device prediction",
-      icon: html`<span>None</span>`,
-    },
+  private touchDeviceStrategyOptions: DropdownOption[] = [
+    { value: "onTouchStart", title: "Fire callbacks the moment a finger lands on the element" },
+    { value: "viewport", title: "Fire callbacks as soon as the element scrolls into view" },
+    { value: "none", title: "No prediction on touch devices" },
   ]
 
-  @state() private minimumConnectionTypeOptions: DropdownOption[] = [
-    {
-      value: "slow-2g",
-      label: "Slow 2G",
-      title: "Slow 2G",
-      icon: html`<span>Slow 2G</span>`,
-    },
-    {
-      value: "2g",
-      label: "2G",
-      title: "2G",
-      icon: html`<span>2G</span>`,
-    },
-    {
-      value: "3g",
-      label: "3G",
-      title: "3G",
-      icon: html`<span>3G</span>`,
-    },
-    {
-      value: "4g",
-      label: "4G",
-      title: "4G",
-      icon: html`<span>4G</span>`,
-    },
+  private minimumConnectionTypeOptions: DropdownOption[] = [
+    { value: "slow-2g", title: "Prefetch on anything, even slow-2g" },
+    { value: "2g", title: "Skip prefetching below 2g" },
+    { value: "3g", title: "Skip prefetching below 3g" },
+    { value: "4g", title: "Only prefetch on 4g" },
   ]
 
-  @state() private cornerOptions: DropdownOption[] = [
-    {
-      value: "top-left",
-      label: "Top Left",
-      title: "Position control panel in top-left corner",
-      icon: html`<span>↖</span>`,
-    },
-    {
-      value: "top-right",
-      label: "Top Right",
-      title: "Position control panel in top-right corner",
-      icon: html`<span>↗</span>`,
-    },
-    {
-      value: "bottom-left",
-      label: "Bottom Left",
-      title: "Position control panel in bottom-left corner",
-      icon: html`<span>↙</span>`,
-    },
-    {
-      value: "bottom-right",
-      label: "Bottom Right",
-      title: "Position control panel in bottom-right corner",
-      icon: html`<span>↘</span>`,
-    },
+  private cornerOptions: DropdownOption[] = [
+    { value: "top-left", title: "Dock the panel top left" },
+    { value: "top-right", title: "Dock the panel top right" },
+    { value: "bottom-left", title: "Dock the panel bottom left" },
+    { value: "bottom-right", title: "Dock the panel bottom right" },
   ]
 
   private _abortController: AbortController | null = null
@@ -350,176 +303,190 @@ export class SettingsTab extends LitElement {
   }
 
   render() {
-    if (!this.managerSettings || !this.devtoolsSettings) {
-      return html`<tab-content
-        .noContentMessage=${"Loading settings..."}
-        .hasContent=${false}
-      ></tab-content>`
-    }
-
     const settings = this.managerSettings
+    const show = this.devtoolsSettings.show
+    const changes = this.changedSettings
 
-    const chipTitle =
-      this.changedSettings.length > 0
-        ? `Settings that have been changed this session compared to your initialized settings.\nClick on the copy icon to easely copy the new setting into your project\n\n` +
-          this.changedSettings
-            .map(
-              change =>
-                `${change.setting}: ${JSON.stringify(change.oldValue)} -> ${JSON.stringify(
-                  change.newValue
-                )}`
-            )
-            .join("\n")
-        : "No settings changed from initial values"
+    const changedTip =
+      "Changed since page load. Copy the config to keep them.\n\n" +
+      changes
+        .map(
+          change =>
+            `${change.setting}: ${JSON.stringify(change.oldValue)} → ${JSON.stringify(change.newValue)}`
+        )
+        .join("\n")
 
     return html`
       <tab-header>
-        <div slot="chips" class="chips-container">
-          <chip-element .title=${chipTitle}> ${this.changedSettings.length} changed </chip-element>
-        </div>
+        ${
+          changes.length
+            ? html`<span slot="chips" data-tip=${changedTip}>${changes.length} changed</span>`
+            : ""
+        }
         <div slot="actions">
-          <copy-icon
-            title="Copy current settings as code"
+          <copy-button
+            label="copy config"
+            data-tip="Copy as ForesightManager.initialize({...})"
             .onCopy=${() => this.handleCopySettings()}
-          ></copy-icon>
+          ></copy-button>
         </div>
       </tab-header>
 
-      <tab-content .hasContent=${true}>
-        <div class="settings-content">
-          <div class="settings-section">
-            <div class="settings-group">
-              <h4>Mouse Prediction</h4>
-              <setting-item-checkbox
-                .isChecked=${settings.enableMousePrediction}
-                header="Enable Mouse Prediction"
-                description="Execute callbacks when mouse is ${settings.trajectoryPredictionTime}ms away from registered elements in mouse direction"
-                setting="enableMousePrediction"
-              ></setting-item-checkbox>
-              <setting-item-range
-                .currentValue=${settings.trajectoryPredictionTime}
-                .maxValue=${MAX_TRAJECTORY_PREDICTION_TIME}
-                .minValue=${MIN_TRAJECTORY_PREDICTION_TIME}
-                .unit=${TRAJECTORY_PREDICTION_TIME_UNIT}
-                header="Prediction Time"
-                description="How far into the future to calculate mouse trajectory path"
-                setting="trajectoryPredictionTime"
-              ></setting-item-range>
-            </div>
-            <div class="settings-group">
-              <h4>Keyboard Navigation</h4>
-              <setting-item-checkbox
-                .isChecked=${settings.enableTabPrediction}
-                header="Enable Tab Prediction"
-                description="Execute callbacks when user ${settings.tabOffset} tabbable elements away from registered elements in tab direction"
-                setting="enableTabPrediction"
-              >
-              </setting-item-checkbox>
-              <setting-item-range
-                .currentValue=${settings.tabOffset}
-                .maxValue=${MAX_TAB_OFFSET}
-                .minValue=${MIN_TAB_OFFSET}
-                .unit=${TAB_OFFSET_UNIT}
-                header="Tab Offset"
-                description="Number of tabbable elements to look ahead when predicting navigation"
-                setting="tabOffset"
-              >
-              </setting-item-range>
-            </div>
-
-            <div class="settings-group">
-              <h4>Scroll Prediction</h4>
-              <setting-item-checkbox
-                .isChecked=${settings.enableScrollPrediction}
-                header="Enable Scroll Prediction"
-                description="Execute callbacks when user is ${settings.scrollMargin}px away from registered elements in scroll direction"
-                setting="enableScrollPrediction"
-              ></setting-item-checkbox>
-              <setting-item-range
-                .currentValue=${settings.scrollMargin}
-                .maxValue=${MAX_SCROLL_MARGIN}
-                .minValue=${MIN_SCROLL_MARGIN}
-                .unit=${SCROLL_MARGIN_UNIT}
-                header="Scroll Margin"
-                description="Pixel distance to check from mouse position in scroll direction"
-                setting="scrollMargin"
-              ></setting-item-range>
-            </div>
-
-            <div class="settings-group">
-              <h4>Touch Device</h4>
-              <setting-item
-                header="Touch Device Strategy"
-                description="How to handle prediction on touch devices"
-              >
-                <single-select-dropdown
-                  slot="controls"
-                  .dropdownOptions=${this.touchDeviceStrategyOptions}
-                  .selectedOptionValue=${settings.touchDeviceStrategy}
-                  .onSelectionChange=${this._handleTouchDeviceStrategyChange}
-                ></single-select-dropdown>
-              </setting-item>
-            </div>
-
-            <div class="settings-group">
-              <h4>Minimum Connection</h4>
-              <setting-item
-                header="Minimum Connection Type"
-                description="Minimum connection speed required to register elements"
-              >
-                <single-select-dropdown
-                  slot="controls"
-                  .dropdownOptions=${this.minimumConnectionTypeOptions}
-                  .selectedOptionValue=${settings.minimumConnectionType}
-                  .onSelectionChange=${this._handleMinimumConnectionTypeChange}
-                ></single-select-dropdown>
-              </setting-item>
-            </div>
-
-            <!-- Developer Tools Group -->
-            <div class="settings-group">
-              <h4>Developer Tools</h4>
-              <setting-item-checkbox
-                .isChecked=${this.devtoolsSettings.show.nameTags}
-                header="Show Name Tags"
-                description="Display name tags over each registered element in the debugger"
-                setting="show.nameTags"
-                @setting-changed=${this._handleDevtoolsSettingChange}
-              ></setting-item-checkbox>
-              <setting-item-checkbox
-                .isChecked=${this.devtoolsSettings.show.elementOverlays}
-                header="Show Element Overlays"
-                description="Render hit-slop boundary overlays around registered elements. Note: turning this off also hides name tags."
-                setting="show.elementOverlays"
-                @setting-changed=${this._handleDevtoolsSettingChange}
-              ></setting-item-checkbox>
-              <setting-item-checkbox
-                .isChecked=${this.devtoolsSettings.show.mouseTrajectory}
-                header="Show Mouse Trajectory"
-                description="Render the predicted mouse trajectory line"
-                setting="show.mouseTrajectory"
-                @setting-changed=${this._handleDevtoolsSettingChange}
-              ></setting-item-checkbox>
-              <setting-item-checkbox
-                .isChecked=${this.devtoolsSettings.show.scrollTrajectory}
-                header="Show Scroll Trajectory"
-                description="Render the predicted scroll trajectory line"
-                setting="show.scrollTrajectory"
-                @setting-changed=${this._handleDevtoolsSettingChange}
-              ></setting-item-checkbox>
-              <setting-item
-                header="Panel Position"
-                description="Choose which corner to position the control panel"
-              >
-                <single-select-dropdown
-                  slot="controls"
-                  .dropdownOptions=${this.cornerOptions}
-                  .selectedOptionValue=${this.currentCorner}
-                  .onSelectionChange=${this._handleCornerChange}
-                ></single-select-dropdown>
-              </setting-item>
-            </div>
+      <tab-content>
+        <div class="group" style="--tint: var(--fs-mouse)">
+          <div class="group-head">
+            <h4
+              data-tip="Fire callbacks when the cursor is heading for an element and will reach it within ${settings.trajectoryPredictionTime}ms"
+            >
+              mouse
+            </h4>
+            <setting-toggle
+              data-tip="enableMousePrediction"
+              .isChecked=${settings.enableMousePrediction}
+              setting="enableMousePrediction"
+            ></setting-toggle>
           </div>
+          <setting-item
+            header="trajectoryPredictionTime"
+            description="How far ahead the cursor path is projected"
+            ?dimmed=${!settings.enableMousePrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.trajectoryPredictionTime}
+              .maxValue=${MAX_TRAJECTORY_PREDICTION_TIME}
+              .minValue=${MIN_TRAJECTORY_PREDICTION_TIME}
+              .unit=${TRAJECTORY_PREDICTION_TIME_UNIT}
+              setting="trajectoryPredictionTime"
+            ></setting-range>
+          </setting-item>
+        </div>
+        <div class="group" style="--tint: var(--fs-tab)">
+          <div class="group-head">
+            <h4
+              data-tip="Fire callbacks when keyboard focus is ${settings.tabOffset} tab stops away from an element"
+            >
+              tab
+            </h4>
+            <setting-toggle
+              data-tip="enableTabPrediction"
+              .isChecked=${settings.enableTabPrediction}
+              setting="enableTabPrediction"
+            ></setting-toggle>
+          </div>
+          <setting-item
+            header="tabOffset"
+            description="How many tab stops ahead to look"
+            ?dimmed=${!settings.enableTabPrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.tabOffset}
+              .maxValue=${MAX_TAB_OFFSET}
+              .minValue=${MIN_TAB_OFFSET}
+              .unit=${TAB_OFFSET_UNIT}
+              setting="tabOffset"
+            ></setting-range>
+          </setting-item>
+        </div>
+        <div class="group" style="--tint: var(--fs-scroll)">
+          <div class="group-head">
+            <h4
+              data-tip="Fire callbacks for elements within ${settings.scrollMargin}px of the cursor in the direction you scroll"
+            >
+              scroll
+            </h4>
+            <setting-toggle
+              data-tip="enableScrollPrediction"
+              .isChecked=${settings.enableScrollPrediction}
+              setting="enableScrollPrediction"
+            ></setting-toggle>
+          </div>
+          <setting-item
+            header="scrollMargin"
+            description="How far past the cursor to look in the scroll direction"
+            ?dimmed=${!settings.enableScrollPrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.scrollMargin}
+              .maxValue=${MAX_SCROLL_MARGIN}
+              .minValue=${MIN_SCROLL_MARGIN}
+              .unit=${SCROLL_MARGIN_UNIT}
+              setting="scrollMargin"
+            ></setting-range>
+          </setting-item>
+        </div>
+        <div class="group">
+          <div class="group-head"><h4>device</h4></div>
+          <setting-item
+            header="touchDeviceStrategy"
+            description="What replaces mouse prediction on touch screens"
+          >
+            <single-select-dropdown
+              slot="controls"
+              .dropdownOptions=${this.touchDeviceStrategyOptions}
+              .selectedOptionValue=${settings.touchDeviceStrategy}
+              .onSelectionChange=${this._handleTouchDeviceStrategyChange}
+            ></single-select-dropdown>
+          </setting-item>
+          <setting-item
+            header="minimumConnectionType"
+            description="Slower connections than this skip registration entirely"
+          >
+            <single-select-dropdown
+              slot="controls"
+              .dropdownOptions=${this.minimumConnectionTypeOptions}
+              .selectedOptionValue=${settings.minimumConnectionType}
+              .onSelectionChange=${this._handleMinimumConnectionTypeChange}
+            ></single-select-dropdown>
+          </setting-item>
+        </div>
+        <div class="group">
+          <div class="group-head"><h4>devtools</h4></div>
+          <setting-item
+            header="show.elementOverlays"
+            description="Dashed hit-slop boxes around elements. Off also hides name tags"
+          >
+            <setting-toggle
+              slot="controls"
+              .isChecked=${show.elementOverlays}
+              setting="show.elementOverlays"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item header="show.nameTags" description="Element name above each overlay">
+            <setting-toggle
+              slot="controls"
+              .isChecked=${show.nameTags}
+              setting="show.nameTags"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item header="show.mouseTrajectory" description="The projected cursor path">
+            <setting-toggle
+              slot="controls"
+              .isChecked=${show.mouseTrajectory}
+              setting="show.mouseTrajectory"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item header="show.scrollTrajectory" description="The projected scroll path">
+            <setting-toggle
+              slot="controls"
+              .isChecked=${show.scrollTrajectory}
+              setting="show.scrollTrajectory"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item header="corner" description="Where this panel docks. Saved in localStorage">
+            <single-select-dropdown
+              slot="controls"
+              .dropdownOptions=${this.cornerOptions}
+              .selectedOptionValue=${this.currentCorner}
+              .onSelectionChange=${this._handleCornerChange}
+            ></single-select-dropdown>
+          </setting-item>
         </div>
       </tab-content>
     `

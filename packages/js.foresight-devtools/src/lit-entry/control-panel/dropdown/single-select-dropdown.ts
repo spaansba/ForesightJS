@@ -1,6 +1,5 @@
-import { html, type TemplateResult } from "lit"
 import { customElement, property } from "lit/decorators.js"
-import { BaseDropdown, type DropdownOption } from "./base-dropdown"
+import { BaseDropdown, optionLabel, type DropdownOption } from "./base-dropdown"
 
 export type { DropdownOption } from "./base-dropdown"
 
@@ -35,10 +34,10 @@ export class SingleSelectDropdown extends BaseDropdown {
     this._closeDropdown()
   }
 
-  protected _getTriggerIcon(): TemplateResult {
-    const selectedOption = this._getSelectedOption()
+  protected _getTriggerContent(): string {
+    const selected = this._getSelectedOption()
 
-    return selectedOption ? selectedOption.icon : html``
+    return selected ? optionLabel(selected) : ""
   }
 
   protected _isOptionSelected(option: DropdownOption): boolean {
@@ -54,7 +53,7 @@ export class SingleSelectDropdown extends BaseDropdown {
   protected _getTriggerLabel(): string {
     const selected = this._getSelectedOption()
 
-    return selected ? `Current selection: ${selected.label}` : "No selection"
+    return selected ? `Current selection: ${optionLabel(selected)}` : "No selection"
   }
 
   private _getSelectedOption(): DropdownOption | undefined {

@@ -4,21 +4,24 @@ import {
   safeSerializeEventData,
   safeSerializeManagerData,
   type SerializedEventData,
+  type SerializedEventType,
 } from "../../../helpers/safeSerializeEventData"
 import type { LogEvents, LoggingLocations } from "../../../types/types"
 import { ForesightDevtools } from "../../foresight-devtools"
 
 export const MAX_LOGS = 100
 
-export const EVENT_COLORS: Record<ForesightEvent, string> = {
-  elementRegistered: "#2196f3",
-  callbackInvoked: "#00bcd4",
-  callbackCompleted: "#4caf50",
-  elementUnregistered: "#ff9800",
-  managerSettingsChanged: "#f44336",
-  mouseTrajectoryUpdate: "#78909c",
-  scrollTrajectoryUpdate: "#607d8b",
-  deviceStrategyChanged: "#9c27b0",
+export const EVENT_LOOK: Record<SerializedEventType, { label: string; color: string }> = {
+  elementRegistered: { label: "+element", color: "#a8a29e" },
+  elementUnregistered: { label: "-element", color: "#78716c" },
+  callbackInvoked: { label: "invoke", color: "#2dd4bf" },
+  callbackCompleted: { label: "done", color: "#4ade80" },
+  mouseTrajectoryUpdate: { label: "mouse", color: "#3b82f6" },
+  scrollTrajectoryUpdate: { label: "scroll", color: "#eab308" },
+  managerSettingsChanged: { label: "settings", color: "#a8a29e" },
+  deviceStrategyChanged: { label: "device", color: "#a8a29e" },
+  managerDataPayload: { label: "state", color: "#a8a29e" },
+  serializationError: { label: "error", color: "#f87171" },
 }
 
 /**
@@ -146,7 +149,7 @@ export class EventLogStore {
     }
 
     if (this.logLocation === "console" || this.logLocation === "both") {
-      const color = EVENT_COLORS[eventType] || "#ffffff"
+      const { color } = EVENT_LOOK[eventType]
       console.log(`%c[ForesightJS] ${eventType}`, `color: ${color}; font-weight: bold;`, event)
     }
 

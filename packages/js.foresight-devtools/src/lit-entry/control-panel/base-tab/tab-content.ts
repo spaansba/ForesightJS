@@ -6,60 +6,46 @@ export class TabContent extends LitElement {
   static styles = [
     css`
       :host {
-        overflow: hidden;
+        display: block;
+        flex: 1;
+        min-height: 0;
       }
 
-      .content-container::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      .content-container::-webkit-scrollbar-track {
-        background: rgba(30, 30, 30, 0.5);
-      }
-
-      .content-container::-webkit-scrollbar-thumb {
-        background-color: rgba(176, 196, 222, 0.5);
-        border: 2px solid rgba(0, 0, 0, 0.2);
-      }
-
-      .content-container::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(176, 196, 222, 0.7);
-      }
-
-      .content-container {
-        scrollbar-gutter: stable;
+      .content {
         height: 100%;
-        min-height: 150px;
+        box-sizing: border-box;
+        padding: 4px 0;
         overflow-y: auto;
         scrollbar-width: thin;
-        scrollbar-color: rgba(176, 196, 222, 0.5) rgba(30, 30, 30, 0.5);
+        scrollbar-color: var(--fs-line) transparent;
       }
 
-      .no-content-message {
+      .empty {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100%;
-        color: #afafaf;
-        font-style: italic;
-        font-family: "Courier New", monospace;
+        padding: 0 32px;
+        text-align: center;
+        color: var(--fs-muted);
+        text-wrap: balance;
       }
     `,
   ]
 
   @property({ type: String, attribute: "no-content-message" })
-  noContentMessage: string = "No content available."
+  noContentMessage: string = ""
 
   @property({ type: Boolean })
   hasContent: boolean = true
 
   render() {
     return html`
-      <div class="content-container">
+      <div class="content">
         ${
           this.hasContent
             ? html`<slot></slot>`
-            : html`<div class="no-content-message">${this.noContentMessage}</div>`
+            : html`<div class="empty">${this.noContentMessage}</div>`
         }
       </div>
     `

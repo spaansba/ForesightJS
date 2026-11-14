@@ -5,35 +5,35 @@ import type { ControllerTabs } from "../../../types/types"
 @customElement("tab-selector")
 export class TabSelector extends LitElement {
   static styles = css`
-    .tab-selector-wrapper {
-      border-bottom: 2px solid #444;
-      margin-top: 12px;
+    :host {
       display: flex;
-      justify-content: space-evenly;
-      width: 100%;
     }
 
-    .tab-button {
-      background: none;
-      border: none;
-      color: #9e9e9e;
-      flex: 1;
-      padding: 8px;
+    .tabs {
+      display: flex;
+    }
+
+    .tab {
+      all: unset;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      color: var(--fs-muted);
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      font-size: 13px;
-      font-weight: 500;
-      text-align: center;
-    }
-    .tab-button:hover {
-      color: #b0c4de;
-      background-color: rgba(176, 196, 222, 0.1);
     }
 
-    .tab-button.active {
-      color: #b0c4de;
-      border-bottom-color: #b0c4de;
+    .tab:hover {
+      color: var(--fs-text);
+    }
+
+    .tab.active {
+      color: var(--fs-text);
+      box-shadow: inset 0 -1px 0 var(--fs-text);
+    }
+
+    .tab:focus-visible {
+      outline: 1px dashed var(--fs-text);
+      outline-offset: -3px;
     }
   `
 
@@ -54,15 +54,17 @@ export class TabSelector extends LitElement {
 
   protected render() {
     return html`
-      <div class="tab-selector-wrapper">
+      <div class="tabs" role="tablist">
         ${this.tabs.map(
           tab => html`
             <button
-              class="tab-button ${this.activeTab === tab ? "active" : ""}"
+              class="tab ${this.activeTab === tab ? "active" : ""}"
+              role="tab"
+              aria-selected="${this.activeTab === tab}"
               @click="${() => this._handleTabClick(tab)}"
               data-tab="${tab}"
             >
-              ${tab.charAt(0).toUpperCase() + tab.slice(1)}
+              ${tab}
             </button>
           `
         )}

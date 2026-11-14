@@ -5,59 +5,46 @@ import { customElement, property } from "lit/decorators.js"
 export class SettingItem extends LitElement {
   static styles = [
     css`
-      .setting-item {
+      .row {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(80, 80, 80, 0.2);
+        min-height: 24px;
+        padding: 0 10px;
       }
 
-      .setting-item:last-child {
-        border-bottom: none;
+      .row:hover {
+        background: var(--fs-raised);
       }
-      .setting-controls {
+
+      :host([dimmed]) .row {
+        opacity: 0.4;
+      }
+
+      .label {
+        color: var(--fs-text);
+        white-space: nowrap;
+        cursor: default;
+      }
+
+      .controls {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         flex-shrink: 0;
-      }
-      .setting-description {
-        font-size: 11px;
-        color: #9e9e9e;
-        line-height: 1.3;
-        font-weight: normal;
-      }
-      .setting-item label {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-weight: 500;
-        color: #fff;
-        font-size: 13px;
-        min-width: 180px;
-      }
-      .setting-header {
-        font-weight: 500;
-        color: #fff;
-        font-size: 13px;
       }
     `,
   ]
 
   @property({ type: String }) header: string = ""
   @property({ type: String }) description: string = ""
+  @property({ type: Boolean, reflect: true }) dimmed: boolean = false
 
   render() {
-    return html`<div class="setting-item">
-      <label>
-        <span class="setting-header">${this.header}</span>
-        <span class="setting-description"> ${this.description} </span>
-      </label>
-      <div class="setting-controls">
-        <slot name="controls"></slot>
-      </div>
+    return html`<div class="row" data-tip=${this.description}>
+      <span class="label">${this.header}</span>
+      <div class="controls"><slot name="controls"></slot></div>
     </div>`
   }
 }

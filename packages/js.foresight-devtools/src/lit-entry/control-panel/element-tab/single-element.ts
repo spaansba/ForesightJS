@@ -9,19 +9,18 @@ import "../base-tab/expandable-item"
 import "./reactivate-countdown"
 import { ForesightManager } from "js.foresight"
 import { DISABLED_SVG, ENABLE_SVG, UNREGISTER_SVG } from "../../../svg/svg-icons"
+import { buttonStyles } from "../shared-styles"
+
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
+    buttonStyles,
     css`
       :host {
         display: block;
       }
 
-      .element-wrapper {
-        display: block;
-      }
-
-      .element-content {
+      .row {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -29,134 +28,86 @@ export class SingleElement extends LitElement {
         min-width: 0;
       }
 
-      .status-indicator {
-        margin-left: 2px;
-        width: 8px;
-        height: 8px;
+      .marker {
         flex-shrink: 0;
-        transition: all 0.3s ease;
+        box-sizing: border-box;
+        width: 7px;
+        height: 7px;
+        border: 1px solid var(--fs-muted);
       }
 
-      .status-indicator.visible {
-        background-color: #4caf50;
-        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+      .marker.live {
+        border-color: var(--fs-text);
+        background: var(--fs-text);
       }
 
-      .status-indicator.hidden {
-        background-color: #666;
-        box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
+      .marker.inactive {
+        border-style: dashed;
+        border-color: var(--fs-dim);
       }
 
-      .status-indicator.prefetching {
-        background-color: #ffeb3b;
-        box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.4);
+      .marker.running {
+        border-color: var(--fs-ok);
+        background: var(--fs-ok);
+        animation: blink 0.4s steps(2, jump-none) infinite;
       }
 
-      .status-indicator.inactive {
-        background-color: #999;
-        box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
+      @keyframes blink {
+        to {
+          opacity: 0.2;
+        }
       }
 
-      .reason-tags {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 7px;
-        flex-shrink: 0;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 10px;
-      }
-
-      .reason-tag {
-        white-space: nowrap;
-        color: color-mix(in srgb, var(--reason-color) 80%, #fff);
-      }
-
-      .reason-tag::before {
-        content: "/";
-        margin-right: 3px;
-        color: #555;
-      }
-
-      .status-indicator.touch-device {
-        background-color: #ba68c8;
-        box-shadow: 0 0 0 2px rgba(186, 104, 200, 0.4);
-      }
-
-      .unregister-button,
-      .toggle-enabled-button,
-      .enable-button {
-        all: unset;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 14px;
-        height: 14px;
-        padding: 1px;
-        cursor: pointer;
-        color: #999;
-      }
-
-      .unregister-button svg,
-      .toggle-enabled-button svg,
-      .enable-button svg {
-        width: 12px;
-        height: 12px;
-      }
-
-      .unregister-button:hover {
-        background-color: rgba(255, 107, 107, 0.1);
-        color: #ff6b6b;
-      }
-
-      .toggle-enabled-button:hover {
-        background-color: rgba(255, 165, 0, 0.1);
-        color: #ffa726;
-      }
-
-      .enable-button:hover {
-        background-color: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
-      }
-
-      .element-name {
-        flex-grow: 1;
+      .name {
+        flex: 1;
         min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 11px;
-        font-weight: 500;
-        color: #e8e8e8;
+        color: var(--fs-text);
       }
 
-      .element-name.callback-active {
-        color: #fff;
-        font-weight: 600;
+      .name.offscreen {
+        color: var(--fs-muted);
       }
 
-      .element-name.callback-inactive {
-        color: #999;
-        font-weight: 500;
+      .name.inactive {
+        color: var(--fs-dim);
       }
 
-      .reactivate-countdown {
-        font-size: 14px;
-        color: #ffa726;
-        font-weight: 500;
-        min-width: 0;
-        white-space: nowrap;
+      .reason {
+        flex-shrink: 0;
+        color: var(--fs-muted);
       }
 
-      .reactivate-countdown:empty {
-        display: none;
+      .reason::before {
+        content: "#";
+        color: var(--fs-dim);
       }
 
-      :host(.not-visible) {
-        opacity: 0.5;
+      .actions {
+        display: flex;
+        opacity: 0;
       }
 
-      .element-wrapper.not-visible {
-        opacity: 0.5;
+      :host(:hover) .actions,
+      .actions:focus-within {
+        opacity: 1;
+      }
+
+      .btn {
+        height: 18px;
+        min-width: 18px;
+        padding: 0 2px;
+      }
+
+      .btn svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .btn.danger:hover {
+        color: var(--fs-error);
       }
     `,
   ]
@@ -192,105 +143,64 @@ export class SingleElement extends LitElement {
     this._abortController = null
   }
 
-  private getInactiveReasons(): { label: string; color: string; description: string }[] {
-    const reasons: { label: string; color: string; description: string }[] = []
+  private getInactiveReasons(): { label: string; description: string }[] {
+    const { isEnabled, isParked, isLimitedConnection, isActive, isPredicted } = this.state
+    const reasons: { label: string; description: string }[] = []
 
-    if (!this.state.isEnabled) {
+    if (!isEnabled) {
       reasons.push({
         label: "disabled",
-        color: "#9e9e9e",
-        description: "Element is disabled, so its callback won't run until you re-enable it.",
+        description: "Disabled. Its callback won't run until you enable it",
       })
     }
 
-    if (this.state.isParked) {
+    if (isParked) {
       reasons.push({
         label: "parked",
-        color: "#7986cb",
-        description:
-          "Element is detached from the DOM and parked: kept registered but inactive until it reconnects.",
+        description: "Detached from the DOM. Stays registered and wakes up when it reconnects",
       })
     }
 
-    if (this.state.isLimitedConnection) {
+    if (isLimitedConnection) {
       reasons.push({
-        label: "limited",
-        color: "#ffb74d",
-        description:
-          "Element is on a limited connection (e.g. Save-Data or slow network), so prediction is paused.",
+        label: "slow-net",
+        description: "Save-Data is on or the connection is below minimumConnectionType",
       })
     }
 
-    // Already fired its callback; stays inactive until reactivated, which by
-    // default (`reactivateAfter: Infinity`) never happens.
-    if (
-      this.state.isEnabled &&
-      !this.state.isParked &&
-      !this.state.isLimitedConnection &&
-      !this.state.isActive &&
-      this.state.isPredicted
-    ) {
+    if (isEnabled && !isParked && !isLimitedConnection && !isActive && isPredicted) {
       reasons.push({
         label: "fired",
-        color: "#4dd0e1",
-        description:
-          "Callback already fired. Stays inactive until reactivated (never, unless reactivateAfter is set).",
+        description: "Callback already ran. Comes back after reactivateAfter (never by default)",
       })
     }
 
     return reasons
   }
 
-  private getBorderColor(): string {
+  private getStatus(): "running" | "live" | "offscreen" | "inactive" {
     if (this.state.isCallbackRunning) {
-      return "#ffeb3b"
-    }
-
-    if (!this.state.isActive) {
-      return "#999"
-    }
-
-    // Use purple for touch devices when active (no opacity variation)
-    if (this.currentDeviceStrategy === "touch") {
-      return "#ba68c8"
-    }
-
-    // Use green for desktop devices when active
-    return this.state.isIntersectingWithViewport ? "#4caf50" : "#666"
-  }
-
-  private getStatusIndicatorClass(): string {
-    if (this.state.isCallbackRunning) {
-      return "prefetching"
+      return "running"
     }
 
     if (!this.state.isActive) {
       return "inactive"
     }
 
-    // Use purple indicator for touch devices (no visibility distinction)
-    if (this.currentDeviceStrategy === "touch") {
-      return "touch-device"
-    }
-
-    return this.state.isIntersectingWithViewport ? "visible" : "hidden"
+    return this.state.isIntersectingWithViewport || this.currentDeviceStrategy === "touch"
+      ? "live"
+      : "offscreen"
   }
 
   private getStatusText(): string {
-    if (this.state.isCallbackRunning) {
-      return "callback active"
+    const labels = {
+      running: "callback running",
+      live: this.currentDeviceStrategy === "touch" ? "active" : "active, on screen",
+      offscreen: "active, off screen",
+      inactive: "inactive",
     }
 
-    if (!this.state.isActive) {
-      const reasons = this.getInactiveReasons()
-
-      return reasons.length ? `inactive: ${reasons.map(r => r.label).join(", ")}` : "inactive"
-    }
-
-    const baseStatus = this.state.isIntersectingWithViewport ? "in viewport" : "not in viewport"
-    const deviceStatus = this.currentDeviceStrategy === "touch" ? " (touch device)" : ""
-
-    return baseStatus + deviceStatus
+    return labels[this.getStatus()]
   }
 
   private formatElementDetails(): string {
@@ -314,84 +224,44 @@ export class SingleElement extends LitElement {
   }
 
   render() {
-    // Don't apply opacity reduction for touch devices since visibility detection isn't reliable
-    const isNotVisible =
-      !this.state.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
-    const inactiveReasons = this.getInactiveReasons()
+    const status = this.getStatus()
 
     return html`
-      <div class="element-wrapper ${isNotVisible ? "not-visible" : ""}">
-        <expandable-item
-          .borderColor=${this.getBorderColor()}
-          .showCopyButton=${true}
-          .itemId=${this.state.id}
-          .isExpanded=${this.isExpanded}
-          .onToggle=${this.onToggle}
-        >
-          <div slot="content" class="element-content" title="Status: ${this.getStatusText()}">
-            <div class="status-indicator ${this.getStatusIndicatorClass()}"></div>
-            <span
-              class="element-name ${
-                this.state.isCallbackRunning
-                  ? "callback-active"
-                  : !this.state.isActive
-                    ? "callback-inactive"
-                    : ""
-              }"
-            >
-              ${this.state.name || "unnamed"}
-            </span>
-            ${
-              inactiveReasons.length
-                ? html`
-                    <span class="reason-tags">
-                      ${inactiveReasons.map(
-                        reason =>
-                          html`<span
-                            class="reason-tag"
-                            style="--reason-color: ${reason.color}"
-                            title="${reason.label}: ${reason.description}"
-                            >${reason.label}</span
-                          >`
-                      )}
-                    </span>
-                  `
-                : ""
-            }
-            ${
-              this.state.isEnabled
-                ? html`
-                    <reactivate-countdown .element=${this.element} .state=${this.state}>
-                    </reactivate-countdown>
-                    <button
-                      class="toggle-enabled-button"
-                      @click="${this.handleToggleEnabled}"
-                      title="Disable element"
-                    >
-                      ${DISABLED_SVG}
-                    </button>
-                  `
-                : html`
-                    <button
-                      class="enable-button"
-                      @click="${this.handleToggleEnabled}"
-                      title="Enable element"
-                    >
-                      ${ENABLE_SVG}
-                    </button>
-                  `
-            }
+      <expandable-item
+        .itemId=${this.state.id}
+        .isExpanded=${this.isExpanded}
+        .onToggle=${this.onToggle}
+      >
+        <div slot="content" class="row">
+          <span class="marker ${status}" data-tip=${this.getStatusText()}></span>
+          <span class="name ${status}">${this.state.name || "unnamed"}</span>
+          ${this.getInactiveReasons().map(
+            reason =>
+              html`<span class="reason" data-tip=${reason.description}>${reason.label}</span>`
+          )}
+          ${
+            this.state.isEnabled
+              ? html`<reactivate-countdown
+                  .element=${this.element}
+                  .state=${this.state}
+                ></reactivate-countdown>`
+              : ""
+          }
+          <span class="actions">
             <button
-              class="unregister-button"
-              @click="${this.handleUnregister}"
-              title="Unregister element"
+              class="btn"
+              @click="${this.handleToggleEnabled}"
+              data-tip="${this.state.isEnabled ? "Disable" : "Enable"}"
             >
+              ${this.state.isEnabled ? DISABLED_SVG : ENABLE_SVG}
+            </button>
+            <button class="btn danger" @click="${this.handleUnregister}" data-tip="Unregister">
               ${UNREGISTER_SVG}
             </button>
-          </div>
-          <div slot="details">${this.formatElementDetails()}</div>
-        </expandable-item>
-      </div>
+          </span>
+        </div>
+        <div slot="details">${this.formatElementDetails()}</div>
+      </expandable-item>
     `
   }
 }

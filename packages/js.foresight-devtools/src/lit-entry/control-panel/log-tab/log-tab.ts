@@ -1,30 +1,20 @@
 import type { ForesightEvent } from "js.foresight"
 import { LitElement, css, html } from "lit"
-import { customElement, property, state } from "lit/decorators.js"
+import { customElement, state } from "lit/decorators.js"
 import { repeat } from "lit/directives/repeat.js"
-import {
-  BOTH_SVG,
-  CLEAR_SVG,
-  CONSOLE_SVG,
-  CONTROL_PANEL_SVG,
-  FILTER_SVG,
-  NONE_SVG,
-  STATE_SVG,
-  WARNING_SVG,
-} from "../../../svg/svg-icons"
 import type { LoggingLocations } from "../../../types/types"
-import "../base-tab/chip"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
-import "../copy-icon/copy-icon"
 import "../dropdown/multi-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import { getEventLogStore, MAX_LOGS } from "./log-store"
+import { buttonStyles } from "../shared-styles"
 import "./single-log"
 
 @customElement("log-tab")
 export class LogTab extends LitElement {
   static styles = [
+    buttonStyles,
     css`
       :host {
         display: flex;
@@ -32,91 +22,18 @@ export class LogTab extends LitElement {
         height: 100%;
       }
 
-      .chips-container {
-        display: flex;
-        gap: 4px;
+      .divider {
+        width: 1px;
+        height: 12px;
+        margin: 0 4px;
+        background: var(--fs-line);
       }
 
-      .single-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        vertical-align: top;
-      }
-
-      .single-button svg {
-        width: 16px;
-        height: 16px;
-        stroke: white;
-        transition: stroke 0.2s;
-      }
-
-      .single-button:hover {
-        background-color: rgba(176, 196, 222, 0.1);
-      }
-
-      .single-button:hover svg {
-        stroke: #b0c4de;
-      }
-
-      .single-button:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-
-      .single-button:disabled:hover {
-        background: none;
-      }
-
-      .single-button:disabled svg {
-        stroke: #666;
-      }
-
-      .no-items {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 200px;
-        text-align: center;
-        font-family: "Courier New", monospace;
-        font-style: italic;
-        padding: 20px;
-        color: #999;
-      }
-
-      .warning-container {
-        background: none;
-        border: none;
-        color: #ffc107;
+      .warning {
+        padding: 0 4px;
+        color: var(--fs-scroll);
+        font-weight: 700;
         cursor: help;
-        padding: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        vertical-align: top;
-      }
-
-      .warning-container svg {
-        width: 16px;
-        height: 16px;
-        stroke: #ffc107;
-        fill: none;
-        transition: stroke 0.2s;
-      }
-
-      .warning-container:hover {
-        background-color: rgba(255, 193, 7, 0.1);
-      }
-
-      .warning-container:hover svg {
-        stroke: #ffdc3e;
       }
     `,
   ]
@@ -126,88 +43,21 @@ export class LogTab extends LitElement {
   @state() private filterDropdown: DropdownOption[]
   @state() private expandedLogIds: Set<string> = new Set()
 
-  @property() noContentMessage: string = "No logs available"
   private _unsubscribeStore: (() => void) | null = null
 
   constructor() {
     super()
     this.logDropdown = [
-      {
-        value: "controlPanel",
-        label: "Control Panel",
-        title: "Log only to the control panel",
-        icon: CONTROL_PANEL_SVG,
-      },
-      {
-        value: "console",
-        label: "Console",
-        title: "Log only to the console",
-        icon: CONSOLE_SVG,
-      },
-      {
-        value: "both",
-        label: "Both",
-        title: "Log to both the control panel and the console",
-        icon: BOTH_SVG,
-      },
-      {
-        value: "none",
-        label: "None",
-        title: "Dont log anywhere",
-        icon: NONE_SVG,
-      },
+      { value: "controlPanel", label: "to panel", title: "Log to this panel only" },
+      { value: "console", label: "to console", title: "Log to the browser console only" },
+      { value: "both", label: "to both", title: "Log to this panel and the console" },
+      { value: "none", label: "nowhere", title: "Don't log at all" },
     ]
 
-    this.filterDropdown = [
-      {
-        value: "elementRegistered",
-        label: "Element Registered",
-        title: "Show element registration events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "elementUnregistered",
-        label: "Element Unregistered",
-        title: "Show element unregistration events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "callbackInvoked",
-        label: "Callback Invoked",
-        title: "Show callback invoked events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "callbackCompleted",
-        label: "Callback Completed",
-        title: "Show callback completed events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "mouseTrajectoryUpdate",
-        label: "Mouse Trajectory Update",
-        title: "Show mouse trajectory update events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "scrollTrajectoryUpdate",
-        label: "Scroll Trajectory Update",
-        title: "Show scroll trajectory update events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "managerSettingsChanged",
-        label: "Manager Settings Changed",
-        title: "Show manager settings change events",
-        icon: FILTER_SVG,
-      },
-      {
-        value: "deviceStrategyChanged",
-        label: "Strategy Changed",
-        title: "Show strategy change events",
-        icon: FILTER_SVG,
-      },
-    ]
+    this.filterDropdown = Object.keys(this.store.eventsEnabled).map(value => ({
+      value,
+      title: `Log ${value} events`,
+    }))
   }
 
   private handleLogLocationChange = (value: string): void => {
@@ -237,18 +87,18 @@ export class LogTab extends LitElement {
   private getNoLogsMessage(): string {
     const enabledCount = Object.values(this.store.eventsEnabled).filter(Boolean).length
     if (enabledCount === 0) {
-      return "Logging for all events is turned off"
+      return "Every event type is filtered out"
     }
 
     if (this.store.logLocation === "console") {
-      return "No logs to display. Logging location is set to console - check browser console for events."
+      return "Logging to the console. Open your browser devtools"
     }
 
     if (this.store.logLocation === "none") {
-      return "No logs to display. Logging location is set to none"
+      return "Logging is set to nowhere"
     }
 
-    return "Interact with Foresight to generate events."
+    return "Quiet so far. Move the mouse toward a registered element"
   }
 
   private handleLogToggle = (logId: string): void => {
@@ -265,7 +115,6 @@ export class LogTab extends LitElement {
   private clearLogs(): void {
     this.store.clear()
     this.expandedLogIds.clear()
-    this.noContentMessage = "Logs cleared"
   }
 
   private logManagerData = (): void => {
@@ -288,23 +137,15 @@ export class LogTab extends LitElement {
 
     return html`
       <tab-header>
-        <div slot="chips" class="chips-container">
-          <chip-element title="Number of logged events (Max ${MAX_LOGS})">
-            ${logs.length} events
-          </chip-element>
-        </div>
+        <span slot="chips" data-tip="Keeps the last ${MAX_LOGS}">${logs.length} logged</span>
         <div slot="actions">
           ${
             this.shouldShowPerformanceWarning()
-              ? html`
-                  <div
-                    class="warning-container"
-                    title="Console logging can be slow with frequent trajectory events.
-Consider using 'Control Panel' only for better performance."
-                  >
-                    ${WARNING_SVG}
-                  </div>
-                `
+              ? html`<span
+                  class="warning"
+                  data-tip="Trajectory events fire on every frame. Logging them to the console gets slow"
+                  >!</span
+                >`
               : ""
           }
           <single-select-dropdown
@@ -312,45 +153,36 @@ Consider using 'Control Panel' only for better performance."
             .selectedOptionValue="${this.store.logLocation}"
             .onSelectionChange="${this.handleLogLocationChange}"
           ></single-select-dropdown>
-
           <multi-select-dropdown
             .dropdownOptions="${this.filterDropdown}"
             .selectedValues="${this.getSelectedEventFilters()}"
             .onSelectionChange="${this.handleFilterChange}"
           ></multi-select-dropdown>
+          <span class="divider"></span>
           <button
-            class="single-button"
-            title="Log the state from the manager"
+            class="btn"
+            data-tip="Log a snapshot of the manager state"
             @click="${this.logManagerData}"
           >
-            ${STATE_SVG}
+            snapshot
           </button>
-          <button
-            class="single-button"
-            title="Clear all logs"
-            ?disabled="${logs.length === 0}"
-            @click="${this.clearLogs}"
-          >
-            ${CLEAR_SVG}
+          <button class="btn" ?disabled="${logs.length === 0}" @click="${this.clearLogs}">
+            clear
           </button>
         </div>
       </tab-header>
-      <tab-content .noContentMessage=${this.noContentMessage} .hasContent=${!!logs.length}>
-        ${
-          logs.length === 0
-            ? html`<div class="no-items">${this.getNoLogsMessage()}</div>`
-            : repeat(
-                logs,
-                log => log.logId,
-                log => html`
-                  <single-log
-                    .log=${log}
-                    .isExpanded=${this.expandedLogIds.has(log.logId)}
-                    .onToggle=${this.handleLogToggle}
-                  ></single-log>
-                `
-              )
-        }
+      <tab-content .noContentMessage=${this.getNoLogsMessage()} .hasContent=${!!logs.length}>
+        ${repeat(
+          logs,
+          log => log.logId,
+          log => html`
+            <single-log
+              .log=${log}
+              .isExpanded=${this.expandedLogIds.has(log.logId)}
+              .onToggle=${this.handleLogToggle}
+            ></single-log>
+          `
+        )}
       </tab-content>
     `
   }

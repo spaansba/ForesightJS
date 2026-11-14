@@ -7,33 +7,19 @@ export class ReactivateCountdown extends LitElement {
   static styles = [
     css`
       :host {
-        display: inline-block;
+        display: inline-flex;
       }
 
       .reactivate-button {
         all: unset;
+        padding: 0 4px;
+        color: var(--fs-muted);
         cursor: pointer;
-        padding: 2px 4px;
-        transition: background-color 0.2s ease;
       }
 
       .reactivate-button:hover {
-        background-color: rgba(255, 165, 0, 0.1);
-      }
-
-      .countdown-time {
-        color: #ffa726;
-        font-weight: 500;
-        font-size: 10px;
-      }
-
-      .countdown-time.infinity {
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .countdown-time.clickable {
-        cursor: pointer;
+        background: var(--fs-hover);
+        color: var(--fs-text);
       }
     `,
   ]
@@ -205,9 +191,9 @@ export class ReactivateCountdown extends LitElement {
         <button
           class="reactivate-button"
           @click="${this.handleTimerClick}"
-          title="Click to reactivate manually"
+          data-tip="Never reactivates on its own. Click to reactivate"
         >
-          <span class="countdown-time infinity">∞</span>
+          ∞
         </button>
       `
     }
@@ -220,9 +206,9 @@ export class ReactivateCountdown extends LitElement {
       <button
         class="reactivate-button"
         @click="${this.handleTimerClick}"
-        title="Click to reactivate immediately"
+        data-tip="Reactivates in this long. Click to do it now"
       >
-        <span class="countdown-time clickable">${this.formatTime(this.remainingTime)}</span>
+        ${this.formatTime(this.remainingTime)}
       </button>
     `
   }

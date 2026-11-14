@@ -6,145 +6,157 @@ import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
+import "./panel-tooltip"
 import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
+import { CLOSE_SVG, MINIMIZE_SVG } from "../../svg/svg-icons"
+import { buttonStyles } from "./shared-styles"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
-  static styles = css`
-    .control-wrapper {
-      --panel-offset: 10px;
-      padding: 12px;
-      position: fixed;
-      background-color: rgba(0, 0, 0, 0.9);
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      z-index: 10001;
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      width: 450px;
-      height: 450px;
-      transition:
-        width 0.3s ease,
-        height 0.3s ease;
-      box-sizing: border-box;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+  static styles = [
+    buttonStyles,
+    css`
+      :host {
+        --fs-bg: #121211;
+        --fs-raised: #1a1a18;
+        --fs-hover: #232320;
+        --fs-line: #2e2d2a;
+        --fs-text: #c9c5bc;
+        --fs-muted: #858179;
+        --fs-dim: #55534e;
+        --fs-mouse: #3b82f6;
+        --fs-scroll: #eab308;
+        --fs-tab: #f97316;
+        --fs-ok: #4ade80;
+        --fs-error: #f87171;
+        --fs-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      }
 
-    .control-wrapper.top-left {
-      top: var(--panel-offset);
-      left: var(--panel-offset);
-    }
-    .control-wrapper.top-right {
-      top: var(--panel-offset);
-      right: var(--panel-offset);
-    }
-    .control-wrapper.bottom-left {
-      bottom: var(--panel-offset);
-      left: var(--panel-offset);
-    }
-    .control-wrapper.bottom-right {
-      bottom: var(--panel-offset);
-      right: var(--panel-offset);
-    }
+      .panel {
+        --panel-offset: 10px;
+        position: fixed;
+        z-index: 10001;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        width: 380px;
+        height: 400px;
+        max-width: calc(100vw - 2 * var(--panel-offset));
+        max-height: calc(100vh - 2 * var(--panel-offset));
+        box-sizing: border-box;
+        overflow: hidden;
+        background: var(--fs-bg);
+        color: var(--fs-text);
+        border: 1px solid var(--fs-line);
+        border-radius: 2px;
+        box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+        font-family: var(--fs-mono);
+        font-size: 11px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
 
-    .control-wrapper.minimized {
-      width: 230px;
-      height: 45px;
-    }
+      .panel.top-left {
+        top: var(--panel-offset);
+        left: var(--panel-offset);
+      }
+      .panel.top-right {
+        top: var(--panel-offset);
+        right: var(--panel-offset);
+      }
+      .panel.bottom-left {
+        bottom: var(--panel-offset);
+        left: var(--panel-offset);
+      }
+      .panel.bottom-right {
+        bottom: var(--panel-offset);
+        right: var(--panel-offset);
+      }
 
-    .title-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0;
-      flex-shrink: 0;
-    }
+      .panel.minimized {
+        width: auto;
+        height: auto;
+      }
 
-    .title-wrapper h1 {
-      margin: 0;
-      font-size: 15px;
-    }
+      .bar {
+        display: flex;
+        align-items: stretch;
+        height: 30px;
+        padding-right: 4px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--fs-line);
+      }
 
-    .minimize-button {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0;
-    }
+      .brand,
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
 
-    .tab-container {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
+      .brand {
+        border-right: 1px dashed var(--fs-line);
+      }
 
-    .tab-content {
-      flex: 1;
-      position: relative;
-    }
+      .pill {
+        all: unset;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        height: 28px;
+        padding: 0 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
 
-    .tab-content > * {
-      display: flex;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
+      .pill:hover {
+        background: var(--fs-hover);
+      }
 
-    .touch-device-warning {
-      background-color: rgba(255, 193, 7, 0.9);
-      color: #000;
-      padding: 8px 12px;
-      margin: 8px 0;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+      tab-selector {
+        flex: 1;
+      }
 
-    .touch-device-warning.hidden {
-      display: none;
-    }
+      .bar > .btn {
+        align-self: center;
+      }
 
-    .warning-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      .tab-content {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+      }
 
-    .warning-icon {
-      font-weight: bold;
-      font-size: 14px;
-    }
+      .tab-content > * {
+        position: absolute;
+        inset: 0;
+      }
 
-    .dismiss-button {
-      background: none;
-      border: none;
-      color: #000;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      font-weight: bold;
-    }
+      .touch-warning {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 4px 3px 10px;
+        color: var(--fs-muted);
+        border-bottom: 1px dashed var(--fs-line);
+      }
 
-    .dismiss-button:hover {
-      opacity: 0.7;
-    }
-  `
+      .touch-warning span {
+        flex: 1;
+      }
+
+      .touch-warning b {
+        color: var(--fs-scroll);
+        font-weight: 500;
+      }
+    `,
+  ]
   @state() private activeTab: ControllerTabs
   @state() private isMinimized: boolean =
     ForesightDevtools.instance.devtoolsSettings.isControlPanelDefaultMinimized
@@ -260,10 +272,6 @@ export class ControlPanel extends LitElement {
     this.isMinimized = !this.isMinimized
   }
 
-  private getMinimizeSymbol(): string {
-    return this.isMinimized ? "+" : "−"
-  }
-
   /**
    * Only the active tab is mounted; hidden tabs would otherwise keep their
    * manager listeners and element subscriptions running invisibly.
@@ -281,44 +289,44 @@ export class ControlPanel extends LitElement {
   }
 
   protected render() {
+    const showWarning = !this.isMinimized && this.isTouchDevice && !this.isWarningDismissed
+
     return html`
-      <div class="control-wrapper ${this.corner} ${this.isMinimized ? "minimized" : ""}">
-        <div class="title-wrapper">
-          <button @click="${this.handleMinimizeClick}" class="minimize-button">
-            ${this.getMinimizeSymbol()}
-          </button>
-          <h1>Foresight DevTools</h1>
-          <div></div>
-        </div>
-
-        <div
-          class="touch-device-warning ${
-            this.isMinimized || !this.isTouchDevice || this.isWarningDismissed ? "hidden" : ""
-          }"
-        >
-          <div class="warning-content">
-            <span class="warning-icon">⚠️</span>
-            <span>Touch device mode: Overlays and visibility sorting not available</span>
-          </div>
-          <button @click="${this.dismissWarning}" class="dismiss-button" title="Dismiss warning">
-            ×
-          </button>
-        </div>
-
+      <div class="panel ${this.corner} ${this.isMinimized ? "minimized" : ""}">
         ${
           this.isMinimized
-            ? ""
-            : html`
-                <div class="tab-container">
-                  <tab-selector
-                    .activeTab="${this.activeTab}"
-                    @tab-change="${this._handleTabChange}"
-                  ></tab-selector>
-
-                  <div class="tab-content">${this.renderActiveTab()}</div>
+            ? html`<button
+                class="pill"
+                @click="${this.handleMinimizeClick}"
+                data-tip="Open devtools"
+              >
+                foresight
+              </button>`
+            : html`<div class="bar">
+                <span class="brand">foresight</span>
+                <tab-selector
+                  .activeTab="${this.activeTab}"
+                  @tab-change="${this._handleTabChange}"
+                ></tab-selector>
+                <button class="btn" @click="${this.handleMinimizeClick}" data-tip="Minimize">
+                  ${MINIMIZE_SVG}
+                </button>
+              </div>`
+        }
+        ${
+          showWarning
+            ? html`
+                <div class="touch-warning">
+                  <span><b>touch device</b>, no trajectories or visibility sort</span>
+                  <button class="btn" @click="${this.dismissWarning}" data-tip="Dismiss">
+                    ${CLOSE_SVG}
+                  </button>
                 </div>
               `
+            : ""
         }
+        ${this.isMinimized ? "" : html`<div class="tab-content">${this.renderActiveTab()}</div>`}
+        <panel-tooltip></panel-tooltip>
       </div>
     `
   }

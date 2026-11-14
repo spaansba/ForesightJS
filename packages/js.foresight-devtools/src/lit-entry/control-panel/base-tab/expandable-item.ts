@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
-import "../copy-icon/copy-icon"
+import "../copy-button"
+import { CHEVRON_SVG } from "../../../svg/svg-icons"
 
 @customElement("expandable-item")
 export class ExpandableItem extends LitElement {
@@ -10,103 +11,75 @@ export class ExpandableItem extends LitElement {
         display: block;
       }
 
-      .item-entry {
-        margin-bottom: 2px;
-        font-size: 11px;
-        line-height: 1.3;
-        overflow: hidden;
-        transition: all 0.2s ease;
-        border-left: 2px solid var(--border-color, #555);
-        padding-left: 6px;
+      .item.expanded {
+        background: var(--fs-raised);
       }
 
-      .item-entry:hover:not(.expanded) {
-        background-color: rgba(255, 255, 255, 0.02);
-      }
-
-      .item-entry.expanded {
-        background-color: rgba(255, 255, 255, 0.03);
-      }
-
-      .item-header {
+      .header {
         display: flex;
         align-items: center;
-        padding: 3px 4px;
+        gap: 6px;
+        height: 22px;
+        padding: 0 4px 0 10px;
         cursor: pointer;
-        transition: background-color 0.2s ease;
-        gap: 8px;
-        min-height: 20px;
       }
 
-      .item-header:hover:not(.expanded) {
-        background-color: rgba(255, 255, 255, 0.03);
+      .header:hover {
+        background: var(--fs-hover);
       }
 
-      .item-details {
-        position: relative;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .item-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 16px;
-        height: 16px;
-
-        user-select: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .item-toggle:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .item-toggle svg {
-        width: 14px;
-        height: 14px;
-        fill: none;
-        stroke: #b0c4de;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        transition: all 0.2s ease;
-      }
-
-      .item-toggle:hover svg {
-        stroke: #d4e4f4;
-      }
-
-      .item-toggle.expanded svg {
-        transform: rotate(90deg);
-      }
-
-      .item-content {
+      .content {
         flex: 1;
         display: flex;
         align-items: center;
-        gap: 8px;
         min-width: 0;
-        overflow: hidden;
       }
 
-      .item-data {
-        color: #e0e0e0;
-        white-space: pre;
-        font-size: 11px;
+      .chevron {
+        display: flex;
+        color: var(--fs-dim);
+        transition: transform 0.12s ease;
+      }
+
+      .header:hover .chevron {
+        color: var(--fs-muted);
+      }
+
+      .chevron svg {
+        width: 11px;
+        height: 11px;
+      }
+
+      .expanded .chevron {
+        transform: rotate(90deg);
+      }
+
+      .details {
+        position: relative;
+        margin: 0 4px 0 10px;
+        padding: 6px 0 8px;
+        border-top: 1px dashed var(--fs-line);
+      }
+
+      copy-button {
+        position: absolute;
+        top: 4px;
+        right: 0;
+      }
+
+      pre {
         margin: 0;
-        padding: 0;
-        font-family: "Courier New", monospace;
-        line-height: 1.3;
-        display: block;
+        color: var(--fs-muted);
+        font: inherit;
+        font-size: 10.5px;
+        line-height: 1.5;
+        white-space: pre;
         overflow-x: auto;
+        scrollbar-width: thin;
       }
     `,
   ]
 
-  @property() borderColor: string = "#555"
-  @property() showCopyButton: boolean = false
   @property() itemId: string = ""
   @property() isExpanded: boolean = false
   @property() onToggle: ((itemId: string) => void) | undefined
@@ -132,32 +105,21 @@ export class ExpandableItem extends LitElement {
   }
 
   render() {
-    this.style.setProperty("--border-color", this.borderColor)
-
     return html`
-      <div class="item-entry ${this.isExpanded ? "expanded" : ""}">
-        <div class="item-header ${this.isExpanded ? "expanded" : ""}" @click="${this.toggleExpand}">
-          <div class="item-content">
-            <slot name="content"></slot>
-          </div>
-          <span class="item-toggle ${this.isExpanded ? "expanded" : ""}">
-            <svg viewBox="0 0 24 24">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
-          </span>
+      <div class="item ${this.isExpanded ? "expanded" : ""}">
+        <div class="header" @click="${this.toggleExpand}">
+          <div class="content"><slot name="content"></slot></div>
+          <span class="chevron">${CHEVRON_SVG}</span>
         </div>
         ${
           this.isExpanded
             ? html`
-                <div class="item-details">
-                  <copy-icon
-                    positioned
-                    title="Copy Details"
+                <div class="details">
+                  <copy-button
+                    data-tip="Copy as JSON"
                     .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
-                  ></copy-icon>
-                  <pre class="item-data">
-                  <slot name="details"></slot>
-                </pre>
+                  ></copy-button>
+                  <pre><slot name="details"></slot></pre>
                 </div>
               `
             : ""

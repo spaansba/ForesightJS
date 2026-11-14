@@ -11,16 +11,18 @@ import type {
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
 type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
-import { DOCUMENT_SVG, INSERTION_SVG, VISIBILITY_SVG } from "../../../svg/svg-icons"
+import { CHEVRON_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 import { ForesightDevtools } from "../../foresight-devtools"
-import "../base-tab/chip"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../dropdown/single-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
 import "../element-tab/single-element"
 import "./reactivate-countdown"
+
+const EMPTY_MESSAGE =
+  "Nothing registered yet. Call ForesightManager.instance.register() on an element"
 
 @customElement("element-tab")
 export class ElementTab extends LitElement {
@@ -31,51 +33,50 @@ export class ElementTab extends LitElement {
       height: 100%;
     }
 
-    .chips-container {
-      display: flex;
-      gap: 8px;
-    }
-
-    .element-section {
-      margin-bottom: 16px;
-    }
-
-    .element-section:last-child {
-      margin-bottom: 0;
+    .section + .section {
+      margin-top: 8px;
     }
 
     .section-header {
-      margin: 4px 0 4px 0;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
+      all: unset;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      height: 22px;
+      padding: 0 10px;
+      color: var(--fs-muted);
+      cursor: pointer;
     }
 
     .section-header:hover {
-      opacity: 0.8;
+      color: var(--fs-text);
     }
 
-    .section-header::before {
-      content: "▼";
-      display: inline-block;
-      transition: transform 0.15s ease;
-      font-size: 10px;
+    .section-header:focus-visible {
+      outline: 1px dashed var(--fs-text);
+      outline-offset: -1px;
     }
 
-    .section-header.collapsed::before {
-      transform: rotate(-90deg);
+    .rule {
+      flex: 1;
+      border-top: 1px dashed var(--fs-line);
     }
 
-    .section-header.active {
-      color: #e8e8e8;
+    .collapsed .rule {
+      border-top-style: solid;
     }
 
-    .section-header.inactive {
-      color: #999;
+    .section-header svg {
+      width: 11px;
+      height: 11px;
+      transform: rotate(90deg);
+      transition: transform 0.12s ease;
+    }
+
+    .section-header.collapsed svg {
+      transform: none;
     }
   `
 
@@ -86,7 +87,6 @@ export class ElementTab extends LitElement {
   @state() private sortDropdown: DropdownOption[]
   @state() private sortOrder: SortElementList
   @state() private elementListItems: Map<ForesightElement, ForesightElementState> = new Map()
-  @state() private noContentMessage: string = "No Elements Registered To The Foresight Manager"
   @state() private expandedElementIds: Set<string> = new Set()
   @state() private activeSectionCollapsed = false
   @state() private inactiveSectionCollapsed = false
@@ -106,21 +106,14 @@ export class ElementTab extends LitElement {
     this.sortDropdown = [
       {
         value: "visibility",
-        label: "Visibility",
-        title: "Sort by Visibility",
-        icon: VISIBILITY_SVG,
+        label: "by visibility",
+        title: "On-screen elements first, then document order",
       },
-      {
-        value: "documentOrder",
-        label: "Document Order",
-        title: "Sort by Document Order",
-        icon: DOCUMENT_SVG,
-      },
+      { value: "documentOrder", label: "by document", title: "Top to bottom as in the DOM" },
       {
         value: "insertionOrder",
-        label: "Insertion Order",
-        title: "Sort by Insertion Order",
-        icon: INSERTION_SVG,
+        label: "by insertion",
+        title: "In the order they were registered",
       },
     ]
   }
@@ -198,7 +191,7 @@ export class ElementTab extends LitElement {
 
     if (touchStrategyTotal === 0 && mouseTotal + scrollTotal + tabTotal === 0) {
       lines.push("")
-      lines.push("Interact with registered elements to see callback statistics")
+      lines.push("Move toward a registered element to see some")
     }
 
     return lines.join("\n")
@@ -257,10 +250,6 @@ export class ElementTab extends LitElement {
         this.elementListItems.delete(e.element)
         // Drop any queued update so a later debounce flush can't re-add it.
         this._pendingElementUpdates.delete(e.element)
-        if (!this.elementListItems.size) {
-          this.noContentMessage = "No Elements Registered To The Foresight Manager"
-        }
-
         this._elementsCacheDirty = true
         this.requestUpdate()
       },
@@ -419,7 +408,6 @@ export class ElementTab extends LitElement {
 
   private renderElementSection(
     label: string,
-    modifierClass: string,
     elements: ForesightElement[],
     collapsed: boolean,
     toggleCollapsed: () => void
@@ -429,13 +417,10 @@ export class ElementTab extends LitElement {
     }
 
     return html`
-      <div class="element-section">
-        <h3
-          class="section-header ${modifierClass} ${collapsed ? "collapsed" : ""}"
-          @click=${toggleCollapsed}
-        >
-          ${label} (${elements.length})
-        </h3>
+      <div class="section">
+        <button class="section-header ${collapsed ? "collapsed" : ""}" @click=${toggleCollapsed}>
+          ${CHEVRON_SVG} ${label}<span class="rule"></span>${elements.length}
+        </button>
         ${
           !collapsed
             ? repeat(
@@ -467,10 +452,8 @@ export class ElementTab extends LitElement {
   render() {
     return html`
       <tab-header>
-        <div slot="chips" class="chips-container">
-          <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">
-            ${this.hitCount.total} hits
-          </chip-element>
+        <div slot="chips" data-tip="${this._generateHitsChipTitle(this.hitCount)}">
+          ${this.hitCount.total} callbacks fired
         </div>
         <div slot="actions">
           <single-select-dropdown
@@ -480,12 +463,8 @@ export class ElementTab extends LitElement {
           ></single-select-dropdown>
         </div>
       </tab-header>
-      <tab-content
-        .noContentMessage=${this.noContentMessage}
-        .hasContent=${!!this.elementListItems.size}
-      >
+      <tab-content .noContentMessage=${EMPTY_MESSAGE} .hasContent=${!!this.elementListItems.size}>
         ${this.renderElementSection(
-          "Active Elements",
           "active",
           this.activeElements,
           this.activeSectionCollapsed,
@@ -494,7 +473,6 @@ export class ElementTab extends LitElement {
           }
         )}
         ${this.renderElementSection(
-          "Inactive Elements",
           "inactive",
           this.inactiveElements,
           this.inactiveSectionCollapsed,

@@ -1,90 +1,54 @@
-import { LitElement, html, css, type TemplateResult } from "lit"
-import { property, state } from "lit/decorators.js"
+import { LitElement, html, css, type PropertyValues, type TemplateResult } from "lit"
+import { property, query, state } from "lit/decorators.js"
+import { buttonStyles } from "../shared-styles"
 
 export type DropdownOption = {
   value: string
-  label: string
+  label?: string
   title: string
-  icon: TemplateResult
 }
+
+export const optionLabel = (option: DropdownOption) => option.label ?? option.value
+
+const GAP = 4
 
 export abstract class BaseDropdown extends LitElement {
   private static currentlyOpen: BaseDropdown | null = null
 
   static styles = [
+    buttonStyles,
     css`
       :host {
-        display: inline-block;
+        display: inline-flex;
       }
 
-      .dropdown-container {
-        position: relative;
-        display: inline-block;
+      .btn {
+        color: var(--fs-text);
       }
 
-      .trigger-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        transition: all 0.2s ease;
+      .caret {
+        color: var(--fs-dim);
+        font-size: 8px;
       }
 
-      .trigger-button svg {
-        width: 16px;
-        height: 16px;
-        stroke: white;
-        transition: stroke 0.2s;
-      }
-
-      .trigger-button .arrow-icon {
-        width: 10px;
-        height: 10px;
-        stroke: white;
-        fill: none;
-        stroke-width: 2;
-        transition:
-          transform 0.2s ease,
-          stroke 0.2s;
-      }
-
-      .trigger-button:hover {
-        background-color: rgba(176, 196, 222, 0.1);
-      }
-
-      .trigger-button:hover svg,
-      .trigger-button:hover .arrow-icon {
-        stroke: #b0c4de;
-      }
-
-      .trigger-button.active {
-        background-color: rgba(176, 196, 222, 0.2);
-      }
-
-      .trigger-button.active svg {
-        stroke: #b0c4de;
-      }
-
-      .trigger-button.active .arrow-icon {
-        transform: rotate(180deg);
-        stroke: #b0c4de;
+      .btn:hover .caret,
+      .btn.active .caret {
+        color: var(--fs-muted);
       }
 
       .dropdown-menu {
         position: fixed;
-        z-index: 9999;
+        z-index: 10002;
         display: none;
         flex-direction: column;
-        background-color: #3a3a3a;
-        border: 1px solid #555;
-        min-width: 200px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        overflow: hidden;
+        min-width: 150px;
+        padding: 3px 0;
+        background: var(--fs-raised);
+        border: 1px solid var(--fs-line);
+        border-radius: 2px;
+        box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.7);
+        font-family: var(--fs-mono);
+        font-size: 11px;
       }
 
       .dropdown-menu.active {
@@ -92,55 +56,53 @@ export abstract class BaseDropdown extends LitElement {
       }
 
       .dropdown-menu button {
-        background: none;
-        border: none;
-        color: #ccc;
-        font-size: 12px;
-        text-align: left;
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
+        all: unset;
         display: flex;
         align-items: center;
-        position: relative;
-        width: 100%;
-        box-sizing: border-box;
+        gap: 8px;
+        padding: 3px 10px 3px 8px;
+        color: var(--fs-muted);
+        cursor: pointer;
+      }
+
+      .dropdown-menu button::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border: 1px solid var(--fs-dim);
       }
 
       .dropdown-menu button:hover {
-        background-color: #555;
-        color: white;
+        background: var(--fs-hover);
+        color: var(--fs-text);
       }
 
       .dropdown-menu button.active {
-        color: #b0c4de;
-        font-weight: bold;
-        background-color: rgba(176, 196, 222, 0.1);
+        color: var(--fs-text);
       }
 
-      .dropdown-menu button.active::after {
-        content: "✓";
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #b0c4de;
-        font-weight: bold;
+      .dropdown-menu button.active::before {
+        background: var(--fs-text);
+        border-color: var(--fs-text);
       }
     `,
   ]
 
   @state() protected isDropdownOpen: boolean = false
+  @query(".btn") private trigger!: HTMLElement
+  @query(".dropdown-menu") private menu!: HTMLElement
   @property({ type: Array }) dropdownOptions: DropdownOption[] = []
 
   connectedCallback() {
     super.connectedCallback()
     document.addEventListener("click", this._handleOutsideClick)
+    document.addEventListener("scroll", this._closeOnScroll, true)
   }
 
   disconnectedCallback() {
     super.disconnectedCallback()
     document.removeEventListener("click", this._handleOutsideClick)
+    document.removeEventListener("scroll", this._closeOnScroll, true)
     if (BaseDropdown.currentlyOpen === this) {
       BaseDropdown.currentlyOpen = null
     }
@@ -158,8 +120,18 @@ export abstract class BaseDropdown extends LitElement {
 
       this.isDropdownOpen = true
       BaseDropdown.currentlyOpen = this
+    }
+  }
 
+  protected updated(changed: PropertyValues): void {
+    if (changed.has("isDropdownOpen") && this.isDropdownOpen) {
       this._positionDropdown()
+    }
+  }
+
+  private _closeOnScroll = (event: Event) => {
+    if (this.isDropdownOpen && !event.composedPath().includes(this.menu)) {
+      this._closeDropdown()
     }
   }
 
@@ -170,32 +142,13 @@ export abstract class BaseDropdown extends LitElement {
     }
   }
 
-  protected _positionDropdown() {
-    if (typeof window === "undefined") {
-      return
-    }
+  private _positionDropdown() {
+    const trigger = this.trigger.getBoundingClientRect()
+    const { height } = this.menu.getBoundingClientRect()
+    const fitsBelow = trigger.bottom + GAP + height <= window.innerHeight - GAP
 
-    const triggerButton = this.shadowRoot?.querySelector(".trigger-button") as HTMLElement
-    const dropdownMenu = this.shadowRoot?.querySelector(".dropdown-menu") as HTMLElement
-
-    if (triggerButton && dropdownMenu) {
-      const rect = triggerButton.getBoundingClientRect()
-      const dropdownHeight = dropdownMenu.offsetHeight || 200
-
-      const top = rect.bottom + 5
-      const right = window.innerWidth - rect.right
-
-      const availableSpaceBelow = window.innerHeight - rect.bottom
-      const shouldPositionAbove = availableSpaceBelow < dropdownHeight && rect.top > dropdownHeight
-
-      if (shouldPositionAbove) {
-        dropdownMenu.style.top = `${rect.top - dropdownHeight - 5}px`
-      } else {
-        dropdownMenu.style.top = `${top}px`
-      }
-
-      dropdownMenu.style.right = `${right}px`
-    }
+    this.menu.style.top = `${fitsBelow ? trigger.bottom + GAP : trigger.top - GAP - height}px`
+    this.menu.style.right = `${window.innerWidth - trigger.right}px`
   }
 
   protected _handleOutsideClick = (event: MouseEvent) => {
@@ -207,38 +160,29 @@ export abstract class BaseDropdown extends LitElement {
   }
 
   protected abstract _handleOptionClick(option: DropdownOption): void
-  protected abstract _getTriggerIcon(): TemplateResult
+  protected abstract _getTriggerContent(): TemplateResult | string
   protected abstract _isOptionSelected(option: DropdownOption): boolean
   protected abstract _getTriggerTitle(): string
   protected abstract _getTriggerLabel(): string
 
   render() {
-    const buttonClass = `trigger-button ${this.isDropdownOpen ? "active" : ""}`
+    const buttonClass = `btn ${this.isDropdownOpen ? "active" : ""}`
     const menuClass = `dropdown-menu ${this.isDropdownOpen ? "active" : ""}`
 
     return html`
       <div class="dropdown-container">
         <button
           class="${buttonClass}"
-          title="${this._getTriggerTitle()}"
+          part="trigger"
+          data-tip="${this._getTriggerTitle()}"
           @click="${this._toggleDropdown}"
           aria-haspopup="true"
           aria-expanded="${this.isDropdownOpen}"
           aria-controls="dropdown-menu"
           aria-label="${this._getTriggerLabel()}"
         >
-          ${this._getTriggerIcon()}
-          <svg
-            class="arrow-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+          ${this._getTriggerContent()}
+          <span class="caret">▼</span>
         </button>
 
         <div class="${menuClass}" id="dropdown-menu" role="menu">
@@ -246,12 +190,12 @@ export abstract class BaseDropdown extends LitElement {
             option => html`
               <button
                 value="${option.value}"
-                title="${option.title}"
+                data-tip="${option.title}"
                 class="${this._isOptionSelected(option) ? "active" : ""}"
                 @click="${() => this._handleOptionClick(option)}"
                 role="menuitem"
               >
-                ${option.label}
+                ${optionLabel(option)}
               </button>
             `
           )}
