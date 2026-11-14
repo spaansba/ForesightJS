@@ -100,7 +100,6 @@ Fired during mouse movement for trajectory calculations
 type MouseTrajectoryUpdateEvent = {
   type: "mouseTrajectoryUpdate"
   trajectoryPositions: {
-    positions: CircularBuffer<MousePosition> // mouse position history
     currentPoint: { x: number; y: number }
     predictedPoint: { x: number; y: number }
   }

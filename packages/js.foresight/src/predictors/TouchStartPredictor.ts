@@ -1,16 +1,10 @@
 import type { ForesightElement } from "../types/types"
-import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ElementObservingModule } from "../core/ElementObservingModule"
 
 export class TouchStartPredictor extends ElementObservingModule {
-  protected readonly moduleName = "TouchStartPredictor"
-
-  constructor(dependencies: ForesightModuleDependencies) {
-    super(dependencies)
+  protected onConnect(): void {
+    this.createAbortController()
   }
-
-  protected onConnect = () => this.createAbortController()
-  protected onDisconnect = () => {}
 
   // Change to touchstart ones it is baseline https://developer.mozilla.org/en-US/docs/Web/API/Element/touchstart_event
   public observeElement(element: ForesightElement): void {

@@ -50,14 +50,12 @@ const predict = async (node: Element) => {
 for (const mode of ["action", "reactive"] as const) {
   describe(mode, () => {
     it("registers once and unregisters on component destruction", async () => {
-      const unregister = vi.spyOn(manager, "unregister")
       const app = render({ callback: vi.fn(), mode })
       const anchor = document.querySelector("a")!
       expect(manager.registeredElements.has(anchor)).toBe(true)
       expect(manager.registeredElements.size).toBe(1)
       await unmount(app)
       apps.splice(apps.indexOf(app), 1)
-      expect(unregister).toHaveBeenCalledWith(anchor)
       expect(manager.registeredElements.size).toBe(0)
     })
 

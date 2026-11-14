@@ -1,13 +1,11 @@
 import { describe, it, expect, vi } from "vitest"
 import { MousePredictor } from "./MousePredictor"
-import { CircularBuffer } from "../helpers/CircularBuffer"
 import { isScannable } from "../helpers/isScannable"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightManagerSettings,
-  MousePosition,
   Rect,
   TrajectoryPositions,
 } from "../types/types"
@@ -23,7 +21,7 @@ const createInternalEntry = (id: string, expandedRect: Rect): ForesightElementIn
     bounds: { expandedRect },
   }) as unknown as ForesightElementInternal
 
-const setupPredictor = (entries: ForesightElementInternal[], enableMousePrediction: boolean) => {
+const setupPredictor = (entries: ForesightElementInternal[]) => {
   const elements = new Map<ForesightElement, ForesightElementInternal>()
   entries.forEach((entry, i) => elements.set({ id: i } as unknown as ForesightElement, entry))
   const scannableElements = new Set(entries.filter(entry => isScannable(entry.state)))
@@ -39,15 +37,12 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
     updateElementState: vi.fn(),
     updateElementBounds: vi.fn(),
     settings: {
-      enableMousePrediction,
+      enableMousePrediction: false,
       trajectoryPredictionTime: 120,
-      positionHistorySize: 8,
-      enableManagerLogging: false,
     } as ForesightManagerSettings,
   }
 
   const trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer<MousePosition>(8),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
@@ -63,7 +58,7 @@ describe("MousePredictor", () => {
       const overlappingRect: Rect = { top: 100, left: 100, right: 200, bottom: 200 }
       const entryA = createInternalEntry("a", overlappingRect)
       const entryB = createInternalEntry("b", overlappingRect)
-      const { predictor, callCallback } = setupPredictor([entryA, entryB], false)
+      const { predictor, callCallback } = setupPredictor([entryA, entryB])
 
       predictor.processMouseMovement({ clientX: 150, clientY: 150 } as MouseEvent)
 
@@ -74,7 +69,7 @@ describe("MousePredictor", () => {
 
     it("should still emit mouseTrajectoryUpdate after a hover hit", () => {
       const entry = createInternalEntry("a", { top: 100, left: 100, right: 200, bottom: 200 })
-      const { predictor, callCallback, emit } = setupPredictor([entry], false)
+      const { predictor, callCallback, emit } = setupPredictor([entry])
 
       predictor.processMouseMovement({ clientX: 150, clientY: 150 } as MouseEvent)
 
@@ -86,7 +81,7 @@ describe("MousePredictor", () => {
 
     it("should not fire callback when the mouse is outside the element", () => {
       const entry = createInternalEntry("a", { top: 100, left: 100, right: 200, bottom: 200 })
-      const { predictor, callCallback } = setupPredictor([entry], false)
+      const { predictor, callCallback } = setupPredictor([entry])
 
       predictor.processMouseMovement({ clientX: 50, clientY: 50 } as MouseEvent)
 

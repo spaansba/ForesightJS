@@ -1,12 +1,10 @@
 import { describe, it, expect, vi } from "vitest"
 import { ScrollPredictor } from "./ScrollPredictor"
-import { CircularBuffer } from "../helpers/CircularBuffer"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightManagerSettings,
-  MousePosition,
   Rect,
   TrajectoryPositions,
 } from "../types/types"
@@ -39,12 +37,10 @@ const setupPredictor = (currentPoint = { x: 150, y: 150 }) => {
     settings: {
       enableScrollPrediction: true,
       scrollMargin: 100,
-      enableManagerLogging: false,
     } as ForesightManagerSettings,
   }
 
   const trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer<MousePosition>(8),
     currentPoint,
     predictedPoint: { x: 0, y: 0 },
   }

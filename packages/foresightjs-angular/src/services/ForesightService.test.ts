@@ -1,16 +1,19 @@
 import type { NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
-import { addEventListenerSpy, mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import {
+  addEventListenerSpy,
+  mockState,
+  registerSpy,
+  unregisterSpy,
+  HOVER_CONTEXT,
+} from "../tests/setup"
+import { createInContext } from "../tests/helpers"
 import { ForesightService } from "./ForesightService"
 
-const zone = {
-  run: <T>(fn: () => T): T => fn(),
-} as NgZone
-
-const createService = () => new ForesightService(zone)
-const createServiceWithZone = (testZone: Pick<NgZone, "run">) =>
-  new ForesightService(testZone as NgZone)
+const createService = () => createInContext(() => new ForesightService())
+const createServiceWithZone = (zone: Pick<NgZone, "run">) =>
+  createInContext(() => new ForesightService(), { zone })
 
 beforeEach(() => {
   addEventListenerSpy.mockClear()
@@ -54,10 +57,10 @@ describe("ForesightService", () => {
 
     run.mockClear()
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
     expect(run).toHaveBeenCalledTimes(1)
-    expect(callback).toHaveBeenCalledWith(fired)
+    expect(callback).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("runs state writes inside the Angular zone", () => {

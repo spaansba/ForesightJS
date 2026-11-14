@@ -23,13 +23,13 @@ The `PositionObserver` uses layered observation:
 
 Mouse prediction tracks cursor movement patterns to anticipate click targets by analyzing velocity and trajectory.
 
-**Event Handling**: `pointermove` events record `clientX` and `clientY` coordinates for mouse and pen input. Position history is limited by `positionHistorySize` setting.
+**Event Handling**: `pointermove` events record `clientX`, `clientY` and the event timestamp for mouse and pen input.
 
-**Prediction Algorithm**: The `predictNextMousePosition` function implements linear extrapolation:
+**Prediction Algorithm**: The `predictNextMousePosition` function implements damped extrapolation:
 
 1. **History Tracking**: Stores past mouse positions with timestamps
-2. **Velocity Calculation**: Calculates average velocity using oldest and newest points in history
-3. **Extrapolation**: Projects current position along trajectory using calculated velocity and `trajectoryPredictionTime` setting
+2. **Velocity Calculation**: Fits a least-squares velocity through the positions of the last 80ms. Older positions are ignored, so the result does not depend on the display refresh rate and a movement that starts after a pause is picked up immediately
+3. **Extrapolation**: Projects current position along trajectory using calculated velocity and `trajectoryPredictionTime` setting. Real cursors brake harder the faster they move, so the reach grows with the logarithm of the speed instead of linearly. This keeps fast flicks from overshooting past the element the user is heading for
 
 **Intersection Detection**: The `lineSegmentIntersectsRect` function implements the Liang-Barsky line clipping algorithm to check intersections between the predicted mouse path and element rectangles:
 
@@ -84,15 +84,13 @@ Touch devices have no continuous cursor, so prediction works differently. The `t
 
 ## Bundle Optimization
 
-The full library is **~32 KB** minified, but you rarely load all of it. Code splitting lazy-loads handlers and predictors based on device type and which features are enabled, so your initial bundle only contains what you actually use:
+The full library is **~39 KB** minified (**~13 KB** gzipped) including its dependencies, but you never load all of it. Code splitting lazy-loads the handler for the current device type and the tab predictor:
 
-| Chunk                           | Size    | Loaded When                      |
-| ------------------------------- | ------- | -------------------------------- |
-| Core                            | ~14 KB  | Always (initial load)            |
-| DesktopHandler + MousePredictor | ~15 KB  | Desktop/mouse users              |
-| TouchDeviceHandler              | ~2 KB   | Touch device users               |
-| TabPredictor + tabbable         | ~7 KB   | `enableTabPrediction: true`      |
-| ScrollPredictor                 | ~1.5 KB | `enableScrollPrediction: true`   |
-| Touch predictors                | ~1.5 KB | Touch device (based on strategy) |
+| Chunk                   | Size   | Contains                                         | Loaded When                 |
+| ----------------------- | ------ | ------------------------------------------------ | --------------------------- |
+| Core                    | ~17 KB | `ForesightManager`                               | Always (initial load)       |
+| DesktopHandler          | ~12 KB | Mouse and scroll predictors, `position-observer` | Desktop/mouse users         |
+| TabPredictor + tabbable | ~7 KB  | Tab predictor                                    | `enableTabPrediction: true` |
+| TouchDeviceHandler      | ~2 KB  | Viewport and touch start predictors              | Touch device users          |
 
-**Result**: a touch device loads only the core, the touch handler, and one touch predictor. A desktop user loads the core, the desktop handler, and whichever predictors they have enabled (mouse, tab, scroll). You never ship the strategies you don't use.
+**Result**: a touch device loads the core and the touch handler. A desktop user loads the core, the desktop handler and, when tab prediction is enabled, the tab predictor.

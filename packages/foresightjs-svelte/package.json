@@ -12,7 +12,8 @@
     "test": "vitest run && vitest run --config vitest.ssr.config.ts",
     "test:run": "vitest run && vitest run --config vitest.ssr.config.ts",
     "test:watch": "vitest --watch",
-    "prepublishOnly": "pnpm check && pnpm test:run && pnpm build:prod"
+    "prepublishOnly": "pnpm check && pnpm test:run && pnpm build:prod",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -10,6 +10,7 @@
     "docs:build": "pnpm --filter docs build",
     "fsinfo": "node ./scripts/list-packages.js",
     "test": "pnpm --filter \"./packages/**\" test",
+    "typecheck": "pnpm --filter \"@foresightjs/*\" typecheck",
     "test:watch": "pnpm --filter \"./packages/**\" test:watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -37,6 +38,6 @@
     "prettier-plugin-svelte": "^4.1.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
-    "vite": "^8.3.4"
+    "vite": "^8.3.6"
   }
 }

@@ -87,7 +87,7 @@ describe("initForesight", () => {
     const options = registerSpy.mock.calls[0][0]
 
     expect(options.element).toBe(link)
-    options.callback({} as ForesightElementState)
+    options.callback({} as ForesightElementState, { hitType: { kind: "mouse", subType: "hover" } })
     expect(prefetch).toHaveBeenCalledWith(link.href)
   })
 

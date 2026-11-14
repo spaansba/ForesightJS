@@ -1,5 +1,5 @@
 import { lineSegmentIntersectsRect } from "../helpers/lineSegmentIntersectsRect"
-import { predictNextMousePosition } from "../helpers/predictNextMousePosition"
+import { createMouseHistory, predictNextMousePosition } from "../helpers/predictNextMousePosition"
 import { isPointInRectangle } from "../helpers/rectAndHitSlop"
 import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type { MouseTrajectoryUpdateEvent, TrajectoryPositions } from "../types/types"
@@ -10,9 +10,8 @@ interface MousePredictorConfig {
 }
 
 export class MousePredictor extends BaseForesightModule {
-  protected readonly moduleName = "MousePredictor"
-
   private trajectoryPositions: TrajectoryPositions
+  private history = createMouseHistory()
 
   // Pre-allocated event object to avoid creating a new object every frame (~60/sec)
   private readonly mouseTrajectoryEvent: MouseTrajectoryUpdateEvent
@@ -37,7 +36,8 @@ export class MousePredictor extends BaseForesightModule {
     if (this.settings.enableMousePrediction) {
       predictNextMousePosition(
         currentPoint,
-        this.trajectoryPositions.positions,
+        e.timeStamp,
+        this.history,
         this.settings.trajectoryPredictionTime,
         this.trajectoryPositions.predictedPoint // reuse existing object
       )
@@ -79,7 +79,4 @@ export class MousePredictor extends BaseForesightModule {
       this.emit(this.mouseTrajectoryEvent)
     }
   }
-
-  protected onDisconnect(): void {}
-  protected onConnect(): void {}
 }

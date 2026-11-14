@@ -9,7 +9,6 @@ ForesightManager.initialize({
   enableMousePrediction: true,
   enableTabPrediction: true,
   enableScrollPrediction: true,
-  enableManagerLogging: false,
 })
 
 ForesightDevtools.initialize({})

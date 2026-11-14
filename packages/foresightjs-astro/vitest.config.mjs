@@ -14,5 +14,6 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["src/**/*.{test,spec}.ts"],
+    setupFiles: ["../js.foresight/test-env.ts"],
   },
 })

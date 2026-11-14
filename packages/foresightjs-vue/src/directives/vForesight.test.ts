@@ -2,7 +2,13 @@ import { defineComponent, h, ref, withDirectives } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
-import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import {
+  mockState,
+  registerSpy,
+  replaceElementOptionsSpy,
+  unregisterSpy,
+  HOVER_CONTEXT,
+} from "../tests/setup"
 import { vForesight } from "./vForesight"
 
 beforeEach(() => {
@@ -97,9 +103,9 @@ describe("vForesight directive", () => {
     mount(Component, { attachTo: document.body })
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
-    expect(cb).toHaveBeenCalledWith(fired)
+    expect(cb).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("accepts a plain function as shorthand", () => {
@@ -118,7 +124,7 @@ describe("vForesight directive", () => {
     expect(registerSpy).toHaveBeenCalledTimes(1)
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
     expect(cb).toHaveBeenCalled()
   })

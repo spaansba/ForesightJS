@@ -1,4 +1,3 @@
-import { devLogMessage } from "../helpers/devLog"
 import type {
   CallbackHitType,
   ElementBounds,
@@ -57,8 +56,6 @@ export abstract class BaseForesightModule {
     return this._isConnected
   }
 
-  protected abstract readonly moduleName: string // Name of the implementor class for debugging purposes
-
   constructor(dependencies: ForesightModuleDependencies) {
     this.elements = dependencies.elements
     this.scannableElements = dependencies.scannableElements
@@ -75,8 +72,7 @@ export abstract class BaseForesightModule {
       return
     }
 
-    this.devLog(`Disconnecting ${this.moduleName}...`)
-    this.abortController?.abort(`${this.moduleName} module disconnected`)
+    this.abortController?.abort()
     this.onDisconnect()
     this._isConnected = false
   }
@@ -86,22 +82,12 @@ export abstract class BaseForesightModule {
       return
     }
 
-    this.devLog(`Connecting ${this.moduleName}...`)
     this._isConnected = true
     this.onConnect()
   }
 
-  public devLog(message: string): void {
-    if (!this.settings.enableManagerLogging) {
-      return
-    }
-
-    const color = this.moduleName.includes("Predictor") ? "#ea580c" : "#2563eb"
-    devLogMessage(this.moduleName, message, color)
-  }
-
-  protected abstract onConnect(): void
-  protected abstract onDisconnect(): void
+  protected onConnect(): void {}
+  protected onDisconnect(): void {}
 
   protected createAbortController(): void {
     if (this.abortController && !this.abortController.signal.aborted) {
@@ -109,7 +95,5 @@ export abstract class BaseForesightModule {
     }
 
     this.abortController = new AbortController()
-
-    this.devLog(`Created new AbortController for ${this.moduleName}`)
   }
 }

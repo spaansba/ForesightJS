@@ -9,7 +9,6 @@ If you want the default global options you don't need to initialize the Foresigh
 // ALL SETTINGS ARE OPTIONAL
 ForesightManager.initialize({
   enableMousePrediction: true,
-  positionHistorySize: 8,
   trajectoryPredictionTime: 80,
   defaultHitSlop: 10,
   enableTabPrediction: true,
@@ -17,7 +16,6 @@ ForesightManager.initialize({
   enableScrollPrediction: true,
   scrollMargin: 150,
   touchDeviceStrategy: "viewport",
-  enableManagerLogging: false,
   minimumConnectionType: "3g",
   setDataAttributes: true,
 })
@@ -43,21 +41,6 @@ All numeric settings are clamped to their specified Min/Max values to prevent in
 ```javascript
 ForesightManager.initialize({
   enableMousePrediction: false, // Disable trajectory prediction
-})
-```
-
----
-
-#### `positionHistorySize`
-
-- **Type:** `number`
-- **Default:** `8`
-- **Clamped between:** `2-30`
-- **Description:** Number of mouse positions to keep in history for velocity calculations. Higher values provide smoother predictions but use more memory.
-
-```javascript
-ForesightManager.initialize({
-  positionHistorySize: 12, // Keep more position history for smoother predictions
 })
 ```
 
@@ -200,23 +183,6 @@ ForesightManager.initialize({
 ```javascript
 ForesightManager.initialize({
   minimumConnectionType: "3g",
-})
-```
-
----
-
-### Other Settings
-
-#### `enableManagerLogging`
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **Description:** Logs basic information about the `ForesightManager` and its handlers that is not available through events. Mostly used by the maintainers of `ForesightJS` to debug the manager, but might be useful for implementers aswell.
-- **Note:** Examples of logs are: Initializing the manager, switching from device strategy (e.g. Mouse to pen), aborting controllers and invalidating cache.
-
-```javascript
-ForesightManager.initialize({
-  enableManagerLogging: true,
 })
 ```
 

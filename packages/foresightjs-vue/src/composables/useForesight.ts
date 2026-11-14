@@ -10,7 +10,7 @@ import {
 import {
   ForesightManager,
   createUnregisteredSnapshot,
-  type ForesightElementState,
+  type ForesightCallback,
   type ForesightRegisterResult,
 } from "js.foresight"
 import type { MaybeElement, ForesightOptions, ForesightResult } from "../types"
@@ -42,7 +42,7 @@ export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): Fores
   let registerResults: ForesightRegisterResult | null = null
   let unsubscribe: (() => void) | null = null
 
-  const callback = (s: ForesightElementState) => toValue(options).callback(s)
+  const callback: ForesightCallback = (...args) => toValue(options).callback(...args)
 
   const registerElement = (element: Element, registerOptions: ForesightOptions) => {
     registerResults = ForesightManager.instance.register({
@@ -68,7 +68,7 @@ export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): Fores
   }
 
   const elementRef = (el: MaybeElement) => {
-    const resolved = resolveElement(el) ?? null
+    const resolved = resolveElement(el)
 
     if (resolved === currentElement) {
       return

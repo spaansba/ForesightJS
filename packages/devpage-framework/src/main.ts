@@ -14,11 +14,9 @@ scan({ enabled: false, showToolbar: false })
 // frameworks. Initialise it (and the devtools) once, before anything mounts.
 ForesightManager.initialize({
   enableMousePrediction: true,
-  positionHistorySize: 10,
   trajectoryPredictionTime: 100,
   defaultHitSlop: { top: 10, left: 10, right: 10, bottom: 10 },
   enableTabPrediction: true,
-  enableManagerLogging: true,
   tabOffset: 2,
   touchDeviceStrategy: "onTouchStart",
   minimumConnectionType: "3g",

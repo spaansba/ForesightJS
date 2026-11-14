@@ -1,5 +1,3 @@
-import type { CircularBuffer } from "../helpers/CircularBuffer"
-
 export interface ForesightRegister {}
 
 export type ForesightMeta = ForesightRegister extends { meta: infer Meta extends object }
@@ -17,7 +15,14 @@ export type Rect = {
  * A callback function that is executed when a foresight interaction
  * (e.g., hover, trajectory hit) occurs on a registered element.
  */
-export type ForesightCallback = (state: ForesightElementState) => void
+export type ForesightCallbackContext = {
+  hitType: CallbackHitType
+}
+
+export type ForesightCallback = (
+  state: ForesightElementState,
+  context: ForesightCallbackContext
+) => void
 
 /**
  * Represents the HTML element that is being tracked by the ForesightManager.
@@ -25,24 +30,12 @@ export type ForesightCallback = (state: ForesightElementState) => void
  */
 export type ForesightElement = Element
 
-/**
- * Represents a mouse position captured at a specific point in time.
- * Used for tracking mouse movement history.
- */
-export type MousePosition = {
-  /** The (x, y) coordinates of the mouse. */
-  point: Point
-  /** The timestamp (e.g., from `performance.now()`) when this position was recorded. */
-  time: number
-}
-
 export type Point = {
   x: number
   y: number
 }
 
 export type TrajectoryPositions = {
-  positions: CircularBuffer<MousePosition>
   currentPoint: Point
   predictedPoint: Point
 }
@@ -212,42 +205,12 @@ export type ForesightManagerData = {
 export type ForesightModules = {
   desktopHandler: boolean
   touchHandler: boolean
-  predictors: {
-    mouse: boolean
-    tab: boolean
-    scroll: boolean
-    viewport: boolean
-    touchStart: boolean
-  }
 }
 
 export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"
 export type MinimumConnectionType = "slow-2g" | "2g" | "3g" | "4g"
 
 type BaseForesightManagerSettings = {
-  /**
-   * Number of mouse positions to keep in history for trajectory calculation.
-   * A higher number might lead to smoother but slightly delayed predictions.
-   *
-   *
-   * @link https://foresightjs.com/docs/getting_started/config#available-global-settings
-   *
-   *
-   * **This value is clamped between 2 and 30.**
-   * @default 8
-   */
-  positionHistorySize: number
-
-  /**
-   *
-   * Logs basic information about the ForesightManager and its handlers that doesn't have a dedicated event.
-   *
-   * Mostly used by the maintainers of ForesightJS to debug the manager. But might be useful for implementers aswell.
-   *
-   * This is not the same as logging events, this can be done with the actual developer tools.
-   * @link https://foresightjs.com/docs/debugging/devtools
-   */
-  enableManagerLogging: boolean
   /**
    * How far ahead (in milliseconds) to predict the mouse trajectory.
    * A larger value means the prediction extends further into the future. (meaning it will trigger callbacks sooner)
@@ -403,15 +366,6 @@ export type HitSlop = Rect | number
  */
 export type NumericSettingKeys = {
   [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends number
-    ? K
-    : never
-}[keyof UpdateForsightManagerSettings]
-
-/**
- * Get all keys in UpdateForsightManagerSettings that are boolean
- */
-export type ManagerBooleanSettingKeys = {
-  [K in keyof UpdateForsightManagerSettings]: UpdateForsightManagerSettings[K] extends boolean
     ? K
     : never
 }[keyof UpdateForsightManagerSettings]

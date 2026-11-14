@@ -3,6 +3,7 @@ export {
   type ForesightElementState,
   type ForesightRegisterOptionsWithoutElement,
   type ForesightCallback,
+  type ForesightCallbackContext,
   type UpdateForsightManagerSettings,
   type ForesightManagerSettings,
   type ForesightEvent,

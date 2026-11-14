@@ -1,10 +1,16 @@
+import "@angular/compiler"
 import { beforeEach, vi } from "vitest"
 import type {
   ForesightCallback,
   ForesightElementState,
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
+  ForesightCallbackContext,
 } from "js.foresight"
+
+export const HOVER_CONTEXT: ForesightCallbackContext = {
+  hitType: { kind: "mouse", subType: "hover" },
+}
 
 export const mockState = {
   listeners: [] as Array<() => void>,

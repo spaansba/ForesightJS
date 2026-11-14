@@ -77,7 +77,7 @@ const fetchImage = async (image: ForesightImage, fetchCount: number): Promise<Im
       [fsForesight]="options()"
       #f="foresight"
       (click)="load()"
-      class="p-4 border border-gray-300 bg-white text-left cursor-pointer"
+      class="w-full p-4 border border-gray-300 bg-white text-left cursor-pointer"
     >
       <div class="space-y-2">
         <h3 class="font-semibold text-gray-900">{{ image().name }}</h3>

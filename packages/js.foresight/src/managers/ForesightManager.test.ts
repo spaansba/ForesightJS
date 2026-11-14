@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import type {
+  ForesightCallback,
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
@@ -141,26 +142,6 @@ const setupDeferredCallbackTest = (reactivateAfter: number = Infinity) => {
   const entry = getEntry(manager, element)
 
   return { manager, element, entry, callback, resolve: () => resolveCallback() }
-}
-
-const expectPredictorNotLoaded = async (
-  predictor: "tab" | "scroll",
-  initSettings: Parameters<typeof ForesightManager.initialize>[0]
-) => {
-  vi.useRealTimers()
-  const manager = ForesightManager.initialize(initSettings)
-  const element = createMockElement()
-
-  manager.register({ element, callback: vi.fn() })
-
-  // Wait for handler to load first
-  await vi.waitFor(() => {
-    expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
-  })
-
-  // Predictor should still be false
-  expect(manager.getManagerData.loadedModules.predictors[predictor]).toBe(false)
-  vi.useFakeTimers()
 }
 
 const createMockNodeList = (count: number): NodeListOf<ForesightElement> => {
@@ -363,6 +344,29 @@ describe("ForesightManager", () => {
   })
 
   describe("Element Unregistration", () => {
+    it("unregisters through any result of an element that was registered again to update it", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const { unregister } = manager.register({ element, callback: vi.fn(), name: "v1" })
+      manager.register({ element, callback: vi.fn(), name: "v2" })
+
+      unregister()
+      expect(manager.registeredElements.has(element)).toBe(false)
+    })
+
+    it("a stale result does not unregister a later registration of the same element", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const stale = manager.register({ element, callback: vi.fn() })
+      manager.unregister(element)
+      manager.register({ element, callback: vi.fn() })
+
+      stale.unregister()
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
     it("should unregister an element", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
@@ -892,12 +896,12 @@ describe("ForesightManager", () => {
     it("should clamp numeric settings to valid ranges", () => {
       const manager = ForesightManager.initialize({
         trajectoryPredictionTime: 500, // Above max
-        positionHistorySize: 1, // Below min
+        scrollMargin: 1, // Below min
       })
 
       const data = manager.getManagerData
       expect(data.globalSettings.trajectoryPredictionTime).toBe(200) // Clamped to max
-      expect(data.globalSettings.positionHistorySize).toBe(2) // Clamped to min
+      expect(data.globalSettings.scrollMargin).toBe(30) // Clamped to min
     })
 
     it("should alter settings and emit event", () => {
@@ -905,17 +909,15 @@ describe("ForesightManager", () => {
       const listener = vi.fn()
 
       manager.addEventListener("managerSettingsChanged", listener)
-      manager.alterGlobalSettings({ trajectoryPredictionTime: 100 })
+      manager.alterGlobalSettings({ trajectoryPredictionTime: 100, minimumConnectionType: "4g" })
 
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "managerSettingsChanged",
-          updatedSettings: expect.arrayContaining([
-            expect.objectContaining({
-              setting: "trajectoryPredictionTime",
-              newValue: 100,
-            }),
-          ]),
+          updatedSettings: [
+            expect.objectContaining({ setting: "trajectoryPredictionTime", newValue: 100 }),
+            { setting: "minimumConnectionType", oldValue: "3g", newValue: "4g" },
+          ],
         })
       )
     })
@@ -994,11 +996,6 @@ describe("ForesightManager", () => {
       const data = manager.getManagerData
       expect(data.loadedModules.desktopHandler).toBe(false)
       expect(data.loadedModules.touchHandler).toBe(false)
-      expect(data.loadedModules.predictors.mouse).toBe(false)
-      expect(data.loadedModules.predictors.tab).toBe(false)
-      expect(data.loadedModules.predictors.scroll).toBe(false)
-      expect(data.loadedModules.predictors.viewport).toBe(false)
-      expect(data.loadedModules.predictors.touchStart).toBe(false)
     })
 
     it("should lazy load desktop handler on first element registration", async () => {
@@ -1018,68 +1015,19 @@ describe("ForesightManager", () => {
       vi.useFakeTimers()
     })
 
-    it("should expose loadedModules in getManagerData", () => {
-      const manager = ForesightManager.initialize()
-
-      const data = manager.getManagerData
-
-      expect(data.loadedModules).toBeDefined()
-      expect(data.loadedModules).toHaveProperty("desktopHandler")
-      expect(data.loadedModules).toHaveProperty("touchHandler")
-      expect(data.loadedModules).toHaveProperty("predictors")
-      expect(data.loadedModules.predictors).toHaveProperty("mouse")
-      expect(data.loadedModules.predictors).toHaveProperty("tab")
-      expect(data.loadedModules.predictors).toHaveProperty("scroll")
-      expect(data.loadedModules.predictors).toHaveProperty("viewport")
-      expect(data.loadedModules.predictors).toHaveProperty("touchStart")
-    })
-
-    it("should load mouse predictor with desktop handler", async () => {
+    it("should not load the tab predictor when tab prediction is disabled", async () => {
       vi.useRealTimers()
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
+      const manager = ForesightManager.initialize({ enableTabPrediction: false })
 
-      manager.register({ element, callback: vi.fn() })
-
-      // Mouse predictor is always loaded with DesktopHandler
+      manager.register({ element: createMockElement(), callback: vi.fn() })
       await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.predictors.mouse).toBe(true)
+        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
       })
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      // @ts-expect-error - accessing private predictor for tests
+      expect(manager.desktopHandler.tabPredictor).toBeNull()
       vi.useFakeTimers()
-    })
-
-    it("should lazy load tab predictor when enabled", async () => {
-      vi.useRealTimers()
-      const manager = ForesightManager.initialize({ enableTabPrediction: true })
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-
-      await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.predictors.tab).toBe(true)
-      })
-      vi.useFakeTimers()
-    })
-
-    it("should not load tab predictor when disabled", async () => {
-      await expectPredictorNotLoaded("tab", { enableTabPrediction: false })
-    })
-
-    it("should lazy load scroll predictor when enabled", async () => {
-      vi.useRealTimers()
-      const manager = ForesightManager.initialize({ enableScrollPrediction: true })
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-
-      await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.predictors.scroll).toBe(true)
-      })
-      vi.useFakeTimers()
-    })
-
-    it("should not load scroll predictor when disabled", async () => {
-      await expectPredictorNotLoaded("scroll", { enableScrollPrediction: false })
     })
 
     it("should reconnect tab predictor after the manager goes idle", async () => {
@@ -1089,18 +1037,49 @@ describe("ForesightManager", () => {
 
       manager.register({ element: first, callback: vi.fn() })
       await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.predictors.tab).toBe(true)
+        // @ts-expect-error - accessing private predictor for tests
+        expect(manager.desktopHandler?.tabPredictor?.isConnected).toBe(true)
       })
 
       manager.unregister(first)
       manager.register({ element: createMockElement("second"), callback: vi.fn() })
 
-      // @ts-expect-error - accessing private predictor for tests
-      const { tabPredictor } = manager.desktopHandler
       await vi.waitFor(() => {
-        expect(tabPredictor?.isConnected).toBe(true)
+        // @ts-expect-error - accessing private predictor for tests
+        expect(manager.desktopHandler.tabPredictor.isConnected).toBe(true)
       })
       vi.useFakeTimers()
+    })
+  })
+
+  describe("Pointer trajectory", () => {
+    beforeEach(() => vi.useRealTimers())
+    afterEach(() => vi.useFakeTimers())
+
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))
+
+    const move = (clientX: number, timeStamp: number) => {
+      const event = new PointerEvent("pointermove", { clientX, clientY: 150 })
+      Object.defineProperty(event, "timeStamp", { value: timeStamp })
+      document.dispatchEvent(event)
+    }
+
+    it("fires a trajectory hit for an element the pointer is moving towards", async () => {
+      const manager = ForesightManager.initialize()
+      const listener = vi.fn()
+      manager.addEventListener("callbackInvoked", listener)
+      manager.register({ element: createMockElement(), callback: vi.fn() })
+      await vi.waitFor(() => expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true))
+
+      move(0, 1000)
+      await nextFrame()
+      expect(listener).not.toHaveBeenCalled()
+
+      move(40, 1016)
+      await nextFrame()
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({ hitType: { kind: "mouse", subType: "trajectory" } })
+      )
     })
   })
 
@@ -1146,33 +1125,39 @@ describe("ForesightManager", () => {
       expect(touchDeviceHandler?.isConnected).toBe(false)
     })
 
-    it("does not connect a touch predictor when the strategy changed mid-load", async () => {
-      vi.mocked(userUsesTouchDevice).mockReturnValueOnce(true)
-      const manager = ForesightManager.initialize()
-      manager.register({ element: createMockElement(), callback: vi.fn() })
-      await loaded(manager, m => m.predictors.touchStart)
-
-      manager.alterGlobalSettings({ touchDeviceStrategy: "viewport" })
-      manager.alterGlobalSettings({ touchDeviceStrategy: "none" })
-      await loaded(manager, m => m.predictors.viewport)
-
-      // @ts-expect-error - accessing private handler for tests
-      const { predictor, viewportPredictor } = manager.touchDeviceHandler
-      expect(predictor).toBeNull()
-      expect(viewportPredictor.isConnected).toBe(false)
-    })
-
-    it("does not connect a desktop predictor disabled mid-load", async () => {
+    it("does not connect the tab predictor when it is disabled mid-load", async () => {
       const manager = ForesightManager.initialize({ enableTabPrediction: false })
       manager.register({ element: createMockElement(), callback: vi.fn() })
       await loaded(manager, m => m.desktopHandler)
 
       manager.alterGlobalSettings({ enableTabPrediction: true })
       manager.alterGlobalSettings({ enableTabPrediction: false })
-      await loaded(manager, m => m.predictors.tab)
+      await vi.waitFor(() => {
+        // @ts-expect-error - accessing private handler for tests
+        expect(manager.desktopHandler.tabPredictor).not.toBeNull()
+      })
+      await new Promise(resolve => setTimeout(resolve, 0))
 
       // @ts-expect-error - accessing private handler for tests
       expect(manager.desktopHandler.tabPredictor.isConnected).toBe(false)
+    })
+
+    it("disconnects the previous touch predictor when the strategy changes", async () => {
+      vi.mocked(userUsesTouchDevice).mockReturnValueOnce(true)
+      const manager = ForesightManager.initialize()
+      manager.register({ element: createMockElement(), callback: vi.fn() })
+      await loaded(manager, m => m.touchHandler)
+
+      // @ts-expect-error - accessing private handler for tests
+      const { predictors } = manager.touchDeviceHandler
+      expect(predictors.onTouchStart.isConnected).toBe(true)
+
+      manager.alterGlobalSettings({ touchDeviceStrategy: "viewport" })
+      expect(predictors.onTouchStart.isConnected).toBe(false)
+      expect(predictors.viewport.isConnected).toBe(true)
+
+      manager.alterGlobalSettings({ touchDeviceStrategy: "none" })
+      expect(predictors.viewport.isConnected).toBe(false)
     })
   })
 
@@ -1340,6 +1325,20 @@ describe("ForesightManager", () => {
 
         expect(() => manager.reactivate(nodeList)).not.toThrow()
       })
+    })
+  })
+
+  describe("Callback context", () => {
+    it("passes the hit type that fired the callback", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn<ForesightCallback>()
+      manager.register({ element, callback })
+
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
+      await vi.runAllTimersAsync()
+
+      expect(callback.mock.calls[0][1].hitType).toEqual({ kind: "mouse", subType: "trajectory" })
     })
   })
 

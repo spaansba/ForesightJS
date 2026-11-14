@@ -1,18 +1,12 @@
 import type { ForesightElement } from "../types/types"
-import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ElementObservingModule } from "../core/ElementObservingModule"
 
 export class ViewportPredictor extends ElementObservingModule {
-  protected readonly moduleName = "ViewportPredictor"
-
   private intersectionObserver: IntersectionObserver | null = null
 
-  constructor(dependencies: ForesightModuleDependencies) {
-    super(dependencies)
+  protected onConnect(): void {
+    this.intersectionObserver = new IntersectionObserver(this.handleViewportEnter)
   }
-
-  protected onConnect = () =>
-    (this.intersectionObserver = new IntersectionObserver(this.handleViewportEnter))
 
   protected onDisconnect() {
     this.intersectionObserver?.disconnect()

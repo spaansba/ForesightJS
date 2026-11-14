@@ -1,71 +1,83 @@
-import type { MousePosition, Point } from "../types/types"
-import type { CircularBuffer } from "./CircularBuffer"
+import type { Point } from "../types/types"
+
+const VELOCITY_WINDOW_MS = 80
+const BRAKING_DISTANCE_PX = 200
+const HISTORY_SIZE = 32
+
+export type MouseHistory = {
+  time: Float64Array
+  x: Float64Array
+  y: Float64Array
+  next: number
+}
+
+export const createMouseHistory = (): MouseHistory => ({
+  time: new Float64Array(HISTORY_SIZE).fill(-Infinity),
+  x: new Float64Array(HISTORY_SIZE),
+  y: new Float64Array(HISTORY_SIZE),
+  next: 0,
+})
 
 /**
- * Predicts the next mouse position based on a history of recent movements.
- * It calculates velocity from the historical data and extrapolates a future point.
- * The `buffer` is mutated by this function: the new `currentPoint` is added,
- * automatically overwriting the oldest entry when the buffer is full.
+ * Predicts where the mouse will be `trajectoryPredictionTimeInMs` from now.
+ * Velocity is the least-squares slope through the positions of the last
+ * {@link VELOCITY_WINDOW_MS}, so it is independent of the frame rate and never
+ * uses positions from before a pause. The cursor is then assumed to brake
+ * harder the faster it moves, which makes the reach grow with the logarithm of
+ * the speed instead of linearly.
+ * The `history` is mutated by this function: the new `currentPoint` overwrites
+ * the oldest entry.
  *
  * @param currentPoint - The current actual mouse coordinates.
- * @param buffer - A circular buffer of previous mouse positions with timestamps.
- *                 This buffer will be modified by this function.
+ * @param time - Timestamp of `currentPoint` in milliseconds.
+ * @param history - Ring of previous mouse positions with timestamps.
  * @param trajectoryPredictionTimeInMs - How far into the future (in milliseconds)
  *                                       to predict the mouse position.
  * @param out - Output point to mutate with the predicted position.
  */
 export const predictNextMousePosition = (
   currentPoint: Point,
-  buffer: CircularBuffer<MousePosition>,
+  time: number,
+  history: MouseHistory,
   trajectoryPredictionTimeInMs: number,
   out: Point
 ): void => {
-  const now = performance.now()
-  // Recycle the slot the buffer is about to overwrite instead of allocating a
-  // fresh MousePosition every move (this runs once per pointer move).
-  const slot = buffer.peekWriteSlot()
-
-  if (slot) {
-    slot.point.x = currentPoint.x
-    slot.point.y = currentPoint.y
-    slot.time = now
-    buffer.add(slot)
-  } else {
-    buffer.add({ point: { x: currentPoint.x, y: currentPoint.y }, time: now })
-  }
-
   const { x, y } = currentPoint
+  let weightedDx = 0
+  let weightedDy = 0
+  let weight = 0
 
-  if (buffer.length < 2) {
+  for (let age = 1; age <= HISTORY_SIZE; age++) {
+    const index = (history.next - age) & (HISTORY_SIZE - 1)
+    const dt = time - history.time[index]
+    if (dt > VELOCITY_WINDOW_MS) {
+      break
+    }
+
+    weightedDx += dt * (x - history.x[index])
+    weightedDy += dt * (y - history.y[index])
+    weight += dt * dt
+  }
+
+  history.time[history.next] = time
+  history.x[history.next] = x
+  history.y[history.next] = y
+  history.next = (history.next + 1) & (HISTORY_SIZE - 1)
+
+  const vx = weight === 0 ? 0 : weightedDx / weight
+  const vy = weight === 0 ? 0 : weightedDy / weight
+  const speed = Math.hypot(vx, vy)
+
+  if (speed === 0) {
     out.x = x
     out.y = y
 
     return
   }
 
-  const first = buffer.getFirst()
-  const last = buffer.getLast()
-  if (!first || !last) {
-    out.x = x
-    out.y = y
+  const reach =
+    BRAKING_DISTANCE_PX * Math.log1p((speed * trajectoryPredictionTimeInMs) / BRAKING_DISTANCE_PX)
 
-    return
-  }
-
-  const dt = (last.time - first.time) * 0.001
-  if (dt === 0) {
-    out.x = x
-    out.y = y
-
-    return
-  }
-
-  const dx = last.point.x - first.point.x
-  const dy = last.point.y - first.point.y
-  const vx = dx / dt
-  const vy = dy / dt
-
-  const trajectoryPredictionTimeInSeconds = trajectoryPredictionTimeInMs * 0.001
-  out.x = x + vx * trajectoryPredictionTimeInSeconds
-  out.y = y + vy * trajectoryPredictionTimeInSeconds
+  out.x = x + (vx / speed) * reach
+  out.y = y + (vy / speed) * reach
 }

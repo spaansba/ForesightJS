@@ -68,7 +68,6 @@ interface MouseTrajectoryUpdatePayload extends PayloadBase {
   type: "mouseTrajectoryUpdate"
   currentPoint: ForesightPoint
   predictedPoint: ForesightPoint
-  positionCount: number
   mousePredictionEnabled: boolean
 }
 
@@ -229,7 +228,6 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
           type: "mouseTrajectoryUpdate",
           currentPoint: event.trajectoryPositions?.currentPoint,
           predictedPoint: event.trajectoryPositions?.predictedPoint,
-          positionCount: event.trajectoryPositions?.positions?.length || 0,
           mousePredictionEnabled: event.predictionEnabled,
           localizedTimestamp: new Date().toLocaleTimeString(),
           logId: logId,
