@@ -4,6 +4,6 @@
     "outDir": "dist",
     "composite": true
   },
-  "include": ["src", "test-setup.ts"],
+  "include": ["src", "test-env.ts"],
   "exclude": ["node_modules", "dist"]
 }
