@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { defineComponent, h, nextTick, ref, withDirectives } from "vue"
 import { mount } from "@vue/test-utils"
 import { ForesightManager } from "js.foresight"
-import { useForesight, vForesight } from "./index"
+import { Foresight, useForesight, vForesight } from "./index"
 
 const { registeredElements } = ForesightManager.instance
 
@@ -42,6 +42,20 @@ describe("against the real ForesightManager", () => {
 
     wrapper.unmount()
     expect(registeredElements.has(element)).toBe(false)
+  })
+
+  it("Foresight `as` with a multi-root component renders without registering", () => {
+    const MultiRoot = defineComponent({ render: () => [h("a", "one"), h("a", "two")] })
+    const before = registeredElements.size
+
+    const wrapper = mount(Foresight, {
+      props: { as: MultiRoot, callback: () => {} },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.findAll("a")).toHaveLength(2)
+    expect(registeredElements.size).toBe(before)
+    wrapper.unmount()
   })
 
   it("vForesight registers on mount and unregisters on unmount", () => {

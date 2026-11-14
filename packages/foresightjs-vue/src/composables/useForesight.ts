@@ -68,7 +68,7 @@ export const useForesight = (options: MaybeRefOrGetter<ForesightOptions>): Fores
   }
 
   const elementRef = (el: MaybeElement) => {
-    const resolved = resolveElement(el) ?? null
+    const resolved = resolveElement(el)
 
     if (resolved === currentElement) {
       return

@@ -49,13 +49,8 @@ describe("resolveElement", () => {
     expect(resolveElement(instance)).toBe(svg)
   })
 
-  it("returns null for a text node $el", () => {
-    const text = document.createTextNode("hello")
-    // Text nodes have nodeType 3 (TEXT_NODE), not COMMENT_NODE.
-    // resolveElement only filters comments, so text nodes pass through.
-    const instance = { $el: text } as unknown as ComponentPublicInstance
-    // text is not an Element, but it's also not a comment, so it gets returned
-    // via the fallback cast. This is an edge case that shouldn't occur in practice.
-    expect(resolveElement(instance)).toBe(text)
+  it("returns null for a text node $el (multi-root component anchor)", () => {
+    const instance = { $el: document.createTextNode("") } as unknown as ComponentPublicInstance
+    expect(resolveElement(instance)).toBeNull()
   })
 })

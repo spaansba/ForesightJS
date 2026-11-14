@@ -11,10 +11,6 @@ export type MaybeElement = Element | ComponentPublicInstance | null | undefined
 
 export type MaybeElementRef = MaybeRefOrGetter<MaybeElement>
 
-export type ResolvedElement<T extends MaybeElement> = T extends ComponentPublicInstance
-  ? Exclude<MaybeElement, ComponentPublicInstance>
-  : T | undefined
-
 export type ForesightOptions = ForesightRegisterOptionsWithoutElement
 
 export type ForesightResult = ToRefs<Readonly<ForesightElementState>> & {
