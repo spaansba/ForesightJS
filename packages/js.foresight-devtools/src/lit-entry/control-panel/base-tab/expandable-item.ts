@@ -12,7 +12,8 @@ export class ExpandableItem extends LitElement {
       }
 
       .item {
-        border-radius: 5px;
+        margin-bottom: 2px;
+        border-left: 2px solid var(--border-color, #555);
       }
 
       .item.expanded {
@@ -24,22 +25,12 @@ export class ExpandableItem extends LitElement {
         align-items: center;
         gap: 6px;
         height: 24px;
-        padding: 0 4px 0 6px;
-        border-radius: 5px;
+        padding: 0 4px 0 8px;
         cursor: pointer;
       }
 
       .header:hover {
         background: var(--fs-hover);
-      }
-
-      .header::before {
-        content: "";
-        width: 2px;
-        height: 12px;
-        border-radius: 1px;
-        background: var(--border-color, #555);
-        flex-shrink: 0;
       }
 
       .content {
@@ -66,7 +57,7 @@ export class ExpandableItem extends LitElement {
 
       .details {
         position: relative;
-        padding: 4px 6px 6px 14px;
+        padding: 4px 6px 6px 8px;
       }
 
       copy-icon {
@@ -127,7 +118,7 @@ export class ExpandableItem extends LitElement {
             ? html`
                 <div class="details">
                   <copy-icon
-                    title="Copy details"
+                    data-tip="Copy details"
                     .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
                   ></copy-icon>
                   <pre><slot name="details"></slot></pre>

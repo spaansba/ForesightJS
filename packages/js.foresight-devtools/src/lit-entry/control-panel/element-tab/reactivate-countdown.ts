@@ -207,7 +207,7 @@ export class ReactivateCountdown extends LitElement {
         <button
           class="reactivate-button"
           @click="${this.handleTimerClick}"
-          title="Click to reactivate manually"
+          data-tip="Click to reactivate manually"
         >
           <span class="countdown-time infinity">∞</span>
         </button>
@@ -222,7 +222,7 @@ export class ReactivateCountdown extends LitElement {
       <button
         class="reactivate-button"
         @click="${this.handleTimerClick}"
-        title="Click to reactivate immediately"
+        data-tip="Click to reactivate immediately"
       >
         <span class="countdown-time clickable">${this.formatTime(this.remainingTime)}</span>
       </button>

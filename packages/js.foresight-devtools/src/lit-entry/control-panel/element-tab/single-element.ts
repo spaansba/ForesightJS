@@ -59,7 +59,6 @@ export class SingleElement extends LitElement {
 
       .reason-tag {
         padding: 0 4px;
-        border-radius: 3px;
         font-family: var(--fs-mono);
         font-size: 9.5px;
         line-height: 15px;
@@ -256,7 +255,7 @@ export class SingleElement extends LitElement {
         .isExpanded=${this.isExpanded}
         .onToggle=${this.onToggle}
       >
-        <div slot="content" class="row" title="Status: ${this.getStatusText()}">
+        <div slot="content" class="row" data-tip="Status: ${this.getStatusText()}">
           <span class="name ${nameClass}">${this.state.name || "unnamed"}</span>
           ${
             inactiveReasons.length
@@ -267,7 +266,7 @@ export class SingleElement extends LitElement {
                         html`<span
                           class="reason-tag"
                           style="--reason-color: ${reason.color}"
-                          title="${reason.label}: ${reason.description}"
+                          data-tip="${reason.label}: ${reason.description}"
                           >${reason.label}</span
                         >`
                     )}
@@ -289,14 +288,14 @@ export class SingleElement extends LitElement {
                 ? html`<button
                     class="icon-button warn"
                     @click="${this.handleToggleEnabled}"
-                    title="Disable element"
+                    data-tip="Disable element"
                   >
                     ${DISABLED_SVG}
                   </button>`
                 : html`<button
                     class="icon-button ok"
                     @click="${this.handleToggleEnabled}"
-                    title="Enable element"
+                    data-tip="Enable element"
                   >
                     ${ENABLE_SVG}
                   </button>`
@@ -304,7 +303,7 @@ export class SingleElement extends LitElement {
             <button
               class="icon-button danger"
               @click="${this.handleUnregister}"
-              title="Unregister element"
+              data-tip="Unregister element"
             >
               ${UNREGISTER_SVG}
             </button>

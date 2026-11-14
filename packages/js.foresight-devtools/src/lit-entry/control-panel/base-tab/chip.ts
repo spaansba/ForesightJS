@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit"
-import { customElement, property } from "lit/decorators.js"
+import { customElement } from "lit/decorators.js"
 
 @customElement("chip-element")
 export class ChipElement extends LitElement {
@@ -14,7 +14,7 @@ export class ChipElement extends LitElement {
         align-items: center;
         height: 18px;
         padding: 0 6px;
-        border-radius: 4px;
+        border-radius: 2px;
         background: var(--fs-surface);
         color: var(--fs-muted);
         font-family: var(--fs-mono);
@@ -25,11 +25,9 @@ export class ChipElement extends LitElement {
     `,
   ]
 
-  @property({ type: String }) title: string = ""
-
   render() {
     return html`
-      <span class="chip" title="${this.title}">
+      <span class="chip">
         <slot></slot>
       </span>
     `

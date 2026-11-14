@@ -43,7 +43,7 @@ export abstract class BaseDropdown extends LitElement {
         padding: 4px;
         background: #1e1e21;
         border: 1px solid var(--fs-border);
-        border-radius: 7px;
+        border-radius: 4px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       }
 
@@ -58,7 +58,7 @@ export abstract class BaseDropdown extends LitElement {
         justify-content: space-between;
         gap: 12px;
         padding: 5px 8px;
-        border-radius: 4px;
+        border-radius: 2px;
         color: #c8c8cc;
         font-size: 12px;
         cursor: pointer;
@@ -170,7 +170,8 @@ export abstract class BaseDropdown extends LitElement {
       <div class="dropdown-container">
         <button
           class="${buttonClass}"
-          title="${this._getTriggerTitle()}"
+          part="trigger"
+          data-tip="${this._getTriggerTitle()}"
           @click="${this._toggleDropdown}"
           aria-haspopup="true"
           aria-expanded="${this.isDropdownOpen}"
@@ -196,7 +197,7 @@ export abstract class BaseDropdown extends LitElement {
             option => html`
               <button
                 value="${option.value}"
-                title="${option.title}"
+                data-tip="${option.title}"
                 class="${this._isOptionSelected(option) ? "active" : ""}"
                 @click="${() => this._handleOptionClick(option)}"
                 role="menuitem"

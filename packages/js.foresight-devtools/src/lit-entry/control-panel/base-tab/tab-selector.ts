@@ -5,22 +5,24 @@ import type { ControllerTabs } from "../../../types/types"
 @customElement("tab-selector")
 export class TabSelector extends LitElement {
   static styles = css`
+    :host {
+      display: flex;
+    }
+
     .tabs {
       display: flex;
-      gap: 2px;
     }
 
     .tab {
       all: unset;
-      padding: 3px 8px;
-      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
       color: var(--fs-muted);
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition:
-        background-color 0.12s ease,
-        color 0.12s ease;
+      transition: color 0.12s ease;
     }
 
     .tab:hover {
@@ -29,11 +31,12 @@ export class TabSelector extends LitElement {
 
     .tab.active {
       color: var(--fs-text);
-      background: var(--fs-hover);
+      box-shadow: inset 0 -2px 0 var(--fs-accent);
     }
 
     .tab:focus-visible {
       outline: 1px solid var(--fs-accent);
+      outline-offset: -1px;
     }
   `
 

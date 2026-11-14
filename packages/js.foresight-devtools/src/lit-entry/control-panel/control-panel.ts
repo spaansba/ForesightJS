@@ -6,10 +6,11 @@ import "./element-tab/element-tab"
 import "./base-tab/tab-selector"
 import "./log-tab/log-tab"
 import "./settings-tab/settings-tab"
+import "./panel-tooltip"
 import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
-import { CLOSE_SVG, MINUS_SVG, PLUS_SVG } from "../../svg/svg-icons"
+import { CLOSE_SVG, MINIMIZE_SVG, EXPAND_SVG } from "../../svg/svg-icons"
 import { iconButtonStyles } from "./shared-styles"
 
 @customElement("control-panel")
@@ -18,7 +19,7 @@ export class ControlPanel extends LitElement {
     iconButtonStyles,
     css`
       :host {
-        --fs-bg: rgba(18, 18, 20, 0.94);
+        --fs-bg: #18181b;
         --fs-surface: rgba(255, 255, 255, 0.04);
         --fs-hover: rgba(255, 255, 255, 0.07);
         --fs-border: rgba(255, 255, 255, 0.08);
@@ -42,10 +43,9 @@ export class ControlPanel extends LitElement {
         box-sizing: border-box;
         overflow: hidden;
         background: var(--fs-bg);
-        backdrop-filter: blur(8px);
         color: var(--fs-text);
         border: 1px solid var(--fs-border);
-        border-radius: 10px;
+        border-radius: 4px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         font-family:
           system-ui,
@@ -76,46 +76,47 @@ export class ControlPanel extends LitElement {
       .panel.minimized {
         width: auto;
         height: auto;
-        border-radius: 8px;
       }
 
       .bar {
         display: flex;
         align-items: center;
-        gap: 8px;
         height: 32px;
         padding: 0 4px 0 10px;
         flex-shrink: 0;
         border-bottom: 1px solid var(--fs-border);
       }
 
-      .minimized .bar {
-        border-bottom: none;
+      .pill {
+        all: unset;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 32px;
+        padding: 0 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .pill:hover {
+        background: var(--fs-hover);
+      }
+
+      .pill svg {
+        width: 14px;
+        height: 14px;
+        color: var(--fs-muted);
       }
 
       .brand {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        padding-right: 10px;
+        border-right: 1px solid var(--fs-border);
         font-weight: 600;
-        letter-spacing: 0.01em;
         white-space: nowrap;
       }
 
-      .brand::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--fs-accent);
-        box-shadow: 0 0 6px var(--fs-accent);
-      }
-
       tab-selector {
-        flex: 1;
-      }
-
-      .minimized .spacer {
+        align-self: stretch;
         flex: 1;
       }
 
@@ -282,31 +283,32 @@ export class ControlPanel extends LitElement {
 
     return html`
       <div class="panel ${this.corner} ${this.isMinimized ? "minimized" : ""}">
-        <div class="bar">
-          <span class="brand">Foresight</span>
-          ${
-            this.isMinimized
-              ? html`<span class="spacer"></span>`
-              : html`<tab-selector
+        ${
+          this.isMinimized
+            ? html`<button class="pill" @click="${this.handleMinimizeClick}">
+                Foresight ${EXPAND_SVG}
+              </button>`
+            : html`<div class="bar">
+                <span class="brand">Foresight</span>
+                <tab-selector
                   .activeTab="${this.activeTab}"
                   @tab-change="${this._handleTabChange}"
-                ></tab-selector>`
-          }
-          <button
-            class="icon-button"
-            @click="${this.handleMinimizeClick}"
-            title="${this.isMinimized ? "Expand" : "Minimize"}"
-          >
-            ${this.isMinimized ? PLUS_SVG : MINUS_SVG}
-          </button>
-        </div>
-
+                ></tab-selector>
+                <button
+                  class="icon-button"
+                  @click="${this.handleMinimizeClick}"
+                  data-tip="Minimize"
+                >
+                  ${MINIMIZE_SVG}
+                </button>
+              </div>`
+        }
         ${
           showWarning
             ? html`
                 <div class="touch-warning">
                   <span>Touch mode: overlays and visibility sorting unavailable</span>
-                  <button class="icon-button" @click="${this.dismissWarning}" title="Dismiss">
+                  <button class="icon-button" @click="${this.dismissWarning}" data-tip="Dismiss">
                     ${CLOSE_SVG}
                   </button>
                 </div>
@@ -314,6 +316,7 @@ export class ControlPanel extends LitElement {
             : ""
         }
         ${this.isMinimized ? "" : html`<div class="tab-content">${this.renderActiveTab()}</div>`}
+        <panel-tooltip></panel-tooltip>
       </div>
     `
   }

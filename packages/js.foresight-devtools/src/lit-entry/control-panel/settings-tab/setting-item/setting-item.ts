@@ -12,11 +12,15 @@ export class SettingItem extends LitElement {
         gap: 12px;
         min-height: 28px;
         padding: 0 6px;
-        border-radius: 5px;
+        border-radius: 4px;
       }
 
       .row:hover {
         background: var(--fs-surface);
+      }
+
+      :host([dimmed]) .row {
+        opacity: 0.4;
       }
 
       .label {
@@ -36,9 +40,10 @@ export class SettingItem extends LitElement {
 
   @property({ type: String }) header: string = ""
   @property({ type: String }) description: string = ""
+  @property({ type: Boolean, reflect: true }) dimmed: boolean = false
 
   render() {
-    return html`<div class="row" title=${this.description}>
+    return html`<div class="row" data-tip=${this.description}>
       <span class="label">${this.header}</span>
       <div class="controls"><slot name="controls"></slot></div>
     </div>`

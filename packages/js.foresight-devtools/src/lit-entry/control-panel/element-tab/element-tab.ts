@@ -452,7 +452,7 @@ export class ElementTab extends LitElement {
     return html`
       <tab-header>
         <div slot="chips">
-          <chip-element title="${this._generateHitsChipTitle(this.hitCount)}">
+          <chip-element data-tip="${this._generateHitsChipTitle(this.hitCount)}">
             ${this.hitCount.total} hits
           </chip-element>
         </div>

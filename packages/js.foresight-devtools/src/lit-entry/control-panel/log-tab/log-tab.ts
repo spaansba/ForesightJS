@@ -207,7 +207,7 @@ export class LogTab extends LitElement {
     return html`
       <tab-header>
         <div slot="chips">
-          <chip-element title="Number of logged events (max ${MAX_LOGS})">
+          <chip-element data-tip="Number of logged events (max ${MAX_LOGS})">
             ${logs.length} events
           </chip-element>
         </div>
@@ -217,7 +217,7 @@ export class LogTab extends LitElement {
               ? html`
                   <span
                     class="icon-button warning"
-                    title="Console logging can be slow with frequent trajectory events.
+                    data-tip="Console logging can be slow with frequent trajectory events.
 Consider using 'Control Panel' only for better performance."
                   >
                     ${WARNING_SVG}
@@ -238,14 +238,14 @@ Consider using 'Control Panel' only for better performance."
           ></multi-select-dropdown>
           <button
             class="icon-button"
-            title="Log the state from the manager"
+            data-tip="Log the state from the manager"
             @click="${this.logManagerData}"
           >
             ${STATE_SVG}
           </button>
           <button
             class="icon-button"
-            title="Clear all logs"
+            data-tip="Clear all logs"
             ?disabled="${logs.length === 0}"
             @click="${this.clearLogs}"
           >

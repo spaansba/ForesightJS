@@ -10,7 +10,6 @@ export class SingleLog extends LitElement {
     css`
       :host {
         display: block;
-        border-radius: 5px;
         background-color: var(--log-background-color, transparent);
       }
 
@@ -124,7 +123,7 @@ export class SingleLog extends LitElement {
         <div slot="content" class="row">
           <span class="time">${log.localizedTimestamp}</span>
           <span class="type">${this.getEventDisplayName(log.type)}</span>
-          <span class="summary" title="${log.summary}">${log.summary}</span>
+          <span class="summary" data-tip="${log.summary}">${log.summary}</span>
         </div>
         <div slot="details">${this.serializeLogDataWithoutSummary(log)}</div>
       </expandable-item>

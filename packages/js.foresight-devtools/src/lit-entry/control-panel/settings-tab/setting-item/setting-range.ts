@@ -1,29 +1,28 @@
 import { LitElement, html, css, type PropertyValues } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 
-import "./setting-item"
 import { ForesightManager, type ForesightManagerSettings } from "js.foresight"
-@customElement("setting-item-range")
-export class SettingItemRange extends LitElement {
+@customElement("setting-range")
+export class SettingRange extends LitElement {
   static styles = [
     css`
-      .range {
-        display: flex;
+      :host {
+        display: inline-flex;
         align-items: center;
         gap: 8px;
       }
 
       .value {
-        min-width: 44px;
+        min-width: 48px;
         text-align: right;
-        color: var(--fs-muted);
+        color: var(--fs-text);
         font-family: var(--fs-mono);
         font-size: 10.5px;
       }
 
       input {
         appearance: none;
-        width: 96px;
+        width: 110px;
         height: 14px;
         margin: 0;
         background: transparent;
@@ -33,13 +32,21 @@ export class SettingItemRange extends LitElement {
       input::-webkit-slider-runnable-track {
         height: 3px;
         border-radius: 2px;
-        background: rgba(255, 255, 255, 0.14);
+        background: linear-gradient(
+          to right,
+          var(--fs-accent) var(--fill),
+          rgba(255, 255, 255, 0.14) var(--fill)
+        );
       }
 
       input::-moz-range-track {
         height: 3px;
         border-radius: 2px;
-        background: rgba(255, 255, 255, 0.14);
+        background: linear-gradient(
+          to right,
+          var(--fs-accent) var(--fill),
+          rgba(255, 255, 255, 0.14) var(--fill)
+        );
       }
 
       input::-webkit-slider-thumb {
@@ -48,16 +55,16 @@ export class SettingItemRange extends LitElement {
         height: 12px;
         margin-top: -4.5px;
         border: none;
-        border-radius: 50%;
-        background: var(--fs-accent);
+        border-radius: 2px;
+        background: #fff;
       }
 
       input::-moz-range-thumb {
         width: 12px;
         height: 12px;
         border: none;
-        border-radius: 50%;
-        background: var(--fs-accent);
+        border-radius: 2px;
+        background: #fff;
       }
     `,
   ]
@@ -66,8 +73,6 @@ export class SettingItemRange extends LitElement {
   @property({ type: Number }) maxValue: number = 100
   @property({ type: Number }) currentValue: number = 50
   @property({ type: String }) unit: string = "px"
-  @property({ type: String }) header: string = ""
-  @property({ type: String }) description: string = ""
   @property({ type: String }) setting: keyof ForesightManagerSettings = "tabOffset"
 
   @state() private displayValue: number = 50
@@ -98,25 +103,24 @@ export class SettingItemRange extends LitElement {
   }
 
   render() {
-    return html`<setting-item header=${this.header} description=${this.description}>
-      <div slot="controls" class="range">
-        <input
-          type="range"
-          min="${this.minValue}"
-          max="${this.maxValue}"
-          step="1"
-          .value=${this.displayValue}
-          @input=${this.handleRangeInput}
-          @change=${this.handleRangeChange}
-        />
-        <span class="value">${this.displayValue} ${this.unit}</span>
-      </div>
-    </setting-item>`
+    const fill = ((this.displayValue - this.minValue) / (this.maxValue - this.minValue)) * 100
+
+    return html`<input
+        type="range"
+        min="${this.minValue}"
+        max="${this.maxValue}"
+        step="1"
+        style="--fill: ${fill}%"
+        .value=${this.displayValue}
+        @input=${this.handleRangeInput}
+        @change=${this.handleRangeChange}
+      />
+      <span class="value">${this.displayValue} ${this.unit}</span>`
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    "setting-item-range": SettingItemRange
+    "setting-range": SettingRange
   }
 }

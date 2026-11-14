@@ -22,7 +22,6 @@ export class CopyIcon extends LitElement {
     `,
   ]
 
-  @property({ type: String }) title: string = "Copy to clipboard"
   @property({ type: Function }) onCopy?: (event: MouseEvent) => Promise<void> | void
 
   @state() private isCopied: boolean = false
@@ -63,11 +62,7 @@ export class CopyIcon extends LitElement {
 
   render() {
     return html`
-      <button
-        class="icon-button ${this.isCopied ? "copied" : ""}"
-        title="${this.title}"
-        @click=${this.handleClick}
-      >
+      <button class="icon-button ${this.isCopied ? "copied" : ""}" @click=${this.handleClick}>
         ${this.isCopied ? TICK_SVG : COPY_SVG}
       </button>
     `

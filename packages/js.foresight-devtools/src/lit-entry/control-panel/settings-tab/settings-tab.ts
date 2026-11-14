@@ -29,8 +29,8 @@ import {
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
 import "../copy-icon/copy-icon"
-import "./setting-item/setting-item-checkbox"
-import "./setting-item/setting-item-range"
+import "./setting-item/setting-toggle"
+import "./setting-item/setting-range"
 import "./setting-item/setting-item"
 import "../dropdown/single-select-dropdown"
 import type { DropdownOption } from "../dropdown/single-select-dropdown"
@@ -55,18 +55,44 @@ export class SettingsTab extends LitElement {
       height: 100%;
     }
 
+    .group {
+      padding: 4px 0 6px;
+    }
+
     .group + .group {
-      margin-top: 6px;
+      border-top: 1px solid var(--fs-border);
+    }
+
+    .group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 26px;
+      padding: 0 6px;
     }
 
     h4 {
       margin: 0;
-      padding: 6px 6px 2px;
       color: var(--fs-muted);
       font-size: 10.5px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
+      cursor: default;
+    }
+
+    single-select-dropdown::part(trigger) {
+      height: 22px;
+      padding: 0 6px 0 8px;
+      gap: 6px;
+      border: 1px solid var(--fs-border);
+      background: var(--fs-surface);
+      color: var(--fs-text);
+      font-size: 11.5px;
+    }
+
+    single-select-dropdown::part(trigger):hover {
+      background: var(--fs-hover);
     }
   `
 
@@ -131,25 +157,25 @@ export class SettingsTab extends LitElement {
       value: "top-left",
       label: "Top Left",
       title: "Position control panel in top-left corner",
-      icon: html`<span>↖</span>`,
+      icon: html`<span>Top left</span>`,
     },
     {
       value: "top-right",
       label: "Top Right",
       title: "Position control panel in top-right corner",
-      icon: html`<span>↗</span>`,
+      icon: html`<span>Top right</span>`,
     },
     {
       value: "bottom-left",
       label: "Bottom Left",
       title: "Position control panel in bottom-left corner",
-      icon: html`<span>↙</span>`,
+      icon: html`<span>Bottom left</span>`,
     },
     {
       value: "bottom-right",
       label: "Bottom Right",
       title: "Position control panel in bottom-right corner",
-      icon: html`<span>↘</span>`,
+      icon: html`<span>Bottom right</span>`,
     },
   ]
 
@@ -364,11 +390,13 @@ export class SettingsTab extends LitElement {
     return html`
       <tab-header>
         <div slot="chips">
-          <chip-element .title=${chipTitle}> ${this.changedSettings.length} changed </chip-element>
+          <chip-element data-tip=${chipTitle}>
+            ${this.changedSettings.length} changed
+          </chip-element>
         </div>
         <div slot="actions">
           <copy-icon
-            title="Copy current settings as code"
+            data-tip="Copy current settings as code"
             .onCopy=${() => this.handleCopySettings()}
           ></copy-icon>
         </div>
@@ -376,64 +404,88 @@ export class SettingsTab extends LitElement {
 
       <tab-content .hasContent=${true}>
         <div class="group">
-          <h4>Mouse</h4>
-          <setting-item-checkbox
-            .isChecked=${settings.enableMousePrediction}
-            header="Prediction"
-            description="Execute callbacks when the mouse is ${settings.trajectoryPredictionTime}ms away from registered elements in its direction"
-            setting="enableMousePrediction"
-          ></setting-item-checkbox>
-          <setting-item-range
-            .currentValue=${settings.trajectoryPredictionTime}
-            .maxValue=${MAX_TRAJECTORY_PREDICTION_TIME}
-            .minValue=${MIN_TRAJECTORY_PREDICTION_TIME}
-            .unit=${TRAJECTORY_PREDICTION_TIME_UNIT}
+          <div class="group-head">
+            <h4
+              data-tip="Execute callbacks when the mouse is ${settings.trajectoryPredictionTime}ms away from registered elements in its direction"
+            >
+              Mouse prediction
+            </h4>
+            <setting-toggle
+              .isChecked=${settings.enableMousePrediction}
+              setting="enableMousePrediction"
+            ></setting-toggle>
+          </div>
+          <setting-item
             header="Prediction time"
             description="How far into the future to calculate the mouse trajectory"
-            setting="trajectoryPredictionTime"
-          ></setting-item-range>
+            ?dimmed=${!settings.enableMousePrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.trajectoryPredictionTime}
+              .maxValue=${MAX_TRAJECTORY_PREDICTION_TIME}
+              .minValue=${MIN_TRAJECTORY_PREDICTION_TIME}
+              .unit=${TRAJECTORY_PREDICTION_TIME_UNIT}
+              setting="trajectoryPredictionTime"
+            ></setting-range>
+          </setting-item>
         </div>
-
         <div class="group">
-          <h4>Keyboard</h4>
-          <setting-item-checkbox
-            .isChecked=${settings.enableTabPrediction}
-            header="Tab prediction"
-            description="Execute callbacks when the user is ${settings.tabOffset} tabbable elements away from registered elements in tab direction"
-            setting="enableTabPrediction"
-          ></setting-item-checkbox>
-          <setting-item-range
-            .currentValue=${settings.tabOffset}
-            .maxValue=${MAX_TAB_OFFSET}
-            .minValue=${MIN_TAB_OFFSET}
-            .unit=${TAB_OFFSET_UNIT}
+          <div class="group-head">
+            <h4
+              data-tip="Execute callbacks when the user is ${settings.tabOffset} tabbable elements away from registered elements in tab direction"
+            >
+              Tab prediction
+            </h4>
+            <setting-toggle
+              .isChecked=${settings.enableTabPrediction}
+              setting="enableTabPrediction"
+            ></setting-toggle>
+          </div>
+          <setting-item
             header="Tab offset"
             description="Number of tabbable elements to look ahead when predicting navigation"
-            setting="tabOffset"
-          ></setting-item-range>
+            ?dimmed=${!settings.enableTabPrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.tabOffset}
+              .maxValue=${MAX_TAB_OFFSET}
+              .minValue=${MIN_TAB_OFFSET}
+              .unit=${TAB_OFFSET_UNIT}
+              setting="tabOffset"
+            ></setting-range>
+          </setting-item>
         </div>
-
         <div class="group">
-          <h4>Scroll</h4>
-          <setting-item-checkbox
-            .isChecked=${settings.enableScrollPrediction}
-            header="Scroll prediction"
-            description="Execute callbacks when the user is ${settings.scrollMargin}px away from registered elements in scroll direction"
-            setting="enableScrollPrediction"
-          ></setting-item-checkbox>
-          <setting-item-range
-            .currentValue=${settings.scrollMargin}
-            .maxValue=${MAX_SCROLL_MARGIN}
-            .minValue=${MIN_SCROLL_MARGIN}
-            .unit=${SCROLL_MARGIN_UNIT}
+          <div class="group-head">
+            <h4
+              data-tip="Execute callbacks when the user is ${settings.scrollMargin}px away from registered elements in scroll direction"
+            >
+              Scroll prediction
+            </h4>
+            <setting-toggle
+              .isChecked=${settings.enableScrollPrediction}
+              setting="enableScrollPrediction"
+            ></setting-toggle>
+          </div>
+          <setting-item
             header="Scroll margin"
             description="Pixel distance to check from the mouse position in scroll direction"
-            setting="scrollMargin"
-          ></setting-item-range>
+            ?dimmed=${!settings.enableScrollPrediction}
+          >
+            <setting-range
+              slot="controls"
+              .currentValue=${settings.scrollMargin}
+              .maxValue=${MAX_SCROLL_MARGIN}
+              .minValue=${MIN_SCROLL_MARGIN}
+              .unit=${SCROLL_MARGIN_UNIT}
+              setting="scrollMargin"
+            ></setting-range>
+          </setting-item>
         </div>
-
         <div class="group">
-          <h4>Device</h4>
+          <div class="group-head"><h4>Device</h4></div>
           <setting-item
             header="Touch strategy"
             description="How to handle prediction on touch devices"
@@ -459,35 +511,51 @@ export class SettingsTab extends LitElement {
         </div>
 
         <div class="group">
-          <h4>Devtools</h4>
-          <setting-item-checkbox
-            .isChecked=${this.devtoolsSettings.show.nameTags}
+          <div class="group-head"><h4>Devtools</h4></div>
+          <setting-item
             header="Name tags"
             description="Display name tags over each registered element"
-            setting="show.nameTags"
-            @setting-changed=${this._handleDevtoolsSettingChange}
-          ></setting-item-checkbox>
-          <setting-item-checkbox
-            .isChecked=${this.devtoolsSettings.show.elementOverlays}
+          >
+            <setting-toggle
+              slot="controls"
+              .isChecked=${this.devtoolsSettings.show.nameTags}
+              setting="show.nameTags"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item
             header="Element overlays"
             description="Render hit-slop boundary overlays around registered elements. Turning this off also hides name tags."
-            setting="show.elementOverlays"
-            @setting-changed=${this._handleDevtoolsSettingChange}
-          ></setting-item-checkbox>
-          <setting-item-checkbox
-            .isChecked=${this.devtoolsSettings.show.mouseTrajectory}
+          >
+            <setting-toggle
+              slot="controls"
+              .isChecked=${this.devtoolsSettings.show.elementOverlays}
+              setting="show.elementOverlays"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item
             header="Mouse trajectory"
             description="Render the predicted mouse trajectory line"
-            setting="show.mouseTrajectory"
-            @setting-changed=${this._handleDevtoolsSettingChange}
-          ></setting-item-checkbox>
-          <setting-item-checkbox
-            .isChecked=${this.devtoolsSettings.show.scrollTrajectory}
+          >
+            <setting-toggle
+              slot="controls"
+              .isChecked=${this.devtoolsSettings.show.mouseTrajectory}
+              setting="show.mouseTrajectory"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
+          <setting-item
             header="Scroll trajectory"
             description="Render the predicted scroll trajectory line"
-            setting="show.scrollTrajectory"
-            @setting-changed=${this._handleDevtoolsSettingChange}
-          ></setting-item-checkbox>
+          >
+            <setting-toggle
+              slot="controls"
+              .isChecked=${this.devtoolsSettings.show.scrollTrajectory}
+              setting="show.scrollTrajectory"
+              @setting-changed=${this._handleDevtoolsSettingChange}
+            ></setting-toggle>
+          </setting-item>
           <setting-item
             header="Panel position"
             description="Which corner the control panel sits in"

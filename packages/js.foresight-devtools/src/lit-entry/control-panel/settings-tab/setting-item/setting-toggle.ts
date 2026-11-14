@@ -1,22 +1,25 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
 
-import "./setting-item"
 import { ForesightManager, type ForesightManagerSettings } from "js.foresight"
 import type { DevtoolsSettings, ShowKey } from "../../../../types/types"
 
 type ShowSettingKey = `show.${ShowKey}`
-@customElement("setting-item-checkbox")
-export class SettingItemCheckbox extends LitElement {
+@customElement("setting-toggle")
+export class SettingToggle extends LitElement {
   static styles = [
     css`
+      :host {
+        display: inline-flex;
+      }
+
       input {
         appearance: none;
         position: relative;
         width: 26px;
         height: 14px;
         margin: 0;
-        border-radius: 7px;
+        border-radius: 4px;
         background: rgba(255, 255, 255, 0.14);
         cursor: pointer;
         outline: none;
@@ -30,7 +33,7 @@ export class SettingItemCheckbox extends LitElement {
         left: 2px;
         width: 10px;
         height: 10px;
-        border-radius: 50%;
+        border-radius: 2px;
         background: #fff;
         transition: transform 0.15s ease;
       }
@@ -51,8 +54,6 @@ export class SettingItemCheckbox extends LitElement {
   ]
 
   @property({ type: Boolean }) isChecked: boolean = false
-  @property({ type: String }) header: string = ""
-  @property({ type: String }) description: string = ""
   @property({ type: String }) setting:
     keyof ForesightManagerSettings | keyof DevtoolsSettings | ShowSettingKey =
     "enableMousePrediction"
@@ -78,19 +79,16 @@ export class SettingItemCheckbox extends LitElement {
   }
 
   render() {
-    return html`<setting-item header=${this.header} description=${this.description}>
-      <input
-        slot="controls"
-        type="checkbox"
-        .checked=${this.isChecked}
-        @change=${this.handleCheckboxChange}
-      />
-    </setting-item>`
+    return html`<input
+      type="checkbox"
+      .checked=${this.isChecked}
+      @change=${this.handleCheckboxChange}
+    />`
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    "setting-item-checkbox": SettingItemCheckbox
+    "setting-toggle": SettingToggle
   }
 }
