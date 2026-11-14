@@ -36,6 +36,9 @@ import type {
 import type { DesktopHandler } from "./DesktopHandler"
 import type { TouchDeviceHandler } from "./TouchDeviceHandler"
 
+const isDesktopStrategy = (strategy: CurrentDeviceStrategy) =>
+  strategy === "mouse" || strategy === "pen"
+
 /**
  * Manages the prediction of user intent based on mouse trajectory and element interactions.
  *
@@ -145,25 +148,10 @@ export class ForesightManager {
     return `foresight-${++this.idCounter}`
   }
 
-  private get isUsingDesktopHandler(): boolean {
-    return this.currentDeviceStrategy === "mouse" || this.currentDeviceStrategy === "pen"
-  }
-
-  private get activeElementCount(): number {
+  private countElements(flag: "isActive" | "isParked"): number {
     let count = 0
-    for (const entry of this.elementEntries.values()) {
-      if (entry.state.isActive) {
-        count++
-      }
-    }
-
-    return count
-  }
-
-  private get parkedElementCount(): number {
-    let count = 0
-    for (const entry of this.elementEntries.values()) {
-      if (entry.state.isParked) {
+    for (const { state } of this.elementEntries.values()) {
+      if (state[flag]) {
         count++
       }
     }
@@ -245,8 +233,8 @@ export class ForesightManager {
       globalCallbackHits: this._globalCallbackHits,
       eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
-      activeElementCount: this.activeElementCount,
-      parkedElementCount: this.parkedElementCount,
+      activeElementCount: this.countElements("isActive"),
+      parkedElementCount: this.countElements("isParked"),
       loadedModules: {
         desktopHandler: this.desktopHandler !== null,
         touchHandler: this.touchDeviceHandler !== null,
@@ -735,7 +723,7 @@ export class ForesightManager {
         elapsed,
         status,
         errorMessage,
-        wasLastActiveElement: this.activeElementCount === 0,
+        wasLastActiveElement: this.countElements("isActive") === 0,
       })
     }
   }
@@ -768,10 +756,9 @@ export class ForesightManager {
 
     this.currentlyActiveHandler?.disconnect()
 
-    const handler =
-      strategy === "mouse" || strategy === "pen"
-        ? await this.getOrCreateDesktopHandler()
-        : await this.getOrCreateTouchHandler()
+    const handler = isDesktopStrategy(strategy)
+      ? await this.getOrCreateDesktopHandler()
+      : await this.getOrCreateTouchHandler()
 
     // A newer switch or a teardown happened while the handler was loading.
     if (request !== this.deviceStrategyRequest) {
@@ -802,18 +789,11 @@ export class ForesightManager {
     }
 
     this.rafId = requestAnimationFrame(() => {
-      // Only process mouse movements for desktop handler (mouse/pen)
-      if (!this.isUsingDesktopHandler) {
-        this.rafId = null
+      this.rafId = null
 
-        return
-      }
-
-      if (this.pendingPointerEvent) {
+      if (this.pendingPointerEvent && isDesktopStrategy(this.currentDeviceStrategy)) {
         this.desktopHandler?.processMouseMovement(this.pendingPointerEvent)
       }
-
-      this.rafId = null
     })
   }
 
@@ -942,8 +922,10 @@ export class ForesightManager {
    * MutationObserver to detect their return).
    */
   private removeGlobalListenersIfIdle(): void {
-    if (this.activeElementCount > 0 || this.parkedElementCount > 0) {
-      return
+    for (const { state } of this.elementEntries.values()) {
+      if (state.isActive || state.isParked) {
+        return
+      }
     }
 
     this.removeGlobalListeners()
