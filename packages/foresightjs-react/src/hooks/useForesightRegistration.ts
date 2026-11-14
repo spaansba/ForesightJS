@@ -47,10 +47,9 @@ export const useForesightRegistration = <T extends HTMLElement = HTMLElement>(
   }, [element])
 
   // Patch options on the existing registration without tearing it down.
-  // meta and hitSlop keep a stable identity while their content is unchanged:
-  // the manager compares meta by identity, so an inline `meta={{...}}` would
-  // otherwise replace the snapshot every render and loop with the
-  // useSyncExternalStore re-render it triggers.
+  // meta and hitSlop are compared by content, not identity - an inline
+  // `meta={{...}}` object would otherwise re-fire this effect every render and
+  // loop with the useSyncExternalStore re-render it triggers.
   const meta = useDeepStable(options.meta)
   const hitSlop = useDeepStable(options.hitSlop)
   useEffect(() => {

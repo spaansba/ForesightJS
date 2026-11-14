@@ -192,17 +192,34 @@ describe("useForesight", () => {
       expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
 
-    it("patches when a function inside meta changes", () => {
+    it("does not re-patch when only a function inside meta changes identity", () => {
       const cb = vi.fn()
       const { rerender } = render(
         <ButtonProbe options={{ name: "x", callback: cb, meta: { track: () => "a" } }} />
       )
       replaceElementOptionsSpy.mockClear()
 
-      const track = () => "b"
-      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { track } }} />)
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { track: () => "b" } }} />)
 
-      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].meta).toEqual({ track })
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not re-patch when circular array meta content is unchanged", () => {
+      const circularList = () => {
+        const list: unknown[] = [1]
+        list.push(list)
+
+        return { list }
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: circularList() }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: circularList() }} />)
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
 
     it("patches when circular meta content changes", () => {

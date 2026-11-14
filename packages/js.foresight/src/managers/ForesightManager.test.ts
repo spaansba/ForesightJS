@@ -363,40 +363,14 @@ describe("ForesightManager", () => {
   })
 
   describe("Element Unregistration", () => {
-    it("keeps the element registered until every register result is released", () => {
+    it("unregisters through any result of an element that was registered again to update it", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
 
-      const first = manager.register({ element, callback: vi.fn() })
-      const second = manager.register({ element, callback: vi.fn() })
+      const { unregister } = manager.register({ element, callback: vi.fn(), name: "v1" })
+      manager.register({ element, callback: vi.fn(), name: "v2" })
 
-      first.unregister()
-      expect(manager.registeredElements.has(element)).toBe(true)
-
-      second.unregister()
-      expect(manager.registeredElements.has(element)).toBe(false)
-    })
-
-    it("ignores repeated unregister calls on the same result", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      const first = manager.register({ element, callback: vi.fn() })
-      manager.register({ element, callback: vi.fn() })
-
-      first.unregister()
-      first.unregister()
-      expect(manager.registeredElements.has(element)).toBe(true)
-    })
-
-    it("manager.unregister removes the element regardless of open registrations", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-      manager.register({ element, callback: vi.fn() })
-
-      manager.unregister(element)
+      unregister()
       expect(manager.registeredElements.has(element)).toBe(false)
     })
 

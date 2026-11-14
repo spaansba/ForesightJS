@@ -55,6 +55,21 @@ describe("against the real ForesightManager", () => {
     unmount()
   })
 
+  it("does not loop on an inline function inside meta", () => {
+    const InlineFunctionMeta = () => {
+      const { elementRef, isRegistered } = useForesight<HTMLButtonElement>({
+        callback: () => {},
+        meta: { track: () => {} },
+      })
+
+      return <button ref={elementRef}>{String(isRegistered)}</button>
+    }
+
+    const { container, unmount } = render(<InlineFunctionMeta />)
+    expect(container.textContent).toBe("true")
+    unmount()
+  })
+
   it("Foresight `as` registers the rendered element and exposes its state", () => {
     const { container, unmount } = render(
       <Foresight as="button" callback={() => {}} foresightName="cta">

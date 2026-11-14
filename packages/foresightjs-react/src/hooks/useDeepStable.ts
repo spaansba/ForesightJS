@@ -11,27 +11,16 @@ export const isDeepEqual = (
   b: unknown,
   visited = new WeakMap<object, object>()
 ): boolean => {
-  if (Object.is(a, b)) {
+  if (Object.is(a, b) || (typeof a === "function" && typeof b === "function")) {
     return true
+  }
+
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) {
+    return false
   }
 
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime()
-  }
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((item, index) => isDeepEqual(item, b[index], visited))
-  }
-
-  if (
-    typeof a !== "object" ||
-    typeof b !== "object" ||
-    a === null ||
-    b === null ||
-    !isPlainObject(a) ||
-    !isPlainObject(b)
-  ) {
-    return false
   }
 
   if (visited.get(a) === b) {
@@ -39,6 +28,14 @@ export const isDeepEqual = (
   }
 
   visited.set(a, b)
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((item, index) => isDeepEqual(item, b[index], visited))
+  }
+
+  if (!isPlainObject(a) || !isPlainObject(b)) {
+    return false
+  }
 
   const entries = Object.entries(a)
   const other = new Map(Object.entries(b))

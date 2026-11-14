@@ -299,7 +299,6 @@ export class ForesightManager {
     const previousEntry = this.elementEntries.get(options.element)
 
     if (previousEntry) {
-      previousEntry.activeRegistrations++
       this.updateElementOptions(options.element, options)
       this.updateElementState(previousEntry, {
         registerCount: previousEntry.state.registerCount + 1,
@@ -344,17 +343,12 @@ export class ForesightManager {
   }
 
   private buildRegisterResult(entry: ForesightElementInternal): ForesightRegisterResult {
-    let released = false
-
     return {
       ...entry.state,
       unregister: () => {
-        if (released) {
-          return
+        if (this.elementEntries.get(entry.element) === entry) {
+          this.unregisterElement(entry.element)
         }
-
-        released = true
-        this.releaseRegistration(entry)
       },
       subscribe: this.makeSubscribe(entry, "subscribers"),
       getSnapshot: () => entry.state,
@@ -540,22 +534,6 @@ export class ForesightManager {
     return next
   }
 
-  private releaseRegistration(entry: ForesightElementInternal): void {
-    if (this.elementEntries.get(entry.element) !== entry) {
-      return
-    }
-
-    entry.activeRegistrations--
-    if (entry.activeRegistrations === 0) {
-      this.unregisterElement(entry.element)
-    }
-  }
-
-  /**
-   * Unregisters the element immediately, including registrations that other
-   * owners have not released yet. To release only your own registration, call
-   * `unregister` on the result returned by {@link register}.
-   */
   public unregister(
     element: ForesightElement | NodeListOf<ForesightElement>,
     unregisterReason?: ElementUnregisteredReason
