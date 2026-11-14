@@ -32,7 +32,7 @@ const DemoElement = ({
   const [callbackHref, setCallbackHref] = useState<string>()
   const [hit, setHit] = useState<string>()
   const { elementRef, isPredicted, hitCount, isCallbackRunning, status, meta } =
-    useForesight<HTMLDivElement>({
+    useForesight<HTMLButtonElement>({
       callback: async (state, { hitType }) => {
         setCallbackHref(state.meta.href)
         setHit(formatHitType(hitType))
@@ -51,12 +51,13 @@ const DemoElement = ({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div
+      <button
+        type="button"
         ref={elementRef}
         className={`w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 cursor-default select-none ${color}`}
       >
         {label}
-      </div>
+      </button>
       <div className="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
         <div>
           hits: {hitCount} | {status ?? "idle"}
@@ -72,7 +73,7 @@ const DemoElement = ({
 
 const ToggleElement = () => {
   const [mounted, setMounted] = useState(true)
-  const { elementRef } = useForesight<HTMLDivElement>({
+  const { elementRef } = useForesight<HTMLButtonElement>({
     callback: () => {},
     name: "toggleable",
     hitSlop: 20,
@@ -81,12 +82,13 @@ const ToggleElement = () => {
   return (
     <div className="flex flex-col items-center gap-2">
       {mounted && (
-        <div
+        <button
+          type="button"
           ref={elementRef}
           className="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none"
         >
           Toggleable
-        </div>
+        </button>
       )}
       {!mounted && (
         <div className="w-28 h-28 flex items-center justify-center text-xs text-gray-400 border border-dashed border-gray-300">

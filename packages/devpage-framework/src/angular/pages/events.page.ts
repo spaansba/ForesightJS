@@ -59,7 +59,8 @@ import { sleep } from "../shared/foresight-controls"
         <h2 class="text-sm font-medium text-gray-900">Interactive elements</h2>
         <div class="flex flex-wrap gap-6">
           <div class="flex flex-col items-center gap-2">
-            <div
+            <button
+              type="button"
               #fast="foresight"
               [fsForesight]="{
                 callback: fastCallback,
@@ -71,7 +72,7 @@ import { sleep } from "../shared/foresight-controls"
               class="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-green-200 cursor-default select-none"
             >
               Fast callback
-            </div>
+            </button>
             <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
               <div>meta.href: {{ fast.state().meta.href ?? "waiting" }}</div>
               <div>callback href: {{ callbackHref() ?? "waiting" }}</div>
@@ -79,7 +80,8 @@ import { sleep } from "../shared/foresight-controls"
             </div>
           </div>
           <div class="flex flex-col items-center gap-2">
-            <div
+            <button
+              type="button"
               [fsForesight]="{
                 callback: slowCallback,
                 name: 'slow-callback',
@@ -89,10 +91,11 @@ import { sleep } from "../shared/foresight-controls"
               class="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-amber-200 cursor-default select-none"
             >
               Slow callback
-            </div>
+            </button>
           </div>
           <div class="flex flex-col items-center gap-2">
-            <div
+            <button
+              type="button"
               [fsForesight]="{
                 callback: errorCallback,
                 name: 'error-callback',
@@ -102,16 +105,17 @@ import { sleep } from "../shared/foresight-controls"
               class="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-red-200 cursor-default select-none"
             >
               Error callback
-            </div>
+            </button>
           </div>
           <div class="flex flex-col items-center gap-2">
             @if (toggleMounted()) {
-              <div
+              <button
+                type="button"
                 [fsForesight]="{ callback: fastCallback, name: 'toggleable', hitSlop: 20 }"
                 class="w-28 h-28 flex items-center justify-center text-xs font-medium text-gray-800 border border-gray-300 bg-blue-200 cursor-default select-none"
               >
                 Toggleable
-              </div>
+              </button>
             } @else {
               <div
                 class="w-28 h-28 flex items-center justify-center text-xs text-gray-400 border border-dashed border-gray-300"
