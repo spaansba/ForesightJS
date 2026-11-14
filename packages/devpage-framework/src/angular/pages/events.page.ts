@@ -9,6 +9,7 @@ import {
   ALL_EVENTS,
   EVENT_COLORS,
   MAX_LOG_ENTRIES,
+  formatHitType,
   summarizeEvent,
   type EventLogEntry,
 } from "../../shared/foresightEvents"
@@ -74,6 +75,7 @@ import { sleep } from "../shared/foresight-controls"
             <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
               <div>meta.href: {{ fast.state().meta.href ?? "waiting" }}</div>
               <div>callback href: {{ callbackHref() ?? "waiting" }}</div>
+              <div>hitType: {{ hit() ?? "waiting" }}</div>
             </div>
           </div>
           <div class="flex flex-col items-center gap-2">
@@ -191,6 +193,7 @@ export class EventsPageComponent {
   protected readonly focusedEvent = signal<ForesightEvent>("callbackInvoked")
   protected readonly focusedCount = signal(0)
   protected readonly callbackHref = signal<string | undefined>(undefined)
+  protected readonly hit = signal<string | undefined>(undefined)
 
   protected readonly counts = computed(() =>
     this.entries().reduce<Partial<Record<ForesightEvent, number>>>((acc, entry) => {
@@ -202,8 +205,9 @@ export class EventsPageComponent {
 
   private nextId = 0
 
-  protected readonly fastCallback: ForesightCallback = async state => {
+  protected readonly fastCallback: ForesightCallback = async (state, { hitType }) => {
     this.callbackHref.set(state.meta.href)
+    this.hit.set(formatHitType(hitType))
     await sleep(50)
   }
   protected readonly slowCallback = () => sleep(1500)

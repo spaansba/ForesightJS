@@ -36,7 +36,7 @@ ForesightManager.instance.register({
 
 #### `callback`
 
-- **Type:** `(state: ForesightElementState) => void`
+- **Type:** `(state: ForesightElementState, context: ForesightCallbackContext) => void`
 - **Required:** Yes
 - **Description:** Function that executes when interaction is predicted or occurs. This is where your prefetching logic goes. The callback receives the [`ForesightElementState`](#registration-return-value) of the element that triggered it, which is especially useful when registering multiple elements with a shared callback.
 - **Note:** If you await your prefetch logic the `callbackCompleted` event will show you how long your prefetch took to run.
@@ -47,6 +47,19 @@ ForesightManager.instance.register({
   callback: state => {
     console.log(`Triggered ${state.name}`)
     // prefetch logic
+  },
+})
+```
+
+The second argument holds `hitType`, the prediction that fired the callback. Use it to spend less on a weak hit like viewport entry and more on a strong one like a touch.
+
+```javascript
+ForesightManager.instance.register({
+  element: myElement,
+  callback: async (state, { hitType }) => {
+    await fetch("/about", {
+      priority: hitType.kind === "viewport" ? "low" : "high",
+    })
   },
 })
 ```

@@ -1,11 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  ForesightManager,
-  type ForesightElementState,
-  type ForesightRegisterResult,
-} from "js.foresight"
+import { ForesightManager, type ForesightRegisterResult } from "js.foresight"
 import type { ForesightOptions } from "../types"
 import { serializeOption } from "./serializeOption"
 
@@ -36,7 +32,7 @@ export const useForesightRegistration = <T extends HTMLElement = HTMLElement>(
     const result = ForesightManager.instance.register({
       ...optionsRef.current,
       element,
-      callback: (state: ForesightElementState) => optionsRef.current.callback(state),
+      callback: (...args) => optionsRef.current.callback(...args),
     })
     setRegisterResults(result)
 
@@ -63,7 +59,7 @@ export const useForesightRegistration = <T extends HTMLElement = HTMLElement>(
 
     ForesightManager.instance.replaceElementOptions(element, {
       ...optionsRef.current,
-      callback: (state: ForesightElementState) => optionsRef.current.callback(state),
+      callback: (...args) => optionsRef.current.callback(...args),
     })
   }, [
     options.reactivateAfter,

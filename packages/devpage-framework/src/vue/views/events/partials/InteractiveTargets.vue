@@ -2,14 +2,17 @@
 import { ref } from "vue"
 import { useForesight } from "@foresightjs/vue"
 import { useReactivateAfter } from "../../../composables/useReactivateAfter"
+import { formatHitType } from "../../../../shared/foresightEvents"
 
 const toggleableMounted = ref(true)
 const reactivateAfter = useReactivateAfter()
 const callbackHref = ref<string>()
+const hit = ref<string>()
 
 const fast = useForesight(() => ({
-  callback: async state => {
+  callback: async (state, { hitType }) => {
     callbackHref.value = state.meta.href
+    hit.value = formatHitType(hitType)
     await new Promise(resolve => setTimeout(resolve, 50))
   },
   name: "fast-callback",
@@ -58,6 +61,7 @@ const toggle = useForesight({
           <div>hits: {{ fast.hitCount.value }} | {{ fast.status.value ?? "idle" }}</div>
           <div>meta.href: {{ fast.meta.value.href ?? "waiting" }}</div>
           <div>callback href: {{ callbackHref ?? "waiting" }}</div>
+          <div>hitType: {{ hit ?? "waiting" }}</div>
           <div>
             {{
               fast.isCallbackRunning.value

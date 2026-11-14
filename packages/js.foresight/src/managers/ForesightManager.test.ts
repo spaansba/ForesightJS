@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import type {
+  ForesightCallback,
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
@@ -1340,6 +1341,20 @@ describe("ForesightManager", () => {
 
         expect(() => manager.reactivate(nodeList)).not.toThrow()
       })
+    })
+  })
+
+  describe("Callback context", () => {
+    it("passes the hit type that fired the callback", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn<ForesightCallback>()
+      manager.register({ element, callback })
+
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
+      await vi.runAllTimersAsync()
+
+      expect(callback.mock.calls[0][1].hitType).toEqual({ kind: "mouse", subType: "trajectory" })
     })
   })
 

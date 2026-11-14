@@ -17,7 +17,14 @@ export type Rect = {
  * A callback function that is executed when a foresight interaction
  * (e.g., hover, trajectory hit) occurs on a registered element.
  */
-export type ForesightCallback = (state: ForesightElementState) => void
+export type ForesightCallbackContext = {
+  hitType: CallbackHitType
+}
+
+export type ForesightCallback = (
+  state: ForesightElementState,
+  context: ForesightCallbackContext
+) => void
 
 /**
  * Represents the HTML element that is being tracked by the ForesightManager.

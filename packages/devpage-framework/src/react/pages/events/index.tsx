@@ -5,6 +5,7 @@ import {
   ALL_EVENTS,
   EVENT_COLORS,
   MAX_LOG_ENTRIES,
+  formatHitType,
   summarizeEvent,
   type EventLogEntry,
 } from "../../../shared/foresightEvents"
@@ -29,10 +30,12 @@ const DemoElement = ({
   reactivateAfter: number
 }) => {
   const [callbackHref, setCallbackHref] = useState<string>()
+  const [hit, setHit] = useState<string>()
   const { elementRef, isPredicted, hitCount, isCallbackRunning, status, meta } =
     useForesight<HTMLDivElement>({
-      callback: async state => {
+      callback: async (state, { hitType }) => {
         setCallbackHref(state.meta.href)
+        setHit(formatHitType(hitType))
 
         if (name === "error-callback") {
           throw new Error("Intentional error for demo")
@@ -61,6 +64,7 @@ const DemoElement = ({
         <div>{isCallbackRunning ? "running..." : isPredicted ? "predicted" : "waiting"}</div>
         <div>meta.href: {meta.href ?? "waiting"}</div>
         <div>callback href: {callbackHref ?? "waiting"}</div>
+        <div>hitType: {hit ?? "waiting"}</div>
       </div>
     </div>
   )

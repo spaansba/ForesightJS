@@ -130,10 +130,14 @@ type ForesightManagerData = {
 
 ### ForesightCallback
 
-The callback function type used when registering elements. Receives the [`ForesightElementState`](#foresightelementstate) of the element that triggered the callback.
+The callback function type used when registering elements. Receives the [`ForesightElementState`](#foresightelementstate) of the element that triggered the callback and a `ForesightCallbackContext`.
 
 ```typescript
-type ForesightCallback = (state: ForesightElementState) => void
+type ForesightCallback = (state: ForesightElementState, context: ForesightCallbackContext) => void
+
+type ForesightCallbackContext = {
+  hitType: CallbackHitType // which prediction fired the callback
+}
 ```
 
 This is useful when registering multiple elements with a shared callback, as you can identify which element triggered it:

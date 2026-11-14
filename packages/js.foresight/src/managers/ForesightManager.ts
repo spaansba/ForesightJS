@@ -707,7 +707,7 @@ export class ForesightManager {
     let errorMessage: string | null = null
 
     try {
-      await entry.callback(entry.state)
+      await entry.callback(entry.state, { hitType: callbackHitType })
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : String(error)
       console.error(`Error in callback for element ${entry.state.name}:`, error)
