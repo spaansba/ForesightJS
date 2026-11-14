@@ -21,7 +21,7 @@ const createInternalEntry = (id: string, expandedRect: Rect): ForesightElementIn
     bounds: { expandedRect },
   }) as unknown as ForesightElementInternal
 
-const setupPredictor = (entries: ForesightElementInternal[], enableMousePrediction: boolean) => {
+const setupPredictor = (entries: ForesightElementInternal[]) => {
   const elements = new Map<ForesightElement, ForesightElementInternal>()
   entries.forEach((entry, i) => elements.set({ id: i } as unknown as ForesightElement, entry))
   const scannableElements = new Set(entries.filter(entry => isScannable(entry.state)))
@@ -37,7 +37,7 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
     updateElementState: vi.fn(),
     updateElementBounds: vi.fn(),
     settings: {
-      enableMousePrediction,
+      enableMousePrediction: false,
       trajectoryPredictionTime: 120,
     } as ForesightManagerSettings,
   }
@@ -53,30 +53,12 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
 }
 
 describe("MousePredictor", () => {
-  describe("trajectory mode (enableMousePrediction: true)", () => {
-    it("should fire the callback of an element the mouse is heading for before it is hovered", () => {
-      const entry = createInternalEntry("a", { top: 100, left: 200, right: 300, bottom: 200 })
-      const { predictor, callCallback } = setupPredictor([entry], true)
-
-      predictor.processMouseMovement({ clientX: 100, clientY: 150, timeStamp: 0 } as MouseEvent)
-
-      expect(callCallback).not.toHaveBeenCalled()
-
-      predictor.processMouseMovement({ clientX: 116, clientY: 150, timeStamp: 16 } as MouseEvent)
-
-      expect(callCallback).toHaveBeenCalledExactlyOnceWith(entry, {
-        kind: "mouse",
-        subType: "trajectory",
-      })
-    })
-  })
-
   describe("hover mode (enableMousePrediction: false)", () => {
     it("should fire callbacks for all overlapping elements on a single mousemove", () => {
       const overlappingRect: Rect = { top: 100, left: 100, right: 200, bottom: 200 }
       const entryA = createInternalEntry("a", overlappingRect)
       const entryB = createInternalEntry("b", overlappingRect)
-      const { predictor, callCallback } = setupPredictor([entryA, entryB], false)
+      const { predictor, callCallback } = setupPredictor([entryA, entryB])
 
       predictor.processMouseMovement({ clientX: 150, clientY: 150 } as MouseEvent)
 
@@ -87,7 +69,7 @@ describe("MousePredictor", () => {
 
     it("should still emit mouseTrajectoryUpdate after a hover hit", () => {
       const entry = createInternalEntry("a", { top: 100, left: 100, right: 200, bottom: 200 })
-      const { predictor, callCallback, emit } = setupPredictor([entry], false)
+      const { predictor, callCallback, emit } = setupPredictor([entry])
 
       predictor.processMouseMovement({ clientX: 150, clientY: 150 } as MouseEvent)
 
@@ -99,7 +81,7 @@ describe("MousePredictor", () => {
 
     it("should not fire callback when the mouse is outside the element", () => {
       const entry = createInternalEntry("a", { top: 100, left: 100, right: 200, bottom: 200 })
-      const { predictor, callCallback } = setupPredictor([entry], false)
+      const { predictor, callCallback } = setupPredictor([entry])
 
       predictor.processMouseMovement({ clientX: 50, clientY: 50 } as MouseEvent)
 
