@@ -14,13 +14,16 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
 
   const manager = ForesightManager.initialize(options.manager)
 
+  const anchors = new Set<HTMLAnchorElement>()
+
   const syncLinks = () => {
     // The manager parks disconnected elements waiting for a reconnect, but
     // view transitions swap the whole document, so anchors from the previous
     // page never come back. Drop them instead of letting them pile up.
-    for (const element of manager.registeredElements.keys()) {
-      if (!element.isConnected) {
-        manager.unregister(element)
+    for (const anchor of anchors) {
+      if (!anchor.isConnected) {
+        manager.unregister(anchor)
+        anchors.delete(anchor)
       }
     }
 
@@ -38,6 +41,7 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
         callback: () => prefetch(anchor.href),
         ...optionsForAnchor(anchor, options),
       })
+      anchors.add(anchor)
     }
   }
 
@@ -58,5 +62,5 @@ export const initForesight = (options: ForesightClientOptions = {}): void => {
     })
   })
 
-  observer.observe(document.body, { childList: true, subtree: true })
+  observer.observe(document.documentElement, { childList: true, subtree: true })
 }

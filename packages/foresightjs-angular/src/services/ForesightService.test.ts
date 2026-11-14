@@ -2,15 +2,12 @@ import type { NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot } from "js.foresight"
 import { addEventListenerSpy, mockState, registerSpy, unregisterSpy } from "../tests/setup"
+import { createInContext } from "../tests/helpers"
 import { ForesightService } from "./ForesightService"
 
-const zone = {
-  run: <T>(fn: () => T): T => fn(),
-} as NgZone
-
-const createService = () => new ForesightService(zone)
-const createServiceWithZone = (testZone: Pick<NgZone, "run">) =>
-  new ForesightService(testZone as NgZone)
+const createService = () => createInContext(() => new ForesightService())
+const createServiceWithZone = (zone: Pick<NgZone, "run">) =>
+  createInContext(() => new ForesightService(), { zone })
 
 beforeEach(() => {
   addEventListenerSpy.mockClear()

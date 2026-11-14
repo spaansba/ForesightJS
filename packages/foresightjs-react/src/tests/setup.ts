@@ -3,6 +3,7 @@ import type {
   ForesightCallback,
   ForesightElementState,
   ForesightRegisterOptions,
+  ForesightRegisterOptionsWithoutElement,
 } from "js.foresight"
 
 export const mockState = {
@@ -17,7 +18,7 @@ const EMPTY_RECT = { top: 0, left: 0, right: 0, bottom: 0 }
 
 export const registerSpy = vi.fn<(opts: ForesightRegisterOptions) => void>()
 export const replaceElementOptionsSpy =
-  vi.fn<(element: unknown, opts: Partial<{ callback: ForesightCallback }>) => void>()
+  vi.fn<(element: unknown, opts: ForesightRegisterOptionsWithoutElement) => void>()
 export const unregisterSpy = vi.fn<() => void>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const addEventListenerSpy =
@@ -84,12 +85,10 @@ vi.mock("js.foresight", async importOriginal => {
         },
         replaceElementOptions: (
           _element: unknown,
-          opts: Partial<{ callback: ForesightCallback }>
+          opts: ForesightRegisterOptionsWithoutElement
         ) => {
           replaceElementOptionsSpy(_element, opts)
-          if (opts.callback) {
-            mockState.lastCallbackWrapper = opts.callback
-          }
+          mockState.lastCallbackWrapper = opts.callback
         },
         addEventListener: addEventListenerSpy,
         removeEventListener: removeEventListenerSpy,
