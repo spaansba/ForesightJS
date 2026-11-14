@@ -1,5 +1,4 @@
 import type {
-  CallbackHits,
   CallbackHitType,
   ForesightElementState,
   ForesightEvent,
@@ -12,6 +11,7 @@ import type {
   ScrollDirection,
   UpdatedManagerSetting,
 } from "js.foresight"
+import type { CallbackHits } from "./callbackHits"
 
 export type SerializedEventType = ForesightEvent | "serializationError" | "managerDataPayload"
 
@@ -100,10 +100,8 @@ interface ManagerDataPayload extends PayloadBase {
   type: "managerDataPayload"
   warning: string
   globalCallbackHits: CallbackHits
-  eventListenerCount: Record<string, number>
   managerSettings: ForesightManagerSettings
   registeredElements: Array<ForesightElementState & { elementInfo: string }>
-  loadedModules: ForesightManagerData["loadedModules"]
 }
 
 export type SerializedEventData =
@@ -120,12 +118,9 @@ export type SerializedEventData =
 
 export const safeSerializeManagerData = (
   data: ForesightManagerData,
+  callbackHits: CallbackHits,
   logId: string
 ): ManagerDataPayload => {
-  const eventListeners: Record<string, number> = {}
-  data.eventListeners.forEach((listeners, eventType) => {
-    eventListeners[eventType] = listeners.size
-  })
   const registeredElements: Array<ForesightElementState & { elementInfo: string }> = []
   data.registeredElements.forEach((state, element) => {
     registeredElements.push({
@@ -140,16 +135,11 @@ export const safeSerializeManagerData = (
     type: "managerDataPayload",
     warning: "this is a lot easier to view in the console",
     logId: logId,
-    globalCallbackHits: data.globalCallbackHits,
+    globalCallbackHits: callbackHits,
     localizedTimestamp: new Date().toLocaleTimeString(),
-    eventListenerCount: eventListeners,
     managerSettings: data.globalSettings,
     registeredElements: registeredElements,
-    loadedModules: data.loadedModules,
-    summary: `${registeredElements.length} elements, ${
-      Object.values(eventListeners).flat().length
-    } listeners,
-  ${data.globalCallbackHits.total} hits`,
+    summary: `${registeredElements.length} elements, ${callbackHits.total} hits`,
   }
 }
 
@@ -177,10 +167,7 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
           localizedTimestamp: new Date(event.timestamp).toLocaleTimeString(),
           meta: event.state.meta,
           logId: logId,
-          summary:
-            event.state.registerCount > 1
-              ? `${event.state.name} - ${getOrdinalSuffix(event.state.registerCount)} time`
-              : event.state.name,
+          summary: event.state.name,
         }
       case "elementUnregistered":
         return {
@@ -295,22 +282,4 @@ export const safeSerializeEventData = <K extends keyof ForesightEventMap>(
  */
 const formatElapsed = (ms: number): string => {
   return `${(ms / 1000).toFixed(4)} s`
-}
-
-const getOrdinalSuffix = (n: number): string => {
-  const lastTwo = n % 100
-  if (lastTwo >= 11 && lastTwo <= 13) {
-    return `${n}th`
-  }
-
-  switch (n % 10) {
-    case 1:
-      return `${n}st`
-    case 2:
-      return `${n}nd`
-    case 3:
-      return `${n}rd`
-    default:
-      return `${n}th`
-  }
 }

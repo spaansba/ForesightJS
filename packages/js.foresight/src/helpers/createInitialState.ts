@@ -9,7 +9,6 @@ import {
   DEFAULT_TRAJECTORY_PREDICTION_TIME,
 } from "../constants"
 import type {
-  CallbackHits,
   ForesightElementInternal,
   ForesightElementState,
   ForesightManagerSettings,
@@ -21,28 +20,6 @@ import type {
 import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
 import { initialViewportState } from "./initialViewportState"
 import { canBeActive } from "./canBeActive"
-
-export const createInitialCallbackHits = (): CallbackHits => {
-  return {
-    mouse: {
-      hover: 0,
-      trajectory: 0,
-    },
-    tab: {
-      forwards: 0,
-      reverse: 0,
-    },
-    scroll: {
-      down: 0,
-      left: 0,
-      right: 0,
-      up: 0,
-    },
-    touch: 0,
-    viewport: 0,
-    total: 0,
-  }
-}
 
 export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   return {
@@ -82,7 +59,6 @@ const createBaseElementState = (isLimitedConnection: boolean): ForesightElementS
     isPredicted: false,
     isCallbackRunning: false,
     hitCount: 0,
-    registerCount: 0,
     durationMs: undefined,
     status: undefined,
     error: null,
@@ -140,7 +116,6 @@ export const createElementInternal = (
     isRegistered: true,
     isActive: canBeActive({ isEnabled, isLimitedConnection, isParked: false }),
     isEnabled,
-    registerCount: 1,
     reactivateAfter,
   }
 
@@ -150,8 +125,6 @@ export const createElementInternal = (
       originalRect: initialRect,
       expandedRect: getExpandedRect(initialRect, hitSlop),
     },
-    invokedAt: undefined,
-    completedAt: undefined,
     element,
     callback,
     reactivateTimeoutId: undefined,

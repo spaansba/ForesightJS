@@ -5,7 +5,6 @@ import {
   createDefaultManagerSettings,
   createElementInternal,
   resolveElementOptions,
-  createInitialCallbackHits,
 } from "../helpers/createInitialState"
 import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
 import { isScannable } from "../helpers/isScannable"
@@ -14,7 +13,6 @@ import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { applySettingsChanges } from "./SettingsManager"
 import type {
-  CallbackHits,
   CallbackHitType,
   callbackStatus,
   CurrentDeviceStrategy,
@@ -88,7 +86,6 @@ export class ForesightManager {
   private currentDeviceStrategy: CurrentDeviceStrategy = userUsesTouchDevice() ? "touch" : "mouse"
 
   private eventEmitter = new ForesightEventEmitter()
-  private _globalCallbackHits: CallbackHits = createInitialCallbackHits()
   private _globalSettings: ForesightManagerSettings = createDefaultManagerSettings()
 
   private constructor(initialSettings?: Partial<UpdateForsightManagerSettings>) {
@@ -230,15 +227,7 @@ export class ForesightManager {
     return {
       registeredElements: this.registeredElements,
       globalSettings: this._globalSettings,
-      globalCallbackHits: this._globalCallbackHits,
-      eventListeners: this.eventEmitter.getEventListeners(),
       currentDeviceStrategy: this.currentDeviceStrategy,
-      activeElementCount: this.countElements("isActive"),
-      parkedElementCount: this.countElements("isParked"),
-      loadedModules: {
-        desktopHandler: this.desktopHandler !== null,
-        touchHandler: this.touchDeviceHandler !== null,
-      },
     }
   }
 
@@ -267,9 +256,6 @@ export class ForesightManager {
 
     if (previousEntry) {
       this.updateElementOptions(options.element, options)
-      this.updateElementState(previousEntry, {
-        registerCount: previousEntry.state.registerCount + 1,
-      })
 
       return this.buildRegisterResult(previousEntry)
     }
@@ -643,8 +629,6 @@ export class ForesightManager {
   private markElementAsRunning(entry: ForesightElementInternal): void {
     this.clearReactivateTimeout(entry)
 
-    entry.invokedAt = Date.now()
-
     this.updateElementState(entry, {
       isPredicted: true,
       isCallbackRunning: true,
@@ -656,8 +640,6 @@ export class ForesightManager {
     entry: ForesightElementInternal,
     callbackHitType: CallbackHitType
   ): Promise<void> {
-    this.updateHitCounters(callbackHitType)
-
     if (this.eventEmitter.hasListeners("callbackInvoked")) {
       this.eventEmitter.emit({
         type: "callbackInvoked",
@@ -697,7 +679,6 @@ export class ForesightManager {
     if (this.elementEntries.get(entry.element) === entry) {
       this.currentlyActiveHandler?.unobserveElement(entry.element)
 
-      entry.completedAt = Date.now()
       const next = this.updateElementState(entry, {
         isCallbackRunning: false,
         isActive: false,
@@ -726,29 +707,6 @@ export class ForesightManager {
         wasLastActiveElement: this.countElements("isActive") === 0,
       })
     }
-  }
-
-  private updateHitCounters(callbackHitType: CallbackHitType): void {
-    switch (callbackHitType.kind) {
-      case "mouse":
-        this._globalCallbackHits.mouse[callbackHitType.subType]++
-        break
-      case "tab":
-        this._globalCallbackHits.tab[callbackHitType.subType]++
-        break
-      case "scroll":
-        this._globalCallbackHits.scroll[callbackHitType.subType]++
-        break
-      case "touch":
-        this._globalCallbackHits.touch++
-        break
-      case "viewport":
-        this._globalCallbackHits.viewport++
-        break
-      default:
-        callbackHitType satisfies never
-    }
-    this._globalCallbackHits.total++
   }
 
   private async setDeviceStrategy(strategy: CurrentDeviceStrategy): Promise<void> {

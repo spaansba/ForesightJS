@@ -3,7 +3,6 @@ import { customElement, state } from "lit/decorators.js"
 import { repeat } from "lit/directives/repeat.js"
 
 import type {
-  CallbackHits,
   CallbackInvokedEvent,
   ElementRegisteredEvent,
   ElementUnregisteredEvent,
@@ -13,6 +12,7 @@ import { ForesightManager, type ForesightElement, type ForesightElementState } f
 type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
 import { CHEVRON_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
+import type { CallbackHits } from "../../../helpers/callbackHits"
 import { ForesightDevtools } from "../../foresight-devtools"
 import "../base-tab/tab-content"
 import "../base-tab/tab-header"
@@ -79,10 +79,6 @@ export class ElementTab extends LitElement {
       transform: none;
     }
   `
-
-  private get hitCount(): CallbackHits {
-    return ForesightManager.instance.getManagerData.globalCallbackHits
-  }
 
   @state() private sortDropdown: DropdownOption[]
   @state() private sortOrder: SortElementList
@@ -265,7 +261,6 @@ export class ElementTab extends LitElement {
       { signal }
     )
 
-    // The manager has already updated its global hit counters; just re-render.
     ForesightManager.instance.addEventListener(
       "callbackCompleted",
       () => {
@@ -450,10 +445,12 @@ export class ElementTab extends LitElement {
   }
 
   render() {
+    const hits = ForesightDevtools.instance.callbackHits
+
     return html`
       <tab-header>
-        <div slot="chips" data-tip="${this._generateHitsChipTitle(this.hitCount)}">
-          ${this.hitCount.total} callbacks fired
+        <div slot="chips" data-tip="${this._generateHitsChipTitle(hits)}">
+          ${hits.total} callbacks fired
         </div>
         <div slot="actions">
           <single-select-dropdown

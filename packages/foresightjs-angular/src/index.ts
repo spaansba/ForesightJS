@@ -18,7 +18,6 @@ export {
   type ManagerSettingsChangedEvent,
   type HitSlop,
   type CallbackHitType,
-  type CallbackHits,
   type TouchDeviceStrategy,
   type MinimumConnectionType,
 } from "js.foresight"

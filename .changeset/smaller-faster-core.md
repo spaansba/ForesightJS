@@ -11,6 +11,6 @@ Breaking changes:
 - **`mouseTrajectoryUpdate` no longer carries `trajectoryPositions.positions`.** `currentPoint` and `predictedPoint` are unchanged.
 - **`enableManagerLogging` is removed** together with all internal console logging.
 - **Out of range settings are clamped silently.** The console warnings are gone.
-- **Only the tab predictor is still lazy loaded on its own.** The mouse and scroll predictors ship in the desktop handler chunk and both touch predictors in the touch handler chunk. `getManagerData.loadedModules` no longer has `predictors`.
+- **Only the tab predictor is still lazy loaded on its own.** The mouse and scroll predictors ship in the desktop handler chunk and both touch predictors in the touch handler chunk.
 
 The devtools no longer show the position history slider.

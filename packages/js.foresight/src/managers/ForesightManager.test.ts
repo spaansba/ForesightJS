@@ -64,6 +64,9 @@ const setup = (options: Partial<ForesightRegisterOptionsWithoutElement> = {}) =>
   return { manager, element, callback, result, state: () => result.getSnapshot() }
 }
 
+const countElements = (manager: ForesightManagerClass, flag: "isActive" | "isParked") =>
+  [...manager.registeredElements.values()].filter(state => state[flag]).length
+
 const deferredCallback = () => {
   let resolve!: () => void
   const callback = vi.fn<ForesightCallback>(() => new Promise<void>(r => (resolve = r)))
@@ -178,15 +181,6 @@ describe("ForesightManager", () => {
       expect(manager.registeredElements.get(element1)?.id).not.toBe(
         manager.registeredElements.get(element2)?.id
       )
-    })
-
-    it("increments registerCount on duplicate registration", () => {
-      const { manager, element } = setup()
-
-      const result = manager.register({ element, callback: vi.fn() })
-
-      expect(result.registerCount).toBe(2)
-      expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
 
     it("names the element after its id unless a name is given", () => {
@@ -396,8 +390,6 @@ describe("ForesightManager", () => {
       expect(completed).toHaveBeenCalledWith(
         expect.objectContaining({ hitType, status: "success", errorMessage: null })
       )
-      expect(manager.getManagerData.globalCallbackHits.mouse.trajectory).toBe(1)
-      expect(manager.getManagerData.globalCallbackHits.total).toBe(1)
     })
 
     it("reports a hover hit when mouse prediction is off", async () => {
@@ -545,12 +537,12 @@ describe("ForesightManager", () => {
       const first = createElement("first")
       manager.register({ element: first, callback: vi.fn() })
       manager.register({ element: createElement("other", rectAt(700)), callback: vi.fn() })
-      expect(manager.getManagerData.activeElementCount).toBe(2)
+      expect(countElements(manager, "isActive")).toBe(2)
 
       await hover(first)
       await settle()
 
-      expect(manager.getManagerData.activeElementCount).toBe(1)
+      expect(countElements(manager, "isActive")).toBe(1)
     })
   })
 
@@ -627,15 +619,13 @@ describe("ForesightManager", () => {
   describe("Lazy loading", () => {
     it("loads the desktop handler on first registration", async () => {
       const manager = ForesightManager.initialize()
-      expect(manager.getManagerData.loadedModules).toEqual({
-        desktopHandler: false,
-        touchHandler: false,
-      })
+      expect(manager["desktopHandler"]).toBeNull()
+      expect(manager["touchDeviceHandler"]).toBeNull()
 
       manager.register({ element: createElement(), callback: vi.fn() })
       await settle()
 
-      expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+      expect(manager["desktopHandler"]).not.toBeNull()
     })
 
     it("does not connect a handler that finished loading after teardown", async () => {
@@ -654,7 +644,7 @@ describe("ForesightManager", () => {
       pointerMove(-999, -999, "touch")
       pointerMove(-999, -999, "mouse")
       await settle()
-      expect(manager.getManagerData.loadedModules.touchHandler).toBe(true)
+      expect(manager["touchDeviceHandler"]).not.toBeNull()
 
       element.dispatchEvent(new PointerEvent("pointerdown", { pointerType: "touch" }))
       expect(callback).not.toHaveBeenCalled()
@@ -804,11 +794,11 @@ describe("ForesightManager", () => {
         await hover(element)
       }
       await settle()
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(countElements(manager, "isActive")).toBe(0)
 
       manager.reactivate(nodeList)
 
-      expect(manager.getManagerData.activeElementCount).toBe(2)
+      expect(countElements(manager, "isActive")).toBe(2)
     })
   })
 
@@ -871,9 +861,9 @@ describe("ForesightManager", () => {
     it("shares state between results of re-registrations", () => {
       const { manager, element, result } = setup()
 
-      manager.register({ element, callback: vi.fn() })
+      const next = manager.register({ element, callback: vi.fn() })
 
-      expect(result.getSnapshot().registerCount).toBe(2)
+      expect(next.getSnapshot()).toBe(result.getSnapshot())
     })
 
     it("returns undefined from subscribeToElement for unregistered elements", () => {
@@ -1160,7 +1150,7 @@ describe("ForesightManager", () => {
       const { manager, element, state } = setup({ enabled: false })
 
       manager.updateElementOptions(element, { enabled: true })
-      expect(state()).toMatchObject({ isEnabled: true, isActive: true, registerCount: 1 })
+      expect(state()).toMatchObject({ isEnabled: true, isActive: true })
 
       manager.updateElementOptions(element, { enabled: false })
       expect(state()).toMatchObject({ isRegistered: true, isEnabled: false, isActive: false })
@@ -1202,7 +1192,7 @@ describe("ForesightManager", () => {
         isEnabled: true,
         isActive: false,
       })
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(countElements(manager, "isActive")).toBe(0)
 
       await hover(element)
       expect(callback).not.toHaveBeenCalled()
@@ -1215,7 +1205,7 @@ describe("ForesightManager", () => {
       manager.reactivate(element)
 
       expect(state()).toMatchObject({ name: "renamed", isEnabled: true, isActive: false })
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(countElements(manager, "isActive")).toBe(0)
     })
   })
 
@@ -1237,13 +1227,13 @@ describe("ForesightManager", () => {
 
       await detach(element)
       expect(state()).toMatchObject({ isRegistered: true, isActive: false, isParked: true })
-      expect(manager.getManagerData.parkedElementCount).toBe(1)
+      expect(countElements(manager, "isParked")).toBe(1)
       expect(onUnregister).not.toHaveBeenCalled()
       expect(await isListening(manager)).toBe(true)
 
       await reattach(element)
       expect(state()).toMatchObject({ isRegistered: true, isActive: true, isParked: false })
-      expect(manager.getManagerData.parkedElementCount).toBe(0)
+      expect(countElements(manager, "isParked")).toBe(0)
 
       await hover(element)
       expect(callback).toHaveBeenCalled()
@@ -1256,7 +1246,7 @@ describe("ForesightManager", () => {
       result.unregister()
 
       expect(manager.registeredElements.has(element)).toBe(false)
-      expect(manager.getManagerData.parkedElementCount).toBe(0)
+      expect(countElements(manager, "isParked")).toBe(0)
     })
 
     it("does not reactivate an element parked mid-callback, and restarts the cooldown on reconnect", async () => {

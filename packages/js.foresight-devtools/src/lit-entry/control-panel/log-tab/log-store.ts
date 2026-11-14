@@ -117,6 +117,7 @@ export class EventLogStore {
       this.addLog(
         safeSerializeManagerData(
           ForesightManager.instance.getManagerData,
+          ForesightDevtools.instance.callbackHits,
           (++this.logIdCounter).toString()
         )
       )

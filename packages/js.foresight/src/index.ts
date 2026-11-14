@@ -28,7 +28,6 @@ export type {
   UpdatedManagerSetting,
   HitSlop,
   CallbackHitType,
-  CallbackHits,
   TouchDeviceStrategy,
   MinimumConnectionType,
   Point as ForesightPoint,
