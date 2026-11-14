@@ -13,7 +13,6 @@ import {
   summarizeEvent,
   type EventLogEntry,
 } from "../../shared/foresightEvents"
-import { abortableDelay } from "../../shared/abortableDelay"
 import { sleep } from "../shared/foresight-controls"
 
 /**
@@ -76,6 +75,7 @@ import { sleep } from "../shared/foresight-controls"
             <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
               <div>meta.href: {{ fast.state().meta.href ?? "waiting" }}</div>
               <div>callback href: {{ callbackHref() ?? "waiting" }}</div>
+              <div>hitType: {{ hit() ?? "waiting" }}</div>
             </div>
           </div>
           <div class="flex flex-col items-center gap-2">
@@ -103,37 +103,6 @@ import { sleep } from "../shared/foresight-controls"
             >
               Error callback
             </div>
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <div
-              #abortable="foresight"
-              [fsForesight]="{
-                callback: abortableCallback,
-                name: 'abortable-callback',
-                hitSlop: 20,
-                reactivateAfter: 2000,
-                enabled: abortableEnabled(),
-              }"
-              class="w-28 h-28 flex items-center justify-center text-xs font-medium border border-gray-300 cursor-default select-none"
-              [class]="
-                abortableEnabled() ? 'bg-purple-200 text-gray-800' : 'bg-gray-200 text-gray-400'
-              "
-            >
-              Abortable callback
-            </div>
-            <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
-              <div>
-                hits: {{ abortable.state().hitCount }} | {{ abortable.state().status ?? "idle" }}
-              </div>
-              <div>hitType: {{ abortableHit() ?? "waiting" }}</div>
-            </div>
-            <button
-              type="button"
-              class="px-2 py-1 text-[10px] border border-gray-400 text-gray-700 hover:bg-gray-100"
-              (click)="abortableEnabled.set(!abortableEnabled())"
-            >
-              {{ abortableEnabled() ? "Disable (aborts)" : "Enable" }}
-            </button>
           </div>
           <div class="flex flex-col items-center gap-2">
             @if (toggleMounted()) {
@@ -224,8 +193,7 @@ export class EventsPageComponent {
   protected readonly focusedEvent = signal<ForesightEvent>("callbackInvoked")
   protected readonly focusedCount = signal(0)
   protected readonly callbackHref = signal<string | undefined>(undefined)
-  protected readonly abortableEnabled = signal(true)
-  protected readonly abortableHit = signal<string | undefined>(undefined)
+  protected readonly hit = signal<string | undefined>(undefined)
 
   protected readonly counts = computed(() =>
     this.entries().reduce<Partial<Record<ForesightEvent, number>>>((acc, entry) => {
@@ -237,15 +205,12 @@ export class EventsPageComponent {
 
   private nextId = 0
 
-  protected readonly fastCallback: ForesightCallback = async state => {
+  protected readonly fastCallback: ForesightCallback = async (state, { hitType }) => {
     this.callbackHref.set(state.meta.href)
+    this.hit.set(formatHitType(hitType))
     await sleep(50)
   }
   protected readonly slowCallback = () => sleep(1500)
-  protected readonly abortableCallback: ForesightCallback = async (_state, { hitType, signal }) => {
-    this.abortableHit.set(formatHitType(hitType))
-    await abortableDelay(3000, signal)
-  }
   protected readonly errorCallback = async () => {
     throw new Error("Intentional error for demo")
   }

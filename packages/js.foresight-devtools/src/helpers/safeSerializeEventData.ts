@@ -57,7 +57,7 @@ interface CallbackCompletedPayload extends PayloadBase {
   elapsed: string
   name: string
   hitType: CallbackHitType
-  status: ForesightElementState["status"]
+  status: "success" | "error" | undefined
   errorMessage: string | undefined | null
   state: ForesightElementState
   wasLastActiveElement: boolean

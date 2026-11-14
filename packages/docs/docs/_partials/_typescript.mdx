@@ -55,7 +55,7 @@ type ForesightElementState = {
   hitCount: number
   registerCount: number // amount of times this element has been (re)registered
   durationMs: number | undefined // duration of the most recent callback run
-  status: "error" | "success" | "aborted" | undefined // status of the most recent callback
+  status: "error" | "success" | undefined // status of the most recent callback
   error: string | null
   reactivateAfter: number
 }
@@ -137,7 +137,6 @@ type ForesightCallback = (state: ForesightElementState, context: ForesightCallba
 
 type ForesightCallbackContext = {
   hitType: CallbackHitType // which prediction fired the callback
-  signal: AbortSignal // aborts when the element is unregistered, disabled or removed from the DOM mid-callback
 }
 ```
 

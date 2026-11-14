@@ -9,7 +9,6 @@ import {
   summarizeEvent,
   type EventLogEntry,
 } from "../../../shared/foresightEvents"
-import { abortableDelay } from "../../../shared/abortableDelay"
 
 const DEMO_ELEMENTS = [
   { name: "fast-callback", label: "Fast callback", color: "bg-green-200", delayMs: 50 },
@@ -31,10 +30,12 @@ const DemoElement = ({
   reactivateAfter: number
 }) => {
   const [callbackHref, setCallbackHref] = useState<string>()
+  const [hit, setHit] = useState<string>()
   const { elementRef, isPredicted, hitCount, isCallbackRunning, status, meta } =
     useForesight<HTMLDivElement>({
-      callback: async state => {
+      callback: async (state, { hitType }) => {
         setCallbackHref(state.meta.href)
+        setHit(formatHitType(hitType))
 
         if (name === "error-callback") {
           throw new Error("Intentional error for demo")
@@ -63,47 +64,8 @@ const DemoElement = ({
         <div>{isCallbackRunning ? "running..." : isPredicted ? "predicted" : "waiting"}</div>
         <div>meta.href: {meta.href ?? "waiting"}</div>
         <div>callback href: {callbackHref ?? "waiting"}</div>
-      </div>
-    </div>
-  )
-}
-
-const AbortableElement = ({ reactivateAfter }: { reactivateAfter: number }) => {
-  const [enabled, setEnabled] = useState(true)
-  const [hit, setHit] = useState<string>()
-  const { elementRef, hitCount, isCallbackRunning, isPredicted, status } =
-    useForesight<HTMLDivElement>({
-      callback: async (_state, { hitType, signal }) => {
-        setHit(formatHitType(hitType))
-        await abortableDelay(3000, signal)
-      },
-      name: "abortable-callback",
-      hitSlop: 20,
-      reactivateAfter,
-      enabled,
-    })
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        ref={elementRef}
-        className={`w-28 h-28 flex items-center justify-center text-xs font-medium border border-gray-300 cursor-default select-none ${enabled ? "bg-purple-200 text-gray-800" : "bg-gray-200 text-gray-400"}`}
-      >
-        Abortable callback
-      </div>
-      <div className="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
-        <div>
-          hits: {hitCount} | {status ?? "idle"}
-        </div>
-        <div>{isCallbackRunning ? "running..." : isPredicted ? "predicted" : "waiting"}</div>
         <div>hitType: {hit ?? "waiting"}</div>
       </div>
-      <button
-        onClick={() => setEnabled(e => !e)}
-        className="px-2 py-1 text-[10px] border border-gray-400 text-gray-700 hover:bg-gray-100"
-      >
-        {enabled ? "Disable (aborts)" : "Enable"}
-      </button>
     </div>
   )
 }
@@ -254,7 +216,6 @@ export default function Events() {
           {DEMO_ELEMENTS.map(el => (
             <DemoElement key={el.name} {...el} reactivateAfter={2000} />
           ))}
-          <AbortableElement reactivateAfter={2000} />
           <ToggleElement />
         </div>
       </div>

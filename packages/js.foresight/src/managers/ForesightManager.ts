@@ -556,7 +556,6 @@ export class ForesightManager {
     }
 
     this.clearReactivateTimeout(entry)
-    entry.abortController?.abort()
     this.currentlyActiveHandler?.unobserveElement(element)
 
     const finalState = this.updateElementState(entry, {
@@ -641,7 +640,6 @@ export class ForesightManager {
       this.currentlyActiveHandler?.observeElement(element)
     } else {
       this.clearReactivateTimeout(entry)
-      entry.abortController?.abort()
       this.currentlyActiveHandler?.unobserveElement(element)
     }
 
@@ -706,24 +704,17 @@ export class ForesightManager {
     }
 
     const start = performance.now()
-    const controller = new AbortController()
-    entry.abortController = controller
-    let status: callbackStatus = "success"
     let errorMessage: string | null = null
 
     try {
-      await entry.callback(entry.state, { hitType: callbackHitType, signal: controller.signal })
+      await entry.callback(entry.state, { hitType: callbackHitType })
     } catch (error) {
-      if (controller.signal.aborted) {
-        status = "aborted"
-      } else {
-        status = "error"
-        errorMessage = error instanceof Error ? error.message : String(error)
-        console.error(`Error in callback for element ${entry.state.name}:`, error)
-      }
+      errorMessage = error instanceof Error ? error.message : String(error)
+      console.error(`Error in callback for element ${entry.state.name}:`, error)
     }
 
-    this.finalizeCallback(entry, callbackHitType, start, status, errorMessage, controller)
+    const status: callbackStatus = errorMessage !== null ? "error" : "success"
+    this.finalizeCallback(entry, callbackHitType, start, status, errorMessage)
   }
 
   private finalizeCallback(
@@ -731,43 +722,30 @@ export class ForesightManager {
     callbackHitType: CallbackHitType,
     startTime: number,
     status: callbackStatus,
-    errorMessage: string | null,
-    controller: AbortController
+    errorMessage: string | null
   ): void {
     const elapsed = performance.now() - startTime
 
     // Unregistered while the callback ran (the element may even be registered
-    // again under a new entry) or superseded by a newer run: leave its state,
-    // attributes and observation alone and only report the completion.
-    if (this.elementEntries.get(entry.element) === entry && entry.abortController === controller) {
-      entry.abortController = undefined
+    // again under a new entry): leave its state, attributes and observation alone
+    // and only report the completion.
+    if (this.elementEntries.get(entry.element) === entry) {
+      this.currentlyActiveHandler?.unobserveElement(entry.element)
+
       entry.completedAt = Date.now()
+      const next = this.updateElementState(entry, {
+        isCallbackRunning: false,
+        isActive: false,
+        durationMs: elapsed,
+        status,
+        error: errorMessage,
+      })
 
-      if (status === "aborted") {
-        this.updateElementState(entry, {
-          isPredicted: false,
-          durationMs: elapsed,
-          status,
-          error: null,
-        })
-        this.reactivateElement(entry.element)
-      } else {
-        this.currentlyActiveHandler?.unobserveElement(entry.element)
-
-        const next = this.updateElementState(entry, {
-          isCallbackRunning: false,
-          isActive: false,
-          durationMs: elapsed,
-          status,
-          error: errorMessage,
-        })
-
-        if (next.reactivateAfter !== Infinity) {
-          this.scheduleReactivateTimeout(entry, next.reactivateAfter)
-        }
-
-        this.removeGlobalListenersIfIdle()
+      if (next.reactivateAfter !== Infinity) {
+        this.scheduleReactivateTimeout(entry, next.reactivateAfter)
       }
+
+      this.removeGlobalListenersIfIdle()
     }
 
     if (this.eventEmitter.hasListeners("callbackCompleted")) {
@@ -950,7 +928,6 @@ export class ForesightManager {
    */
   private parkDisconnected(entry: ForesightElementInternal): void {
     this.clearReactivateTimeout(entry)
-    entry.abortController?.abort()
     this.currentlyActiveHandler?.unobserveElement(entry.element)
 
     // Preserve `isPredicted`: an element that already fired its callback must stay

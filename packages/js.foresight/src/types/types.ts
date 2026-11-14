@@ -19,7 +19,6 @@ export type Rect = {
  */
 export type ForesightCallbackContext = {
   hitType: CallbackHitType
-  signal: AbortSignal
 }
 
 export type ForesightCallback = (
@@ -166,14 +165,13 @@ export type ForesightElementInternal = {
   callback: ForesightCallback
   /** Pending reactivation timer, if any. */
   reactivateTimeoutId?: ReturnType<typeof setTimeout>
-  abortController?: AbortController
   /** Listeners notified whenever `state` is replaced. Created on first subscribe. */
   subscribers: Set<() => void> | undefined
   /** Listeners notified whenever `bounds` is replaced. Created on first subscribe. */
   boundsSubscribers: Set<() => void> | undefined
 }
 
-export type callbackStatus = "error" | "success" | "aborted" | undefined
+export type callbackStatus = "error" | "success" | undefined
 
 type MouseCallbackCounts = {
   hover: number
