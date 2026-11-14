@@ -33,12 +33,12 @@ export class MousePredictor extends BaseForesightModule {
     currentPoint.x = e.clientX
     currentPoint.y = e.clientY
 
-    if (this.settings.enableMousePrediction) {
+    if (this.deps.settings.enableMousePrediction) {
       predictNextMousePosition(
         currentPoint,
         e.timeStamp,
         this.history,
-        this.settings.trajectoryPredictionTime,
+        this.deps.settings.trajectoryPredictionTime,
         this.trajectoryPositions.predictedPoint // reuse existing object
       )
     } else {
@@ -49,15 +49,15 @@ export class MousePredictor extends BaseForesightModule {
 
   public processMouseMovement(e: MouseEvent): void {
     this.updatePointerState(e)
-    const enablePrediction = this.settings.enableMousePrediction
+    const enablePrediction = this.deps.settings.enableMousePrediction
     const currentPoint = this.trajectoryPositions.currentPoint
 
-    for (const internal of this.scannableElements) {
+    for (const internal of this.deps.scannableElements) {
       const expandedRect = internal.bounds.expandedRect
 
       if (!enablePrediction) {
         if (isPointInRectangle(currentPoint, expandedRect)) {
-          this.callCallback(internal, { kind: "mouse", subType: "hover" })
+          this.deps.callCallback(internal, { kind: "mouse", subType: "hover" })
 
           continue
         }
@@ -70,13 +70,13 @@ export class MousePredictor extends BaseForesightModule {
           expandedRect
         )
       ) {
-        this.callCallback(internal, { kind: "mouse", subType: "trajectory" })
+        this.deps.callCallback(internal, { kind: "mouse", subType: "trajectory" })
       }
     }
 
-    if (this.hasListeners("mouseTrajectoryUpdate")) {
+    if (this.deps.hasListeners("mouseTrajectoryUpdate")) {
       this.mouseTrajectoryEvent.predictionEnabled = enablePrediction
-      this.emit(this.mouseTrajectoryEvent)
+      this.deps.emit(this.mouseTrajectoryEvent)
     }
   }
 }

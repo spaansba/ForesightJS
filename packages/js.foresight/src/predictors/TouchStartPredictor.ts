@@ -1,16 +1,12 @@
 import type { ForesightElement } from "../types/types"
-import { ElementObservingModule } from "../core/ElementObservingModule"
+import { BaseForesightModule } from "../core/BaseForesightModule"
 
-export class TouchStartPredictor extends ElementObservingModule {
-  protected onConnect(): void {
-    this.createAbortController()
-  }
-
+export class TouchStartPredictor extends BaseForesightModule {
   // Change to touchstart ones it is baseline https://developer.mozilla.org/en-US/docs/Web/API/Element/touchstart_event
   public observeElement(element: ForesightElement): void {
     if (element instanceof HTMLElement) {
       element.addEventListener("pointerdown", this.handleTouchStart, {
-        signal: this.abortController?.signal,
+        signal: this.abortController.signal,
       })
     }
   }
@@ -24,10 +20,10 @@ export class TouchStartPredictor extends ElementObservingModule {
 
   protected handleTouchStart = (e: PointerEvent): void => {
     const currentTarget = e.currentTarget as ForesightElement
-    const data = this.elements.get(currentTarget)
+    const data = this.deps.elements.get(currentTarget)
 
     if (data) {
-      this.callCallback(data, {
+      this.deps.callCallback(data, {
         kind: "touch",
       })
       this.unobserveElement(currentTarget)

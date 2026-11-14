@@ -66,7 +66,7 @@ export class ScrollPredictor extends BaseForesightModule {
       predictNextScrollPosition(
         this.trajectoryPositions.currentPoint,
         this.scrollDirection,
-        this.settings.scrollMargin,
+        this.deps.settings.scrollMargin,
         this.predictedScrollPoint
       )
       this.hasPredictedScrollPoint = true
@@ -80,7 +80,7 @@ export class ScrollPredictor extends BaseForesightModule {
         entry.bounds.expandedRect
       )
     ) {
-      this.callCallback(entry, {
+      this.deps.callCallback(entry, {
         kind: "scroll",
         subType: this.scrollDirection,
       })
@@ -96,13 +96,13 @@ export class ScrollPredictor extends BaseForesightModule {
     if (
       !this.scrollDirection ||
       !this.hasPredictedScrollPoint ||
-      !this.hasListeners("scrollTrajectoryUpdate")
+      !this.deps.hasListeners("scrollTrajectoryUpdate")
     ) {
       return
     }
 
     this.scrollTrajectoryEvent.predictedPoint = this.predictedScrollPoint
     this.scrollTrajectoryEvent.scrollDirection = this.scrollDirection
-    this.emit(this.scrollTrajectoryEvent)
+    this.deps.emit(this.scrollTrajectoryEvent)
   }
 }
