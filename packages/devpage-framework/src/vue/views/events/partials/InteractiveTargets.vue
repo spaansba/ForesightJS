@@ -2,6 +2,8 @@
 import { ref } from "vue"
 import { useForesight } from "@foresightjs/vue"
 import { useReactivateAfter } from "../../../composables/useReactivateAfter"
+import { abortableDelay } from "../../../../shared/abortableDelay"
+import { formatHitType } from "../../../../shared/foresightEvents"
 
 const toggleableMounted = ref(true)
 const reactivateAfter = useReactivateAfter()
@@ -34,6 +36,20 @@ const error = useForesight(() => ({
   name: "error-callback",
   hitSlop: 20,
   reactivateAfter: reactivateAfter.value,
+}))
+
+const abortableEnabled = ref(true)
+const abortableHit = ref<string>()
+
+const abortable = useForesight(() => ({
+  callback: async (_state, { hitType, signal }) => {
+    abortableHit.value = formatHitType(hitType)
+    await abortableDelay(3000, signal)
+  },
+  name: "abortable-callback",
+  hitSlop: 20,
+  reactivateAfter: reactivateAfter.value,
+  enabled: abortableEnabled.value,
 }))
 
 const toggle = useForesight({
@@ -110,6 +126,36 @@ const toggle = useForesight({
             }}
           </div>
         </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-2">
+        <div
+          :ref="abortable.elementRef"
+          class="w-28 h-28 flex items-center justify-center text-xs font-medium border border-gray-300 cursor-default select-none"
+          :class="abortableEnabled ? 'bg-purple-200 text-gray-800' : 'bg-gray-200 text-gray-400'"
+        >
+          Abortable callback
+        </div>
+        <div class="font-mono text-[10px] text-gray-500 text-center space-y-0.5">
+          <div>hits: {{ abortable.hitCount.value }} | {{ abortable.status.value ?? "idle" }}</div>
+          <div>
+            {{
+              abortable.isCallbackRunning.value
+                ? "running..."
+                : abortable.isPredicted.value
+                  ? "predicted"
+                  : "waiting"
+            }}
+          </div>
+          <div>hitType: {{ abortableHit ?? "waiting" }}</div>
+        </div>
+        <button
+          type="button"
+          class="px-2 py-1 text-[10px] border border-gray-400 text-gray-700 hover:bg-gray-100"
+          @click="abortableEnabled = !abortableEnabled"
+        >
+          {{ abortableEnabled ? "Disable (aborts)" : "Enable" }}
+        </button>
       </div>
 
       <div class="flex flex-col items-center gap-2">
