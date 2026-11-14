@@ -10,13 +10,12 @@ export class SettingItem extends LitElement {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        min-height: 28px;
-        padding: 0 6px;
-        border-radius: 4px;
+        min-height: 24px;
+        padding: 0 10px;
       }
 
       .row:hover {
-        background: var(--fs-surface);
+        background: var(--fs-raised);
       }
 
       :host([dimmed]) .row {
@@ -25,7 +24,7 @@ export class SettingItem extends LitElement {
 
       .label {
         color: var(--fs-text);
-        font-size: 12px;
+        white-space: nowrap;
         cursor: default;
       }
 

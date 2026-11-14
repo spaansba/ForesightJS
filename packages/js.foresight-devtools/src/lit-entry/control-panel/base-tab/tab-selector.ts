@@ -17,12 +17,9 @@ export class TabSelector extends LitElement {
       all: unset;
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 0 10px;
       color: var(--fs-muted);
-      font-size: 12px;
-      font-weight: 500;
       cursor: pointer;
-      transition: color 0.12s ease;
     }
 
     .tab:hover {
@@ -31,12 +28,12 @@ export class TabSelector extends LitElement {
 
     .tab.active {
       color: var(--fs-text);
-      box-shadow: inset 0 -2px 0 var(--fs-accent);
+      box-shadow: inset 0 -1px 0 var(--fs-text);
     }
 
     .tab:focus-visible {
-      outline: 1px solid var(--fs-accent);
-      outline-offset: -1px;
+      outline: 1px dashed var(--fs-text);
+      outline-offset: -3px;
     }
   `
 
@@ -67,7 +64,7 @@ export class TabSelector extends LitElement {
               @click="${() => this._handleTabClick(tab)}"
               data-tab="${tab}"
             >
-              ${tab.charAt(0).toUpperCase() + tab.slice(1)}
+              ${tab}
             </button>
           `
         )}

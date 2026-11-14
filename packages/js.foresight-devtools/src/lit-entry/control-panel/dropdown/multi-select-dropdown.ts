@@ -1,7 +1,5 @@
-import { html, type TemplateResult } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import { BaseDropdown, type DropdownOption } from "./base-dropdown"
-import { FILTER_SVG } from "../../../svg/svg-icons"
 
 @customElement("multi-select-dropdown")
 export class MultiSelectDropdown extends BaseDropdown {
@@ -21,8 +19,8 @@ export class MultiSelectDropdown extends BaseDropdown {
     this.onSelectionChange?.(option.value, newSelectionState)
   }
 
-  protected _getTriggerIcon(): TemplateResult {
-    return html`${FILTER_SVG}<span class="trigger-label">${this.selectedValues.length}</span>`
+  protected _getTriggerContent(): string {
+    return `types ${this.selectedValues.length}/${this.dropdownOptions.length}`
   }
 
   protected _isOptionSelected(option: DropdownOption): boolean {
@@ -30,14 +28,7 @@ export class MultiSelectDropdown extends BaseDropdown {
   }
 
   protected _getTriggerTitle(): string {
-    const count = this.selectedValues.length
-    if (count === 0) {
-      return "No items selected"
-    } else if (count === 1) {
-      return "1 item selected"
-    } else {
-      return `${count} items selected`
-    }
+    return "Which event types get logged"
   }
 
   protected _getTriggerLabel(): string {

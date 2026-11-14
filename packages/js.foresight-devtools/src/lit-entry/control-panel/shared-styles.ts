@@ -1,43 +1,40 @@
 import { css } from "lit"
 
-export const iconButtonStyles = css`
-  .icon-button {
+export const buttonStyles = css`
+  .btn {
     all: unset;
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    height: 22px;
-    min-width: 22px;
-    padding: 0 4px;
-    border-radius: 4px;
+    gap: 4px;
+    height: 20px;
+    min-width: 20px;
+    padding: 0 5px;
     color: var(--fs-muted);
+    white-space: nowrap;
     cursor: pointer;
-    transition:
-      background-color 0.12s ease,
-      color 0.12s ease;
   }
 
-  .icon-button:hover,
-  .icon-button.active {
+  .btn:hover,
+  .btn.active {
     background-color: var(--fs-hover);
     color: var(--fs-text);
   }
 
-  .icon-button:focus-visible {
-    outline: 1px solid var(--fs-accent);
+  .btn:focus-visible {
+    outline: 1px dashed var(--fs-text);
+    outline-offset: -1px;
   }
 
-  .icon-button:disabled {
-    opacity: 0.35;
+  .btn:disabled {
+    color: var(--fs-dim);
     cursor: default;
     background: none;
-    color: var(--fs-muted);
   }
 
-  .icon-button svg {
-    width: 14px;
-    height: 14px;
+  .btn svg {
+    width: 13px;
+    height: 13px;
   }
 `

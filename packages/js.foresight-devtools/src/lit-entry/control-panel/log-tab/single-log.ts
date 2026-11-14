@@ -1,7 +1,7 @@
 import { LitElement, html, css, PropertyValues } from "lit"
 import { customElement, property } from "lit/decorators.js"
 import type { SerializedEventData } from "../../../helpers/safeSerializeEventData"
-import { EVENT_COLORS } from "./log-store"
+import { EVENT_LOOK } from "./log-store"
 import "../base-tab/expandable-item"
 
 @customElement("single-log")
@@ -10,37 +10,35 @@ export class SingleLog extends LitElement {
     css`
       :host {
         display: block;
-        background-color: var(--log-background-color, transparent);
+      }
+
+      :host([error]) {
+        background: color-mix(in srgb, var(--fs-error) 10%, transparent);
       }
 
       .row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         min-width: 0;
         width: 100%;
-        font-size: 11px;
       }
 
       .time {
         flex-shrink: 0;
-        color: var(--fs-muted);
-        font-family: var(--fs-mono);
-        font-size: 10px;
+        color: var(--fs-dim);
       }
 
       .type {
         flex-shrink: 0;
-        width: 72px;
-        color: var(--log-color, var(--fs-accent));
-        font-weight: 600;
+        width: 8ch;
         white-space: nowrap;
       }
 
       .summary {
         flex: 1;
         min-width: 0;
-        color: #bdbdc2;
+        color: var(--fs-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -48,34 +46,14 @@ export class SingleLog extends LitElement {
     `,
   ]
 
-  @property({ attribute: false })
-  log: SerializedEventData
+  @property({ attribute: false }) log!: SerializedEventData
+  @property({ type: Boolean }) isExpanded: boolean = false
+  @property() onToggle: ((logId: string) => void) | undefined
+  @property({ type: Boolean, reflect: true }) error: boolean = false
 
-  constructor(log: SerializedEventData) {
-    super()
-    this.log = log
-  }
-
-  @property({ type: Boolean })
-  isExpanded: boolean = false
-
-  @property()
-  onToggle: ((logId: string) => void) | undefined
-
-  protected updated(changedProperties: PropertyValues<this>) {
-    // Only run this logic if the `log` property has changed.
-    if (changedProperties.has("log") && this.log) {
-      const log = this.log
-      const isError = log.type === "callbackCompleted" && "status" in log && log.status === "error"
-
-      // Instead of toggling a class, we now set CSS custom properties
-      // directly on the host element's style. This is an encapsulated
-      // pattern that does not interfere with external classes.
-      const color = isError ? "#f44336" : this.getLogTypeColor(log.type)
-      const bgColor = isError ? "rgba(244, 67, 54, 0.1)" : "transparent"
-
-      this.style.setProperty("--log-color", color)
-      this.style.setProperty("--log-background-color", bgColor)
+  protected willUpdate(changed: PropertyValues<this>) {
+    if (changed.has("log")) {
+      this.error = this.log.type === "callbackCompleted" && this.log.status === "error"
     }
   }
 
@@ -86,43 +64,19 @@ export class SingleLog extends LitElement {
     return JSON.stringify(rest, null, 2)
   }
 
-  private getLogTypeColor(logType: string): string {
-    return (EVENT_COLORS as Record<string, string>)[logType] || "#555"
-  }
-
-  private getEventDisplayName(eventType: string): string {
-    const eventNames: Record<string, string> = {
-      elementRegistered: "Registered",
-      elementUnregistered: "Unregistered",
-      callbackInvoked: "Invoked",
-      callbackCompleted: "Completed",
-      mouseTrajectoryUpdate: "Mouse",
-      scrollTrajectoryUpdate: "Scroll",
-      managerSettingsChanged: "Settings",
-      managerDataPayload: "ManagerData",
-      deviceStrategyChanged: "Strategy",
-    }
-
-    return eventNames[eventType] || eventType
-  }
-
   render() {
     const log = this.log
-    const isError = log.type === "callbackCompleted" && "status" in log && log.status === "error"
-
-    // The border color for the child component is still fine to calculate here.
-    const borderColor = isError ? "#f44336" : this.getLogTypeColor(log.type)
+    const look = this.error ? EVENT_LOOK.serializationError : EVENT_LOOK[log.type]
 
     return html`
       <expandable-item
-        .borderColor=${borderColor}
         .itemId=${log.logId}
         .isExpanded=${this.isExpanded}
         .onToggle=${this.onToggle}
       >
         <div slot="content" class="row">
           <span class="time">${log.localizedTimestamp}</span>
-          <span class="type">${this.getEventDisplayName(log.type)}</span>
+          <span class="type" style="color: ${look.color}" data-tip=${log.type}>${look.label}</span>
           <span class="summary" data-tip="${log.summary}">${log.summary}</span>
         </div>
         <div slot="details">${this.serializeLogDataWithoutSummary(log)}</div>

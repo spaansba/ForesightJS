@@ -10,23 +10,28 @@ import "./panel-tooltip"
 import { getEventLogStore } from "./log-tab/log-store"
 import type { ControllerTabs, Corner } from "../../types/types"
 import { ForesightDevtools } from "../foresight-devtools"
-import { CLOSE_SVG, MINIMIZE_SVG, EXPAND_SVG } from "../../svg/svg-icons"
-import { iconButtonStyles } from "./shared-styles"
+import { CLOSE_SVG, MINIMIZE_SVG } from "../../svg/svg-icons"
+import { buttonStyles } from "./shared-styles"
 
 @customElement("control-panel")
 export class ControlPanel extends LitElement {
   static styles = [
-    iconButtonStyles,
+    buttonStyles,
     css`
       :host {
-        --fs-bg: #18181b;
-        --fs-surface: rgba(255, 255, 255, 0.04);
-        --fs-hover: rgba(255, 255, 255, 0.07);
-        --fs-border: rgba(255, 255, 255, 0.08);
-        --fs-text: #e6e6e6;
-        --fs-muted: #8b8b90;
-        --fs-accent: #8ab4f8;
-        --fs-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --fs-bg: #121211;
+        --fs-raised: #1a1a18;
+        --fs-hover: #232320;
+        --fs-line: #2e2d2a;
+        --fs-text: #c9c5bc;
+        --fs-muted: #858179;
+        --fs-dim: #55534e;
+        --fs-mouse: #3b82f6;
+        --fs-scroll: #eab308;
+        --fs-tab: #f97316;
+        --fs-ok: #4ade80;
+        --fs-error: #f87171;
+        --fs-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
       }
 
       .panel {
@@ -44,16 +49,13 @@ export class ControlPanel extends LitElement {
         overflow: hidden;
         background: var(--fs-bg);
         color: var(--fs-text);
-        border: 1px solid var(--fs-border);
-        border-radius: 4px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        font-size: 12px;
+        border: 1px solid var(--fs-line);
+        border-radius: 2px;
+        box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+        font-family: var(--fs-mono);
+        font-size: 11px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
       }
 
       .panel.top-left {
@@ -80,19 +82,34 @@ export class ControlPanel extends LitElement {
 
       .bar {
         display: flex;
-        align-items: center;
-        height: 32px;
-        padding: 0 4px 0 10px;
+        align-items: stretch;
+        height: 30px;
+        padding-right: 4px;
         flex-shrink: 0;
-        border-bottom: 1px solid var(--fs-border);
+        border-bottom: 1px solid var(--fs-line);
+      }
+
+      .brand,
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
+
+      .brand {
+        border-right: 1px dashed var(--fs-line);
       }
 
       .pill {
         all: unset;
         display: flex;
         align-items: center;
-        gap: 10px;
-        height: 32px;
+        gap: 7px;
+        height: 28px;
         padding: 0 10px;
         font-weight: 600;
         cursor: pointer;
@@ -102,22 +119,12 @@ export class ControlPanel extends LitElement {
         background: var(--fs-hover);
       }
 
-      .pill svg {
-        width: 14px;
-        height: 14px;
-        color: var(--fs-muted);
-      }
-
-      .brand {
-        padding-right: 10px;
-        border-right: 1px solid var(--fs-border);
-        font-weight: 600;
-        white-space: nowrap;
-      }
-
       tab-selector {
-        align-self: stretch;
         flex: 1;
+      }
+
+      .bar > .btn {
+        align-self: center;
       }
 
       .tab-content {
@@ -135,15 +142,18 @@ export class ControlPanel extends LitElement {
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 6px 4px 10px;
-        background: rgba(255, 193, 7, 0.12);
-        color: #ffd54f;
-        font-size: 11px;
-        border-bottom: 1px solid var(--fs-border);
+        padding: 3px 4px 3px 10px;
+        color: var(--fs-muted);
+        border-bottom: 1px dashed var(--fs-line);
       }
 
       .touch-warning span {
         flex: 1;
+      }
+
+      .touch-warning b {
+        color: var(--fs-scroll);
+        font-weight: 500;
       }
     `,
   ]
@@ -285,20 +295,20 @@ export class ControlPanel extends LitElement {
       <div class="panel ${this.corner} ${this.isMinimized ? "minimized" : ""}">
         ${
           this.isMinimized
-            ? html`<button class="pill" @click="${this.handleMinimizeClick}">
-                Foresight ${EXPAND_SVG}
+            ? html`<button
+                class="pill"
+                @click="${this.handleMinimizeClick}"
+                data-tip="Open devtools"
+              >
+                foresight
               </button>`
             : html`<div class="bar">
-                <span class="brand">Foresight</span>
+                <span class="brand">foresight</span>
                 <tab-selector
                   .activeTab="${this.activeTab}"
                   @tab-change="${this._handleTabChange}"
                 ></tab-selector>
-                <button
-                  class="icon-button"
-                  @click="${this.handleMinimizeClick}"
-                  data-tip="Minimize"
-                >
+                <button class="btn" @click="${this.handleMinimizeClick}" data-tip="Minimize">
                   ${MINIMIZE_SVG}
                 </button>
               </div>`
@@ -307,8 +317,8 @@ export class ControlPanel extends LitElement {
           showWarning
             ? html`
                 <div class="touch-warning">
-                  <span>Touch mode: overlays and visibility sorting unavailable</span>
-                  <button class="icon-button" @click="${this.dismissWarning}" data-tip="Dismiss">
+                  <span><b>touch device</b>, no trajectories or visibility sort</span>
+                  <button class="btn" @click="${this.dismissWarning}" data-tip="Dismiss">
                     ${CLOSE_SVG}
                   </button>
                 </div>

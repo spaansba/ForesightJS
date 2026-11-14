@@ -15,39 +15,22 @@ export class SettingToggle extends LitElement {
 
       input {
         appearance: none;
-        position: relative;
-        width: 26px;
-        height: 14px;
+        width: 11px;
+        height: 11px;
         margin: 0;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid var(--fs-muted);
+        background: transparent;
         cursor: pointer;
-        outline: none;
-        transition: background-color 0.15s ease;
-      }
-
-      input::before {
-        content: "";
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-        background: #fff;
-        transition: transform 0.15s ease;
       }
 
       input:checked {
-        background: var(--fs-accent);
-      }
-
-      input:checked::before {
-        transform: translateX(12px);
+        border-color: var(--tint, var(--fs-text));
+        background: var(--tint, var(--fs-text));
+        box-shadow: inset 0 0 0 2px var(--fs-bg);
       }
 
       input:focus-visible {
-        outline: 1px solid var(--fs-accent);
+        outline: 1px dashed var(--fs-text);
         outline-offset: 2px;
       }
     `,

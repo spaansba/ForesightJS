@@ -15,13 +15,12 @@ export class PanelTooltip extends LitElement {
       z-index: 10003;
       max-width: 260px;
       padding: 4px 7px;
-      border-radius: 4px;
-      background: #2a2a2e;
-      border: 1px solid var(--fs-border);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      color: var(--fs-text);
-      font-size: 11px;
-      line-height: 1.4;
+      border-radius: 2px;
+      background: var(--fs-text);
+      color: var(--fs-bg);
+      font-family: var(--fs-mono);
+      font-size: 10.5px;
+      line-height: 1.45;
       white-space: pre-line;
       pointer-events: none;
     }
@@ -78,7 +77,7 @@ export class PanelTooltip extends LitElement {
     this.tip = null
   }
 
-  protected updated(changed: PropertyValues<this>): void {
+  protected updated(changed: PropertyValues): void {
     if (!changed.has("tip") || !this.tip || !this.tipEl) {
       return
     }

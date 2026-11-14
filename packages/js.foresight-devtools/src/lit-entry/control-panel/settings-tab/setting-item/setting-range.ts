@@ -13,16 +13,19 @@ export class SettingRange extends LitElement {
       }
 
       .value {
-        min-width: 48px;
+        min-width: 52px;
         text-align: right;
         color: var(--fs-text);
-        font-family: var(--fs-mono);
-        font-size: 10.5px;
+      }
+
+      .unit {
+        margin-left: 2px;
+        color: var(--fs-muted);
       }
 
       input {
         appearance: none;
-        width: 110px;
+        width: 96px;
         height: 14px;
         margin: 0;
         background: transparent;
@@ -30,41 +33,44 @@ export class SettingRange extends LitElement {
       }
 
       input::-webkit-slider-runnable-track {
-        height: 3px;
-        border-radius: 2px;
+        height: 1px;
         background: linear-gradient(
           to right,
-          var(--fs-accent) var(--fill),
-          rgba(255, 255, 255, 0.14) var(--fill)
+          var(--tint, var(--fs-text)) var(--fill),
+          var(--fs-dim) var(--fill)
         );
       }
 
       input::-moz-range-track {
-        height: 3px;
-        border-radius: 2px;
+        height: 1px;
         background: linear-gradient(
           to right,
-          var(--fs-accent) var(--fill),
-          rgba(255, 255, 255, 0.14) var(--fill)
+          var(--tint, var(--fs-text)) var(--fill),
+          var(--fs-dim) var(--fill)
         );
       }
 
       input::-webkit-slider-thumb {
         appearance: none;
-        width: 12px;
+        width: 3px;
         height: 12px;
-        margin-top: -4.5px;
+        margin-top: -5.5px;
         border: none;
-        border-radius: 2px;
-        background: #fff;
+        border-radius: 0;
+        background: var(--fs-text);
       }
 
       input::-moz-range-thumb {
-        width: 12px;
+        width: 3px;
         height: 12px;
         border: none;
-        border-radius: 2px;
-        background: #fff;
+        border-radius: 0;
+        background: var(--fs-text);
+      }
+
+      input:focus-visible {
+        outline: 1px dashed var(--fs-text);
+        outline-offset: 2px;
       }
     `,
   ]
@@ -115,7 +121,7 @@ export class SettingRange extends LitElement {
         @input=${this.handleRangeInput}
         @change=${this.handleRangeChange}
       />
-      <span class="value">${this.displayValue} ${this.unit}</span>`
+      <span class="value">${this.displayValue}<span class="unit">${this.unit}</span></span>`
   }
 }
 

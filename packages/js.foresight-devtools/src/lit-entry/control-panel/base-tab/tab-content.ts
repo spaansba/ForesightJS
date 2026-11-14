@@ -14,10 +14,10 @@ export class TabContent extends LitElement {
       .content {
         height: 100%;
         box-sizing: border-box;
-        padding: 4px;
+        padding: 4px 0;
         overflow-y: auto;
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+        scrollbar-color: var(--fs-line) transparent;
       }
 
       .empty {
@@ -25,15 +25,16 @@ export class TabContent extends LitElement {
         justify-content: center;
         align-items: center;
         height: 100%;
-        padding: 0 24px;
+        padding: 0 32px;
         text-align: center;
         color: var(--fs-muted);
+        text-wrap: balance;
       }
     `,
   ]
 
   @property({ type: String, attribute: "no-content-message" })
-  noContentMessage: string = "No content available."
+  noContentMessage: string = ""
 
   @property({ type: Boolean })
   hasContent: boolean = true

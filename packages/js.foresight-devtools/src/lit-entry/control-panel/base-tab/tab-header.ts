@@ -10,10 +10,16 @@ export class TabHeader extends LitElement {
         align-items: center;
         justify-content: space-between;
         gap: 8px;
-        height: 30px;
-        padding: 0 6px 0 10px;
-        border-bottom: 1px solid var(--fs-border);
+        height: 28px;
+        padding: 0 5px 0 10px;
+        border-bottom: 1px solid var(--fs-line);
         flex-shrink: 0;
+      }
+
+      ::slotted([slot="chips"]) {
+        color: var(--fs-muted);
+        white-space: nowrap;
+        cursor: default;
       }
 
       .chips,

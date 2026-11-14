@@ -9,27 +9,53 @@ import "../base-tab/expandable-item"
 import "./reactivate-countdown"
 import { ForesightManager } from "js.foresight"
 import { DISABLED_SVG, ENABLE_SVG, UNREGISTER_SVG } from "../../../svg/svg-icons"
-import { iconButtonStyles } from "../shared-styles"
+import { buttonStyles } from "../shared-styles"
 
 @customElement("single-element")
 export class SingleElement extends LitElement {
   static styles = [
-    iconButtonStyles,
+    buttonStyles,
     css`
       :host {
         display: block;
       }
 
-      .not-visible {
-        opacity: 0.5;
-      }
-
       .row {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         flex: 1;
         min-width: 0;
+      }
+
+      .marker {
+        flex-shrink: 0;
+        box-sizing: border-box;
+        width: 7px;
+        height: 7px;
+        border: 1px solid var(--fs-muted);
+      }
+
+      .marker.live {
+        border-color: var(--fs-text);
+        background: var(--fs-text);
+      }
+
+      .marker.inactive {
+        border-style: dashed;
+        border-color: var(--fs-dim);
+      }
+
+      .marker.running {
+        border-color: var(--fs-ok);
+        background: var(--fs-ok);
+        animation: blink 0.4s steps(2, jump-none) infinite;
+      }
+
+      @keyframes blink {
+        to {
+          opacity: 0.2;
+        }
       }
 
       .name {
@@ -38,38 +64,30 @@ export class SingleElement extends LitElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 11.5px;
         color: var(--fs-text);
       }
 
-      .name.running {
-        color: #fff;
-        font-weight: 600;
-      }
-
-      .name.inactive {
+      .name.offscreen {
         color: var(--fs-muted);
       }
 
-      .reason-tags {
-        display: inline-flex;
-        gap: 4px;
-        flex-shrink: 0;
+      .name.inactive {
+        color: var(--fs-dim);
       }
 
-      .reason-tag {
-        padding: 0 4px;
-        font-family: var(--fs-mono);
-        font-size: 9.5px;
-        line-height: 15px;
-        color: var(--reason-color);
-        background: color-mix(in srgb, var(--reason-color) 14%, transparent);
+      .reason {
+        flex-shrink: 0;
+        color: var(--fs-muted);
+      }
+
+      .reason::before {
+        content: "#";
+        color: var(--fs-dim);
       }
 
       .actions {
         display: flex;
         opacity: 0;
-        transition: opacity 0.12s ease;
       }
 
       :host(:hover) .actions,
@@ -77,27 +95,19 @@ export class SingleElement extends LitElement {
         opacity: 1;
       }
 
-      .icon-button {
+      .btn {
         height: 18px;
         min-width: 18px;
         padding: 0 2px;
       }
 
-      .icon-button svg {
+      .btn svg {
         width: 12px;
         height: 12px;
       }
 
-      .icon-button.danger:hover {
-        color: #ff6b6b;
-      }
-
-      .icon-button.warn:hover {
-        color: #ffa726;
-      }
-
-      .icon-button.ok:hover {
-        color: #66bb6a;
+      .btn.danger:hover {
+        color: var(--fs-error);
       }
     `,
   ]
@@ -133,88 +143,64 @@ export class SingleElement extends LitElement {
     this._abortController = null
   }
 
-  private getInactiveReasons(): { label: string; color: string; description: string }[] {
-    const reasons: { label: string; color: string; description: string }[] = []
+  private getInactiveReasons(): { label: string; description: string }[] {
+    const { isEnabled, isParked, isLimitedConnection, isActive, isPredicted } = this.state
+    const reasons: { label: string; description: string }[] = []
 
-    if (!this.state.isEnabled) {
+    if (!isEnabled) {
       reasons.push({
         label: "disabled",
-        color: "#9e9e9e",
-        description: "Element is disabled, so its callback won't run until you re-enable it.",
+        description: "Disabled. Its callback won't run until you enable it",
       })
     }
 
-    if (this.state.isParked) {
+    if (isParked) {
       reasons.push({
         label: "parked",
-        color: "#7986cb",
-        description:
-          "Element is detached from the DOM and parked: kept registered but inactive until it reconnects.",
+        description: "Detached from the DOM. Stays registered and wakes up when it reconnects",
       })
     }
 
-    if (this.state.isLimitedConnection) {
+    if (isLimitedConnection) {
       reasons.push({
-        label: "limited",
-        color: "#ffb74d",
-        description:
-          "Element is on a limited connection (e.g. Save-Data or slow network), so prediction is paused.",
+        label: "slow-net",
+        description: "Save-Data is on or the connection is below minimumConnectionType",
       })
     }
 
-    // Already fired its callback; stays inactive until reactivated, which by
-    // default (`reactivateAfter: Infinity`) never happens.
-    if (
-      this.state.isEnabled &&
-      !this.state.isParked &&
-      !this.state.isLimitedConnection &&
-      !this.state.isActive &&
-      this.state.isPredicted
-    ) {
+    if (isEnabled && !isParked && !isLimitedConnection && !isActive && isPredicted) {
       reasons.push({
         label: "fired",
-        color: "#4dd0e1",
-        description:
-          "Callback already fired. Stays inactive until reactivated (never, unless reactivateAfter is set).",
+        description: "Callback already ran. Comes back after reactivateAfter (never by default)",
       })
     }
 
     return reasons
   }
 
-  private getStatusColor(): string {
+  private getStatus(): "running" | "live" | "offscreen" | "inactive" {
     if (this.state.isCallbackRunning) {
-      return "#ffeb3b"
+      return "running"
     }
 
     if (!this.state.isActive) {
-      return "#999"
+      return "inactive"
     }
 
-    // Use purple for touch devices when active (no opacity variation)
-    if (this.currentDeviceStrategy === "touch") {
-      return "#ba68c8"
-    }
-
-    // Use green for desktop devices when active
-    return this.state.isIntersectingWithViewport ? "#4caf50" : "#666"
+    return this.state.isIntersectingWithViewport || this.currentDeviceStrategy === "touch"
+      ? "live"
+      : "offscreen"
   }
 
   private getStatusText(): string {
-    if (this.state.isCallbackRunning) {
-      return "callback active"
+    const labels = {
+      running: "callback running",
+      live: this.currentDeviceStrategy === "touch" ? "active" : "active, on screen",
+      offscreen: "active, off screen",
+      inactive: "inactive",
     }
 
-    if (!this.state.isActive) {
-      const reasons = this.getInactiveReasons()
-
-      return reasons.length ? `inactive: ${reasons.map(r => r.label).join(", ")}` : "inactive"
-    }
-
-    const baseStatus = this.state.isIntersectingWithViewport ? "in viewport" : "not in viewport"
-    const deviceStatus = this.currentDeviceStrategy === "touch" ? " (touch device)" : ""
-
-    return baseStatus + deviceStatus
+    return labels[this.getStatus()]
   }
 
   private formatElementDetails(): string {
@@ -238,42 +224,21 @@ export class SingleElement extends LitElement {
   }
 
   render() {
-    const isNotVisible =
-      !this.state.isIntersectingWithViewport && this.currentDeviceStrategy !== "touch"
-    const inactiveReasons = this.getInactiveReasons()
-    const nameClass = this.state.isCallbackRunning
-      ? "running"
-      : !this.state.isActive
-        ? "inactive"
-        : ""
+    const status = this.getStatus()
 
     return html`
       <expandable-item
-        class="${isNotVisible ? "not-visible" : ""}"
-        .borderColor=${this.getStatusColor()}
         .itemId=${this.state.id}
         .isExpanded=${this.isExpanded}
         .onToggle=${this.onToggle}
       >
-        <div slot="content" class="row" data-tip="Status: ${this.getStatusText()}">
-          <span class="name ${nameClass}">${this.state.name || "unnamed"}</span>
-          ${
-            inactiveReasons.length
-              ? html`
-                  <span class="reason-tags">
-                    ${inactiveReasons.map(
-                      reason =>
-                        html`<span
-                          class="reason-tag"
-                          style="--reason-color: ${reason.color}"
-                          data-tip="${reason.label}: ${reason.description}"
-                          >${reason.label}</span
-                        >`
-                    )}
-                  </span>
-                `
-              : ""
-          }
+        <div slot="content" class="row">
+          <span class="marker ${status}" data-tip=${this.getStatusText()}></span>
+          <span class="name ${status}">${this.state.name || "unnamed"}</span>
+          ${this.getInactiveReasons().map(
+            reason =>
+              html`<span class="reason" data-tip=${reason.description}>${reason.label}</span>`
+          )}
           ${
             this.state.isEnabled
               ? html`<reactivate-countdown
@@ -283,28 +248,14 @@ export class SingleElement extends LitElement {
               : ""
           }
           <span class="actions">
-            ${
-              this.state.isEnabled
-                ? html`<button
-                    class="icon-button warn"
-                    @click="${this.handleToggleEnabled}"
-                    data-tip="Disable element"
-                  >
-                    ${DISABLED_SVG}
-                  </button>`
-                : html`<button
-                    class="icon-button ok"
-                    @click="${this.handleToggleEnabled}"
-                    data-tip="Enable element"
-                  >
-                    ${ENABLE_SVG}
-                  </button>`
-            }
             <button
-              class="icon-button danger"
-              @click="${this.handleUnregister}"
-              data-tip="Unregister element"
+              class="btn"
+              @click="${this.handleToggleEnabled}"
+              data-tip="${this.state.isEnabled ? "Disable" : "Enable"}"
             >
+              ${this.state.isEnabled ? DISABLED_SVG : ENABLE_SVG}
+            </button>
+            <button class="btn danger" @click="${this.handleUnregister}" data-tip="Unregister">
               ${UNREGISTER_SVG}
             </button>
           </span>

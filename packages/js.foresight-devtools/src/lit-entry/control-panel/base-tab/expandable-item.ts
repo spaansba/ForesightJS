@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit"
 import { customElement, property } from "lit/decorators.js"
-import "../copy-icon/copy-icon"
+import "../copy-button"
 import { CHEVRON_SVG } from "../../../svg/svg-icons"
 
 @customElement("expandable-item")
@@ -11,21 +11,16 @@ export class ExpandableItem extends LitElement {
         display: block;
       }
 
-      .item {
-        margin-bottom: 2px;
-        border-left: 2px solid var(--border-color, #555);
-      }
-
       .item.expanded {
-        background: var(--fs-surface);
+        background: var(--fs-raised);
       }
 
       .header {
         display: flex;
         align-items: center;
         gap: 6px;
-        height: 24px;
-        padding: 0 4px 0 8px;
+        height: 22px;
+        padding: 0 4px 0 10px;
         cursor: pointer;
       }
 
@@ -42,13 +37,17 @@ export class ExpandableItem extends LitElement {
 
       .chevron {
         display: flex;
+        color: var(--fs-dim);
+        transition: transform 0.12s ease;
+      }
+
+      .header:hover .chevron {
         color: var(--fs-muted);
-        transition: transform 0.15s ease;
       }
 
       .chevron svg {
-        width: 12px;
-        height: 12px;
+        width: 11px;
+        height: 11px;
       }
 
       .expanded .chevron {
@@ -57,21 +56,23 @@ export class ExpandableItem extends LitElement {
 
       .details {
         position: relative;
-        padding: 4px 6px 6px 8px;
+        margin: 0 4px 0 10px;
+        padding: 6px 0 8px;
+        border-top: 1px dashed var(--fs-line);
       }
 
-      copy-icon {
+      copy-button {
         position: absolute;
         top: 4px;
-        right: 4px;
+        right: 0;
       }
 
       pre {
         margin: 0;
-        color: #cfcfd4;
-        font-family: var(--fs-mono);
+        color: var(--fs-muted);
+        font: inherit;
         font-size: 10.5px;
-        line-height: 1.45;
+        line-height: 1.5;
         white-space: pre;
         overflow-x: auto;
         scrollbar-width: thin;
@@ -79,7 +80,6 @@ export class ExpandableItem extends LitElement {
     `,
   ]
 
-  @property() borderColor: string = "#555"
   @property() itemId: string = ""
   @property() isExpanded: boolean = false
   @property() onToggle: ((itemId: string) => void) | undefined
@@ -105,8 +105,6 @@ export class ExpandableItem extends LitElement {
   }
 
   render() {
-    this.style.setProperty("--border-color", this.borderColor)
-
     return html`
       <div class="item ${this.isExpanded ? "expanded" : ""}">
         <div class="header" @click="${this.toggleExpand}">
@@ -117,10 +115,10 @@ export class ExpandableItem extends LitElement {
           this.isExpanded
             ? html`
                 <div class="details">
-                  <copy-icon
-                    data-tip="Copy details"
+                  <copy-button
+                    data-tip="Copy as JSON"
                     .onCopy=${(event: MouseEvent) => this.handleCopy(event)}
-                  ></copy-icon>
+                  ></copy-button>
                   <pre><slot name="details"></slot></pre>
                 </div>
               `
