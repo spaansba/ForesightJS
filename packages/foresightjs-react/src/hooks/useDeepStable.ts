@@ -1,11 +1,5 @@
 import { useRef } from "react"
 
-const isPlainObject = (value: object): boolean => {
-  const prototype = Object.getPrototypeOf(value)
-
-  return prototype === Object.prototype || prototype === null
-}
-
 export const isDeepEqual = (
   a: unknown,
   b: unknown,
@@ -23,17 +17,13 @@ export const isDeepEqual = (
     return a.getTime() === b.getTime()
   }
 
-  if (visited.get(a) === b) {
-    return true
+  if (visited.has(a)) {
+    return visited.get(a) === b
   }
 
   visited.set(a, b)
 
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every((item, index) => isDeepEqual(item, b[index], visited))
-  }
-
-  if (!isPlainObject(a) || !isPlainObject(b)) {
+  if (Array.isArray(a) !== Array.isArray(b)) {
     return false
   }
 

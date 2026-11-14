@@ -265,6 +265,60 @@ describe("useForesight", () => {
       expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
 
+    it("does not re-patch when a Map or class instance inside meta is content-equal", () => {
+      class Point {
+        constructor(public x: number) {}
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe
+          options={{
+            name: "x",
+            callback: cb,
+            meta: { map: new Map([[1, 2]]), point: new Point(1) },
+          }}
+        />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(
+        <ButtonProbe
+          options={{
+            name: "x",
+            callback: cb,
+            meta: { map: new Map([[1, 2]]), point: new Point(1) },
+          }}
+        />
+      )
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("patches when circular meta changes shape", () => {
+      const selfLoop = () => {
+        const meta: { self?: unknown } = {}
+        meta.self = meta
+
+        return meta
+      }
+      const twoStepLoop = () => {
+        const meta: { self?: unknown } = {}
+        meta.self = { self: meta }
+
+        return meta
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: selfLoop() }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      const next = twoStepLoop()
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: next }} />)
+
+      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].meta).toBe(next)
+    })
+
     it("does not loop when an inline meta object causes patches to replace the snapshot", () => {
       // Mimic the real manager: meta is compared by identity, so every patch
       // with a fresh meta object replaces the snapshot and notifies subscribers.
