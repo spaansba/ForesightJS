@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { ForesightManager } from "./ForesightManager"
 import { hasConnectionLimitations, userUsesTouchDevice } from "../helpers/shouldRegister"
 import type {
+  ForesightCallback,
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
@@ -78,6 +79,11 @@ const createMockElement = (id = "test-element"): ForesightElement => {
 
   return element
 }
+
+const rejectOnAbort: ForesightCallback = (_state, { signal }) =>
+  new Promise<void>((_resolve, reject) => {
+    signal.addEventListener("abort", () => reject(signal.reason))
+  })
 
 const expectState = (
   state: ForesightElementState,
@@ -1343,6 +1349,82 @@ describe("ForesightManager", () => {
     })
   })
 
+  describe("Callback context", () => {
+    it("passes the hit type and a live signal", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn<ForesightCallback>()
+      manager.register({ element, callback })
+
+      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
+      await vi.runAllTimersAsync()
+
+      const context = callback.mock.calls[0][1]
+      expect(context.hitType).toEqual({ kind: "mouse", subType: "trajectory" })
+      expect(context.signal.aborted).toBe(false)
+    })
+
+    it("aborts the signal when the element is unregistered mid-callback", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const completedListener = vi.fn()
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      const callback = vi.fn(rejectOnAbort)
+      manager.addEventListener("callbackCompleted", completedListener)
+      manager.register({ element, callback })
+
+      fire(manager, getEntry(manager, element))
+      manager.unregister(element)
+      await vi.runAllTimersAsync()
+
+      expect(callback.mock.calls[0][1].signal.aborted).toBe(true)
+      expect(completedListener).toHaveBeenCalledWith(
+        expect.objectContaining({ status: "aborted", errorMessage: null })
+      )
+      expect(consoleSpy).not.toHaveBeenCalled()
+    })
+
+    it("lets an aborted element fire again once it is enabled", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      const callback = vi.fn(rejectOnAbort)
+      manager.register({ element, callback })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+      manager.updateElementOptions(element, { enabled: false })
+      await vi.runAllTimersAsync()
+
+      expect(entry.state.status).toBe("aborted")
+      expect(entry.state.isActive).toBe(false)
+
+      manager.updateElementOptions(element, { enabled: true })
+      fire(manager, entry)
+
+      expect(callback).toHaveBeenCalledTimes(2)
+      expect(callback.mock.calls[1][1].signal.aborted).toBe(false)
+    })
+
+    it("keeps a callback that ignores the abort as predicted", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      let finish = () => {}
+      const callback: ForesightCallback = () => new Promise<void>(resolve => (finish = resolve))
+      manager.register({ element, callback })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+      element.remove()
+      // @ts-expect-error - private method invoked directly for tests
+      manager.parkDisconnected(entry)
+      finish()
+      await vi.runAllTimersAsync()
+
+      expect(entry.state.status).toBe("success")
+      expect(entry.state.isPredicted).toBe(true)
+    })
+  })
+
   describe("Callback receives state snapshot", () => {
     it("should pass state to callback on invocation", async () => {
       const manager = ForesightManager.initialize()
@@ -2426,6 +2508,27 @@ describe("ForesightManager", () => {
       expect(entry.state.isRegistered).toBe(true)
       expect(entry.state.isActive).toBe(false)
       expect(entry.state.isParked).toBe(true)
+    })
+
+    it("aborts a running callback when detached and reactivates on reconnect", async () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+      manager.register({ element, callback: rejectOnAbort })
+      const entry = getEntry(manager, element)
+
+      fire(manager, entry)
+      element.remove()
+      triggerDomCheck(manager, [], [element])
+      await vi.runAllTimersAsync()
+
+      expect(entry.state.status).toBe("aborted")
+      expect(entry.state.isPredicted).toBe(false)
+      expect(entry.state.isActive).toBe(false)
+
+      document.body.appendChild(element)
+      triggerDomCheck(manager, [element], [])
+
+      expect(entry.state.isActive).toBe(true)
     })
 
     it("does not unregister or emit elementUnregistered on disconnect", () => {

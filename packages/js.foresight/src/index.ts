@@ -11,6 +11,7 @@ export type {
   UpdateForsightManagerSettings,
   ForesightManagerSettings,
   ForesightCallback,
+  ForesightCallbackContext,
   ForesightRegisterOptions,
   ForesightRegisterNodeListOptions,
   ForesightRegisterOptionsWithoutElement,

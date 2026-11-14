@@ -36,7 +36,7 @@ type CallbackCompletedEvent = {
   state: ForesightElementState
   hitType: CallbackHitType
   elapsed: number // Time between callbackInvoked and callbackCompleted
-  status: "success" | "error" | undefined
+  status: "success" | "error" | "aborted" | undefined
   errorMessage: string | null
   wasLastActiveElement: boolean
 }

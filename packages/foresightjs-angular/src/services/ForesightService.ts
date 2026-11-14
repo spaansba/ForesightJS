@@ -2,6 +2,7 @@ import { Injectable, NgZone, signal } from "@angular/core"
 import {
   ForesightManager,
   createUnregisteredSnapshot,
+  type ForesightCallback,
   type ForesightElementState,
   type ForesightEvent,
   type ForesightEventMap,
@@ -24,7 +25,8 @@ export class ForesightService {
     // listeners outside the zone, and Angular 17 does not schedule change
     // detection for signal writes made there (18+ does via the hybrid
     // scheduler). zone.run is a passthrough in zoneless apps.
-    const callback = (s: ForesightElementState) => this.zone.run(() => optionsRef.callback(s))
+    const callback: ForesightCallback = (...args) =>
+      this.zone.run(() => optionsRef.callback(...args))
     const setState = (s: Readonly<ForesightElementState>) => this.zone.run(() => state.set(s))
 
     let result: ForesightRegisterResult | null = ForesightManager.instance.register({

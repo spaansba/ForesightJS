@@ -55,7 +55,7 @@ type ForesightElementState = {
   hitCount: number
   registerCount: number // amount of times this element has been (re)registered
   durationMs: number | undefined // duration of the most recent callback run
-  status: "error" | "success" | undefined // status of the most recent callback
+  status: "error" | "success" | "aborted" | undefined // status of the most recent callback
   error: string | null
   reactivateAfter: number
 }
@@ -130,10 +130,15 @@ type ForesightManagerData = {
 
 ### ForesightCallback
 
-The callback function type used when registering elements. Receives the [`ForesightElementState`](#foresightelementstate) of the element that triggered the callback.
+The callback function type used when registering elements. Receives the [`ForesightElementState`](#foresightelementstate) of the element that triggered the callback and a `ForesightCallbackContext`.
 
 ```typescript
-type ForesightCallback = (state: ForesightElementState) => void
+type ForesightCallback = (state: ForesightElementState, context: ForesightCallbackContext) => void
+
+type ForesightCallbackContext = {
+  hitType: CallbackHitType // which prediction fired the callback
+  signal: AbortSignal // aborts when the element is unregistered, disabled or removed from the DOM mid-callback
+}
 ```
 
 This is useful when registering multiple elements with a shared callback, as you can identify which element triggered it:
