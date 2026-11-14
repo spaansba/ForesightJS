@@ -1,5 +1,7 @@
 import { LitElement, css, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
+import { ForesightManager } from "js.foresight"
+import { countCallbackHit, createCallbackHits } from "../helpers/callbackHits"
 import {
   SHOW_KEYS,
   type DeepPartial,
@@ -25,6 +27,9 @@ export class ForesightDevtools extends LitElement {
   @state() private isInitialized = false
 
   private static _instance: ForesightDevtools | null = null
+  private _abortController: AbortController | null = null
+
+  public readonly callbackHits = createCallbackHits()
 
   public devtoolsSettings: Required<DevtoolsSettings> = {
     show: {
@@ -86,8 +91,20 @@ export class ForesightDevtools extends LitElement {
     return ForesightDevtools._instance!
   }
 
+  connectedCallback() {
+    super.connectedCallback()
+    this._abortController = new AbortController()
+    ForesightManager.instance.addEventListener(
+      "callbackInvoked",
+      e => countCallbackHit(this.callbackHits, e.hitType),
+      { signal: this._abortController.signal }
+    )
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback()
+    this._abortController?.abort()
+    this._abortController = null
     this.cleanup()
   }
 

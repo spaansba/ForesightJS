@@ -94,8 +94,6 @@ export type ForesightElementState = {
   isCallbackRunning: boolean
   /** Number of times the callback has fired for this element. */
   hitCount: number
-  /** Number of times this element has been (re)registered. */
-  registerCount: number
   /** Duration in ms of the most recent callback run. */
   durationMs: number | undefined
   /** Status of the most recently completed callback. */
@@ -141,10 +139,6 @@ export type ForesightElementInternal = {
   state: ForesightElementState
   /** Current immutable geometry ref. Replaced on every position/size change. */
   bounds: ElementBounds
-  /** Timestamp the callback was last invoked. */
-  invokedAt: number | undefined
-  /** Timestamp the callback last completed. */
-  completedAt: number | undefined
   /** The DOM element this record tracks. */
   element: ForesightElement
   /** User-supplied callback. */
@@ -159,32 +153,12 @@ export type ForesightElementInternal = {
 
 export type callbackStatus = "error" | "success" | undefined
 
-type MouseCallbackCounts = {
-  hover: number
-  trajectory: number
-}
-
-type TabCallbackCounts = {
-  reverse: number
-  forwards: number
-}
-
 export type ScrollDirection = "down" | "up" | "left" | "right" | "none"
-type ScrollCallbackCounts = Record<`${Exclude<ScrollDirection, "none">}`, number>
-
-export type CallbackHits = {
-  total: number
-  mouse: MouseCallbackCounts
-  tab: TabCallbackCounts
-  scroll: ScrollCallbackCounts
-  touch: number
-  viewport: number
-}
 
 export type CallbackHitType =
-  | { kind: "mouse"; subType: keyof MouseCallbackCounts }
-  | { kind: "tab"; subType: keyof TabCallbackCounts }
-  | { kind: "scroll"; subType: keyof ScrollCallbackCounts }
+  | { kind: "mouse"; subType: "hover" | "trajectory" }
+  | { kind: "tab"; subType: "forwards" | "reverse" }
+  | { kind: "scroll"; subType: Exclude<ScrollDirection, "none"> }
   | { kind: "touch"; subType?: string }
   | { kind: "viewport"; subType?: string }
 
@@ -194,17 +168,7 @@ export type CallbackHitType =
 export type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementState>
   globalSettings: Readonly<ForesightManagerSettings>
-  globalCallbackHits: Readonly<CallbackHits>
-  eventListeners: ReadonlyMap<keyof ForesightEventMap, ReadonlySet<ForesightEventListener>>
   currentDeviceStrategy: CurrentDeviceStrategy
-  activeElementCount: number
-  parkedElementCount: number
-  loadedModules: ForesightModules
-}
-
-export type ForesightModules = {
-  desktopHandler: boolean
-  touchHandler: boolean
 }
 
 export type TouchDeviceStrategy = "none" | "viewport" | "onTouchStart"

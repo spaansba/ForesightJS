@@ -90,18 +90,13 @@ ForesightManager.instance.unregister(navLinks)
 
 ## ForesightManager.instance.getManagerData {#foresightmanagerinstancegetmanagerdata}
 
-Snapshot of the current `ForesightManager` state, including all global settings, registered elements, position observer data, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+Snapshot of the current `ForesightManager` state: registered elements, global settings and the current device strategy. This is primarily used for debugging, monitoring, and development purposes.
 
 **Properties:**
 
 - `registeredElements` - `Map` of all currently registered elements and their associated [`ForesightElementState`](../getting-started/typescript.md#foresightelementstate)
-- `eventListeners` - `Map` of all event listeners listening to ForesightManager events.
 - `globalSettings` - Current global configuration settings
-- `globalCallbackHits` - Total `callback` execution counts by interaction type (mouse/tab/scroll/viewport/touch) and by subtype (hover/trajectory for mouse, forwards/reverse for tab, direction for scroll)
 - `currentDeviceStrategy` - Which strategy is being used: `mouse`, `touch`, or `pen`. This changes dynamically as the input method changes
-- `activeElementCount` - Amount of elements currently active (not the same as registered)
-- `parkedElementCount` - Amount of elements currently parked: detached from the DOM (`isParked: true`) and waiting to reconnect
-- `loadedModules` - Shows which device handlers have been [lazy loaded](../behind-the-scenes.md#bundle-optimization)
 
 **Returns:** `Readonly<ForesightManagerData>`
 
@@ -113,32 +108,7 @@ The return will look something like this:
     "size": 7,
     "entries": "<all your currently registered elements>"
   },
-  "activeElementCount": 5,
-  "parkedElementCount": 0,
   "currentDeviceStrategy": "mouse",
-  "eventListeners": {
-    "0": {
-      "elementRegistered": []
-    },
-    "1": {
-      "elementUnregistered": []
-    },
-    "2": {
-      "mouseTrajectoryUpdate": []
-    },
-    "3": {
-      "scrollTrajectoryUpdate": []
-    },
-    "4": {
-      "managerSettingsChanged": []
-    },
-    "5": {
-      "callbackInvoked": []
-    },
-    "6": {
-      "callbackCompleted": []
-    }
-  },
   "globalSettings": {
     "defaultHitSlop": {
       "bottom": 0,
@@ -155,29 +125,6 @@ The return will look something like this:
     "touchDeviceStrategy": "onTouchStart",
     "minimumConnectionType": "3g",
     "setDataAttributes": true
-  },
-  "globalCallbackHits": {
-    "mouse": {
-      "hover": 0,
-      "trajectory": 3
-    },
-    "scroll": {
-      "down": 2,
-      "left": 0,
-      "right": 0,
-      "up": 0
-    },
-    "tab": {
-      "forwards": 3,
-      "reverse": 0
-    },
-    "touch": 0,
-    "viewport": 0,
-    "total": 8
-  },
-  "loadedModules": {
-    "desktopHandler": true,
-    "touchHandler": false
   }
 }
 ```

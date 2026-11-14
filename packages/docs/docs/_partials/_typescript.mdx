@@ -53,7 +53,6 @@ type ForesightElementState = {
   isPredicted: boolean
   isCallbackRunning: boolean
   hitCount: number
-  registerCount: number // amount of times this element has been (re)registered
   durationMs: number | undefined // duration of the most recent callback run
   status: "error" | "success" | undefined // status of the most recent callback
   error: string | null
@@ -109,7 +108,7 @@ type CurrentDeviceStrategy = "mouse" | "touch" | "pen"
 
 ### ForesightManagerData
 
-Snapshot of the current ForesightManager state, including all [global settings](../configuration/global-settings.md), registered elements, and interaction statistics. This is primarily used for debugging, monitoring, and development purposes.
+Snapshot of the current ForesightManager state: registered elements, [global settings](../configuration/global-settings.md) and the current device strategy. This is primarily used for debugging, monitoring, and development purposes.
 
 This data is returned in the [`managerSettingsChanged`](../events.md) event or by calling [`ForesightManager.instance.getManagerData`](../debugging/static-properties.md#foresightmanagerinstancegetmanagerdata) manually.
 
@@ -117,12 +116,7 @@ This data is returned in the [`managerSettingsChanged`](../events.md) event or b
 type ForesightManagerData = {
   registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> // See above for ForesightElementState
   globalSettings: Readonly<ForesightManagerSettings> // See configuration for global settings
-  globalCallbackHits: Readonly<CallbackHits> // See above for CallbackHitType, this is that but all of them combined
-  eventListeners: ReadonlyMap<keyof ForesightEventMap, ReadonlySet<ForesightEventListener>> // All event listeners currently listening
   currentDeviceStrategy: CurrentDeviceStrategy
-  activeElementCount: number
-  parkedElementCount: number // elements detached from the DOM, waiting to reconnect
-  loadedModules: ForesightModules // which device handlers are lazily loaded
 }
 ```
 

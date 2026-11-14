@@ -6,7 +6,6 @@ import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightElementState,
-  ForesightModules,
   ForesightRegisterOptions,
 } from "../types/types"
 
@@ -250,17 +249,6 @@ describe("ForesightManager", () => {
 
       expect(state1?.id).not.toBe(state2?.id)
       expect(state1?.id).toMatch(/^foresight-\d+$/)
-    })
-
-    it("should increment registerCount on duplicate registration", () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-      const result = manager.register({ element, callback: vi.fn() })
-
-      expect(result.registerCount).toBe(2)
-      expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
 
     it("should use element id as name when name not provided", () => {
@@ -671,20 +659,6 @@ describe("ForesightManager", () => {
       expect(entry.state.isCallbackRunning).toBe(false)
     })
 
-    it("should update hit counters on callback invocation", async () => {
-      const manager = ForesightManager.initialize()
-      const element = createMockElement()
-
-      manager.register({ element, callback: vi.fn() })
-
-      fire(manager, getEntry(manager, element), { kind: "mouse", subType: "trajectory" })
-      await vi.runAllTimersAsync()
-
-      const data = manager.getManagerData
-      expect(data.globalCallbackHits.mouse.trajectory).toBe(1)
-      expect(data.globalCallbackHits.total).toBe(1)
-    })
-
     it("should prevent duplicate callback invocation while running", async () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
@@ -967,9 +941,7 @@ describe("ForesightManager", () => {
       const data = manager.getManagerData
 
       expect(data.registeredElements.size).toBe(1)
-      expect(data.activeElementCount).toBe(1)
       expect(data.globalSettings).toBeDefined()
-      expect(data.globalCallbackHits.total).toBe(0)
     })
 
     it("should track active element count", async () => {
@@ -980,12 +952,12 @@ describe("ForesightManager", () => {
       manager.register({ element: element1, callback: vi.fn() })
       manager.register({ element: element2, callback: vi.fn() })
 
-      expect(manager.getManagerData.activeElementCount).toBe(2)
+      expect(manager["activeElementCount"]).toBe(2)
 
       fire(manager, getEntry(manager, element1))
       await vi.runAllTimersAsync()
 
-      expect(manager.getManagerData.activeElementCount).toBe(1)
+      expect(manager["activeElementCount"]).toBe(1)
     })
   })
 
@@ -993,9 +965,8 @@ describe("ForesightManager", () => {
     it("should not have handlers loaded before first registration", () => {
       const manager = ForesightManager.initialize()
 
-      const data = manager.getManagerData
-      expect(data.loadedModules.desktopHandler).toBe(false)
-      expect(data.loadedModules.touchHandler).toBe(false)
+      expect(manager["desktopHandler"]).toBeNull()
+      expect(manager["touchDeviceHandler"]).toBeNull()
     })
 
     it("should lazy load desktop handler on first element registration", async () => {
@@ -1004,13 +975,13 @@ describe("ForesightManager", () => {
       const element = createMockElement()
 
       // Before registration, no handlers loaded
-      expect(manager.getManagerData.loadedModules.desktopHandler).toBe(false)
+      expect(manager["desktopHandler"]).toBeNull()
 
       manager.register({ element, callback: vi.fn() })
 
       // Wait for async handler loading to complete
       await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+        expect(manager["desktopHandler"]).not.toBeNull()
       })
       vi.useFakeTimers()
     })
@@ -1021,7 +992,7 @@ describe("ForesightManager", () => {
 
       manager.register({ element: createMockElement(), callback: vi.fn() })
       await vi.waitFor(() => {
-        expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true)
+        expect(manager["desktopHandler"]).not.toBeNull()
       })
       await new Promise(resolve => setTimeout(resolve, 0))
 
@@ -1069,7 +1040,7 @@ describe("ForesightManager", () => {
       const listener = vi.fn()
       manager.addEventListener("callbackInvoked", listener)
       manager.register({ element: createMockElement(), callback: vi.fn() })
-      await vi.waitFor(() => expect(manager.getManagerData.loadedModules.desktopHandler).toBe(true))
+      await vi.waitFor(() => expect(manager["desktopHandler"]).not.toBeNull())
 
       move(0, 1000)
       await nextFrame()
@@ -1088,8 +1059,11 @@ describe("ForesightManager", () => {
     afterEach(() => vi.useFakeTimers())
 
     // Waits for a lazy module to finish loading, then lets the awaiting code run on.
-    const loaded = async (manager: ForesightManager, check: (m: ForesightModules) => boolean) => {
-      await vi.waitFor(() => expect(check(manager.getManagerData.loadedModules)).toBe(true))
+    const loaded = async (
+      manager: ForesightManager,
+      handler: "desktopHandler" | "touchDeviceHandler"
+    ) => {
+      await vi.waitFor(() => expect(manager[handler]).not.toBeNull())
       await new Promise(resolve => setTimeout(resolve, 0))
     }
 
@@ -1099,7 +1073,7 @@ describe("ForesightManager", () => {
 
       manager.register({ element, callback: vi.fn() })
       manager.unregister(element)
-      await loaded(manager, m => m.desktopHandler)
+      await loaded(manager, "desktopHandler")
 
       // @ts-expect-error - accessing private handler for tests
       expect(manager.desktopHandler.isConnected).toBe(false)
@@ -1108,7 +1082,7 @@ describe("ForesightManager", () => {
     it("only connects the latest device strategy when switching mid-load", async () => {
       const manager = ForesightManager.initialize()
       manager.register({ element: createMockElement(), callback: vi.fn() })
-      await loaded(manager, m => m.desktopHandler)
+      await loaded(manager, "desktopHandler")
 
       const move = (pointerType: string) =>
         document.dispatchEvent(
@@ -1116,7 +1090,7 @@ describe("ForesightManager", () => {
         )
       move("touch")
       move("mouse")
-      await loaded(manager, m => m.touchHandler)
+      await loaded(manager, "touchDeviceHandler")
 
       // @ts-expect-error - accessing private handlers for tests
       const { desktopHandler, touchDeviceHandler, currentlyActiveHandler } = manager
@@ -1128,7 +1102,7 @@ describe("ForesightManager", () => {
     it("does not connect the tab predictor when it is disabled mid-load", async () => {
       const manager = ForesightManager.initialize({ enableTabPrediction: false })
       manager.register({ element: createMockElement(), callback: vi.fn() })
-      await loaded(manager, m => m.desktopHandler)
+      await loaded(manager, "desktopHandler")
 
       manager.alterGlobalSettings({ enableTabPrediction: true })
       manager.alterGlobalSettings({ enableTabPrediction: false })
@@ -1146,7 +1120,7 @@ describe("ForesightManager", () => {
       vi.mocked(userUsesTouchDevice).mockReturnValueOnce(true)
       const manager = ForesightManager.initialize()
       manager.register({ element: createMockElement(), callback: vi.fn() })
-      await loaded(manager, m => m.touchHandler)
+      await loaded(manager, "touchDeviceHandler")
 
       // @ts-expect-error - accessing private handler for tests
       const { predictors } = manager.touchDeviceHandler
@@ -1511,9 +1485,7 @@ describe("ForesightManager", () => {
       const result1 = manager.register({ element, callback: vi.fn() })
       const result2 = manager.register({ element, callback: vi.fn() })
 
-      // Both results should read from the same internal entry
-      expect(result2.getSnapshot().registerCount).toBe(2)
-      expect(result1.getSnapshot().registerCount).toBe(2)
+      expect(result1.getSnapshot()).toBe(result2.getSnapshot())
     })
   })
 
@@ -1991,7 +1963,6 @@ describe("ForesightManager", () => {
       manager.register({ element, callback: vi.fn(), name: "updated" })
 
       expect(manager.registeredElements.get(element)?.name).toBe("updated")
-      expect(manager.registeredElements.get(element)?.registerCount).toBe(2)
     })
   })
 
@@ -2250,7 +2221,6 @@ describe("ForesightManager", () => {
 
       expect(entry.state.isEnabled).toBe(true)
       expect(entry.state.isActive).toBe(true)
-      expect(manager.registeredElements.get(element)?.registerCount).toBe(1)
     })
 
     it("deactivates without unregistering when toggled off", () => {
@@ -2350,7 +2320,7 @@ describe("ForesightManager", () => {
     it("does not count the element as active or observe it", () => {
       const { manager, element } = setupBasicTest()
 
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(manager["activeElementCount"]).toBe(0)
       // @ts-expect-error - accessing private handler for tests
       const handler = manager.currentlyActiveHandler
       if (handler) {
@@ -2374,7 +2344,7 @@ describe("ForesightManager", () => {
       // Enabling must not start prediction on a limited connection.
       expect(entry.state.isEnabled).toBe(true)
       expect(entry.state.isActive).toBe(false)
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(manager["activeElementCount"]).toBe(0)
     })
 
     it("stays inactive when reactivate() is called during a limited connection", () => {
@@ -2383,7 +2353,7 @@ describe("ForesightManager", () => {
       manager.reactivate(element)
 
       expect(entry.state.isActive).toBe(false)
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(manager["activeElementCount"]).toBe(0)
     })
 
     it("registers as active when the connection is not limited", () => {
@@ -2468,17 +2438,17 @@ describe("ForesightManager", () => {
       expect(entry.state.isParked).toBe(false)
     })
 
-    it("tracks parked elements in getManagerData.parkedElementCount", () => {
+    it("tracks the parked element count", () => {
       const { manager, element } = setupBasicTest()
-      expect(manager.getManagerData.parkedElementCount).toBe(0)
+      expect(manager["parkedElementCount"]).toBe(0)
 
       element.remove()
       triggerDomCheck(manager, [], [element])
-      expect(manager.getManagerData.parkedElementCount).toBe(1)
+      expect(manager["parkedElementCount"]).toBe(1)
 
       document.body.appendChild(element)
       triggerDomCheck(manager, [element], [])
-      expect(manager.getManagerData.parkedElementCount).toBe(0)
+      expect(manager["parkedElementCount"]).toBe(0)
     })
 
     it("keeps global listeners alive while a parked element waits to reconnect", () => {
@@ -2490,7 +2460,7 @@ describe("ForesightManager", () => {
       triggerDomCheck(manager, [], [element])
 
       // No active element, but listeners must stay so reconnection is detected.
-      expect(manager.getManagerData.activeElementCount).toBe(0)
+      expect(manager["activeElementCount"]).toBe(0)
       // @ts-expect-error - private field
       expect(manager.isSetup).toBe(true)
     })
@@ -2499,12 +2469,12 @@ describe("ForesightManager", () => {
       const { manager, element, result } = setupBasicTest()
       element.remove()
       triggerDomCheck(manager, [], [element])
-      expect(manager.getManagerData.parkedElementCount).toBe(1)
+      expect(manager["parkedElementCount"]).toBe(1)
 
       result.unregister()
 
       expect(manager.registeredElements.has(element)).toBe(false)
-      expect(manager.getManagerData.parkedElementCount).toBe(0)
+      expect(manager["parkedElementCount"]).toBe(0)
     })
 
     it("does not reactivate an element parked mid-callback, and restarts the cooldown on reconnect", async () => {

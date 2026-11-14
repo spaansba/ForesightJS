@@ -59,8 +59,4 @@ export class ForesightEventEmitter {
 
     return listeners !== undefined && listeners.size > 0
   }
-
-  public getEventListeners(): ReadonlyMap<ForesightEvent, ReadonlySet<ForesightEventListener>> {
-    return this.eventListeners
-  }
 }
