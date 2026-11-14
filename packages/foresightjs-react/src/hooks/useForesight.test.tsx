@@ -198,6 +198,127 @@ describe("useForesight", () => {
       expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
     })
 
+    it("does not re-patch when only a function inside meta changes identity", () => {
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: { track: () => "a" } }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: { track: () => "b" } }} />)
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not re-patch when circular array meta content is unchanged", () => {
+      const circularList = () => {
+        const list: unknown[] = [1]
+        list.push(list)
+
+        return { list }
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: circularList() }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: circularList() }} />)
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("patches when circular meta content changes", () => {
+      const circular = (v: number) => {
+        const meta: { v: number; self?: unknown } = { v }
+        meta.self = meta
+
+        return meta
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: circular(1) }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      const next = circular(2)
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: next }} />)
+
+      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].meta).toBe(next)
+    })
+
+    it("does not re-patch when circular meta content is unchanged", () => {
+      const circular = () => {
+        const meta: { v: number; self?: unknown } = { v: 1 }
+        meta.self = meta
+
+        return meta
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: circular() }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: circular() }} />)
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not re-patch when a Map or class instance inside meta is content-equal", () => {
+      class Point {
+        constructor(public x: number) {}
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe
+          options={{
+            name: "x",
+            callback: cb,
+            meta: { map: new Map([[1, 2]]), point: new Point(1) },
+          }}
+        />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      rerender(
+        <ButtonProbe
+          options={{
+            name: "x",
+            callback: cb,
+            meta: { map: new Map([[1, 2]]), point: new Point(1) },
+          }}
+        />
+      )
+
+      expect(replaceElementOptionsSpy).not.toHaveBeenCalled()
+    })
+
+    it("patches when circular meta changes shape", () => {
+      const selfLoop = () => {
+        const meta: { self?: unknown } = {}
+        meta.self = meta
+
+        return meta
+      }
+      const twoStepLoop = () => {
+        const meta: { self?: unknown } = {}
+        meta.self = { self: meta }
+
+        return meta
+      }
+      const cb = vi.fn()
+      const { rerender } = render(
+        <ButtonProbe options={{ name: "x", callback: cb, meta: selfLoop() }} />
+      )
+      replaceElementOptionsSpy.mockClear()
+
+      const next = twoStepLoop()
+      rerender(<ButtonProbe options={{ name: "x", callback: cb, meta: next }} />)
+
+      expect(replaceElementOptionsSpy.mock.calls.at(-1)?.[1].meta).toBe(next)
+    })
+
     it("does not loop when an inline meta object causes patches to replace the snapshot", () => {
       // Mimic the real manager: meta is compared by identity, so every patch
       // with a fresh meta object replaces the snapshot and notifies subscribers.
