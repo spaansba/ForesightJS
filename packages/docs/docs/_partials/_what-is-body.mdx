@@ -24,17 +24,17 @@ ForesightJS is a specialized performance tool, not something to drop into every 
 
 ### Which problems does ForesightJS solve?
 
-#### Problem 1: On-Hover Prefetching Still Has Latency
+#### Problem 1: Hover-Based Prefetching Starts Late
 
-Traditional hover-based prefetching only triggers after the user's cursor reaches an element. This approach wastes the critical 100-200ms window between when a user begins moving toward a target and when the hover event actually fires-time that could be used for prefetching.
+Hover-based prefetching only triggers once the cursor is already on the link. The 100-200ms between the user starting to move toward a link and the hover event firing goes unused. ForesightJS predicts the target from the mouse trajectory and starts prefetching before the cursor arrives.
 
-#### Problem 2: Viewport-Based Prefetching is Wasteful
+#### Problem 2: Viewport-Based Prefetching Loads What Users Never Click
 
-Many modern frameworks (like Next.js) automatically prefetch resources for all links that enter the viewport. While well-intentioned, this creates significant overhead since users typically interact with only a small fraction of visible elements. Simply scrolling up and down the Next.js homepage can trigger **_1.59MB_** of unnecessary prefetch requests.
+Viewport prefetching loads routes for links as they become visible, while users usually click only a few of them. Some frameworks now make this cheaper. Next.js has an opt-in [Partial Prefetching](https://nextjs.org/docs/app/guides/prefetching#partial-prefetching) mode that fetches one shared shell per route instead of one request per link. ForesightJS only prefetches the links users are predicted to interact with.
 
-#### Problem 3: Hover-Based Prefetching Excludes Keyboard Users
+#### Problem 3: Keyboard Users Get Less
 
-Many routers rely on hover-based prefetching, but this approach completely excludes keyboard users since keyboard navigation never triggers hover events. This means keyboard users miss out on the performance benefits that mouse users get from hover-based prefetching.
+Hover-only prefetching never fires for keyboard users. Strategies that also listen to focus only start once the link is focused. ForesightJS tracks Tab navigation and prefetches when the user is a few tab stops away from a link.
 
 ## Lightweight
 

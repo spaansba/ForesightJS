@@ -8,7 +8,7 @@ keywords:
   - tab prediction
 description: Introduction to ForesightJS for Angular, a lightweight library that predicts user intent based on mouse movements and keyboard navigation
 last_updated:
-  date: 2026-06-26
+  date: 2026-11-14
   author: Bart Spaans
 ---
 
