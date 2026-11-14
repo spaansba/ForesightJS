@@ -364,6 +364,29 @@ describe("ForesightManager", () => {
   })
 
   describe("Element Unregistration", () => {
+    it("unregisters through any result of an element that was registered again to update it", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const { unregister } = manager.register({ element, callback: vi.fn(), name: "v1" })
+      manager.register({ element, callback: vi.fn(), name: "v2" })
+
+      unregister()
+      expect(manager.registeredElements.has(element)).toBe(false)
+    })
+
+    it("a stale result does not unregister a later registration of the same element", () => {
+      const manager = ForesightManager.initialize()
+      const element = createMockElement()
+
+      const stale = manager.register({ element, callback: vi.fn() })
+      manager.unregister(element)
+      manager.register({ element, callback: vi.fn() })
+
+      stale.unregister()
+      expect(manager.registeredElements.has(element)).toBe(true)
+    })
+
     it("should unregister an element", () => {
       const manager = ForesightManager.initialize()
       const element = createMockElement()
