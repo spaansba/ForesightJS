@@ -1,26 +1,12 @@
-import type { ComponentPublicInstance } from "vue"
-import type { MaybeElement, ResolvedElement } from "../types"
+import type { MaybeElement } from "../types"
 
 /**
- * Resolves a MaybeElement to a raw DOM Element or null.
- * Handles ComponentPublicInstance by extracting $el.
- * Filters out comment nodes (components that render nothing).
+ * Resolves a template ref to a DOM Element, or null when there is none.
+ * Components resolve to their `$el`, which is not an Element when the
+ * component renders nothing (comment) or multiple roots (text anchor).
  */
-export const resolveElement = <T extends MaybeElement>(target: T): ResolvedElement<T> | null => {
-  if (!target) {
-    return null
-  }
+export const resolveElement = (target: MaybeElement): Element | null => {
+  const el = target instanceof Element ? target : target?.$el
 
-  if (target instanceof Element) {
-    return target as ResolvedElement<T>
-  }
-
-  const el = (target as ComponentPublicInstance).$el
-  // Filter comment nodes - a component with v-if="false" or empty template
-  // leaves a #comment placeholder that has no size or position.
-  if (el instanceof Node && el.nodeType === Node.COMMENT_NODE) {
-    return null
-  }
-
-  return (el ?? null) as ResolvedElement<T> | null
+  return el instanceof Element ? el : null
 }
