@@ -16,15 +16,12 @@ import {
   type ShowSettings,
 } from "../../../types/types"
 import {
-  MAX_POSITION_HISTORY_SIZE,
   MAX_SCROLL_MARGIN,
   MAX_TAB_OFFSET,
   MAX_TRAJECTORY_PREDICTION_TIME,
-  MIN_POSITION_HISTORY_SIZE,
   MIN_SCROLL_MARGIN,
   MIN_TAB_OFFSET,
   MIN_TRAJECTORY_PREDICTION_TIME,
-  POSITION_HISTORY_SIZE_UNIT,
   SCROLL_MARGIN_UNIT,
   TAB_OFFSET_UNIT,
   TRAJECTORY_PREDICTION_TIME_UNIT,
@@ -229,7 +226,6 @@ export class SettingsTab extends LitElement {
       "enableTabPrediction",
       "enableScrollPrediction",
       "trajectoryPredictionTime",
-      "positionHistorySize",
       "tabOffset",
       "scrollMargin",
       "touchDeviceStrategy",
@@ -343,7 +339,6 @@ export class SettingsTab extends LitElement {
       enableMousePrediction: settings.enableMousePrediction,
       enableTabPrediction: settings.enableTabPrediction,
       enableScrollPrediction: settings.enableScrollPrediction,
-      positionHistorySize: settings.positionHistorySize,
       trajectoryPredictionTime: settings.trajectoryPredictionTime,
       tabOffset: settings.tabOffset,
       scrollMargin: settings.scrollMargin,
@@ -410,16 +405,6 @@ export class SettingsTab extends LitElement {
                 description="How far into the future to calculate mouse trajectory path"
                 setting="trajectoryPredictionTime"
               ></setting-item-range>
-              <setting-item-range
-                .currentValue=${settings.positionHistorySize}
-                .maxValue=${MAX_POSITION_HISTORY_SIZE}
-                .minValue=${MIN_POSITION_HISTORY_SIZE}
-                .unit=${POSITION_HISTORY_SIZE_UNIT}
-                header="Position History Size"
-                description="How far into the future, in ${POSITION_HISTORY_SIZE_UNIT}, to calculate mouse trajectory path"
-                setting="positionHistorySize"
-              >
-              </setting-item-range>
             </div>
             <div class="settings-group">
               <h4>Keyboard Navigation</h4>

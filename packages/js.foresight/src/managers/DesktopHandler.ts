@@ -1,7 +1,7 @@
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import { ElementObservingModule } from "../core/ElementObservingModule"
 import { MousePredictor } from "../predictors/MousePredictor"
-import type { ScrollPredictor } from "../predictors/ScrollPredictor"
+import { ScrollPredictor } from "../predictors/ScrollPredictor"
 import type { TabPredictor } from "../predictors/TabPredictor"
 import { PositionObserver, PositionObserverEntry } from "position-observer"
 import type {
@@ -10,33 +10,27 @@ import type {
   ForesightManagerSettings,
   TrajectoryPositions,
 } from "../types/types"
-import { CircularBuffer } from "../helpers/CircularBuffer"
 import { areRectsEqual, getExpandedRect, isPointInRectangle } from "../helpers/rectAndHitSlop"
 
 export class DesktopHandler extends ElementObservingModule {
-  protected readonly moduleName = "DesktopHandler"
-
   private mousePredictor: MousePredictor
   private tabPredictor: TabPredictor | null = null
-  private scrollPredictor: ScrollPredictor | null = null
+  private scrollPredictor: ScrollPredictor
   private positionObserver: PositionObserver | null = null
-  private storedDependencies: ForesightModuleDependencies
+  private dependencies: ForesightModuleDependencies
 
   public trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer(this.settings.positionHistorySize),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
 
   constructor(dependencies: ForesightModuleDependencies) {
     super(dependencies)
-    this.storedDependencies = dependencies
+    this.dependencies = dependencies
 
-    // Only MousePredictor is instantiated immediately - Tab and Scroll are lazy-loaded
-    this.mousePredictor = new MousePredictor({
-      dependencies,
-      trajectoryPositions: this.trajectoryPositions,
-    })
+    const config = { dependencies, trajectoryPositions: this.trajectoryPositions }
+    this.mousePredictor = new MousePredictor(config)
+    this.scrollPredictor = new ScrollPredictor(config)
   }
 
   protected onConnect(): void {
@@ -44,24 +38,7 @@ export class DesktopHandler extends ElementObservingModule {
       this.connectTabPredictor()
     }
 
-    if (this.settings.enableScrollPrediction) {
-      this.connectScrollPredictor()
-    }
-
-    this.connectMousePredictor() // We always connect the mouse predictor
     this.positionObserver = new PositionObserver(this.handlePositionChange)
-
-    const enabledPredictors = ["mouse"]
-
-    if (this.settings.enableTabPrediction) {
-      enabledPredictors.push("tab (loading...)")
-    }
-
-    if (this.settings.enableScrollPrediction) {
-      enabledPredictors.push("scroll (loading...)")
-    }
-
-    this.devLog(`Connected predictors: [${enabledPredictors.join(", ")}] and PositionObserver`)
 
     for (const [element, entry] of this.elements) {
       if (entry.state.isActive) {
@@ -81,7 +58,7 @@ export class DesktopHandler extends ElementObservingModule {
       }
 
       if (enableScrollPosition) {
-        this.scrollPredictor?.handleScrollPrefetch(entry, positionEntry.boundingClientRect)
+        this.scrollPredictor.handleScrollPrefetch(entry, positionEntry.boundingClientRect)
       } else {
         // If we dont check for scroll prediction, check if the user is hovering over the element during a scroll instead
         this.checkForMouseHover(entry)
@@ -94,8 +71,8 @@ export class DesktopHandler extends ElementObservingModule {
     }
 
     if (enableScrollPosition) {
-      this.scrollPredictor?.emitTrajectoryUpdate()
-      this.scrollPredictor?.resetScrollProps()
+      this.scrollPredictor.emitTrajectoryUpdate()
+      this.scrollPredictor.resetScrollProps()
     }
   }
 
@@ -132,43 +109,39 @@ export class DesktopHandler extends ElementObservingModule {
   }
 
   protected onDisconnect(): void {
-    this.disconnectMousePredictor()
-    this.disconnectTabPredictor()
-    this.disconnectScrollPredictor()
+    this.tabPredictor?.disconnect()
     this.positionObserver?.disconnect()
     this.positionObserver = null
   }
 
   public onSettingsChanged(changed: ReadonlySet<keyof ForesightManagerSettings>): void {
-    if (changed.has("positionHistorySize")) {
-      this.trajectoryPositions.positions.resize(this.settings.positionHistorySize)
-    }
-
-    if (!this.isConnected) {
+    if (!this.isConnected || !changed.has("enableTabPrediction")) {
       return
     }
 
-    if (changed.has("enableScrollPrediction")) {
-      if (this.settings.enableScrollPrediction) {
-        this.connectScrollPredictor()
-      } else {
-        this.disconnectScrollPredictor()
-      }
-    }
-
-    if (changed.has("enableTabPrediction")) {
-      if (this.settings.enableTabPrediction) {
-        this.connectTabPredictor()
-      } else {
-        this.disconnectTabPredictor()
-      }
+    if (this.settings.enableTabPrediction) {
+      this.connectTabPredictor()
+    } else {
+      this.tabPredictor?.disconnect()
     }
   }
 
-  public processMouseMovement = (event: PointerEvent) =>
-    this.mousePredictor.processMouseMovement(event)
+  private async connectTabPredictor(): Promise<void> {
+    if (!this.tabPredictor) {
+      const { TabPredictor } = await import("../predictors/TabPredictor")
+      this.tabPredictor ??= new TabPredictor(this.dependencies)
+    }
+
+    // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
+    if (this.isConnected && this.settings.enableTabPrediction) {
+      this.tabPredictor.connect()
+    }
+  }
 
   public invalidateTabCache = () => this.tabPredictor?.invalidateCache()
+
+  public processMouseMovement = (event: PointerEvent) =>
+    this.mousePredictor.processMouseMovement(event)
 
   public observeElement(element: ForesightElement): void {
     this.positionObserver?.observe(element)
@@ -176,54 +149,5 @@ export class DesktopHandler extends ElementObservingModule {
 
   public unobserveElement(element: ForesightElement): void {
     this.positionObserver?.unobserve(element)
-  }
-
-  public connectTabPredictor = async () => {
-    if (!this.tabPredictor) {
-      const { TabPredictor } = await import("../predictors/TabPredictor")
-      this.tabPredictor ??= new TabPredictor(this.storedDependencies)
-      this.devLog("TabPredictor lazy loaded")
-    }
-
-    // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
-    if (!this.isConnected || !this.settings.enableTabPrediction) {
-      return
-    }
-
-    this.tabPredictor.connect()
-  }
-
-  public connectScrollPredictor = async () => {
-    if (!this.scrollPredictor) {
-      const { ScrollPredictor } = await import("../predictors/ScrollPredictor")
-      this.scrollPredictor ??= new ScrollPredictor({
-        dependencies: this.storedDependencies,
-        trajectoryPositions: this.trajectoryPositions,
-      })
-
-      this.devLog("ScrollPredictor lazy loaded")
-    }
-
-    // The handler may have disconnected, or the setting flipped off, while the dynamic import was resolving.
-    if (!this.isConnected || !this.settings.enableScrollPrediction) {
-      return
-    }
-
-    this.scrollPredictor.connect()
-  }
-
-  public connectMousePredictor = () => this.mousePredictor.connect()
-
-  public disconnectTabPredictor = () => this.tabPredictor?.disconnect()
-  public disconnectScrollPredictor = () => this.scrollPredictor?.disconnect()
-  public disconnectMousePredictor = () => this.mousePredictor.disconnect()
-
-  /** For debugging: returns which predictors have been lazy loaded */
-  public get loadedPredictors() {
-    return {
-      mouse: true,
-      tab: this.tabPredictor !== null,
-      scroll: this.scrollPredictor !== null,
-    }
   }
 }

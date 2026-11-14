@@ -1,13 +1,11 @@
 import { describe, it, expect, vi } from "vitest"
 import { MousePredictor } from "./MousePredictor"
-import { CircularBuffer } from "../helpers/CircularBuffer"
 import { isScannable } from "../helpers/isScannable"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
 import type {
   ForesightElement,
   ForesightElementInternal,
   ForesightManagerSettings,
-  MousePosition,
   Rect,
   TrajectoryPositions,
 } from "../types/types"
@@ -41,13 +39,10 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
     settings: {
       enableMousePrediction,
       trajectoryPredictionTime: 120,
-      positionHistorySize: 8,
-      enableManagerLogging: false,
     } as ForesightManagerSettings,
   }
 
   const trajectoryPositions: TrajectoryPositions = {
-    positions: new CircularBuffer<MousePosition>(8),
     currentPoint: { x: 0, y: 0 },
     predictedPoint: { x: 0, y: 0 },
   }
@@ -58,6 +53,24 @@ const setupPredictor = (entries: ForesightElementInternal[], enableMousePredicti
 }
 
 describe("MousePredictor", () => {
+  describe("trajectory mode (enableMousePrediction: true)", () => {
+    it("should fire the callback of an element the mouse is heading for before it is hovered", () => {
+      const entry = createInternalEntry("a", { top: 100, left: 200, right: 300, bottom: 200 })
+      const { predictor, callCallback } = setupPredictor([entry], true)
+
+      predictor.processMouseMovement({ clientX: 100, clientY: 150, timeStamp: 0 } as MouseEvent)
+
+      expect(callCallback).not.toHaveBeenCalled()
+
+      predictor.processMouseMovement({ clientX: 116, clientY: 150, timeStamp: 16 } as MouseEvent)
+
+      expect(callCallback).toHaveBeenCalledExactlyOnceWith(entry, {
+        kind: "mouse",
+        subType: "trajectory",
+      })
+    })
+  })
+
   describe("hover mode (enableMousePrediction: false)", () => {
     it("should fire callbacks for all overlapping elements on a single mousemove", () => {
       const overlappingRect: Rect = { top: 100, left: 100, right: 200, bottom: 200 }

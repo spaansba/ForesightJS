@@ -1,6 +1,6 @@
 import { tabbable, type FocusableElement } from "tabbable"
 import { getFocusedElementIndex } from "../helpers/getFocusedElementIndex"
-import { BaseForesightModule, type ForesightModuleDependencies } from "../core/BaseForesightModule"
+import { BaseForesightModule } from "../core/BaseForesightModule"
 
 /**
  * Manages the prediction of user intent based on Tab key navigation.
@@ -14,22 +14,12 @@ import { BaseForesightModule, type ForesightModuleDependencies } from "../core/B
  * - Calling a provided callback when a prediction is made.
  */
 export class TabPredictor extends BaseForesightModule {
-  protected readonly moduleName = "TabPredictor"
-
   // Internal state for tab prediction
   private lastKeyDown: KeyboardEvent | null = null
   private tabbableElementsCache: FocusableElement[] = []
   private lastFocusedIndex: number | null = null
 
-  constructor(dependencies: ForesightModuleDependencies) {
-    super(dependencies)
-  }
-
   public invalidateCache() {
-    if (this.tabbableElementsCache.length) {
-      this.devLog("Invalidating tabbable elements cache")
-    }
-
     this.tabbableElementsCache = []
     this.lastFocusedIndex = null
   }
@@ -95,7 +85,6 @@ export class TabPredictor extends BaseForesightModule {
       return
     }
 
-    this.devLog("Caching tabbable elements")
     this.tabbableElementsCache = tabbable(document.documentElement)
   }
 

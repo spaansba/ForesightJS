@@ -16,8 +16,6 @@ interface ScrollPredictorConfig {
 }
 
 export class ScrollPredictor extends BaseForesightModule {
-  protected readonly moduleName = "ScrollPredictor"
-
   // Reused across the batch to avoid allocating a point per scroll change
   private readonly predictedScrollPoint: Point = { x: 0, y: 0 }
   private hasPredictedScrollPoint = false
@@ -107,7 +105,4 @@ export class ScrollPredictor extends BaseForesightModule {
     this.scrollTrajectoryEvent.scrollDirection = this.scrollDirection
     this.emit(this.scrollTrajectoryEvent)
   }
-
-  protected onConnect() {}
-  protected onDisconnect = () => this.resetScrollProps()
 }

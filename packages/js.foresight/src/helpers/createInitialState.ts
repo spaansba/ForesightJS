@@ -3,7 +3,6 @@ import {
   DEFAULT_ENABLE_SCROLL_PREDICTION,
   DEFAULT_ENABLE_TAB_PREDICTION,
   DEFAULT_HITSLOP,
-  DEFAULT_POSITION_HISTORY_SIZE,
   DEFAULT_REACTIVATE_AFTER,
   DEFAULT_SCROLL_MARGIN,
   DEFAULT_TAB_OFFSET,
@@ -47,10 +46,8 @@ export const createInitialCallbackHits = (): CallbackHits => {
 
 export const createDefaultManagerSettings = (): ForesightManagerSettings => {
   return {
-    enableManagerLogging: false,
     enableMousePrediction: DEFAULT_ENABLE_MOUSE_PREDICTION,
     enableScrollPrediction: DEFAULT_ENABLE_SCROLL_PREDICTION,
-    positionHistorySize: DEFAULT_POSITION_HISTORY_SIZE,
     trajectoryPredictionTime: DEFAULT_TRAJECTORY_PREDICTION_TIME,
     scrollMargin: DEFAULT_SCROLL_MARGIN,
     defaultHitSlop: {
