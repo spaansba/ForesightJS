@@ -18,10 +18,11 @@ _In the GIF above, the [ForesightJS DevTools](https://foresightjs.com/docs/debug
 
 ## Integrations
 
-Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. There are official packages for React, Vue, Angular, and Astro:
+Since ForesightJS is framework agnostic, it can be integrated with any JavaScript framework. There are official packages for React, Vue, Angular, Astro, and Svelte:
 
 - **JavaScript** → [`js.foresight`](https://foresightjs.com/docs/getting-started/quick-start): the framework-agnostic core, usable in any project.
 - **React** → [`@foresightjs/react`](https://foresightjs.com/docs/react/installation): `useForesight`, the `Foresight` component, `useForesightEvent`, plus [Next.js](https://foresightjs.com/docs/react/nextjs) and [React Router](https://foresightjs.com/docs/react/react-router) examples.
+- **Svelte** → [`@foresightjs/svelte`](https://foresightjs.com/docs/svelte/installation): the `foresight` action, reactive `createForesight` registrations, and lifecycle-managed `onForesightEvent` subscriptions.
 - **Vue** → [`@foresightjs/vue`](https://foresightjs.com/docs/vue/quick-start): the `v-foresight` directive, the `Foresight` component, and the `useForesight` / `useForesightEvent` composables.
 - **Angular** → [`@foresightjs/angular`](https://foresightjs.com/docs/angular/installation): the `[fsForesight]` directive, `ForesightService`, `ForesightComponent`, and `injectForesightEvent`.
 - **Astro** → [`@foresightjs/astro`](https://foresightjs.com/docs/astro/installation): adds `foresight` as a fifth prefetch strategy next to Astro's native four, plus the `<ForesightLink>` component and `registerForesight` client API.

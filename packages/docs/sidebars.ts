@@ -37,6 +37,7 @@ const sidebars: SidebarsConfig = {
     "behind-the-scenes",
     "ai-context",
   ],
+  svelteSidebar: ["svelte/installation", "svelte/api", "svelte/sveltekit"],
   reactSidebar: [
     {
       type: "category",

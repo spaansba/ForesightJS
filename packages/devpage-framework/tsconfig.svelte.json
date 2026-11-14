@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "paths": {
+      "@foresightjs/svelte": ["./packages/foresightjs-svelte/src/index.ts"],
+      "js.foresight": ["./packages/js.foresight/src/index.ts"]
+    },
+    "rootDir": "../.."
+  },
+  "include": ["src/svelte/**/*.svelte", "src/shared/controls.ts"]
+}

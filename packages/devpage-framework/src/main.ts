@@ -25,15 +25,16 @@ ForesightManager.initialize({
 })
 ForesightDevtools.initialize({})
 
-type Framework = "react" | "vue" | "angular"
+type Framework = "react" | "vue" | "angular" | "svelte"
 
 const reactRoot = document.getElementById("react-root") as HTMLDivElement
 const vueRoot = document.getElementById("vue-root") as HTMLDivElement
+const svelteRoot = document.getElementById("svelte-root") as HTMLDivElement
 const angularRoot = document.getElementById("angular-root") as HTMLDivElement
 const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("#toolbar .switch button"))
 
 let active: Framework | null = null
-let mounted: { unmount: () => void } | null = null
+let mounted: { unmount: () => void | Promise<void> } | null = null
 
 const mountReact = async () => {
   const [
@@ -109,18 +110,28 @@ const mountAngular = async () => {
   }
 }
 
+const mountSvelte = async () => {
+  const [{ mount, unmount }, { default: App }] = await Promise.all([
+    import("svelte"),
+    import("./svelte/App.svelte"),
+  ])
+  const app = mount(App, { target: svelteRoot })
+  mounted = { unmount: () => unmount(app) }
+}
+
 const activate = async (fw: Framework) => {
   if (active === fw) {
     return
   }
 
   // Tear the current app down so its foresight elements unregister cleanly.
-  mounted?.unmount()
+  await mounted?.unmount()
   mounted = null
 
   reactRoot.style.display = fw === "react" ? "" : "none"
   vueRoot.style.display = fw === "vue" ? "" : "none"
   angularRoot.style.display = fw === "angular" ? "" : "none"
+  svelteRoot.style.display = fw === "svelte" ? "" : "none"
 
   // Both demos use a browser-history router; reset to "/" (a route both share)
   // so the incoming framework always boots on a valid path.
@@ -139,6 +150,8 @@ const activate = async (fw: Framework) => {
     await mountReact()
   } else if (fw === "vue") {
     await mountVue()
+  } else if (fw === "svelte") {
+    await mountSvelte()
   } else {
     await mountAngular()
   }

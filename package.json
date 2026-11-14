@@ -28,11 +28,13 @@
     "eslint": "^10.12.0",
     "eslint-plugin-lit": "^2.3.1",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-svelte": "^3.24.1",
     "eslint-plugin-vue": "~10.11.1",
     "eslint-plugin-wc": "^3.1.0",
     "fallow": "^3.34.0",
     "globals": "^17.13.0",
     "prettier": "^3.9.10",
+    "prettier-plugin-svelte": "^4.1.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.4"

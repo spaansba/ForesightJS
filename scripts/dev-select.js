@@ -11,7 +11,7 @@ const rl = readline.createInterface({
 console.log("\nChoose a devpage to run:\n")
 
 console.log(
-  "\x1b[34m1. Framework devpage (default — React + Vue + Angular on one page, switch with one click)\x1b[0m"
+  "\x1b[34m1. Framework devpage (default — React + Vue + Angular + Svelte on one page, switch with one click)\x1b[0m"
 )
 console.log(
   "\x1b[35m2. Astro devpage (page prefetching via the @foresightjs/astro integration)\x1b[0m"
@@ -27,7 +27,7 @@ rl.question("Enter your choice (1-3): ", answer => {
   switch (answer.trim()) {
     case "1":
       filter = "devpage-framework"
-      console.log("\nStarting framework devpage (React + Vue + Angular)...\n")
+      console.log("\nStarting framework devpage (React + Vue + Angular + Svelte)...\n")
       break
     case "2":
       filter = "devpage-astro"

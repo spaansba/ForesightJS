@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* The React, Vue and Angular demos all live under src/. @source pins the
+/* The React, Vue, Angular and Svelte demos all live under src/. @source pins the
    directory so a running dev server still picks up classes from newly added
    framework folders (e.g. src/angular) without a manual restart. */
 @source "./";
