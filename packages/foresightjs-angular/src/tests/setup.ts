@@ -4,7 +4,12 @@ import type {
   ForesightElementState,
   ForesightRegisterOptions,
   ForesightRegisterOptionsWithoutElement,
+  ForesightCallbackContext,
 } from "js.foresight"
+
+export const HOVER_CONTEXT: ForesightCallbackContext = {
+  hitType: { kind: "mouse", subType: "hover" },
+}
 
 export const mockState = {
   listeners: [] as Array<() => void>,

@@ -2,7 +2,13 @@ import { ElementRef, NgZone } from "@angular/core"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
 import { ForesightService } from "../services/ForesightService"
-import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import {
+  mockState,
+  registerSpy,
+  replaceElementOptionsSpy,
+  unregisterSpy,
+  HOVER_CONTEXT,
+} from "../tests/setup"
 import { ForesightDirective } from "./ForesightDirective"
 
 const zone = {
@@ -95,10 +101,10 @@ describe("ForesightDirective", () => {
     directive.ngOnChanges()
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
     expect(first).not.toHaveBeenCalled()
-    expect(second).toHaveBeenCalledWith(fired)
+    expect(second).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("exposes state as an Angular signal", () => {

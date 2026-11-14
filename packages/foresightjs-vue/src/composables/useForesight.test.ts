@@ -2,7 +2,13 @@ import { defineComponent, h, nextTick, reactive, ref } from "vue"
 import { mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createUnregisteredSnapshot, type ForesightCallback } from "js.foresight"
-import { mockState, registerSpy, replaceElementOptionsSpy, unregisterSpy } from "../tests/setup"
+import {
+  mockState,
+  registerSpy,
+  replaceElementOptionsSpy,
+  unregisterSpy,
+  HOVER_CONTEXT,
+} from "../tests/setup"
 import type { ForesightOptions } from "../types"
 import { useForesight } from "./useForesight"
 
@@ -133,9 +139,9 @@ describe("useForesight", () => {
     await nextTick()
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
-    expect(cb).toHaveBeenCalledWith(fired)
+    expect(cb).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("returns flat refs with unregistered initial state", () => {
@@ -208,10 +214,10 @@ describe("useForesight", () => {
     await nextTick()
 
     const fired = { ...createUnregisteredSnapshot(false), isPredicted: true }
-    mockState.lastCallbackWrapper?.(fired)
+    mockState.lastCallbackWrapper?.(fired, HOVER_CONTEXT)
 
     expect(cb1).not.toHaveBeenCalled()
-    expect(cb2).toHaveBeenCalledWith(fired)
+    expect(cb2).toHaveBeenCalledWith(fired, HOVER_CONTEXT)
   })
 
   it("patches options on the same element without unregistering", async () => {

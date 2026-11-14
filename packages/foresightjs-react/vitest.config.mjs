@@ -10,7 +10,24 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    setupFiles: ["src/tests/setup.ts"],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["src/**/*.{test,spec}.{ts,tsx}"],
+          exclude: ["src/**/*.integration.test.*"],
+          setupFiles: ["src/tests/setup.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          include: ["src/**/*.integration.test.*"],
+          setupFiles: ["../js.foresight/test-env.ts"],
+        },
+      },
+    ],
   },
 })
