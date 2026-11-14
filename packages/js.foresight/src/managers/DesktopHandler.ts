@@ -2,7 +2,11 @@ import { BaseForesightModule, type ForesightModuleDependencies } from "../core/B
 import { MousePredictor } from "../predictors/MousePredictor"
 import { ScrollPredictor } from "../predictors/ScrollPredictor"
 import type { TabPredictor } from "../predictors/TabPredictor"
-import { PositionObserver, PositionObserverEntry } from "position-observer"
+import {
+  createPositionObserver,
+  type PositionEntry,
+  type PositionObserver,
+} from "../helpers/createPositionObserver"
 import type {
   ForesightElement,
   ForesightElementInternal,
@@ -35,7 +39,7 @@ export class DesktopHandler extends BaseForesightModule {
       this.connectTabPredictor()
     }
 
-    this.positionObserver = new PositionObserver(this.handlePositionChange)
+    this.positionObserver = createPositionObserver(this.handlePositionChange)
 
     for (const [element, entry] of this.deps.elements) {
       if (entry.state.isActive) {
@@ -44,7 +48,7 @@ export class DesktopHandler extends BaseForesightModule {
     }
   }
 
-  private handlePositionChange = (entries: PositionObserverEntry[]) => {
+  private handlePositionChange = (entries: PositionEntry[]) => {
     const enableScrollPosition = this.deps.settings.enableScrollPrediction
 
     for (const positionEntry of entries) {
@@ -84,7 +88,7 @@ export class DesktopHandler extends BaseForesightModule {
 
   private handlePositionChangeDataUpdates = (
     entry: ForesightElementInternal,
-    positionEntry: PositionObserverEntry
+    positionEntry: PositionEntry
   ) => {
     const isNowIntersecting = positionEntry.isIntersecting
 
