@@ -27,7 +27,7 @@ Since ForesightJS is framework agnostic, it can be integrated with any JavaScrip
 - **Angular** → [`@foresightjs/angular`](https://foresightjs.com/docs/angular/installation): the `[fsForesight]` directive, `ForesightService`, `ForesightComponent`, and `injectForesightEvent`.
 - **Astro** → [`@foresightjs/astro`](https://foresightjs.com/docs/astro/installation): adds `foresight` as a fifth prefetch strategy next to Astro's native four, plus the `<ForesightLink>` component and `registerForesight` client API.
 
-Using another framework (Svelte, Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
+Using another framework (Solid, etc.)? See [Other Frameworks](https://foresightjs.com/docs/other-frameworks) for how to build your own thin binding on top of the core. Sharing integrations for other frameworks/packages is highly appreciated!
 
 ## Prediction Strategies
 
