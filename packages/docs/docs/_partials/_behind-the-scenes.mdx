@@ -9,11 +9,11 @@ ForesightJS uses a singleton pattern with `ForesightManager` as the central inst
 Since DOM elements can change position and we need to keep the DOM clean, we require `element.getBoundingClientRect()` for each element on each update. To avoid triggering reflows, ForesightJS uses observers:
 
 - **`MutationObserver`**: Detects when registered elements are detached from or reattached to the DOM, so they can be parked (kept registered but inactive) and resumed. This keeps prediction working across detach/reattach and re-parenting
-- **`PositionObserver`**: Shopify's library that asynchronously monitors element position changes without polling
+- **Position observer**: A built-in observer, based on Shopify's `position-observer`, that asynchronously monitors element position changes without polling
 
-The `PositionObserver` uses layered observation:
+The position observer uses layered observation:
 
-1. `VisibilityObserver` (built on `IntersectionObserver`) determines if elements are viewport-visible
+1. An `IntersectionObserver` determines if elements are viewport-visible
 2. `ResizeObserver` tracks size changes of visible target elements
 3. Target-specific `IntersectionObserver` instances with smart rootMargin calculations transform viewport observation into target-specific observation regions
 
@@ -84,13 +84,13 @@ Touch devices have no continuous cursor, so prediction works differently. The `t
 
 ## Bundle Optimization
 
-The full library is **~39 KB** minified (**~13 KB** gzipped) including its dependencies, but you never load all of it. Code splitting lazy-loads the handler for the current device type and the tab predictor:
+The full library is **~36 KB** minified (**~12 KB** gzipped) including its dependencies, but you never load all of it. Code splitting lazy-loads the handler for the current device type and the tab predictor:
 
-| Chunk                   | Size   | Contains                                         | Loaded When                 |
-| ----------------------- | ------ | ------------------------------------------------ | --------------------------- |
-| Core                    | ~17 KB | `ForesightManager`                               | Always (initial load)       |
-| DesktopHandler          | ~12 KB | Mouse and scroll predictors, `position-observer` | Desktop/mouse users         |
-| TabPredictor + tabbable | ~7 KB  | Tab predictor                                    | `enableTabPrediction: true` |
-| TouchDeviceHandler      | ~2 KB  | Viewport and touch start predictors              | Touch device users          |
+| Chunk                   | Size   | Contains                                       | Loaded When                 |
+| ----------------------- | ------ | ---------------------------------------------- | --------------------------- |
+| Core                    | ~17 KB | `ForesightManager`                             | Always (initial load)       |
+| DesktopHandler          | ~9 KB  | Mouse and scroll predictors, position observer | Desktop/mouse users         |
+| TabPredictor + tabbable | ~7 KB  | Tab predictor                                  | `enableTabPrediction: true` |
+| TouchDeviceHandler      | ~2 KB  | Viewport and touch start predictors            | Touch device users          |
 
 **Result**: a touch device loads the core and the touch handler. A desktop user loads the core, the desktop handler and, when tab prediction is enabled, the tab predictor.

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { PositionObserverEntry, type PositionObserverCallback } from "position-observer"
+import type { PositionEntry } from "../helpers/createPositionObserver"
 import type { ForesightManager as ForesightManagerClass } from "./ForesightManager"
 import type {
   ForesightCallback,
@@ -14,17 +14,18 @@ const device = vi.hoisted(() => ({
 }))
 vi.mock("../helpers/shouldRegister", () => device)
 
-const positionObservers = vi.hoisted(() => new Set<PositionObserverCallback>())
-vi.mock("position-observer", async importOriginal => ({
-  ...(await importOriginal<typeof import("position-observer")>()),
-  PositionObserver: class {
-    constructor(private callback: PositionObserverCallback) {
-      positionObservers.add(callback)
-    }
-    observe() {}
-    unobserve() {}
-    disconnect() {
-      positionObservers.delete(this.callback)
+type PositionCallback = (entries: PositionEntry[]) => void
+const positionObservers = vi.hoisted(() => new Set<PositionCallback>())
+vi.mock("../helpers/createPositionObserver", () => ({
+  createPositionObserver: (callback: PositionCallback) => {
+    positionObservers.add(callback)
+
+    return {
+      observe() {},
+      unobserve() {},
+      disconnect() {
+        positionObservers.delete(callback)
+      },
     }
   },
 }))
@@ -107,8 +108,9 @@ const tabTo = async (element: HTMLElement) => {
 }
 
 const reportPosition = (element: Element, rect: DOMRect, isIntersecting = true) => {
-  const entry = new PositionObserverEntry(element, rect, rect, isIntersecting, rectAt(0, 0))
-  positionObservers.forEach(callback => callback([entry]))
+  positionObservers.forEach(callback =>
+    callback([{ target: element, boundingClientRect: rect, isIntersecting }])
+  )
 }
 
 const isListening = async (manager: ForesightManagerClass) => {

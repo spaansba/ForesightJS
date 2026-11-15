@@ -1,10 +1,8 @@
+import { playwright } from "@vitest/browser-playwright"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./test-env.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
@@ -27,7 +25,30 @@ export default defineConfig({
         },
       },
     },
-    include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    exclude: ["node_modules", "dist", "development_page", "docs"],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./test-env.ts"],
+          include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          exclude: ["node_modules", "dist", "development_page", "docs", "src/**/*.browser.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "browser",
+          include: ["src/**/*.browser.test.ts"],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: "chromium" }],
+          },
+        },
+      },
+    ],
   },
 })

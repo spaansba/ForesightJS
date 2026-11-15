@@ -26,4 +26,6 @@ jobs:
 
       - run: pnpm install
 
+      - run: pnpm --filter js.foresight exec playwright install --with-deps chromium-headless-shell
+
       - run: pnpm test
