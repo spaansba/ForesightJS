@@ -18,7 +18,7 @@ last_updated:
 [![npm version](https://img.shields.io/npm/v/@foresightjs/astro.svg)](https://www.npmjs.com/package/@foresightjs/astro)
 [![npm downloads](https://img.shields.io/npm/dt/@foresightjs/astro.svg)](https://www.npmjs.com/package/@foresightjs/astro)
 
-`@foresightjs/astro` is the official Astro integration for ForesightJS. Unlike the React, Vue, and Angular packages it is not a set of component bindings: you add [`foresight()`](./integration.md) to your Astro config once and it registers your links automatically, prefetching them through Astro's own prefetch pipeline when intent is predicted.
+`@foresightjs/astro` is the official Astro integration for ForesightJS. Unlike the React, Vue, Angular, and Svelte packages it is not a set of component bindings: you add [`foresight()`](./integration.md) to your Astro config once and it registers your links automatically, prefetching them through Astro's own prefetch pipeline when intent is predicted.
 
 ```bash
 npm install @foresightjs/astro js.foresight

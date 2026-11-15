@@ -42,11 +42,17 @@ Official Astro integration: adds `foresight` as a prefetch strategy alongside As
 
 **Published as:** `@foresightjs/astro` on npm
 
+### [foresightjs-svelte](./foresightjs-svelte/)
+
+Official Svelte 5 bindings: the `foresight` action, reactive `createForesight` registrations, and lifecycle-managed `onForesightEvent` subscriptions. Supports SvelteKit and SSR.
+
+**Published as:** `@foresightjs/svelte` on npm
+
 ## Development Packages
 
 ### [devpage-framework](./devpage-framework/) · [devpage-nextjs](./devpage-nextjs/) · [devpage-astro](./devpage-astro/)
 
-Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React, Vue, and Angular demos on a single page, sharing one `ForesightManager` singleton. Toggle between them with one click.
+Development environments for testing and debugging ForesightJS against each framework. Used by maintainers for live testing with immediate feedback. `devpage-framework` runs the React, Vue, Angular, and Svelte demos on a single page, sharing one `ForesightManager` singleton. Toggle between them with one click.
 
 ### [docs](./docs/)
 

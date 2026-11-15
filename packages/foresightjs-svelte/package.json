@@ -1,0 +1,72 @@
+{
+  "name": "@foresightjs/svelte",
+  "version": "0.1.0",
+  "description": "Svelte 5 actions and reactive bindings for ForesightJS.",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "svelte-package --input src",
+    "build:prod": "svelte-package --input src",
+    "dev": "svelte-package --input src --watch",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run && vitest run --config vitest.ssr.config.ts",
+    "test:run": "vitest run && vitest run --config vitest.ssr.config.ts",
+    "test:watch": "vitest --watch",
+    "prepublishOnly": "pnpm check && pnpm test:run && pnpm build:prod",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "homepage": "https://foresightjs.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaansba/ForesightJS",
+    "directory": "packages/foresightjs-svelte"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "svelte",
+    "sveltekit",
+    "foresight",
+    "js.foresight",
+    "svelte-action",
+    "prefetch",
+    "interaction-prediction"
+  ],
+  "author": "Bart Spaans",
+  "license": "MIT",
+  "llms": "https://foresightjs.com/llms.txt",
+  "llmsFull": "https://foresightjs.com/llms-full.txt",
+  "peerDependencies": {
+    "js.foresight": "^4.3.0",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^3.0.2",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "js.foresight": "workspace:*",
+    "jsdom": "^30.1.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "svelte": "./dist/index.js"
+}

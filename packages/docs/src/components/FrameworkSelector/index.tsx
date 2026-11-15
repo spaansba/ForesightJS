@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from "react"
 import { useHistory, useLocation } from "@docusaurus/router"
 import styles from "./styles.module.css"
 
-type FrameworkId = "js" | "react" | "vue" | "angular" | "astro"
+type FrameworkId = "js" | "react" | "vue" | "angular" | "astro" | "svelte"
 
 const ROOTS: Record<FrameworkId, string> = {
+  svelte: "/docs/svelte/installation",
   js: "/docs/getting-started/what-is-foresightjs",
   react: "/docs/react/what-is-foresightjs",
   vue: "/docs/vue/what-is-foresightjs",
@@ -153,6 +154,15 @@ const AngularIcon = () => {
   )
 }
 
+const SvelteIcon = () => (
+  <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden="true">
+    <rect width="32" height="32" rx="5" fill="#ff3e00" />
+    <text x="16" y="23" textAnchor="middle" fontSize="22" fontWeight="700" fill="#fff">
+      S
+    </text>
+  </svg>
+)
+
 const AstroIcon = () => {
   return (
     <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden="true">
@@ -175,11 +185,16 @@ const FRAMEWORKS: Array<{ id: FrameworkId; label: string; Icon: () => React.Reac
   { id: "js", label: "JavaScript", Icon: JsIcon },
   { id: "react", label: "React", Icon: ReactIcon },
   { id: "vue", label: "Vue", Icon: VueIcon },
+  { id: "svelte", label: "Svelte", Icon: SvelteIcon },
   { id: "angular", label: "Angular", Icon: AngularIcon },
   { id: "astro", label: "Astro", Icon: AstroIcon },
 ]
 
 const detectFramework = (pathname: string): FrameworkId => {
+  if (pathname.startsWith("/docs/svelte/")) {
+    return "svelte"
+  }
+
   if (pathname.startsWith("/docs/react/")) {
     return "react"
   }

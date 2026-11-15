@@ -6,6 +6,7 @@ import litPlugin from "eslint-plugin-lit"
 import pluginVue from "eslint-plugin-vue"
 import reactHooksPlugin from "eslint-plugin-react-hooks"
 import stylistic from "@stylistic/eslint-plugin"
+import svelte from "eslint-plugin-svelte"
 
 export default [
   // Global ignores
@@ -18,6 +19,7 @@ export default [
       "**/scripts/**",
       "**/.docusaurus/**",
       "**/.astro/**",
+      "**/.svelte-kit/**",
       "**/.next/**",
       "**/next-env.d.ts",
     ],
@@ -57,6 +59,24 @@ export default [
         "error",
         { allowWithName: "^ForesightRegister$" },
       ],
+    },
+  },
+
+  ...svelte.configs["flat/recommended"].map(config => ({
+    ...config,
+    files: [
+      "packages/foresightjs-svelte/**/*.svelte",
+      "packages/devpage-framework/src/svelte/**/*.svelte",
+    ],
+  })),
+  {
+    files: [
+      "packages/foresightjs-svelte/**/*.svelte",
+      "packages/devpage-framework/src/svelte/**/*.svelte",
+    ],
+    languageOptions: {
+      globals: { ...globals.browser },
+      parserOptions: { parser: tseslint.parser },
     },
   },
 

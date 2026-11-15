@@ -4,6 +4,7 @@ import styles from "./frameworkinstall.module.css"
 const frameworks = [
   { name: "JavaScript", command: "pnpm add js.foresight" },
   { name: "React", command: "pnpm add @foresightjs/react" },
+  { name: "Svelte", command: "pnpm add @foresightjs/svelte js.foresight" },
   { name: "Vue", command: "pnpm add @foresightjs/vue" },
   { name: "Angular", command: "pnpm add @foresightjs/angular js.foresight" },
   { name: "Astro", command: "pnpm add @foresightjs/astro js.foresight" },

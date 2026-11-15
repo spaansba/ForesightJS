@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "outDir": "dist",
+    "paths": {}
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "tests/**/*.svelte"]
+}

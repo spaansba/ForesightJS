@@ -77,6 +77,26 @@ function PrefetchButton() {
     ],
   },
   {
+    id: "svelte",
+    label: "Svelte",
+    docsLink: "/docs/svelte/installation",
+    docsLabel: "Svelte docs",
+    variants: [
+      {
+        id: "action",
+        label: "Action",
+        language: "markup",
+        code: `<script lang="ts">
+import { foresight } from '@foresightjs/svelte'
+</script>
+
+<button use:foresight={{ callback: () => console.log('prefetch logic here') }}>
+  Prefetch
+</button>`,
+      },
+    ],
+  },
+  {
     id: "vue",
     label: "Vue",
     docsLink: "/docs/vue/installation",

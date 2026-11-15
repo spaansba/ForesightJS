@@ -15,11 +15,11 @@ last_updated:
 
 # Other Frameworks
 
-There are official packages for [React](./react/installation.md), [Vue](./vue/installation.md), [Angular](./angular/installation.md), and [Astro](./astro/installation.md). For every other framework (Svelte, Solid, etc.) `js.foresight` has everything you need to build your own thin binding. This page shows the two pieces involved: registering from a component lifecycle, and the subscribe pattern for reactive state.
+There are official packages for [React](./react/installation.md), [Vue](./vue/installation.md), [Angular](./angular/installation.md), [Astro](./astro/installation.md), and [Svelte](./svelte/installation.md). For every other framework (Solid, etc.) `js.foresight` has everything you need to build your own thin binding. This page shows the two pieces involved: registering from a component lifecycle, and the subscribe pattern for reactive state.
 
 ## Registering from a component
 
-Register the element when your component mounts and unregister when it is destroyed. Detaching an element from the DOM does **not** unregister it (it is parked and resumes if it reattaches), so the cleanup call matters. A Svelte action is a good example of the shape:
+Register the element when your component mounts and unregister when it is destroyed. Detaching an element from the DOM does **not** unregister it (it is parked and resumes if it reattaches), so the cleanup call matters. A lifecycle binding has this shape (for Svelte, use the packaged [`foresight` action](./svelte/api.md) instead):
 
 ```js
 import { ForesightManager } from "js.foresight"
@@ -42,7 +42,7 @@ The options are the same [registration options](./configuration/registration-opt
 ## The subscribe pattern
 
 :::tip Most of the time you don't need this
-If you only want to fire a callback (prefetching, preloading, etc.), the registration snippet above is all you need and you can skip this entire section. The subscribe pattern only matters when you want to drive reactive state from a registration, which is mainly something full framework adapters do (like our official [React](./react/installation.md), [Vue](./vue/installation.md), and [Angular](./angular/installation.md) packages).
+If you only want to fire a callback (prefetching, preloading, etc.), the registration snippet above is all you need and you can skip this entire section. The subscribe pattern only matters when you want to drive reactive state from a registration, which is mainly something full framework adapters do (like our official [React](./react/installation.md), [Vue](./vue/installation.md), [Angular](./angular/installation.md), and [Svelte](./svelte/installation.md) packages).
 :::
 
 `register()` returns more than the unregister function: the element's full [state snapshot](./configuration/registration-options.md#registration-return-value) plus `subscribe` and `getSnapshot`. The state is an immutable snapshot whose reference is replaced (never mutated) on every logical change, which makes it plug into any reactivity system:
