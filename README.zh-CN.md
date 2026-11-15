@@ -1,5 +1,7 @@
 # [ForesightJS](https://foresightjs.com/)
 
+[English](README.md) | **简体中文**
+
 [![npm version](https://img.shields.io/npm/v/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![npm downloads](https://img.shields.io/npm/dt/js.foresight.svg)](https://www.npmjs.com/package/js.foresight)
 [![Bundle Size](https://img.shields.io/bundlejs/size/js.foresight)](https://bundlejs.com/?q=js.foresight)
