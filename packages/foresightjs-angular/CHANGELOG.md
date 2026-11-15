@@ -1,5 +1,19 @@
 # @foresightjs/angular
 
+## 1.1.0
+
+### Minor Changes
+
+- [#258](https://github.com/spaansba/ForesightJS/pull/258) [`7dfcb6f`](https://github.com/spaansba/ForesightJS/commit/7dfcb6fde69b0d9d01a1eeb00d92479ea8ed9a5a) Thanks [@spaansba](https://github.com/spaansba)! - Callbacks receive a second argument with `hitType`, the prediction that fired them.
+
+- [#277](https://github.com/spaansba/ForesightJS/pull/277) [`5397d5f`](https://github.com/spaansba/ForesightJS/commit/5397d5fae215f67c8149becb3b048b6030cbcb6a) Thanks [@spaansba](https://github.com/spaansba)! - Removed bookkeeping that only the devtools used. `getManagerData` no longer returns `globalCallbackHits`, `eventListeners`, `activeElementCount`, `parkedElementCount` or `loadedModules`. `registerCount` is removed from `ForesightElementState`, and the `CallbackHits` and `ForesightModules` types are no longer exported. To count callback hits yourself, listen to `callbackInvoked` and read `hitType`. The devtools now count hits on their own.
+
+### Patch Changes
+
+- [#270](https://github.com/spaansba/ForesightJS/pull/270) [`f768be2`](https://github.com/spaansba/ForesightJS/commit/f768be2c6ecf5f9fea02d63aadb2460228f8acf4) Thanks [@spaansba](https://github.com/spaansba)! - Registration and event listeners are skipped during server rendering, so the directive and component no longer log errors under SSR. `@angular/common` is now a peer dependency.
+- Updated dependencies [[`7dfcb6f`](https://github.com/spaansba/ForesightJS/commit/7dfcb6fde69b0d9d01a1eeb00d92479ea8ed9a5a), [`369e0e5`](https://github.com/spaansba/ForesightJS/commit/369e0e5b7ae259a2c000ba9faed89712fabe814d), [`5397d5f`](https://github.com/spaansba/ForesightJS/commit/5397d5fae215f67c8149becb3b048b6030cbcb6a), [`369e0e5`](https://github.com/spaansba/ForesightJS/commit/369e0e5b7ae259a2c000ba9faed89712fabe814d), [`677de5f`](https://github.com/spaansba/ForesightJS/commit/677de5fbc87620072da5b17d58d205dd32539b2d)]:
+  - js.foresight@5.0.0
+
 ## 1.0.1
 
 ### Patch Changes

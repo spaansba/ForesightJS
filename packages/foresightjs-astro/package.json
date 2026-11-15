@@ -1,6 +1,6 @@
 {
   "name": "@foresightjs/astro",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Astro integration for ForesightJS. Predictive prefetching that fires before hover, configured like Astro's built-in prefetch strategies.",
   "type": "module",
   "sideEffects": false,
@@ -68,8 +68,8 @@
   "llmsFull": "https://foresightjs.com/llms-full.txt",
   "peerDependencies": {
     "astro": "^5.0.0 || ^6.0.0 || ^7.0.0",
-    "js.foresight": "^4.3.0",
-    "js.foresight-devtools": "^2.2.3"
+    "js.foresight": "^5.0.0",
+    "js.foresight-devtools": "^3.0.0"
   },
   "peerDependenciesMeta": {
     "js.foresight-devtools": {

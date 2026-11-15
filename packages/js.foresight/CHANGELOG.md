@@ -1,5 +1,33 @@
 # js.foresight
 
+## 5.0.0
+
+### Major Changes
+
+- [#277](https://github.com/spaansba/ForesightJS/pull/277) [`5397d5f`](https://github.com/spaansba/ForesightJS/commit/5397d5fae215f67c8149becb3b048b6030cbcb6a) Thanks [@spaansba](https://github.com/spaansba)! - Removed bookkeeping that only the devtools used. `getManagerData` no longer returns `globalCallbackHits`, `eventListeners`, `activeElementCount`, `parkedElementCount` or `loadedModules`. `registerCount` is removed from `ForesightElementState`, and the `CallbackHits` and `ForesightModules` types are no longer exported. To count callback hits yourself, listen to `callbackInvoked` and read `hitType`. The devtools now count hits on their own.
+
+- [#261](https://github.com/spaansba/ForesightJS/pull/261) [`369e0e5`](https://github.com/spaansba/ForesightJS/commit/369e0e5b7ae259a2c000ba9faed89712fabe814d) Thanks [@spaansba](https://github.com/spaansba)! - Make the core smaller and simpler. The full library including dependencies goes from 45.7 kB to 38.8 kB minified (15.6 kB to 12.9 kB gzipped) and from ten chunks to seven.
+
+  Breaking changes:
+
+  - **`positionHistorySize` is removed.** Mouse velocity uses the positions of the last 80ms, whatever the display refresh rate.
+  - **`mouseTrajectoryUpdate` no longer carries `trajectoryPositions.positions`.** `currentPoint` and `predictedPoint` are unchanged.
+  - **`enableManagerLogging` is removed** together with all internal console logging.
+  - **Out of range settings are clamped silently.** The console warnings are gone.
+  - **Only the tab predictor is still lazy loaded on its own.** The mouse and scroll predictors ship in the desktop handler chunk and both touch predictors in the touch handler chunk.
+
+  The devtools no longer show the position history slider.
+
+### Minor Changes
+
+- [#258](https://github.com/spaansba/ForesightJS/pull/258) [`7dfcb6f`](https://github.com/spaansba/ForesightJS/commit/7dfcb6fde69b0d9d01a1eeb00d92479ea8ed9a5a) Thanks [@spaansba](https://github.com/spaansba)! - Callbacks receive a second argument with `hitType`, the prediction that fired them.
+
+- [#261](https://github.com/spaansba/ForesightJS/pull/261) [`369e0e5`](https://github.com/spaansba/ForesightJS/commit/369e0e5b7ae259a2c000ba9faed89712fabe814d) Thanks [@spaansba](https://github.com/spaansba)! - Improve mouse trajectory prediction. Velocity is now a least-squares fit over the positions of the last 80ms using the pointer event timestamps, which makes it independent of the display refresh rate and stops positions from before a pause from skewing it. The predicted reach now grows with the logarithm of the speed instead of linearly, so fast movements no longer overshoot far past their target. Replayed on recorded mouse sessions this triggers the clicked element about as early with roughly a quarter fewer wrong elements, and the predicted point is about 25% closer to where the cursor ends up.
+
+### Patch Changes
+
+- [#268](https://github.com/spaansba/ForesightJS/pull/268) [`677de5f`](https://github.com/spaansba/ForesightJS/commit/677de5fbc87620072da5b17d58d205dd32539b2d) Thanks [@spaansba](https://github.com/spaansba)! - `unregister()` on a `register()` result no longer removes a later registration of the same element after the element was unregistered and registered again.
+
 ## 4.3.0
 
 ### Minor Changes
