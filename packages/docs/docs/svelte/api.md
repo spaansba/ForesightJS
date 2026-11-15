@@ -63,4 +63,15 @@ Call during component initialization to subscribe to a typed manager event for t
 <p>Completed callbacks: {completed}</p>
 ```
 
-The event type is fixed for that subscription. The callback can read current component state. See [events](../events.md) for event payloads and the core API.
+The event type and listener function are captured at initialization. The callback can read current component state, but passing a callback prop directly (`onForesightEvent("callbackCompleted", onEvent)`) keeps that initial function even if the parent replaces it. Forward through a wrapper to read the latest callback prop when each event fires:
+
+```svelte
+<script lang="ts">
+  import { onForesightEvent, type CallbackCompletedEvent } from "@foresightjs/svelte"
+
+  let { onEvent }: { onEvent: (event: CallbackCompletedEvent) => void } = $props()
+  onForesightEvent("callbackCompleted", event => onEvent(event))
+</script>
+```
+
+See [events](../events.md) for event payloads and the core API.

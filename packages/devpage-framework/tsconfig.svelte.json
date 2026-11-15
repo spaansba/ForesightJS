@@ -5,8 +5,8 @@
     "moduleResolution": "bundler",
     "strict": true,
     "paths": {
-      "@foresightjs/svelte": ["./packages/foresightjs-svelte/src/index.ts"],
-      "js.foresight": ["./packages/js.foresight/src/index.ts"]
+      "@foresightjs/svelte": ["../foresightjs-svelte/src/index.ts"],
+      "js.foresight": ["../js.foresight/src/index.ts"]
     },
     "rootDir": "../.."
   },

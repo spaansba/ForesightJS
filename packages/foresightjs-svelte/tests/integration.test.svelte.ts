@@ -132,6 +132,33 @@ it("stops manager event subscriptions on component destruction", async () => {
   expect(onRegistered).toHaveBeenCalledTimes(1)
 })
 
+it("forwards events to the latest callback prop without resubscribing", async () => {
+  const initial = vi.fn()
+  const next = vi.fn()
+  const props = $state<ComponentProps<typeof Harness>>({
+    callback: vi.fn(),
+    onRegistered: initial,
+  })
+  const subscribe = vi.spyOn(manager, "addEventListener")
+  const app = render(props)
+  const subscriptions = subscribe.mock.calls.length
+  manager.register({ element: document.createElement("a"), callback: props.callback })
+  expect(initial).toHaveBeenCalledTimes(1)
+
+  flushSync(() => {
+    props.onRegistered = next
+  })
+  manager.register({ element: document.createElement("a"), callback: props.callback })
+  expect(initial).toHaveBeenCalledTimes(1)
+  expect(next).toHaveBeenCalledTimes(1)
+  expect(subscribe).toHaveBeenCalledTimes(subscriptions)
+
+  await unmount(app)
+  apps.splice(apps.indexOf(app), 1)
+  manager.register({ element: document.createElement("a"), callback: props.callback })
+  expect(next).toHaveBeenCalledTimes(1)
+})
+
 it("suppresses disabled callbacks and reacts when enabled", async () => {
   const callback = vi.fn()
   const props = $state<ComponentProps<typeof Harness>>({ callback, options: { enabled: false } })
