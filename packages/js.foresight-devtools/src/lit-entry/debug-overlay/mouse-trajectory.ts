@@ -1,4 +1,4 @@
-import { LitElement, html, css, unsafeCSS } from "lit"
+import { LitElement, html, css } from "lit"
 import { customElement, query } from "lit/decorators.js"
 import {
   ForesightManager,
@@ -12,8 +12,6 @@ export type Point = {
   x: number
   y: number
 }
-const LINE_BASE_WIDTH = 100
-
 @customElement("mouse-trajectory")
 export class MouseTrajectory extends LitElement {
   static styles = [
@@ -22,36 +20,28 @@ export class MouseTrajectory extends LitElement {
         display: block;
       }
 
-      /* Every per-frame write is a transform: the line is a fixed-width bar
-         scaled to the trajectory length, so updates never trigger layout or paint. */
-      .trajectory {
+      .trajectory-line {
         display: none;
         position: absolute;
         top: 0;
         left: 0;
-        transform-origin: 0 0;
         will-change: transform;
-        z-index: 9999;
-      }
-
-      .line {
-        position: absolute;
-        top: -2px;
-        left: 0;
-        width: ${unsafeCSS(LINE_BASE_WIDTH)}px;
-        height: 4px;
         transform-origin: left center;
-        will-change: transform;
+        height: 4px;
         background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.4));
+        z-index: 9999;
         border-radius: 2px;
         box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
       }
 
-      .arrow {
+      .trajectory-line::after {
+        content: "";
         position: absolute;
-        top: -4px;
-        left: -2px;
-        will-change: transform;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
         border-left: 8px solid #3b82f6;
         border-top: 4px solid transparent;
         border-bottom: 4px solid transparent;
@@ -61,9 +51,7 @@ export class MouseTrajectory extends LitElement {
   ]
 
   private _abortController = new AbortController()
-  @query(".trajectory", true) private _trajectoryEl!: HTMLElement
-  @query(".line", true) private _lineEl!: HTMLElement
-  @query(".arrow", true) private _arrowEl!: HTMLElement
+  @query(".trajectory-line", true) private _lineEl!: HTMLElement
   private _mousePredictionIsEnabled =
     ForesightManager.instance.getManagerData.globalSettings.enableMousePrediction
   private _isVisible = false
@@ -112,7 +100,7 @@ export class MouseTrajectory extends LitElement {
     }
 
     this._isVisible = visible
-    this._trajectoryEl.style.display = visible ? "block" : "none"
+    this._lineEl.style.display = visible ? "block" : "none"
   }
 
   private handleTrajectoryReset = (e: CallbackCompletedEvent | ElementUnregisteredEvent) => {
@@ -146,17 +134,11 @@ export class MouseTrajectory extends LitElement {
     const length = Math.sqrt(dx * dx + dy * dy)
     const angle = Math.atan2(dy, dx) * 57.29577951308232 // Pre-calculate rad to deg
 
-    this._trajectoryEl.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
-    this._lineEl.style.transform = `scaleX(${length / LINE_BASE_WIDTH})`
-    this._arrowEl.style.transform = `translateX(${length}px)`
+    this._lineEl.style.transform = `translate3d(${currentPoint.x}px, ${currentPoint.y}px, 0) rotate(${angle}deg)`
+    this._lineEl.style.width = `${length}px`
   }
 
   render() {
-    return html`
-      <div class="trajectory">
-        <div class="line"></div>
-        <div class="arrow"></div>
-      </div>
-    `
+    return html`<div class="trajectory-line"></div>`
   }
 }
