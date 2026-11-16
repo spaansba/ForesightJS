@@ -16,6 +16,7 @@ import type {
 
 type HitSlop = ForesightElementState["hitSlop"]
 type Scroll = { x: number; y: number }
+type HitKind = Extract<CallbackHitType["kind"], "mouse" | "scroll" | "tab">
 
 interface ElementOverlay {
   slopArea: HTMLElement
@@ -36,6 +37,7 @@ interface CallbackAnimation {
 export class ElementOverlays extends LitElement {
   private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
   private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
+  private _hits: Map<ForesightElement, HitKind> = new Map()
   private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
   private _pendingUpdates: Set<ForesightElement> = new Set()
   @query("#overlays-container") private containerElement!: HTMLElement
@@ -269,6 +271,11 @@ export class ElementOverlays extends LitElement {
   private createOverlay(element: ForesightElement): ElementOverlay {
     const slopArea = document.createElement("div")
     slopArea.className = "slop-area"
+    const hit = this._hits.get(element)
+    if (hit) {
+      slopArea.dataset.hit = hit
+    }
+
     const nameLabel = document.createElement("div")
     nameLabel.className = "name-label"
     slopArea.appendChild(nameLabel)
@@ -394,6 +401,7 @@ export class ElementOverlays extends LitElement {
       this.overlayMap.delete(element)
     }
 
+    this._hits.delete(element)
     this.clearCallbackAnimationTimeout(element)
   }
 
@@ -408,23 +416,18 @@ export class ElementOverlays extends LitElement {
   private highlightElementCallback(element: ForesightElement, hitType: CallbackHitType) {
     this.clearCallbackAnimationTimeout(element)
 
-    // The overlay may still be queued when the element became visible and got
-    // predicted in the same task.
-    if (this._pendingUpdates.has(element)) {
-      this._flushUpdates()
-    }
-
-    const overlay = this.overlayMap.get(element)
-    if (!overlay) {
-      return
-    }
-
     switch (hitType.kind) {
       case "mouse":
       case "scroll":
-      case "tab":
-        overlay.slopArea.dataset.hit = hitType.kind
+      case "tab": {
+        this._hits.set(element, hitType.kind)
+        const overlay = this.overlayMap.get(element)
+        if (overlay) {
+          overlay.slopArea.dataset.hit = hitType.kind
+        }
+
         break
+      }
       case "touch":
         break
       case "viewport":
@@ -441,6 +444,7 @@ export class ElementOverlays extends LitElement {
         delete overlay.slopArea.dataset.hit
       }
 
+      this._hits.delete(element)
       this.callbackAnimations.delete(element)
     }, 400)
 
@@ -458,6 +462,7 @@ export class ElementOverlays extends LitElement {
     }
     this._elementSubscriptions.clear()
     this._pendingUpdates.clear()
+    this._hits.clear()
 
     this.callbackAnimations.forEach(animation => {
       clearTimeout(animation.timeoutId)
