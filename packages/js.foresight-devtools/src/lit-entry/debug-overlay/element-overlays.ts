@@ -15,6 +15,7 @@ import type {
 } from "js.foresight"
 
 type HitSlop = ForesightElementState["hitSlop"]
+type Scroll = { x: number; y: number }
 
 interface ElementOverlay {
   slopArea: HTMLElement
@@ -36,6 +37,7 @@ export class ElementOverlays extends LitElement {
   private overlayMap: Map<ForesightElement, ElementOverlay> = new Map()
   private callbackAnimations: Map<ForesightElement, CallbackAnimation> = new Map()
   private _elementSubscriptions: Map<ForesightElement, () => void> = new Map()
+  private _pendingUpdates: Set<ForesightElement> = new Set()
   @query("#overlays-container") private containerElement!: HTMLElement
 
   @property({ type: Boolean }) showNameTags = true
@@ -156,9 +158,7 @@ export class ElementOverlays extends LitElement {
       "elementRegistered",
       (e: ElementRegisteredEvent) => {
         this._subscribeToElement(e.element)
-        if (e.state.isIntersectingWithViewport) {
-          this.createOrUpdateElementOverlay(e.element, e.state)
-        }
+        this._queueUpdate(e.element)
       },
       { signal }
     )
@@ -200,11 +200,9 @@ export class ElementOverlays extends LitElement {
   }
 
   private _syncAlreadyRegisteredElements(): void {
-    for (const [element, state] of ForesightManager.instance.registeredElements) {
+    for (const element of ForesightManager.instance.registeredElements.keys()) {
       this._subscribeToElement(element)
-      if (state.isIntersectingWithViewport && state.isActive) {
-        this.createOrUpdateElementOverlay(element, state)
-      }
+      this._queueUpdate(element)
     }
   }
 
@@ -213,16 +211,7 @@ export class ElementOverlays extends LitElement {
       return
     }
 
-    const update = () => {
-      const state = ForesightManager.instance.registeredElements.get(element)
-      if (!state || !state.isIntersectingWithViewport || !state.isActive) {
-        this.removeElementOverlay(element)
-
-        return
-      }
-
-      this.createOrUpdateElementOverlay(element, state)
-    }
+    const update = () => this._queueUpdate(element)
 
     // State and geometry are published on separate channels: logical changes
     // (active/intersecting/name) come through subscribeToElement, rect changes
@@ -236,6 +225,40 @@ export class ElementOverlays extends LitElement {
         unsubscribeBounds?.()
       })
     }
+  }
+
+  /**
+   * Updates are applied once per task. Reading the scroll offset after another
+   * overlay's style writes forces a layout, so updating per element during a
+   * position callback for hundreds of elements meant hundreds of layouts.
+   */
+  private _queueUpdate(element: ForesightElement): void {
+    if (this._pendingUpdates.size === 0) {
+      queueMicrotask(this._flushUpdates)
+    }
+
+    this._pendingUpdates.add(element)
+  }
+
+  private _flushUpdates = (): void => {
+    // Before the first render there is no container to append to; firstUpdated
+    // queues every registered element again.
+    if (!this.containerElement) {
+      this._pendingUpdates.clear()
+
+      return
+    }
+
+    const scroll = { x: window.scrollX, y: window.scrollY }
+    for (const element of this._pendingUpdates) {
+      const state = ForesightManager.instance.registeredElements.get(element)
+      if (!state || !state.isIntersectingWithViewport || !state.isActive) {
+        this.removeElementOverlay(element)
+      } else {
+        this.createOrUpdateElementOverlay(element, state, scroll)
+      }
+    }
+    this._pendingUpdates.clear()
   }
 
   private _unsubscribeFromElement(element: ForesightElement): void {
@@ -268,9 +291,12 @@ export class ElementOverlays extends LitElement {
    * axis. Sharp corners stay sharp, since offsetting a rectangle outward does
    * not round its corners.
    */
-  private expandedBorderRadius(element: ForesightElement, hitSlop: HitSlop): string {
+  private expandedBorderRadius(
+    element: ForesightElement,
+    hitSlop: HitSlop,
+    rect: DOMRectReadOnly
+  ): string {
     const style = getComputedStyle(element as HTMLElement)
-    const rect = (element as HTMLElement).getBoundingClientRect()
 
     const corner = (value: string, slopX: number, slopY: number): [number, number] => {
       const [xRaw, yRaw = xRaw] = value.split(" ")
@@ -297,13 +323,14 @@ export class ElementOverlays extends LitElement {
     overlay: ElementOverlay,
     element: ForesightElement,
     hitSlop: HitSlop,
-    bounds: ElementBounds
+    bounds: ElementBounds,
+    scroll: Scroll
   ): void {
     const { expandedRect } = bounds
     // The manager reports viewport-relative rects; convert to document
     // coordinates, which stay constant during scroll.
-    const left = expandedRect.left + window.scrollX
-    const top = expandedRect.top + window.scrollY
+    const left = expandedRect.left + scroll.x
+    const top = expandedRect.top + scroll.y
     const width = expandedRect.right - expandedRect.left
     const height = expandedRect.bottom - expandedRect.top
 
@@ -328,7 +355,7 @@ export class ElementOverlays extends LitElement {
     const radiusKey = `${width}|${height}|${hitSlop.top}|${hitSlop.right}|${hitSlop.bottom}|${hitSlop.left}`
     if (overlay.lastRadiusKey !== radiusKey) {
       overlay.lastRadiusKey = radiusKey
-      style.borderRadius = this.expandedBorderRadius(element, hitSlop)
+      style.borderRadius = this.expandedBorderRadius(element, hitSlop, bounds.originalRect)
     }
   }
 
@@ -341,13 +368,11 @@ export class ElementOverlays extends LitElement {
     overlay.nameLabel.textContent = name === "unnamed" ? "" : name
   }
 
-  private createOrUpdateElementOverlay(element: ForesightElement, state: ForesightElementState) {
-    // Before the first render there is no container to append to; the element
-    // is picked up by the firstUpdated sync instead.
-    if (!this.containerElement) {
-      return
-    }
-
+  private createOrUpdateElementOverlay(
+    element: ForesightElement,
+    state: ForesightElementState,
+    scroll: Scroll
+  ) {
     const bounds = ForesightManager.instance.getElementBounds(element)
     if (!bounds) {
       return
@@ -358,7 +383,7 @@ export class ElementOverlays extends LitElement {
       overlay = this.createOverlay(element)
     }
 
-    this.updateSlopArea(overlay, element, state.hitSlop, bounds)
+    this.updateSlopArea(overlay, element, state.hitSlop, bounds, scroll)
     this.updateNameLabel(overlay, state.name)
   }
 
@@ -382,6 +407,12 @@ export class ElementOverlays extends LitElement {
 
   private highlightElementCallback(element: ForesightElement, hitType: CallbackHitType) {
     this.clearCallbackAnimationTimeout(element)
+
+    // The overlay may still be queued when the element became visible and got
+    // predicted in the same task.
+    if (this._pendingUpdates.has(element)) {
+      this._flushUpdates()
+    }
 
     const overlay = this.overlayMap.get(element)
     if (!overlay) {
@@ -426,6 +457,7 @@ export class ElementOverlays extends LitElement {
       unsub()
     }
     this._elementSubscriptions.clear()
+    this._pendingUpdates.clear()
 
     this.callbackAnimations.forEach(animation => {
       clearTimeout(animation.timeoutId)
