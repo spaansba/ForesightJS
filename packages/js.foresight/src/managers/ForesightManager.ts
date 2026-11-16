@@ -8,6 +8,7 @@ import {
 } from "../helpers/createInitialState"
 import { applyDataAttributes, removeDataAttributes } from "../helpers/dataAttributes"
 import { isScannable } from "../helpers/isScannable"
+import { initialViewportState } from "../helpers/initialViewportState"
 import { canBeActive } from "../helpers/canBeActive"
 import { ForesightEventEmitter } from "../core/ForesightEventEmitter"
 import type { ForesightModuleDependencies } from "../core/BaseForesightModule"
@@ -62,10 +63,12 @@ export class ForesightManager {
   /**
    * Precomputed subset of {@link elementEntries} that the mouse trajectory scan
    * iterates every pointer move (see {@link isScannable}). Kept in sync by
-   * {@link updateElementState} plus register/unregister, so the hot loop skips
+   * {@link updateElementState} plus unregister, so the hot loop skips
    * the full registry and its per-element flag checks.
    */
   private scannableElements: Set<ForesightElementInternal> = new Set()
+  /** Registered this task and not yet measured, see {@link measureNewElements}. */
+  private unmeasuredElements: Set<ForesightElementInternal> = new Set()
   /** Public read-only view exposing only external state, derived from {@link elementEntries}. */
   public readonly registeredElements: ReadonlyMap<ForesightElement, ForesightElementState> =
     new DerivedMapView(this.elementEntries, (entry: ForesightElementInternal) => entry.state)
@@ -270,10 +273,11 @@ export class ForesightManager {
     )
 
     this.elementEntries.set(options.element, entry)
-
-    if (isScannable(entry.state)) {
-      this.scannableElements.add(entry)
+    if (this.unmeasuredElements.size === 0) {
+      queueMicrotask(this.measureNewElements)
     }
+
+    this.unmeasuredElements.add(entry)
 
     if (this._globalSettings.setDataAttributes) {
       applyDataAttributes(entry.element, entry.state)
@@ -293,6 +297,32 @@ export class ForesightManager {
     })
 
     return this.buildRegisterResult(entry)
+  }
+
+  /**
+   * Measures every element registered in the current task at once. Measuring
+   * inside register() forces a layout per element when a framework inserts and
+   * registers elements in turn (Vue function refs), which is quadratic. All
+   * reads happen before any write so the batch costs a single layout.
+   */
+  private measureNewElements = (): void => {
+    const measured = Array.from(this.unmeasuredElements, entry => ({
+      entry,
+      rect: entry.element.getBoundingClientRect(),
+    }))
+    this.unmeasuredElements.clear()
+
+    for (const { entry, rect } of measured) {
+      if (this.elementEntries.get(entry.element) !== entry) {
+        continue
+      }
+
+      this.updateElementBounds(entry, {
+        originalRect: rect,
+        expandedRect: getExpandedRect(rect, entry.state.hitSlop),
+      })
+      this.updateElementState(entry, { isIntersectingWithViewport: initialViewportState(rect) })
+    }
   }
 
   private buildRegisterResult(entry: ForesightElementInternal): ForesightRegisterResult {

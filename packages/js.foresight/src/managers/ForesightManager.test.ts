@@ -878,12 +878,12 @@ describe("ForesightManager", () => {
   describe("Bounds channel (getBounds / subscribeToBounds)", () => {
     it("notifies only bounds subscribers on a rect-only update", async () => {
       const { element, result } = setup()
+      await settle()
       const stateListener = vi.fn()
       const boundsListener = vi.fn()
       result.subscribe(stateListener)
       result.subscribeToBounds(boundsListener)
       const snapshotBefore = result.getSnapshot()
-      await settle()
 
       reportPosition(element, rectAt(300, 300))
 
@@ -895,6 +895,7 @@ describe("ForesightManager", () => {
 
     it("notifies only state subscribers on a logical change", async () => {
       const { element, result } = setup()
+      await settle()
       const stateListener = vi.fn()
       const boundsListener = vi.fn()
       result.subscribe(stateListener)
@@ -911,15 +912,31 @@ describe("ForesightManager", () => {
 
     it("does not notify when the rect is unchanged", async () => {
       const { element, result } = setup()
+      await settle()
       const boundsListener = vi.fn()
       result.subscribeToBounds(boundsListener)
       const boundsBefore = result.getBounds()
-      await settle()
 
       reportPosition(element, rectAt())
 
       expect(boundsListener).not.toHaveBeenCalled()
       expect(result.getBounds()).toBe(boundsBefore)
+    })
+
+    it("defers measuring until after the registering task", async () => {
+      const manager = ForesightManager.initialize()
+      const elements = [createElement(), createElement()]
+      const reads = elements.map(element => vi.spyOn(element, "getBoundingClientRect"))
+      const results = elements.map(element => manager.register({ element, callback: vi.fn() }))
+
+      expect(reads.every(read => read.mock.calls.length === 0)).toBe(true)
+      expect(results[0].getSnapshot().isIntersectingWithViewport).toBe(false)
+
+      await Promise.resolve()
+
+      expect(reads.every(read => read.mock.calls.length === 1)).toBe(true)
+      expect(results[0].getSnapshot().isIntersectingWithViewport).toBe(true)
+      expect(results[0].getBounds().originalRect.top).toBe(100)
     })
 
     it("updates bounds before state on a hitSlop change", () => {
@@ -940,9 +957,9 @@ describe("ForesightManager", () => {
 
     it("supports manager-level bounds subscriptions and clears them on unregister", async () => {
       const { manager, element } = setup()
+      await settle()
       const boundsListener = vi.fn()
       manager.subscribeToElementBounds(element, boundsListener)
-      await settle()
 
       reportPosition(element, rectAt(300, 300))
       expect(boundsListener).toHaveBeenCalledTimes(1)
@@ -957,9 +974,9 @@ describe("ForesightManager", () => {
     it("binds results of re-registrations to the same bounds", async () => {
       const { manager, element, result: first } = setup()
       const second = manager.register({ element, callback: vi.fn() })
+      await settle()
       const boundsListener = vi.fn()
       first.subscribeToBounds(boundsListener)
-      await settle()
 
       reportPosition(element, rectAt(300, 300))
 

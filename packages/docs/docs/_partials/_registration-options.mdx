@@ -218,6 +218,8 @@ Subscribes to geometry changes for this element. The listener is called every ti
 
 Returns the current immutable `ElementBounds` snapshot for this element: its measured `originalRect` and the hitSlop-expanded `expandedRect` used for interaction detection.
 
+Elements are measured right after the task that registered them, in one batch, so `getBounds()` returns empty rects (and `isIntersectingWithViewport` is `false`) if read synchronously after `register()`. Use `subscribeToBounds` or `subscribe` to get the first measurement.
+
 ---
 
 ### State Fields

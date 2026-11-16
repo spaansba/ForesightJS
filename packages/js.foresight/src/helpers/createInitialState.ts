@@ -17,8 +17,7 @@ import type {
   ForesightRegisterOptionsWithoutElement,
   HitSlop,
 } from "../types/types"
-import { getExpandedRect, normalizeHitSlop } from "./rectAndHitSlop"
-import { initialViewportState } from "./initialViewportState"
+import { normalizeHitSlop } from "./rectAndHitSlop"
 import { canBeActive } from "./canBeActive"
 
 export const createDefaultManagerSettings = (): ForesightManagerSettings => {
@@ -104,15 +103,12 @@ export const createElementInternal = (
     enabled: isEnabled,
   } = resolveElementOptions(options, defaultHitSlop)
 
-  const initialRect = element.getBoundingClientRect()
-
   const state: ForesightElementState = {
     ...createBaseElementState(isLimitedConnection),
     id,
     name,
     meta,
     hitSlop,
-    isIntersectingWithViewport: initialViewportState(initialRect),
     isRegistered: true,
     isActive: canBeActive({ isEnabled, isLimitedConnection, isParked: false }),
     isEnabled,
@@ -121,9 +117,11 @@ export const createElementInternal = (
 
   return {
     state,
+    // Empty until the manager measures it after the registering task, so a
+    // batch of registrations costs one layout instead of one per element.
     bounds: {
-      originalRect: initialRect,
-      expandedRect: getExpandedRect(initialRect, hitSlop),
+      originalRect: new DOMRectReadOnly(),
+      expandedRect: { top: 0, left: 0, right: 0, bottom: 0 },
     },
     element,
     callback,
