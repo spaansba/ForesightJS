@@ -1,6 +1,6 @@
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { repeat } from "lit/directives/repeat.js"
+import { virtualize } from "@lit-labs/virtualizer/virtualize.js"
 
 import type {
   CallbackInvokedEvent,
@@ -9,7 +9,10 @@ import type {
 } from "js.foresight"
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
-type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
+type Section = "active" | "inactive"
+type ListRow =
+  | { kind: "header"; section: Section; count: number }
+  | { kind: "element"; element: ForesightElement; state: ForesightElementState }
 import { CHEVRON_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 import type { CallbackHits } from "../../../helpers/callbackHits"
@@ -33,7 +36,20 @@ export class ElementTab extends LitElement {
       height: 100%;
     }
 
-    .section + .section {
+    /* The list scrolls itself: the virtualizer looks up its scroll container
+       on connect, before tab-content has rendered the slot it sits in. */
+    .list {
+      height: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: var(--fs-line) transparent;
+    }
+
+    /* The virtualizer positions rows absolutely, so they need an explicit width. */
+    single-element {
+      width: 100%;
+    }
+
+    .section-header.inactive-header {
       margin-top: 8px;
     }
 
@@ -95,6 +111,7 @@ export class ElementTab extends LitElement {
   private _cachedActiveElements: ForesightElement[] = []
   private _cachedInactiveElements: ForesightElement[] = []
   private _elementsCacheDirty = true
+  private _documentOrder: ForesightElement[] | null = null
 
   constructor() {
     super()
@@ -234,6 +251,7 @@ export class ElementTab extends LitElement {
         this.elementListItems.set(e.element, e.state)
         this._subscribeToElement(e.element)
         this._elementsCacheDirty = true
+        this._documentOrder = null
         this.requestUpdate()
       },
       { signal }
@@ -247,6 +265,7 @@ export class ElementTab extends LitElement {
         // Drop any queued update so a later debounce flush can't re-add it.
         this._pendingElementUpdates.delete(e.element)
         this._elementsCacheDirty = true
+        this._documentOrder = null
         this.requestUpdate()
       },
       { signal }
@@ -310,6 +329,10 @@ export class ElementTab extends LitElement {
     // membership, isActive and isIntersectingWithViewport.
     for (const [element, state] of this._pendingElementUpdates) {
       const previous = this.elementListItems.get(element)
+      if (previous?.isParked !== state.isParked) {
+        this._documentOrder = null
+      }
+
       if (
         !previous ||
         previous.isActive !== state.isActive ||
@@ -327,31 +350,46 @@ export class ElementTab extends LitElement {
   private updateElementListFromManager() {
     this.elementListItems = new Map(ForesightManager.instance.registeredElements)
     this._elementsCacheDirty = true
+    this._documentOrder = null
   }
 
-  private getSortedElements(): ElementListEntry[] {
-    const entries: ElementListEntry[] = Array.from(this.elementListItems, ([element, state]) => ({
-      element,
-      state,
-    }))
+  private get documentOrder(): ForesightElement[] {
+    if (this._documentOrder) {
+      return this._documentOrder
+    }
 
+    const unplaced = new Set(this.elementListItems.keys())
+    const ordered: ForesightElement[] = []
+    for (const node of document.querySelectorAll("*")) {
+      if (unplaced.delete(node)) {
+        ordered.push(node)
+      }
+    }
+    ordered.push(...unplaced)
+    this._documentOrder = ordered
+
+    return ordered
+  }
+
+  private getSortedElements(): ForesightElement[] {
     switch (this.sortOrder) {
       case "insertionOrder":
-        return entries
+        return [...this.elementListItems.keys()]
       case "documentOrder":
-        return entries.sort(this.sortByDocumentPosition)
-      case "visibility":
-        return entries.sort((a, b) => {
-          if (a.state.isIntersectingWithViewport !== b.state.isIntersectingWithViewport) {
-            return a.state.isIntersectingWithViewport ? -1 : 1
-          }
+        return this.documentOrder
+      case "visibility": {
+        const isVisible = (element: ForesightElement) =>
+          this.elementListItems.get(element)?.isIntersectingWithViewport === true
 
-          return this.sortByDocumentPosition(a, b)
-        })
+        return [
+          ...this.documentOrder.filter(isVisible),
+          ...this.documentOrder.filter(element => !isVisible(element)),
+        ]
+      }
       default:
         this.sortOrder satisfies never
 
-        return entries
+        return []
     }
   }
 
@@ -362,13 +400,13 @@ export class ElementTab extends LitElement {
 
     const active: ForesightElement[] = []
     const inactive: ForesightElement[] = []
-    for (const entry of this.getSortedElements()) {
+    for (const element of this.getSortedElements()) {
       // Disabled elements are inactive too; their reason is shown as a badge on the
       // row rather than a separate section.
-      if (entry.state.isActive) {
-        active.push(entry.element)
+      if (this.elementListItems.get(element)?.isActive) {
+        active.push(element)
       } else {
-        inactive.push(entry.element)
+        inactive.push(element)
       }
     }
     this._cachedActiveElements = active
@@ -388,59 +426,58 @@ export class ElementTab extends LitElement {
     return this._cachedInactiveElements
   }
 
-  private sortByDocumentPosition = (a: ElementListEntry, b: ElementListEntry) => {
-    const position = a.element.compareDocumentPosition(b.element)
-    if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
-      return -1
+  private toggleSection(section: Section): void {
+    if (section === "active") {
+      this.activeSectionCollapsed = !this.activeSectionCollapsed
+    } else {
+      this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
     }
-
-    if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-      return 1
-    }
-
-    return 0
   }
 
-  private renderElementSection(
-    label: string,
-    elements: ForesightElement[],
-    collapsed: boolean,
-    toggleCollapsed: () => void
-  ) {
+  private sectionRows(section: Section, elements: ForesightElement[]): ListRow[] {
     if (elements.length === 0) {
-      return ""
+      return []
     }
 
-    return html`
-      <div class="section">
-        <button class="section-header ${collapsed ? "collapsed" : ""}" @click=${toggleCollapsed}>
-          ${CHEVRON_SVG} ${label}<span class="rule"></span>${elements.length}
-        </button>
-        ${
-          !collapsed
-            ? repeat(
-                elements,
-                element => this.elementListItems.get(element)?.id ?? "",
-                element => {
-                  const state = this.elementListItems.get(element)
-                  if (!state) {
-                    return ""
-                  }
+    const collapsed =
+      section === "active" ? this.activeSectionCollapsed : this.inactiveSectionCollapsed
+    const rows: ListRow[] = [{ kind: "header", section, count: elements.length }]
+    if (collapsed) {
+      return rows
+    }
 
-                  return html`
-                    <single-element
-                      .element=${element}
-                      .state=${state}
-                      .isExpanded=${this.expandedElementIds.has(state.id)}
-                      .onToggle=${this.handleElementToggle}
-                    >
-                    </single-element>
-                  `
-                }
-              )
-            : ""
-        }
-      </div>
+    for (const element of elements) {
+      const state = this.elementListItems.get(element)
+      if (state) {
+        rows.push({ kind: "element", element, state })
+      }
+    }
+
+    return rows
+  }
+
+  private renderRow = (row: ListRow) => {
+    if (row.kind === "element") {
+      return html`
+        <single-element
+          .element=${row.element}
+          .state=${row.state}
+          .isExpanded=${this.expandedElementIds.has(row.state.id)}
+          .onToggle=${this.handleElementToggle}
+        ></single-element>
+      `
+    }
+
+    const collapsed =
+      row.section === "active" ? this.activeSectionCollapsed : this.inactiveSectionCollapsed
+
+    return html`
+      <button
+        class="section-header ${row.section}-header ${collapsed ? "collapsed" : ""}"
+        @click=${() => this.toggleSection(row.section)}
+      >
+        ${CHEVRON_SVG} ${row.section}<span class="rule"></span>${row.count}
+      </button>
     `
   }
 
@@ -461,22 +498,17 @@ export class ElementTab extends LitElement {
         </div>
       </tab-header>
       <tab-content .noContentMessage=${EMPTY_MESSAGE} .hasContent=${!!this.elementListItems.size}>
-        ${this.renderElementSection(
-          "active",
-          this.activeElements,
-          this.activeSectionCollapsed,
-          () => {
-            this.activeSectionCollapsed = !this.activeSectionCollapsed
-          }
-        )}
-        ${this.renderElementSection(
-          "inactive",
-          this.inactiveElements,
-          this.inactiveSectionCollapsed,
-          () => {
-            this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
-          }
-        )}
+        <div class="list">
+          ${virtualize({
+            scroller: true,
+            items: [
+              ...this.sectionRows("active", this.activeElements),
+              ...this.sectionRows("inactive", this.inactiveElements),
+            ],
+            keyFunction: row => (row.kind === "header" ? row.section : row.state.id),
+            renderItem: this.renderRow,
+          })}
+        </div>
       </tab-content>
     `
   }

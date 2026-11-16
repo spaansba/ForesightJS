@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import { Foresight } from "@foresightjs/vue"
+import ButtonGrid from "./ButtonGrid.vue"
 
 const resetKey = ref(0)
 const hitCount = ref(0)
@@ -52,28 +52,7 @@ const setCount = (value: number) => {
       </div>
     </div>
 
-    <!-- Re-keying the container on reset re-mounts every button, clearing state. -->
-    <div :key="resetKey" class="flex flex-wrap gap-1">
-      <Foresight
-        v-for="i in buttonCount"
-        :key="i"
-        :hit-slop="0"
-        :callback="onHit"
-        #default="{ elementRef, isPredicted }"
-      >
-        <button
-          type="button"
-          :ref="elementRef"
-          :class="[
-            'flex justify-center items-center size-10 text-xs font-medium border',
-            isPredicted
-              ? 'bg-emerald-500 text-white border-emerald-600'
-              : 'bg-white text-gray-700 border-gray-300',
-          ]"
-        >
-          {{ i - 1 }}
-        </button>
-      </Foresight>
-    </div>
+    <!-- Re-keying the grid on reset re-mounts every button, clearing state. -->
+    <ButtonGrid :key="resetKey" :button-count="buttonCount" @hit="onHit" />
   </main>
 </template>
