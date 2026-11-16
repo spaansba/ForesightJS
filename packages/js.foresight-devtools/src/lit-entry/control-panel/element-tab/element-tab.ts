@@ -1,6 +1,6 @@
 import { css, html, LitElement } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { repeat } from "lit/directives/repeat.js"
+import { virtualize } from "@lit-labs/virtualizer/virtualize.js"
 
 import type {
   CallbackInvokedEvent,
@@ -10,6 +10,10 @@ import type {
 import { ForesightManager, type ForesightElement, type ForesightElementState } from "js.foresight"
 
 type ElementListEntry = { element: ForesightElement; state: ForesightElementState }
+type Section = "active" | "inactive"
+type ListRow =
+  | { kind: "header"; section: Section; count: number }
+  | { kind: "element"; element: ForesightElement; state: ForesightElementState }
 import { CHEVRON_SVG } from "../../../svg/svg-icons"
 import type { SortElementList } from "../../../types/types"
 import type { CallbackHits } from "../../../helpers/callbackHits"
@@ -33,7 +37,20 @@ export class ElementTab extends LitElement {
       height: 100%;
     }
 
-    .section + .section {
+    /* The list scrolls itself: the virtualizer looks up its scroll container
+       on connect, before tab-content has rendered the slot it sits in. */
+    .list {
+      height: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: var(--fs-line) transparent;
+    }
+
+    /* The virtualizer positions rows absolutely, so they need an explicit width. */
+    single-element {
+      width: 100%;
+    }
+
+    .section-header.inactive-header {
       margin-top: 8px;
     }
 
@@ -401,46 +418,58 @@ export class ElementTab extends LitElement {
     return 0
   }
 
-  private renderElementSection(
-    label: string,
-    elements: ForesightElement[],
-    collapsed: boolean,
-    toggleCollapsed: () => void
-  ) {
+  private toggleSection(section: Section): void {
+    if (section === "active") {
+      this.activeSectionCollapsed = !this.activeSectionCollapsed
+    } else {
+      this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
+    }
+  }
+
+  private sectionRows(section: Section, elements: ForesightElement[]): ListRow[] {
     if (elements.length === 0) {
-      return ""
+      return []
     }
 
-    return html`
-      <div class="section">
-        <button class="section-header ${collapsed ? "collapsed" : ""}" @click=${toggleCollapsed}>
-          ${CHEVRON_SVG} ${label}<span class="rule"></span>${elements.length}
-        </button>
-        ${
-          !collapsed
-            ? repeat(
-                elements,
-                element => this.elementListItems.get(element)?.id ?? "",
-                element => {
-                  const state = this.elementListItems.get(element)
-                  if (!state) {
-                    return ""
-                  }
+    const collapsed =
+      section === "active" ? this.activeSectionCollapsed : this.inactiveSectionCollapsed
+    const rows: ListRow[] = [{ kind: "header", section, count: elements.length }]
+    if (collapsed) {
+      return rows
+    }
 
-                  return html`
-                    <single-element
-                      .element=${element}
-                      .state=${state}
-                      .isExpanded=${this.expandedElementIds.has(state.id)}
-                      .onToggle=${this.handleElementToggle}
-                    >
-                    </single-element>
-                  `
-                }
-              )
-            : ""
-        }
-      </div>
+    for (const element of elements) {
+      const state = this.elementListItems.get(element)
+      if (state) {
+        rows.push({ kind: "element", element, state })
+      }
+    }
+
+    return rows
+  }
+
+  private renderRow = (row: ListRow) => {
+    if (row.kind === "element") {
+      return html`
+        <single-element
+          .element=${row.element}
+          .state=${row.state}
+          .isExpanded=${this.expandedElementIds.has(row.state.id)}
+          .onToggle=${this.handleElementToggle}
+        ></single-element>
+      `
+    }
+
+    const collapsed =
+      row.section === "active" ? this.activeSectionCollapsed : this.inactiveSectionCollapsed
+
+    return html`
+      <button
+        class="section-header ${row.section}-header ${collapsed ? "collapsed" : ""}"
+        @click=${() => this.toggleSection(row.section)}
+      >
+        ${CHEVRON_SVG} ${row.section}<span class="rule"></span>${row.count}
+      </button>
     `
   }
 
@@ -461,22 +490,17 @@ export class ElementTab extends LitElement {
         </div>
       </tab-header>
       <tab-content .noContentMessage=${EMPTY_MESSAGE} .hasContent=${!!this.elementListItems.size}>
-        ${this.renderElementSection(
-          "active",
-          this.activeElements,
-          this.activeSectionCollapsed,
-          () => {
-            this.activeSectionCollapsed = !this.activeSectionCollapsed
-          }
-        )}
-        ${this.renderElementSection(
-          "inactive",
-          this.inactiveElements,
-          this.inactiveSectionCollapsed,
-          () => {
-            this.inactiveSectionCollapsed = !this.inactiveSectionCollapsed
-          }
-        )}
+        <div class="list">
+          ${virtualize({
+            scroller: true,
+            items: [
+              ...this.sectionRows("active", this.activeElements),
+              ...this.sectionRows("inactive", this.inactiveElements),
+            ],
+            keyFunction: row => (row.kind === "header" ? row.section : row.state.id),
+            renderItem: this.renderRow,
+          })}
+        </div>
       </tab-content>
     `
   }

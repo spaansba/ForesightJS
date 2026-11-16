@@ -54,12 +54,13 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "js.foresight": "workspace:*",
-    "tslib": "^2.8.1",
     "tsdown": "^0.23.1",
+    "tslib": "^2.8.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   },
   "dependencies": {
+    "@lit-labs/virtualizer": "^2.1.1",
     "lit": "^3.3.3"
   }
 }
